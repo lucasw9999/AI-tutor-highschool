@@ -9,6 +9,9 @@ Lucas's own problem-first study system to go from "knows Python, no Java" to a *
 | **`mastery-tracker.md`** | The persistent memory — what you know / are shaky on / haven't touched. Carries across sessions. |
 | **`tutor-prompt.md`** | The AI tutor's instructions — problem-first, hints-not-answers, stays in the AP Java subset, grades FRQs to rubric, updates the tracker. |
 | **`how-to-use.md`** | Plain day-to-day instructions: time, rhythm, what each session looks like. |
+| **`chatgpt-setup.md`** | Step-by-step for setting up the tutor as a ChatGPT **Custom GPT** (and the free-ChatGPT / Claude alternatives). |
+| **`day-1-diagnostic.md`** | A ready-to-run first-session placement check, with answer key. |
+| **`python-to-java-cheatsheet.md`** | One-time Java syntax seed for a Python beginner. |
 
 ## How to run it (today, zero setup)
 1. Create a **Project** in Claude (or a Custom GPT).
@@ -16,6 +19,8 @@ Lucas's own problem-first study system to go from "knows Python, no Java" to a *
 3. Attach `csa-coverage-map.md` and `mastery-tracker.md` as Project knowledge.
 4. Type **"let's start."** First session = a short **diagnostic**; after that it's solve-learn-repeat.
 5. After each session, paste the tutor's `TRACKER UPDATE` block into `mastery-tracker.md`. That's the whole loop.
+
+> **Using ChatGPT instead of Claude?** Follow **`chatgpt-setup.md`** — same files, set up as a ChatGPT Custom GPT (works the same; the doc also covers free-ChatGPT and Claude).
 
 ## The strategy in one breath
 Use **summer 2026** to front-load Java syntax + Unit 4 (the 30–40% unit) so the school year is reinforcement, not first-exposure → let the **school year** carry the body with 1 FRQ/week → **Jan–May 2027** drill released exams to the rubric. CSP is foundation-only; skip the CSP exam.
