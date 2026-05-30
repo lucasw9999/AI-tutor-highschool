@@ -3,7 +3,7 @@
 **This is the persistent memory.** The AI tutor reads this at the start of every session to know where you are, picks the next thing to work on, and updates it at the end. Think of it as the "what you know / what's shaky / what's untouched" brain that carries across sessions (the lightweight version of DeepTutor's L1/L2/L3 memory).
 
 - **Target:** Score 5 on AP CSA, **May 2027**
-- **Background:** Fluent-ish Python, **no Java yet** (as of June 2026)
+- **Background:** Beginner Python (variables, basic data, reading files); **limited experience with arrays/lists/loops over collections**; **no Java yet** (as of June 2026)
 - **Status legend:** ⬜ not started · 🟡 learning · 🟠 shaky · 🟢 solid · ⭐ mastered (fast/timed)
 - **Last session:** _(none yet — start with the diagnostic)_
 
