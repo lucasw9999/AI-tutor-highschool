@@ -9,7 +9,7 @@ Same idea as the CSA tutor. Requires **ChatGPT Plus** (no Plus? see bottom).
 ## Step 2 — Configure (left → "Configure" tab)
 - **Name:** `English Tutor (Grade 10)`
 - **Instructions:** paste everything below the `---` line in **`tutor-prompt.md`**.
-- **Knowledge — upload these files from the `eg/` folder:**
+- **Knowledge — upload these files from the `10th_english/` folder:**
   - `coverage-map.md`
   - `mastery-tracker.md`
   - All 5 in **`study-packs/`** (Julius Caesar, Night, The Book Thief, The Kite Runner, Life of Pi)
