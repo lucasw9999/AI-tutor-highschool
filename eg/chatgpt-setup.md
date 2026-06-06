@@ -13,7 +13,7 @@ Same idea as the CSA tutor. Requires **ChatGPT Plus** (no Plus? see bottom).
   - `coverage-map.md`
   - `mastery-tracker.md`
   - All 5 in **`study-packs/`** (Julius Caesar, Night, The Book Thief, The Kite Runner, Life of Pi)
-  - All 5 in **`guides/`** (essay-writing, literary-devices, grammar, vocabulary, research-mla)
+  - All in **`guides/`** (essay-writing, literary-devices, grammar, vocabulary, **vocab-word-bank** (all 24 weeks), research-mla)
   - *(optional)* `diagnostic.md`
 
 ## Step 3 — Test (right "Preview" panel)
