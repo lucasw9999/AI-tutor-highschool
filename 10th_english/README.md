@@ -1,6 +1,6 @@
 # Lucas's Grade-10 English Project — Start Here
 
-A problem/question-driven study system for Lucas's sophomore English class (Foothill HS, Mrs. Pagtakhan). **Goal: understand everything before the class starts and earn an A** — efficiently, in a few weeks of focused work, without slowly reading every page. Same architecture as the CSA system (in `../csa/`), adapted because English is learned differently: **read → analyze → write → rubric-feedback → discuss**, not drill-the-one-right-answer.
+A problem/question-driven study system for Lucas's sophomore English class (Foothill HS, Mrs. Pagtakhan). **Goal: understand everything before the class starts and earn an A** — efficiently, in a few weeks of focused work, without slowly reading every page. Same architecture as the CSA system (in `../ap_csa/`), adapted because English is learned differently: **read → analyze → write → rubric-feedback → discuss**, not drill-the-one-right-answer.
 
 ## What's here
 | Path | What it is |
