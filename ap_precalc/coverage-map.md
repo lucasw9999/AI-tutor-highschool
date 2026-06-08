@@ -4,19 +4,23 @@
 
 ---
 
-## The exam (what a 4–5 is made of)
+## The exam (what a 4–5 is made of) — **May 2027 format**
+> ⚠️ **The exam format changed for May 2027** (Lucas's year). Numbers below are the new format (College Board CED Clarifications, effective Fall 2026). **Course content is unchanged** — all study packs stay valid. Details + source: `reference/2027-exam-changes.md`.
+
 | Section | Count | Weight | Calculator |
 |---|---|---|---|
-| **I. Multiple Choice** | 40 Q (2 hrs) | **~63%** | Part A: 28 Q **NO calc** (~44%) · Part B: 12 Q **calc** |
-| **II. Free Response** | 4 Q (1 hr) | **~37%** | Part A: Q1–Q2 **calc** · Part B: Q3–Q4 **NO calc** |
+| **I. Multiple Choice** | **42 Q** | **~63%** | Part A: **29 Q NO calc · 65 min** (~44%) · Part B: **13 Q calc · 40 min** |
+| **II. Free Response** | 4 Q | **~37%** | Part A: Q1–Q2 **calc · 35 min** · Part B: Q3–Q4 **NO calc · 35 min** |
 
 **The 4 FRQs are fixed types every year:**
-1. **Function Concepts** (calculator)
-2. **Modeling a Non-Periodic Context** (calculator)
+1. **Function Concepts** (calculator) — *minor Part C(i) tweak for 2027*
+2. **Modeling a Non-Periodic Context** (calculator) — *restructured for 2027: Part B(iii) removed, Part C expanded*
 3. **Modeling a Periodic Context** (no calculator)
-4. **Symbolic Manipulation** (no calculator)
+4. **Symbolic Manipulation** (no calculator) — **lowest-scoring FRQ both years (mean 1.28/6 in 2024, 1.93/6 in 2025); biggest point-gain opportunity**
 
-Hybrid digital: MCQ in Bluebook; FRQs handwritten. **A graphing calculator is required.** → see `reference/graphing-calculator-skills.md`.
+Hybrid digital: MCQ in Bluebook; FRQs handwritten. **Calculator: an approved physical graphing calculator is permitted, *and* a built-in Desmos is available in Bluebook** → see `reference/graphing-calculator-skills.md`.
+
+**Encouraging:** ~**50% (2024) → ~54% (2025) of all students score a 4 or 5** (mean ≈ 3.5). A strong score is genuinely achievable with focused prep.
 
 > **Key fact:** the AP exam tests **Units 1–3 only.** Unit 4 is required for the *class* but never appears on the *exam* — so we learn it for the A, but don't drill exam-format questions on it.
 

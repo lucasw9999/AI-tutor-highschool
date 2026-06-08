@@ -1,27 +1,29 @@
 # AP Precalculus — How the Exam Works & How to Score 4-5
 
-**Why this matters:** Precalc rewards *process over answers*. The exam is predictable — same 40+4 structure, same 4 fixed FRQ types every year — so a 5 is a preparation problem, not a luck problem. Master the four FRQ templates and the notation graders demand, and you've handled ~37% of the score directly plus the reasoning that powers the MC. Exam tests **Units 1-3 only** (Unit 4 is class-required but NOT on the exam).
+**Why this matters:** Precalc rewards *process over answers*. The exam is predictable — same **42+4** structure, same 4 fixed FRQ types every year — so a 5 is a preparation problem, not a luck problem. Master the four FRQ templates and the notation graders demand, and you've handled ~37% of the score directly plus the reasoning that powers the MC. Exam tests **Units 1-3 only** (Unit 4 is class-required but NOT on the exam).
+
+> ⚠️ **Numbers below are the May 2027 format** (new for Lucas's year — College Board CED Clarifications, effective Fall 2026). Content/FRQ-types/scoring approach are unchanged from 2024–25; only question counts + timing changed. Full detail + source: `2027-exam-changes.md`.
 
 ---
 
-## 1. Structure & timing at a glance
+## 1. Structure & timing at a glance (May 2027)
 
 | Section | What | Calc? | Time | Weight |
 |---|---|---|---|---|
-| **I-A** Multiple Choice | 28 questions | **NO calc** | 80 min | 43.75% |
-| **I-B** Multiple Choice | 12 questions | **Graphing calc REQUIRED** | 40 min | 18.75% |
-| **II-A** Free Response | Q1 + Q2 | **Calc REQUIRED** | 30 min | 18.75% |
-| **II-B** Free Response | Q3 + Q4 | **NO calc** | 30 min | 18.75% |
-| | **40 MC + 4 FRQ** | | **~3 hrs** | MC 62.5% / FRQ 37.5% |
+| **I-A** Multiple Choice | **29 questions** | **NO calc** | **65 min** | ~43.75% |
+| **I-B** Multiple Choice | **13 questions** | **Calc available** | 40 min | ~18.75% |
+| **II-A** Free Response | Q1 + Q2 | **Calc available** | **35 min** | ~18.75% |
+| **II-B** Free Response | Q3 + Q4 | **NO calc** | **35 min** | ~18.75% |
+| | **42 MC + 4 FRQ** | | **~2 hr 55 min** | MC ~62.5% / FRQ ~37.5% |
 
 - **Format:** Hybrid digital — MC answered in **Bluebook** app; FRQs **handwritten** in a paper booklet. You cannot flag-and-return across sections once time is called.
-- **Calculator:** Put it in **RADIAN mode** before you start. Required for I-B, II-A. Not allowed for I-A, II-B.
+- **Calculator:** an approved **physical graphing calculator** is permitted, **and** a **built-in Desmos** is available in Bluebook for the calculator parts (use either/both). Required for nothing, available on I-B and II-A; not available on I-A, II-B. Work in **radians**.
 
 **Pacing math (memorize this):**
-- **MC Part A:** 80 min / 28 Q ≈ **2.85 min/Q** (~2:50 each).
-- **MC Part B:** 40 min / 12 Q ≈ **3.3 min/Q** — slightly more time because calc steps eat clock.
-- **FRQ:** ~**15 min per question**. Each is 6 points; that's ~2.5 min/point. Don't burn 25 min on Q2 and leave Q1 half-done.
-- **Rule:** If an MC question stalls past ~3 min, guess (no wrong-answer penalty), flag it, move on. Every MC is worth the same.
+- **MC Part A:** 65 min / 29 Q ≈ **2.2 min/Q** — *tighter than the old format; don't linger.*
+- **MC Part B:** 40 min / 13 Q ≈ **3.0 min/Q** — calc steps eat clock.
+- **FRQ:** ~**17 min per question** (35 min per 2-question part). Each is 6 points. Don't burn the whole part on one question.
+- **Rule:** If an MC question stalls past ~2.5 min, guess (no wrong-answer penalty), flag it, move on. Every MC is worth the same.
 
 ---
 
@@ -38,6 +40,7 @@ The four FRQs are the **same labeled types every year**, printed verbatim in the
 4. "What model fits this table?" → check **ratios** of successive outputs (constant ratio = exponential) vs **differences** (constant difference = linear).
 
 ### Q2 — Modeling a Non-Periodic Context *(calculator)*
+*(2027 update: Part B(iii) removed, Part C expanded — same skills, same task type.)*
 **What it is:** A real-world scenario (sales, streams). You build a model (log, quadratic, exponential) from given data points, then reason about it. Tasks: **write and solve a system** for the parameters, compute **average rate of change** (= slope of secant), use it to **estimate/extrapolate**, and **explain a model limitation** (concavity, why the estimate is over/under, why error grows).
 **Attack plan:**
 1. Plug data points in → get equations → solve for parameters (use calc).

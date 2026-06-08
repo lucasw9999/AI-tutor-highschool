@@ -1,15 +1,17 @@
-# Graphing-Calculator Skills the AP Precalculus Exam Expects (TI-84 / equivalent)
+# Graphing-Calculator Skills the AP Precalculus Exam Expects (TI-84 *or* the built-in Desmos)
 
 **Why this matters:** ~37.5% of your AP Precalc score sits on calculator-active sections (MC Part B + FRQ Q1 & Q2). Those questions are *designed* to be slow or impossible by hand — they reward fast, correct calculator moves. Knowing the exact button paths is free points toward your A and 4/5.
 
+> **Which calculator?** On the AP Precalc exam you may use an **approved physical graphing calculator (e.g., TI-84)**, **and/or** the **built-in Desmos graphing calculator inside Bluebook** — College Board's words: "in place of or in addition to a handheld." Since the **Desmos calculator is always there in Bluebook (free, nothing to buy/charge), practice with Desmos too** — the *moves* below (graph, find zeros/intersections, regressions) are the same idea in either tool; only the button paths differ. The skills, not the device, are what score points.
+
 ---
 
-## The exam at a glance (calculator policy)
+## The exam at a glance (calculator policy — May 2027)
 
 | Section | Questions | Calculator? | Worth |
 |---|---|---|---|
-| **MC Part A** | 28 | ❌ No calc | ~43.75% |
-| **MC Part B** | 12 | ✅ Graphing calc | ~18.75% |
+| **MC Part A** | 29 | ❌ No calc | ~43.75% |
+| **MC Part B** | 13 | ✅ Calc available | ~18.75% |
 | **FRQ Q1** Function Concepts | 1 | ✅ Graphing calc | } ~18.75% |
 | **FRQ Q2** Modeling Non-Periodic Context | 1 | ✅ Graphing calc | } |
 | **FRQ Q3** Modeling Periodic Context | 1 | ❌ No calc | } ~18.75% |

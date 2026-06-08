@@ -1,0 +1,31 @@
+# ⚠️ AP Precalculus — May 2027 Exam Format Change (READ THIS)
+
+**Lucas's exam is May 2027 — and the exam FORMAT changes that year.** This is official and verified (College Board *AP Precalculus CED Clarifications and Corrections*, created 2026-05-20, "To be implemented for Fall 2026" = the 2026–27 school year = May 2027 exam).
+
+## The bottom line
+- **Course CONTENT does NOT change.** Units 1–3 are tested, Unit 4 is excluded, the topics are the same, the 4 FRQ task types are the same, the 3 mathematical practices are the same. **→ Every study pack and the formula sheet stay 100% valid.**
+- **The exam STRUCTURE changes** (number of questions + timing only).
+
+## Exactly what changes (2026 → May 2027)
+| Section | Was (≤2026) | **May 2027** |
+|---|---|---|
+| MCQ Part A (no calculator) | 28 Q · 80 min | **29 Q · 65 min** |
+| MCQ Part B (calculator) | 12 Q · 40 min | **13 Q · 40 min** (timing same) |
+| **MCQ total** | **40** | **42** |
+| FRQ Part A (calculator, Q1–Q2) | 30 min | **35 min** |
+| FRQ Part B (no calculator, Q3–Q4) | 30 min | **35 min** |
+| **FRQ section** | 60 min | **70 min** |
+
+Plus two FRQ content tweaks (same task types, just adjusted):
+- **FRQ Q2 (Modeling Non-Periodic):** Part B(iii) **removed**, Part C **expanded**; scoring guidelines for B(iii)/C updated.
+- **FRQ Q1 (Function Concepts):** minor Part C(i) tweak, **no scoring change**.
+
+## What does NOT change
+- Section weighting stays ~**63% MCQ / ~37% FRQ** (College Board didn't announce a weight change — confirm in the summer-2026 CED).
+- Still a **hybrid digital** exam (MCQ in Bluebook; FRQs handwritten on paper) — **not** fully digital.
+- Calculator policy (see `graphing-calculator-skills.md`): an **approved physical graphing calculator is permitted, and a built-in Desmos is available in Bluebook** — use either or both.
+
+## So what should Lucas actually do?
+Nothing changes about *what to learn*. The only practical effects: there are **2 more MCQs**, **Part A is tighter on time** (29 Q in 65 min ≈ 2.2 min/Q, down from ~2.85), the **FRQ section is a bit roomier** (35 min/part), and **Q2 looks slightly different**. Prep is identical — master Units 1–3, no-calculator fluency, the formula sheet, and the 4 FRQ types.
+
+*Source: College Board AP Central — AP Precalculus exam page + the CED Clarifications & Corrections PDF (effective Fall 2026). Recheck the updated CED when College Board posts it in summer 2026 in case any figure is fine-tuned.*

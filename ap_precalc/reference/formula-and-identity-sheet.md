@@ -1,6 +1,6 @@
 # AP Precalculus — Must-Memorize Reference Sheet
 
-**Why this matters:** AP Precalc gives you almost no formula sheet. Section I Part A (28 questions, NO calculator, ~44% of your score) and FRQ Q3/Q4 (no calculator) assume you have these cold. Memorize this and you stop losing easy points. (Exam covers Units 1–3 only; Unit 4 is class-required but not tested.)
+**Why this matters:** AP Precalc gives you almost no formula sheet. Section I Part A (29 no-calculator questions, ~44% of your score) and FRQ Q3/Q4 (no calculator) assume you have these cold. Memorize this and you stop losing easy points. (Exam covers Units 1–3 only; Unit 4 is class-required but not tested.)
 
 ---
 

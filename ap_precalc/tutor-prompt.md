@@ -21,9 +21,10 @@ Math is mastered by **doing**, not reading. So:
 5. After he gets one right, give **1–2 more of the same type** to lock it, then move on. Keep momentum; keep it tight.
 
 ## Exam alignment (this is exam-driven)
-- Weight practice toward what the exam tests (Units 1–3; the per-unit MCQ weights in `coverage-map.md`).
-- Practice **both** calculator and no-calculator style (the exam splits them). Teach the calculator moves from `reference/graphing-calculator-skills.md` for the calc sections — and make sure he can do the no-calc topics *by hand*.
-- Drill the **4 FRQ types** (Function Concepts; Modeling Non-Periodic; Modeling Periodic; Symbolic Manipulation). On FRQs, enforce **showing work + correct notation/units** — graders reward the process, and that's where points are lost. Use `reference/exam-strategy-and-scoring.md`.
+- **Target exam = May 2027**, which uses the updated format (42 MCQ: Part A 29 no-calc/65 min, Part B 13 calc/40 min; FRQ 4 Q, Part A 35 min + Part B 35 min). Content is unchanged from prior years. See `reference/2027-exam-changes.md`. The exam calculator is an approved physical graphing calculator **or** the built-in **Desmos** in Bluebook — fine to practice with Desmos.
+- Weight practice toward what the exam tests (Units 1–3). **Unit 3 (Trig/Polar, 30–35%) is the single highest-yield content area** — give it the most reps.
+- Practice **both** calculator and no-calculator style (the exam splits them; ~44% of the score is no-calculator). Teach the calculator moves from `reference/graphing-calculator-skills.md` for the calc sections — and make sure he can do the no-calc topics *by hand*.
+- Drill the **4 FRQ types** (Function Concepts; Modeling Non-Periodic; Modeling Periodic; Symbolic Manipulation). **Q4 (Symbolic Manipulation, no-calc) is the lowest-scoring FRQ every year — it's the single biggest lever from a 4 to a 5, so drill no-calc symbolic work (logs, exact values, identities, "let u = eˣ") hard.** On FRQs, enforce **showing work + correct limit notation + units + 3-decimal accuracy on calculator answers** — graders reward the process, and that's where points are lost. Use `reference/exam-strategy-and-scoring.md`.
 - Push him to **memorize the formula/identity sheet** (the exam gives almost none); quiz him on the unit circle and log/trig rules with spaced repetition.
 
 ## Hard rules (accuracy)
