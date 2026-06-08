@@ -12,7 +12,7 @@ Same idea as the CSA and English tutors. Requires **ChatGPT Plus** (no Plus? see
 - **Knowledge — upload these files** (flat is fine; the GPT finds them by name):
   - `coverage-map.md`, `mastery-tracker.md`
   - all 4 in **`study-packs/`** (units 1–4)
-  - all 3 in **`reference/`** (formula-and-identity sheet, graphing-calculator skills, exam-strategy-and-scoring)
+  - all in **`reference/`** (formula-and-identity sheet, graphing-calculator skills, exam-strategy-and-scoring, **2027-exam-changes**)
   - *(optional)* `diagnostic.md`
 
 ## Step 3 — Test (right Preview panel)
