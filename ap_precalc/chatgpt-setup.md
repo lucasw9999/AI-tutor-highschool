@@ -11,7 +11,7 @@ Same idea as the CSA and English tutors. Requires **ChatGPT Plus** (no Plus? see
 - **Instructions:** paste everything below the `---` line in **`tutor-prompt.md`**.
 - **Knowledge — upload these files** (flat is fine; the GPT finds them by name):
   - `coverage-map.md`, `mastery-tracker.md`
-  - all 4 in **`study-packs/`** (units 1–4)
+  - All 4 study packs (in `study-packs/`): `unit-1-polynomial-rational` · `unit-2-exponential-logarithmic` · `unit-3-trigonometric-polar` · `unit-4-parametric-vectors-matrices`
   - all in **`reference/`** (formula-and-identity sheet, graphing-calculator skills, exam-strategy-and-scoring, **2027-exam-changes**, **skills-and-weightings**, **practice-resources-and-exam-day**)
   - *(optional)* `diagnostic.md`
 

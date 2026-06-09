@@ -12,7 +12,7 @@ How to put this whole system into a ChatGPT **Custom GPT** so it has the tutor i
 Fill in:
 - **Name:** `AP CSA Tutor`
 - **Instructions:** paste the entire contents of **`tutor-prompt.md`** (everything below the `---` line).
-- **Knowledge** (upload these files from the `ap` folder):
+- **Knowledge** (upload these files from the `ap_csa/` folder):
   - `csa-coverage-map.md`
   - `mastery-tracker.md`
   - *(optional)* `python-to-java-cheatsheet.md`, `day-1-diagnostic.md`
