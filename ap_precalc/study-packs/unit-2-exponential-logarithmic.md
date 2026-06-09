@@ -168,9 +168,11 @@ $$\boxed{\,\log_b x = y \iff b^y = x\,}$$
 
 ---
 
-### 2.10 Semi-Log Plots (Linearizing Data)
+### 2.15 Semi-Log Plots (Linearizing Data)
 
 **Plain language:** A **semi-log plot** puts the y-axis on a **log scale** (and x linear). On this plot, **exponential data becomes a straight line.** That's the whole point: it's a visual test for "is this exponential?"
+
+> **Exam scope (important):** On the AP exam, semi-log means the **log scale is on the y-axis ONLY, to linearize EXPONENTIAL data.** Putting the *x*-axis on a log scale (to linearize logarithmic data) and full **log-log** plots are **OUT of scope** — don't study them. The exam writes the linearized form as $y=(\log_n b)x+\log_n a$ for a log base $n>1$.
 
 **The math (know why it works):** Take $y = a\cdot b^{x}$ and log both sides:
 $$\log y = \log a + (\log b)\,x.$$
@@ -187,6 +189,17 @@ This is **linear in** $x$: $Y = mx + B$ where $Y=\log y$, slope $m=\log b$, inte
 - Model: $y = 10\cdot 10^{x}$.
 
 **#1 mistake:** Thinking the points on a semi-log plot are the actual data values. They're the **logs** of the data. Slope is $\log b$, not $b$ — you must un-log to recover the base and initial value.
+
+---
+
+### 2.16 Model Error & Residuals (EK 2.6.B — easy points the exam likes)
+
+**Plain language:** Once you fit a model, you judge how good it is.
+- **Error (residual)** at a point = **predicted − actual** value. Positive error = the model **overestimates** there; negative = **underestimates**.
+- **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*
+- **Context can make an over- or under-estimate preferable.** The exam may ask which is "better" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn't a universal "right" choice, it depends on the scenario. Justify with the context.
+
+**#1 mistake:** Calling a model "good" because the curve looks close, ignoring the residual plot — or saying an estimate is "wrong" when the question wants *over vs under* and *why that's appropriate here*.
 
 ---
 
