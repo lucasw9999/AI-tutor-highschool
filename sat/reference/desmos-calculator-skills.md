@@ -54,11 +54,11 @@ By hand this needs the quadratic formula. In Desmos:
 > **RULE — "Two equations, click the dot."** Type both equations exactly as given (any form: `y=`, standard form `Ax+By=C`, even a curve). Desmos draws both. Click the intersection point(s); the (x, y) shown is the solution to the system. For "how many solutions," just **count the intersection dots**.
 
 ### Worked Example 3 — Solve the system
-`y = 2x − 1` and `x² + y = 11`
+`y = 2x − 1` and `y = x² − 4`
 1. Line 1: `y = 2x - 1`
-2. Line 2: `x^2 + y = 11`  *(type it as-is — Desmos handles it)*
-3. Click intersections → `(-4, -9)` and `(3, 5)`.
-4. **Answer:** (x, y) = (−4, −9) and (3, 5). If the question asks "what is the *positive* value of x," answer **3**.
+2. Line 2: `y = x^2 - 4`  *(type it as-is — Desmos handles it)*
+3. Click intersections → `(3, 5)` and `(-1, -3)`.
+4. **Answer:** (x, y) = (3, 5) and (−1, −3). If the question asks "what is the *positive* value of x," answer **3**. *(Check by hand: x²−4 = 2x−1 → x²−2x−3 = 0 → (x−3)(x+1)=0 → x = 3 or −1.)*
 
 > **MISS-FIX:** Don't waste time substituting by hand. If the SAT asks for *only* one coordinate (e.g., "the value of y when x > 0"), read it straight off the dot. If it asks "how many real solutions," count dots: 0, 1, or 2.
 
@@ -171,7 +171,7 @@ Data: (1, 5), (2, 8), (3, 11), (4, 14). "Predict y when x = 10."
 
 **A2.** Graph `y=x^2+x-12`; x-intercepts at `(-4,0)` and `(3,0)` → **x = −4 or x = 3.**
 
-**A3.** Type both; intersections `(-2, 6)` and `(3, 1)` → **(−2, 6) and (3, 1).** *(Set them equal by hand only if you must: −x+4 = x²−2 → x²+x−6=0 → x=−3,2… wait — trust the graph; the curve is x²−2, giving x=−2 and x=3. Always trust the clicked dots over rushed mental algebra.)*
+**A3.** Type both; intersections **(−3, 7)** and **(2, 2)**. *(By hand: −x+4 = x²−2 → x²+x−6 = 0 → (x+3)(x−2)=0 → x = −3 or 2; plug each into the line y = −x+4 → (−3, 7) and (2, 2). The clicked Desmos dots match.)*
 
 **A4.** Graph `y=x^2+4`; it never crosses the x-axis → **0 real solutions.** (Vertex at (0,4), entirely above the axis.)
 
