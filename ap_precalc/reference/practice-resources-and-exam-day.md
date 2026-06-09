@@ -19,5 +19,15 @@
 - **Calculator:** an approved **physical graphing calculator** is allowed **and** a **built-in Desmos** is in Bluebook for the calculator parts. **Rehearse with Desmos** (it's guaranteed to be there): graphing, finding zeros/intersections, and **regressions** (linear/quadratic/exponential/sinusoidal) for the modeling FRQ. Know its limits — it won't do your algebra or write your justification.
 - Bring **No. 2 pencils**; know your school's start time and what to bring (College Board's "What to Bring" list).
 
-## Where to mine official scope clarifications
-The **"AP Precalculus CED Clarification and Guidance — Effective Fall 2026"** PDF (linked from the AP Central exam page) lists ~30+ Essential-Knowledge clarifications and **exclusions** — useful so you don't over-study. Examples worth knowing: discriminating **open vs. closed intervals** for increasing/decreasing is **out of scope** (EK 1.1.A); **semi-log** uses a **log y-axis for exponential data only** (log-x linearization is out of scope, EK 2.15.A); residual-plot/over-vs-underestimate reasoning (EK 2.6.B). *(The exam format/timing change is in the same PDF's "Exam Information" section.)*
+## What's OUT of scope — don't study these (save time)
+Verified from the CED Course-Framework notes + the Fall-2026 Clarification PDF. None of these appear on the AP exam:
+- **(1.1)** Discriminating **open vs. closed intervals** for increasing/decreasing.
+- **(1.5)** The **rational root theorem** and **Descartes' rule of signs**; factoring by hand is limited to common-factor + quadratic rules.
+- **(1.11)** **Partial-fraction decomposition**; **synthetic division** is not required (polynomial long division suffices).
+- **(2.1)** **Series sums** (arithmetic/geometric) — only *sequences* (nth term) are tested.
+- **(2.14)** Contextual interpretation of the constants in a logarithmic model `a + b·logₙ(x)`.
+- **(2.15)** **Semi-log:** log scale on the **y-axis for exponential data only** — log-x and log-log linearization are out.
+- **(3.12)** **Half-angle identities** and **tangent sum/difference identities** (and any identity not listed) — only **Pythagorean + sum/difference + double-angle for sine & cosine** are assessed.
+- **All of Unit 4** (parametric, vectors, matrices, conics) — class-only, never on the exam.
+
+*Full list: the "AP Precalculus CED Clarification and Guidance — Effective Fall 2026" PDF (linked from the AP Central exam page); the exam format/timing change is in that same PDF's "Exam Information" section.*

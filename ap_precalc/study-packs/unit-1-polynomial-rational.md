@@ -138,6 +138,26 @@ Right 3, vertical stretch ×2, reflect over x-axis, up 1.
 
 ---
 
+### 2.10 Piecewise-defined functions *(easy to skip — and it's a named FRQ2 model type)*
+**Plain language:** A **piecewise function** is built from different rules on **non-overlapping** intervals of the domain — one formula here, a different one there.
+
+**Notation & evaluating:**
+$$f(x)=\begin{cases} 2x+1, & x<0\\ x^2, & 0\le x\le 3\\ 5, & x>3\end{cases}$$
+To evaluate, pick the piece whose interval contains the input: $f(-2)=2(-2)+1=-3$; $f(2)=2^2=4$; $f(10)=5$.
+
+**What the exam asks:** evaluate at a point; identify which interval applies; **build a piecewise model from a context** ("charges \$5 up to 10 items, then \$0.40 each after" → a two-piece function); read/interpret a piecewise graph; check continuity at the breakpoints. The CED lists **piecewise-defined** as one of the FRQ Q2 modeling function types, so it can be the whole modeling question.
+
+**#1 mistake:** Using the wrong piece at a boundary — watch the **≤ vs <** at each breakpoint to see which rule owns the endpoint.
+
+### 2.11 Model domain & range restrictions *(FRQ Q2 Part C points)*
+When you build a model for a real context, state its **valid domain/range**:
+- **Domain restriction** — from the context (time can't be negative; you can't have a fraction of a person), a math constraint (no division by zero / no log of ≤0), or an extreme-value clue.
+- **Range restriction** — e.g., a count must be a whole number (round), or a quantity can't exceed a physical max.
+
+Justifying these limitations is exactly what FRQ Q2's reasoning parts reward — don't just give the formula, **say where it's valid and why.**
+
+---
+
 ## 3. Graduated practice set
 *(Work each before opening the solution.)*
 

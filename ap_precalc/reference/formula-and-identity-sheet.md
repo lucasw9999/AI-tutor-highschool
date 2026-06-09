@@ -132,16 +132,17 @@ Start with `y = f(x)`. Transformed form: **`y = a · f(b(x − h)) + k`**
 
 ---
 
-## 7. Sequence & Series Formulas
+## 7. Sequences (nth-term)
+
+> **Scope note:** Only **sequences** (nth-term + common difference/ratio) are on the AP exam. The **series-SUM formulas below are NOT tested** (CED Topic 2.1: "series are formally outside the scope of this framework") — learn them only if your *class* requires it; don't study them for the AP exam.
 
 **Arithmetic** (common difference `d`, linear growth — adds each step):
 - nth term: **aₙ = a₁ + (n − 1)d**
-- sum of first n: **Sₙ = (n/2)(a₁ + aₙ) = (n/2)[2a₁ + (n − 1)d]**
+- ◽ *(class-only, not on AP exam)* sum: Sₙ = (n/2)(a₁ + aₙ)
 
 **Geometric** (common ratio `r`, exponential growth — multiplies each step):
 - nth term: **aₙ = a₁ · r^(n−1)**
-- sum of first n: **Sₙ = a₁ · (1 − rⁿ)/(1 − r)**, r ≠ 1
-- infinite sum (only if **|r| < 1**): **S = a₁ / (1 − r)**
+- ◽ *(class-only, not on AP exam)* sum: Sₙ = a₁(1 − rⁿ)/(1 − r); infinite sum (|r|<1): a₁/(1 − r)
 
 *Use it:* 3, 6, 12, 24… is geometric (r = 2) → a₅ = 3·2⁴ = **48**.
 
@@ -152,6 +153,6 @@ Start with `y = f(x)`. Transformed form: **`y = a · f(b(x − h)) + k`**
 2. logₐ(x³y) = ? → **3logₐx + logₐy**
 3. Period of `y = 4cos(3x)`? → **2π/3**
 4. HA of `(3x+1)/(x−5)`? → **y = 3**
-5. Sum of `5 + 5/2 + 5/4 + …` (r = ½)? → **5/(1 − ½) = 10**
+5. aₙ for 3, 6, 12, 24…? → **aₙ = 3·2^(n−1)** (nth-term — sequences, not series, are what's tested)
 
-*All formulas verified against standard references. Practice the no-calculator sections (Part A + FRQ Q3/Q4) until these are automatic — that's where this sheet wins you the most points.*
+*All formulas verified against the official CED. Practice the no-calculator sections (Part A + FRQ Q3/Q4) until these are automatic — that's where this sheet wins you the most points.*
