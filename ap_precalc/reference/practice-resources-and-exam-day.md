@@ -16,7 +16,7 @@
 ## Exam-day mechanics (rehearse these)
 - **Hybrid digital format:** you answer **multiple-choice in the Bluebook app** and **view the free-response prompts in Bluebook**, but you **handwrite your FRQ answers in a paper booklet** that gets collected and scored.
 - **Rehearse the handwriting format:** College Board posts a **"Sample Free-Response Booklet" PDF** (`ap-precalculus-hybrid-sample-free-response-booklet.pdf`) — practice writing full FRQ solutions in that layout so exam day isn't the first time.
-- **Calculator:** an approved **physical graphing calculator** is allowed **and** a **built-in Desmos** is in Bluebook for the calculator parts. **Rehearse with Desmos** (it's guaranteed to be there): graphing, finding zeros/intersections, and **regressions** (linear/quadratic/exponential/sinusoidal) for the modeling FRQ. Know its limits — it won't do your algebra or write your justification.
+- **Calculator:** an approved **physical graphing calculator** is allowed **and** a **built-in Desmos** is in Bluebook for the calculator parts. **Rehearse with Desmos** (it's guaranteed to be there): graphing, finding zeros/intersections, and **regressions** (linear/quadratic/exponential/sinusoidal) for the modeling FRQ. Know its limits — it won't do your algebra or write your justification. *(Practice on the free **desmos.com** calculator; on exam day you use the **built-in Bluebook Desmos** — same tool, not the web/app version.)*
 - Bring **No. 2 pencils**; know your school's start time and what to bring (College Board's "What to Bring" list).
 
 ## What's OUT of scope — don't study these (save time)
