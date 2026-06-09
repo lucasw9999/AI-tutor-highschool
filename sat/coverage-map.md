@@ -16,10 +16,10 @@
 ## Reading & Writing — 4 domains (your `study-packs/`)
 | Domain | What it tests | Pack |
 |---|---|---|
-| **Standard English Conventions** (grammar) 🔥 | punctuation, sentence boundaries, agreement, verbs, modifiers, parallelism | `rw-grammar.md` — *highest ROI; rules are finite & learnable* |
-| **Information & Ideas** | central ideas, detail, command of evidence (textual + **quantitative/graphs**), inference | `rw-reading.md` |
-| **Craft & Structure** | words-in-context, text structure/purpose, cross-text connections | `rw-reading.md` |
-| **Expression of Ideas** | transitions, rhetorical synthesis ("notes" questions) | `rw-expression.md` |
+| **Craft & Structure** *(~28%)* | words-in-context, text structure/purpose, cross-text connections | `rw-reading.md` |
+| **Information & Ideas** *(~26%)* | central ideas, detail, command of evidence (textual + **quantitative/graphs**), inference | `rw-reading.md` |
+| **Standard English Conventions** (grammar) *(~26%)* 🔥 | punctuation, sentence boundaries, agreement, verbs, modifiers, parallelism | `rw-grammar.md` — *highest ROI; rules are finite & learnable* |
+| **Expression of Ideas** *(~20%)* | transitions, rhetorical synthesis ("notes" questions) | `rw-expression.md` |
 
 ## Math — 4 domains (your `study-packs/`)
 | Domain | What it tests | Pack |
