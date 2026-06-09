@@ -12,7 +12,7 @@ Same idea as the AP tutors. Requires **ChatGPT Plus** (no Plus? see bottom).
 - **Knowledge — upload these** (flat is fine; the GPT finds them by name):
   - `coverage-map.md`, `mastery-tracker.md`
   - **Study packs (7):** `rw-grammar` · `rw-reading` · `rw-expression` · `math-algebra` · `math-advanced` · `math-problem-solving-data` · `math-geometry-trig`
-  - **References (6):** `desmos-calculator-skills` · `test-strategy-and-pacing` · `grammar-cheatsheet` · `error-log` · `scoring-and-adaptive` · `vocab-in-context`
+  - **References (7):** `desmos-calculator-skills` · `test-strategy-and-pacing` · `grammar-cheatsheet` · `error-log` · `scoring-and-adaptive` · `vocab-in-context` · `practice-resources`
   - *(optional)* `diagnostic.md`
 
 ## Step 3 — Test (right Preview panel)

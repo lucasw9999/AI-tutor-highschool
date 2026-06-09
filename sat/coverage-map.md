@@ -24,13 +24,15 @@
 ## Math — 4 domains (your `study-packs/`)
 | Domain | What it tests | Pack |
 |---|---|---|
-| **Algebra** | linear equations/inequalities/systems, linear functions | `math-algebra.md` |
-| **Advanced Math** | quadratics, nonlinear, exponentials, functions, polynomials | `math-advanced.md` |
-| **Problem-Solving & Data Analysis** | ratios/%, rates, stats, graphs, probability | `math-problem-solving-data.md` |
-| **Geometry & Trigonometry** | lines/angles, triangles, circles, area/volume, right-triangle trig | `math-geometry-trig.md` |
+| **Algebra** *(~13–15 Q)* 🔥 | linear equations/inequalities/systems, linear functions | `math-algebra.md` |
+| **Advanced Math** *(~13–15 Q)* 🔥 | quadratics, nonlinear, exponentials, functions, polynomials | `math-advanced.md` |
+| **Problem-Solving & Data Analysis** *(~5–7 Q)* | ratios/%, rates, stats, graphs, probability | `math-problem-solving-data.md` |
+| **Geometry & Trigonometry** *(~5–7 Q)* | lines/angles, triangles, circles, area/volume, right-triangle trig | `math-geometry-trig.md` |
+
+> **Math priority:** Algebra + Advanced Math ≈ **60%+ of the 44 math questions** — that's where the points (and the harder Module-2 items) live. Drill those two first; PS&DA and Geometry/Trig are smaller but easy points. *(Per-domain counts verified vs College Board.)*
 
 ## References (`reference/`)
-`desmos-calculator-skills` (a Math superpower) · `test-strategy-and-pacing` (adaptive game-plan) · `grammar-cheatsheet` (memorize) · **`error-log`** (the #1 lever to 1500+) · `scoring-and-adaptive` (what 1500+ needs) · `vocab-in-context`.
+`desmos-calculator-skills` (a Math superpower) · `test-strategy-and-pacing` (adaptive game-plan) · `grammar-cheatsheet` (memorize) · **`error-log`** (the #1 lever to 1500+) · `scoring-and-adaptive` (what 1500+ needs) · `vocab-in-context` · `practice-resources` (best official + third-party prep, and how to use each).
 
 ---
 
