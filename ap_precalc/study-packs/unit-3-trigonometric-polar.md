@@ -56,6 +56,20 @@ Unit 3 is **30–35% of the MCQ** — the single biggest unit on the exam. It ow
 
 ---
 
+### 2.2b The five key points + midline, over TWO cycles (FRQ Q3 **Part A** — scorable points you can't skip)
+FRQ Q3 **Part A literally asks you to identify and plot the coordinates of five labeled points on the sinusoid and draw its midline, across *two full cycles*.** It's procedural points (skills 2.A/2.B) that students leave on the table by jumping to the equation.
+
+**The five points within one cycle** are at the **quarter-period** marks: **max → midline (going down) → min → midline (going up) → max.** Steps:
+1. Midline **d = (max+min)/2** (draw this horizontal line); amplitude **a = (max−min)/2**; period **P**; quarter-period **= P/4**.
+2. Start at a known point (e.g., a max at t₀). Step forward by **P/4** each time, alternating value: **max (d+a) → midline (d) → min (d−a) → midline (d) → max (d+a)** — that's one cycle (5 points). Continue another full period for the **second cycle**.
+
+**Worked example:** max 40, min 2, period 60, max at t = 0.
+d = 21, a = 19, quarter-period = 15. Points: **(0, 40) → (15, 21) → (30, 2) → (45, 21) → (60, 40)** [cycle 1], then **(75, 21) → (90, 2) → (105, 21) → (120, 40)** [cycle 2]. Draw the midline at **y = 21**.
+
+**#1 mistake:** plotting only one cycle, or forgetting to **draw/label the midline** — both are explicitly required.
+
+---
+
 ### 2.3 Sinusoidal behavior on an interval + concavity ↔ rate of change (FRQ Q3 gold)
 
 **Plain idea:** On any piece of a wave the exam asks two things: is the function **positive/negative** and **increasing/decreasing**, AND is the **rate of change increasing or decreasing** (concavity — no calculus needed, just read the curve).
