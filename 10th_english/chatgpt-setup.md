@@ -12,7 +12,7 @@ Same idea as the CSA tutor. Requires **ChatGPT Plus** (no Plus? see bottom).
 - **Knowledge — upload these files from the `10th_english/` folder:**
   - `coverage-map.md`
   - `mastery-tracker.md`
-  - All 5 in **`study-packs/`** (Julius Caesar, Night, The Book Thief, The Kite Runner, Life of Pi)
+  - All 5 study packs (in `study-packs/`): `01-julius-caesar` · `02-night` · `03-the-book-thief` · `04-the-kite-runner` · `05-life-of-pi`
   - All in **`guides/`** (essay-writing, literary-devices, grammar, vocabulary, **vocab-word-bank** (all 24 weeks), research-mla)
   - *(optional)* `diagnostic.md`
 
