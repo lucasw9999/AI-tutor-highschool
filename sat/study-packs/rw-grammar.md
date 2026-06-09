@@ -180,10 +180,10 @@ In the clause "the committee selected ___," the committee is the subject doing t
 **How the SAT disguises it:** Begins the sentence with a descriptive phrase + comma, then the four choices each start with a different noun. Pick the one that the phrase actually describes. (This is exactly the official sample Q15 type — "Based on events… , [Rabinal Achí]…".)
 
 **Worked example:**
-> Walking through the ancient ruins, ______ were clearly visible to the tourists.
-> A) crumbling columns B) the tourists saw crumbling columns C) the guide pointed out crumbling columns that D) it was clear that crumbling columns
+> Walking through the ancient ruins, ______.
+> A) crumbling columns were visible everywhere   B) the tourists marveled at the crumbling columns   C) it was clear that the columns were crumbling   D) the crumbling columns made an impressive sight
 
-The opener "Walking through the ancient ruins" must describe whoever is walking — a **person**. Columns can't walk. Only a choice starting with a person fixes it. Of the options, the one placing a person right after the comma is correct (B puts "the tourists" as the walkers). **Answer: B.**
+The opener "Walking through the ancient ruins" must describe whoever is walking — a **person** — and that noun must come **right after the comma** *and* the rest must be a complete sentence. Columns can't walk, and "it" can't walk. Only **B** puts a person ("the tourists") immediately after the comma. **Answer: B.** (A, C, and D all leave a non-walker as the subject → dangling modifier.)
 
 **#1 trap:** Picking a grammatically smooth choice whose **subject can't logically do the opening action.** Always ask: "Who or what is doing the intro phrase?" The noun right after the comma must be able to do it.
 
