@@ -40,6 +40,9 @@ All three exam units carry roughly equal weight — **none is skippable.**
 - **formula-and-identity-sheet.md** — the must-memorize set (unit circle, log/exponent rules, trig identities). AP Precalc gives you almost no formulas — memorize these.
 - **graphing-calculator-skills.md** — the exact calculator moves the exam rewards (zeros, intersections, regressions for the modeling FRQs).
 - **exam-strategy-and-scoring.md** — timing, the 4 FRQ types, what graders reward, common point-losers, what earns a 4–5.
+- **skills-and-weightings.md** — the 3 Mathematical Practices / 8 skills + their exam weights + per-FRQ skill map (where to spend time: 1.C "construct functions" + Practice 1 are heaviest).
+- **practice-resources-and-exam-day.md** — where to get real released items (AP Central / AP Classroom), Bluebook + handwritten-FRQ mechanics, the rehearsable sample booklet.
+- **2027-exam-changes.md** — the verified May-2027 format change (read first).
 
 ---
 
