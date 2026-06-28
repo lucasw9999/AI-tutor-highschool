@@ -1,6 +1,6 @@
 # Full Timed Mock Exams — Assembly, Timing, and Results Log
 
-**Purpose.** This file is the readiness keystone. The §12 readiness bar requires ≥3 full, timed practice exams with a weighted composite in the estimated 5-range. This file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current.
+**Purpose.** This file is the readiness keystone. The [readiness dashboard in `../exam-skill-tracker.md`](../exam-skill-tracker.md) requires ≥3 full, timed practice exams with a weighted composite in the estimated 5-range. This file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current.
 
 **Cross-links:** official sources → [`official-sources-index.md`](official-sources-index.md) · skill tracker → [`../exam-skill-tracker.md`](../exam-skill-tracker.md) · pacing strategy → [`../reference/pacing-and-strategy.md`](../reference/pacing-and-strategy.md) · FRQ rubric rules → [`../reference/frq-rubric-and-penalties.md`](../reference/frq-rubric-and-penalties.md) · sourcing/alignment guide → [`../reference/question-sources-and-access.md`](../reference/question-sources-and-access.md)
 
@@ -47,13 +47,18 @@ Build a 42-MCQ set by sampling from the unit-weight and skill-weight targets bel
 
 Additionally, ensure the assembled set hits **Analyze-Code (P3) at 37–53% of MCQ items** (≈16–22 of the 42 questions). Draw these from `mcq-analyze-code.md` and count the `[practice P3]` tags in the unit banks to hit this target. Practice P2 (Develop Code) should be 22–38% (≈9–16 questions).
 
-**Suggested quick assembly (42 questions):**
-- Take all or most items from `mcq-analyze-code.md` that cover Analyze-Code items not already in the unit banks — fill to ~18 P3 items.
-- From `mcq-unit-1.md`: pick 8 items.
-- From `mcq-unit-2.md`: pick 12 items.
-- From `mcq-unit-3.md`: pick 5 items.
-- From `mcq-unit-4.md`: pick 17 items (largest unit — do not undersample it).
-- Check the `[practice P.]` tags as you pick; redistribute if Analyze-Code count falls outside 16–22.
+**Suggested quick assembly (42 MCQ total — no more, no less):**
+1. Pick your unit-weight slice first (total must equal 42):
+   - From `mcq-unit-1.md`: pick **8 items** (≈19%)
+   - From `mcq-unit-2.md`: pick **12 items** (≈29%)
+   - From `mcq-unit-3.md`: pick **5 items** (≈12%)
+   - From `mcq-unit-4.md`: pick **17 items** (≈40%) — largest unit; do not undersample it.
+   - **Subtotal: 8 + 12 + 5 + 17 = 42 questions.**
+2. Count the `[practice P3]` tags among the 42 you just picked. The target is **16–22 of those 42** being Analyze-Code (P3) items.
+   - If P3 count is already 16–22: you are done. Do not add more questions.
+   - If P3 count is **below 16**: swap in P3-tagged items from `mcq-analyze-code.md` to replace an equal number of non-P3 items from the same or adjacent unit slot until you reach the target. The total stays 42.
+   - If P3 count is **above 22**: swap a few P3 items out for P2 items from the unit banks. The total stays 42.
+3. The result is exactly **42 MCQ** covering the unit-weight targets with 16–22 P3 (Analyze-Code) items baked in.
 
 #### FRQ selection (4 questions)
 
