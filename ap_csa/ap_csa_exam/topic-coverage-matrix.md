@@ -26,7 +26,7 @@
 | **1.12** Objects, Classes & References | Object vs class distinction; reference variables; **all classes extend `Object`** (inherit `toString`, `equals`) | `question-bank/mcq-unit-1.md` |
 | **1.13** Constructors & `new` | Constructor syntax; `new`; overloaded constructors; object initialization | `question-bank/mcq-unit-1.md`, `question-bank/frq-q2-class-design.md` |
 | **1.14** Instance Methods & `NullPointerException` | Calling instance methods; **`NullPointerException`** when method called on `null` reference | `question-bank/mcq-unit-1.md`, `question-bank/mcq-analyze-code.md` |
-| **1.15** `String`: Immutability, Concatenation & Methods | Immutable; `+` concatenation; 0-based indexing; `StringIndexOutOfBoundsException`; 6 String methods (see §2) | `question-bank/mcq-unit-1.md`, `question-bank/mcq-analyze-code.md`, `question-bank/frq-q1-methods-control.md` |
+| **1.15** `String`: Immutability, Concatenation & Methods | Immutable; `+` concatenation; 0-based indexing; `StringIndexOutOfBoundsException`; 8 String methods (see §2) | `question-bank/mcq-unit-1.md`, `question-bank/mcq-analyze-code.md`, `question-bank/frq-q1-methods-control.md` |
 
 ### Unit 2 — Selection & Iteration (25–35% of MCQ) · 12 topics
 
