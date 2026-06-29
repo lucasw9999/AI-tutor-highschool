@@ -21,7 +21,7 @@ Past FRQs are valuable for rubric practice, but the format changed. Apply these 
 - **Q3 (ArrayList / Data Analysis)** — ✅ usable; ArrayList shape is consistent.
 - **Q4 (2D Array)** — ✅ usable; 2D array work is consistent.
 - **Q2 (Class Design)** — ⚠️ use **only post-redesign (2026+)** Q2. Pre-redesign Q2 was often "design a subclass" — inheritance, which is **off the exam**. Old "GridWorld" and subclass FRQs: skip entirely.
-- **Old scoring (pre-redesign):** prior FRQs were 9/9/9/9 pts. The new format is **7/7/5/6 = 25 pts**. Rub the rubric structure but don't over-weight the point values.
+- **Old scoring (pre-redesign):** prior FRQs were 9/9/9/9 pts. The new format is **7/7/5/6 = 25 pts**. Practice the rubric structure but don't over-weight the point values.
 
 ### What is NOT yet posted (monitor these)
 
