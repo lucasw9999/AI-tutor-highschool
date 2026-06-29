@@ -281,6 +281,67 @@ public class Roster {
 
 ---
 
+### Practice FRQ 5 — `BankAccount` (7 points)  · *computed-result method with conditional state-update*
+
+Design a complete class named `BankAccount` that meets this specification:
+
+- It stores three pieces of state: an **owner name** (String), the current **balance** (a `double`), and the total number of **withdrawals** that have actually been made (a whole number).
+- A constructor takes the owner name and the opening balance (in that order). The withdrawal count always starts at `0`.
+- An accessor `getBalance()` returns the current balance.
+- A method `withdraw(double amount)` attempts to take `amount` out of the account. It withdraws **only if** there are sufficient funds — that is, only if `amount` is **less than or equal to** the current balance. When it succeeds, it subtracts `amount` from the balance, increases the withdrawal count by 1, and returns the **new balance**. When there are **not** enough funds, it changes **nothing** and returns `-1.0`. (You may assume `amount >= 0`.)
+- A method `getWithdrawalCount()` returns how many successful withdrawals have been made.
+
+Write the **entire class**, including the instance variables, following encapsulation conventions.
+
+#### Sample solution
+
+```java
+public class BankAccount {
+    private String owner;
+    private double balance;
+    private int withdrawals;
+
+    public BankAccount(String ownerName, double openingBalance) {
+        owner = ownerName;
+        balance = openingBalance;
+        withdrawals = 0;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public double withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            withdrawals++;
+            return balance;
+        }
+        return -1.0;
+    }
+
+    public int getWithdrawalCount() {
+        return withdrawals;
+    }
+}
+```
+
+#### Rubric (7 points)
+
+| Pt | Criterion |
+|---|---|
+| 1 | Class header `public class BankAccount` **and** all instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this) |
+| 2 | Three instance variables of the correct types: `String` owner, `double` balance, `int` withdrawals |
+| 3 | `public` constructor header with two parameters in the order (owner, opening balance) that initializes `owner` and `balance` from them |
+| 4 | Constructor initializes `withdrawals` to `0` (initializes **all** state, including the field not passed in) |
+| 5 | `withdraw` header is correct — `public double withdraw(double amount)` (non-`void`, returns a `double`) — and `getBalance()`/`getWithdrawalCount()` are non-`void` accessors that return the matching field |
+| 6 | `withdraw` performs the **conditional update**: only when `amount <= balance` does it subtract `amount` from `balance` **and** increment `withdrawals`; on the insufficient-funds path it leaves all state unchanged |
+| 7 | `withdraw` returns the **new balance** on success and `-1.0` on failure (correct return on both branches) |
+
+**Trace check.** `new BankAccount("Mia", 100.0)` → owner "Mia", balance 100.0, withdrawals 0. `getBalance()` → **100.0** ✓. `withdraw(30.0)` → `30.0 <= 100.0` true → balance 70.0, withdrawals 1, returns **70.0** ✓. `withdraw(200.0)` → `200.0 <= 70.0` false → state unchanged, returns **-1.0** ✓ (balance still 70.0, withdrawals still 1). `withdraw(70.0)` → `70.0 <= 70.0` true (boundary) → balance 0.0, withdrawals 2, returns **0.0** ✓. `getWithdrawalCount()` → **2** ✓ (the failed attempt did not count). All fields `private`; class/constructor `public`; the constructor initializes the non-parameter field (`withdrawals`); real cross-field arithmetic (`balance -= amount`) happens only under the `amount <= balance` guard; no `toString`/`equals` override. Points sum **7**.
+
+---
+
 ## (c) Signature point-losers for Q2
 
 Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/killer-errors-cheatsheet.md):
