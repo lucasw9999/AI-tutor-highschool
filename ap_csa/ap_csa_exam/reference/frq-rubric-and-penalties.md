@@ -103,7 +103,29 @@ FRQ code is typed in a **plain text editor** in Bluebook — no compiler, no aut
 
 ---
 
-## 8. Monitor: 2026 Scoring Guidelines
+## 8. Grader-Calibration Gate
+
+**FRQ self-scores do not count toward readiness until this gate is passed.** Strict grading requires a calibrated grader — otherwise scores are presumed inflated.
+
+**Protocol:**
+
+1. **Blind-grade an officially-scored sample response** before your FRQ self-scores feed the readiness bar. Use a CED sample-FRQ response (MessageBuilder Q1, CupcakeMachine Q2, ItemInventory Q3, Schedule Q4 — official point awards are in the CED) or, once posted, a 2026 Scoring-Guidelines sample.
+2. **Grade it entirely before looking at the official award.** Then compare your score to the official award **on each FRQ individually**.
+3. **Pass criterion:** your award must be **within ±1 point** of the official award on each FRQ. Landing off by 2 or more on any FRQ = gate not passed.
+4. **If you are off by >1 point:** subtract the measured bias from your past self-scores and **do not count FRQ toward readiness** until you re-calibrate and pass.
+5. **Re-test every 8 weeks** and **immediately after College Board posts the 2026 Scoring Guidelines** (watch URL below). The 2026 SG is the authoritative rubric once posted — re-run this gate against a 2026 SG sample as soon as it is available.
+
+**Calibration log (update after each gate check):**
+
+| Date | Sample used | Your score | Official award | Gap | Passed? |
+|---|---|---|---|---|---|
+| — | — | — | — | — | ⬜ |
+
+**Status in `exam-skill-tracker.md`:** gate B in §(f) tracks this. The readiness bar cannot reach 100% until gate B shows ⬜ → ✅.
+
+---
+
+## 9. Monitor: 2026 Scoring Guidelines
 
 The official College Board 2026 Scoring Guidelines have not been published as of 2026-06-27 (the URL returns 404). When they are posted — expected approximately fall 2026 — fold the exact rubric rows and penalty language from that document into this file.
 

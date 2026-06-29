@@ -2,6 +2,8 @@
 
 **What this is.** A short, **timed** placement exam that measures your *current* AP CSA exam performance — not your content recall, but your ability to convert "I know this" into points under exam conditions. **This diagnostic — not the prior "~100% coverage" claim — is your authoritative baseline** (design spec §14). Whatever it surfaces seeds your first ~2 weeks of study (the ranked leak list at the bottom).
 
+**Diagnostic is provisional — single-question leaks need confirmation.** A topic leak inferred from a single missed question is provisional, not confirmed. Within the first 2 study sessions after this diagnostic, re-test any single-question leak with 2–3 fresh items on that topic before it drives more than one session of work. Route a topic to the content tutor (`../tutor-prompt.md`) only after **≥2 distinct misses** — a single slip is treated as a careless error (micro-teach + reps), not a content gap. At the Phase 1→2 boundary (end of summer 2026), re-run a fresh full diagnostic to re-rank the leaks before entering the school-year phase.
+
 **Format.** 14 multiple-choice questions + one short FRQ of each of the 4 types (Q1–Q4). All questions are **original** and strictly in-syllabus (only the Java Quick Reference library; none of the 19 exclusions; recursion is **trace-only**).
 
 **How to take it (exam conditions):**

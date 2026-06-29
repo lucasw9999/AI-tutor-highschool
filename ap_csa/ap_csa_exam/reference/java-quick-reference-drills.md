@@ -253,10 +253,10 @@ sc.close();
 
 | Method | Notes |
 |---|---|
-| `boolean equals(Object other)` | Override to compare content (Q2 FRQ) |
-| `String toString()` | Override to return a string representation (Q2 FRQ) |
+| `boolean equals(Object other)` | Inherited by every class (topic 1.12); you may CALL it on a String or object — never write or override it |
+| `String toString()` | Inherited by every class (topic 1.12); you may trigger it implicitly via String concatenation — never write or override it |
 
-Overriding (inheritance design) is excluded from the exam. But Q2 Class Design FRQ may ask you to implement `equals` or `toString` for your own class.
+**Overriding `equals` or `toString` is OUTSIDE the scope of the exam. Q2 Class Design FRQ will NOT ask you to write or override either method.** The two rows above exist only because every class inherits them from `Object` — that inheritance fact is in-syllabus (topic 1.12). Knowing you can *call* an inherited `toString` indirectly (e.g., `"Value: " + obj`) is fair game; writing or overriding one is a CED exclusion, the same as overriding any method. See also `frq-q2-class-design.md` ("We never override `toString` or `equals` — both are exclusions").
 
 ---
 
