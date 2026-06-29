@@ -3,10 +3,10 @@
 **Purpose.** This file is the readiness keystone. The [readiness dashboard in `../exam-skill-tracker.md`](../exam-skill-tracker.md) §(f) defines all pass/fail thresholds for readiness — this file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full, timed mocks do.
 
 **Qualifying-mock requirements (operational rules — thresholds in `../exam-skill-tracker.md` §(f)):**
-- **≥6 total logged mocks** before readiness is evaluated (no cherry-picking; every started timed mock is logged).
+- **≥6 total logged mocks** before readiness is evaluated (no cherry-picking; every started timed mock is logged). *Minimum-viable floor: see "Resilience & fallbacks" in `../exam-skill-tracker.md` §(f) — a reduced-confidence "likely-5, reduced sample" reading is available at ≥4 mocks with 3 consecutive qualifying if 6 is genuinely infeasible.*
 - The 3 consecutive qualifying mocks must **span ≥10 days** (durability, not a hot streak) and fall **within ~6 weeks**.
 - **No item reused** within the prior 8 weeks across the qualifying window.
-- **≥1 qualifying mock from official material** (CED samples, 2026 released FRQs, or AP Classroom); ≥1 proctored if obtainable.
+- **≥1 qualifying mock from official material** (CED samples, 2026 released FRQs, or AP Classroom); ≥1 proctored if obtainable. *If AP Classroom is unobtainable, use the official-anchor fallback — see §4b below.*
 - **≥1 qualifying mock within the final 2 weeks** before the exam.
 - Any mock that misses any criterion **breaks the 3-consecutive streak**; the count restarts at the next mock. Mocks may not be excluded as "off days."
 
@@ -92,6 +92,8 @@ The CED PDF (pp. 149–180) contains a pre-assembled sample form: **20 sample MC
 - You want the official College Board worked examples as your calibration standard.
 
 **Limitation:** 20 MCQ takes ~43 min (not 90 min); it is a half-length Section I. Score it against the scoring table below adjusted to 20 questions, and note the shorter format in the results log. Use it as "Mock 0" (calibration) rather than counting it toward the ≥3 full-length readiness requirement.
+
+**Official-anchor fallback exception:** when AP Classroom is unobtainable and no other full-length official MCQ exists, the CED 20-MCQ set — run timed and prorated to the 42-question/90-min scale — counts as the **official MCQ anchor** for the purposes of criterion C's official-material requirement and the difficulty-gap check (criterion 5). In this case log it as "official anchor = 2026 FRQ + CED MCQ set." See §4b and `../exam-skill-tracker.md` §(f) Resilience & fallbacks for the full procedure. Outside this fallback, the CED set does not count as a full-length qualifying mock.
 
 **Source:** <https://apcentral.collegeboard.org/media/pdf/ap-computer-science-a-course-and-exam-description.pdf> pp. 149–180. Also see [`official-sources-index.md`](official-sources-index.md).
 
@@ -189,7 +191,15 @@ gap = mean(bank-assembled mock composites) − official-mock composite
 - **If gap ≤ 7:** the bank is reasonably calibrated; proceed normally.
 - **If gap > 7:** the bank is presumed easier than official material. The bar shifts: the **official-mock composite must be ≥80%** (the mean no longer drives readiness), and **2 of the 3 qualifying mocks must be official** until a later window shows gap ≤ 7.
 
-Log the gap in the results table. When the official composite is not yet measured (no official mock taken), leave the gap column blank.
+**Official-anchor fallback (no full-length official MCQ available):** when using the official-anchor fallback (2026 FRQ + CED MCQ set per the Option C exception above), compute the gap on **FRQ percentage only**:
+
+```
+FRQ-only gap = mean(bank FRQ %) − official FRQ %
+```
+
+If this FRQ-only gap > 7, the elevated-bar rule applies to the FRQ side: the official FRQ% must be ≥80%, and ≥2 of the 3 qualifying mocks must be official-anchor mocks. The MCQ gap is left unmeasured; note "MCQ gap: N/A — no full-length official MCQ" in the results table. The composite-level gap check resumes if/when AP Classroom access is obtained.
+
+Log the gap (composite or FRQ-only, labeled appropriately) in the results table. When the official composite is not yet measured (no official mock taken), leave the gap column blank.
 
 ---
 

@@ -95,13 +95,13 @@ One row per recurring error pattern. Status advances from ⬜ → 🟢 / ⭐ as 
 | All 4 FRQ-type variants drilled (≥3 attempts each) | ⬜ | Q1–Q4; see (d) table above |
 | All MCQ styles drilled | ⬜ | Unit MCQ + Analyze-Code pack |
 
-**B. Grader-calibration gate** — must pass before any FRQ self-score counts toward the bar. The grader (examiner) must BLIND-grade an officially-scored sample response — a CED sample-FRQ response (which carries official point awards) or, once posted, a 2026 Scoring-Guidelines sample — and land **within ±1 point** of the official award on each FRQ. Re-test **every 8 weeks** and **immediately after College Board posts the 2026 Scoring Guidelines**. If off by >1 point, FRQ scores are presumed inflated: subtract the measured bias and do not count FRQ toward readiness until re-calibrated.
+**B. Grader-calibration gate** — must pass before any FRQ self-score counts toward the bar. The grader (examiner) must BLIND-grade an officially-scored sample response — a CED sample-FRQ response (which carries official point awards) or, once posted, a 2026 Scoring-Guidelines sample — and land **within ±1 point** of the official award on each FRQ. Re-test **every 8 weeks** and **immediately after College Board posts the 2026 Scoring Guidelines**. If off by >1 point, FRQ scores are presumed inflated: subtract the measured bias and do not count FRQ toward readiness until re-calibrated. (See "Gate-B persistent-failure exit" in the Resilience & fallbacks block below for what to do if the gate fails twice in a row.)
 
 | Gate B check | Status | Last calibrated | Bias measured |
 |---|---|---|---|
 | Grader within ±1 pt of official sample | ⬜ | — | — |
 
-**C. The bar** — evaluated on the **most recent 3 consecutive QUALIFYING full timed mocks** (90-min MCQ + 90-min FRQ). A mock is *qualifying* only if: it is fully **logged** (every started timed mock is logged — no cherry-picking; a mock that misses any criterion **breaks the 3-consecutive streak**, which restarts at the next mock); the 3 **span ≥10 days** (durability, not a hot streak); they fall **within ~6 weeks**; they are drawn from a **total of ≥6 logged mocks**; they reuse **no item seen in the prior 8 weeks**; and the window includes **≥1 mock from official material** (≥1 **proctored** official mock if obtainable). On those 3 mocks, ALL of the following must hold:
+**C. The bar** — evaluated on the **most recent 3 consecutive QUALIFYING full timed mocks** (90-min MCQ + 90-min FRQ). A mock is *qualifying* only if: it is fully **logged** (every started timed mock is logged — no cherry-picking; a mock that misses any criterion **breaks the 3-consecutive streak**, which restarts at the next mock); the 3 **span ≥10 days** (durability, not a hot streak); they fall **within ~6 weeks**; they are drawn from a **total of ≥6 logged mocks** (see Resilience & fallbacks below for the reduced-confidence floor); they reuse **no item seen in the prior 8 weeks**; and the window includes **≥1 mock from official material** (≥1 **proctored** official mock if obtainable; see Resilience & fallbacks for the official-anchor fallback when AP Classroom is unavailable). On those 3 mocks, ALL of the following must hold:
 
 | # | Criterion | Floor | Status | Evidence |
 |---|---|---|---|---|
@@ -121,13 +121,13 @@ One row per recurring error pattern. Status advances from ⬜ → 🟢 / ⭐ as 
 | Reading current (≤6 weeks) | ⬜ | — | — |
 | Final-2-week mock (if exam ≤2 weeks out) | ⬜ | — | — |
 
-**E. Burnout guard** — if composite **drops ≥8 points across 2 consecutive mocks while topic mastery is unchanged**, treat it as **fatigue, not skill regression** → prescribe a **3–5 day rest / light review**, do NOT add drilling.
+**E. Burnout guard** — if composite **drops ≥8 points across 2 consecutive mocks while topic mastery is unchanged**, treat it as **fatigue, not skill regression** → prescribe a **3–5 day rest / light review**, do NOT add drilling. (Burnout = a *drop*. A *flat* score below the bar is a plateau — handled separately in the Resilience & fallbacks block below.)
 
 | Burnout check | Status | Notes |
 |---|---|---|
 | No ≥8-point drop across 2 consecutive mocks (or prescribed rest taken) | ⬜ | — |
 
-**F. Recalibration (within 1 week of CB posting the 2026 score distribution / raw→5 conversion):** read the official composite needed for a 5 (`C5`); set the **bar = C5 + 8 points, floored at 78%** (never lower it below 78% without a second confirming source); **re-score all logged past mocks** against the official conversion (windows that no longer pass drop readiness below 100%); replace the estimated composite→score table and the CED-derived rubric with the official ones, then re-run gate B.
+**F. Recalibration (within 1 week of CB posting the 2026 score distribution / raw→5 conversion):** read the official composite needed for a 5 (`C5`); set the **bar = C5 + 8 points, floored at 78%** (never lower it below 78% without a second confirming source); **re-score all logged past mocks** against the official conversion (windows that no longer pass drop readiness below 100%); replace the estimated composite→score table and the CED-derived rubric with the official ones, then re-run gate B. (If the 2026 data has NOT posted by ~6 weeks before the exam — ≈ late March 2027 — see the "No-posting freeze" in the Resilience & fallbacks block below.)
 
 | Recalibration check | Status | Notes |
 |---|---|---|
@@ -135,6 +135,60 @@ One row per recurring error pattern. Status advances from ⬜ → 🟢 / ⭐ as 
 | Bar updated to C5 + 8 pts (floor 78%) | ⬜ | — |
 | All logged mocks re-scored against official conversion | ⬜ | — |
 | Gate B re-run against 2026 Scoring Guidelines | ⬜ | Watch `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` |
+
+---
+
+### Resilience & fallbacks
+
+These rules ensure a genuinely-ready student is never blocked by an unsatisfiable requirement. Reduced-confidence readings are labeled honestly — never upgraded to "high-confidence 5."
+
+**1. Minimum-viable readiness (relaxes criterion C's ≥6 mocks)**
+
+≥6 logged mocks is the high-confidence target. If 6 is genuinely infeasible on time, a **reduced-confidence "likely-5 (reduced sample)"** reading may be declared under these conditions — ALL other A–F criteria unchanged:
+
+- **Floor:** ≥4 logged mocks with **3 consecutive qualifying**.
+- **Span and freshness:** the 3 consecutive mocks still span ≥10 days; the window still falls within ~6 weeks; ≥1 mock falls within the final 2 weeks before the exam.
+- **Gate B still required;** ≥1 official-material mock still required.
+- **Splitting one mock** across two sittings (Section I one day, Section II the next) is a **last resort** — flag it explicitly in the results log; it does not count as a full mock toward the consecutive streak without that flag.
+- **Label:** this reading is **"likely-5, reduced sample"** — never "high-confidence 5." Document the reason in the log.
+
+**2. Official-anchor fallback (when AP Classroom is unobtainable)**
+
+Satisfies criterion C's ≥1 official-material mock requirement and criterion 5's difficulty-gap check:
+
+- **Official-material mock:** the **2026 released FRQs run as a timed Section II** (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4) PLUS the **CED 20-MCQ sample set run timed and prorated to the 42-question/90-min scale** together constitute one official anchor. Log as "official anchor = 2026 FRQ + CED MCQ set."
+- **Difficulty-gap (criterion 5) with no full-length official MCQ:** compute the gap on the **FRQ percentage only** — (mean bank FRQ %) − (official FRQ %). If that FRQ-only gap > 7, the elevated-bar rule applies to the FRQ side (official FRQ% must be ≥80%; ≥2 of 3 qualifying mocks must be official-anchor mocks until the gap closes). The MCQ gap is left blank/unmeasured; note this in the results log.
+- **Reconciliation with Option C ("doesn't count"):** the CED 20-MCQ set does **not** count as a qualifying full-length mock on its own. Under this fallback only — when it is the **only official MCQ available** — it serves as the MCQ anchor for the official-material requirement and the difficulty-gap calculation. If AP Classroom becomes available, switch to it immediately.
+
+**3. Gate-B persistent-failure exit (in criterion B)**
+
+If the grader-calibration gate fails **twice consecutively**, do not block FRQ readiness permanently:
+
+- **Adopt bias correction:** subtract the measured bias from every FRQ self-score. The bias-corrected score is the score that counts going forward.
+- **Accelerated re-test schedule:** re-test the gate every **4 weeks** (not 8) until it passes.
+- **Unstable bias:** if the measured bias differs substantially across FRQ types (e.g., over-awards Q2 but is accurate on Q1/Q3/Q4), seek **one externally-graded FRQ** (AP teacher or a vetted online provider) as a tiebreak. Apply per-type corrections as appropriate.
+- **Calibration standard:** the **CED sample rubrics remain the calibration standard until the 2026 Scoring Guidelines post**. Do NOT calibrate against the 2026 released FRQs (Account, Bottle, Attendance, GameBoard) while they lack official scoring guidelines — those problems are valid practice material, but their point awards are unverified.
+- Once the gate passes (bias within ±1 pt), resume normal 8-week re-test cadence.
+
+**4. Plateau guard (distinct from burnout guard E)**
+
+Burnout = a *drop* ≥8 pts. Plateau = *flat* below the bar. If the composite mean stays **flat (±3 pts) and below the readiness bar across ≥3 mocks over ≥4 weeks** with topic mastery unchanged, stop repeating the same drill mix. Escalate in order:
+
+1. Run a focused re-diagnostic on the **lowest unmet criterion** (use `diagnostic-exam.md` or a targeted unit drill).
+2. Route the weakest unit/practice/FRQ type to the **content tutor** (`../tutor-prompt.md`) as a content gap — the examiner cannot fix what it hasn't diagnosed as a knowledge hole.
+3. Acquire fresh official-style material (AP Classroom / Albert.io) to rule out **bank-overfit** (scoring well on the bank but stalling on fresh material).
+4. If the plateau is pacing-driven (finishing but just under the composite bar), switch to **pace-only drills** for 1–2 weeks before the next full mock.
+
+Log the tactic change in the session log with a note: "plateau guard triggered — escalation step N."
+
+**5. No-posting freeze (in criterion F)**
+
+Recalibration against the 2026 official data is an **upgrade, not a precondition**. If the 2026 Scoring Guidelines and/or score curve have NOT posted by **~6 weeks before the exam (≈ late March 2027)**:
+
+- **Freeze the conservative bar as final:** mean ≥82% / floor ≥78% composite; CED-derived rubric for gate B.
+- **Never lower a threshold** for lack of official data. The conservative bar was set with margin for exactly this uncertainty.
+- Continue watching the URLs in criterion F. If the data posts before the exam, run the recalibration then.
+- Do not hold readiness hostage to a posting that may not come on time.
 
 ---
 

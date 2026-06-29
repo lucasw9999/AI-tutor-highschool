@@ -115,6 +115,18 @@ FRQ code is typed in a **plain text editor** in Bluebook — no compiler, no aut
 4. **If you are off by >1 point:** subtract the measured bias from your past self-scores and **do not count FRQ toward readiness** until you re-calibrate and pass.
 5. **Re-test every 8 weeks** and **immediately after College Board posts the 2026 Scoring Guidelines** (watch URL below). The 2026 SG is the authoritative rubric once posted — re-run this gate against a 2026 SG sample as soon as it is available.
 
+**Gate-B persistent-failure exit (if the gate fails twice consecutively):**
+
+Failing twice in a row does not block FRQ readiness permanently. Instead:
+
+- **Adopt bias correction:** subtract the measured bias from every FRQ self-score. The bias-corrected score is the score that counts going forward.
+- **Accelerated re-test:** switch from the 8-week cycle to **every 4 weeks** until the gate passes.
+- **Unstable bias:** if the bias differs substantially across FRQ types (e.g., over-awards Q2 but accurate on Q1/Q3/Q4), seek **one externally-graded FRQ** (AP teacher or vetted online provider) as a tiebreak, then apply per-type corrections.
+- **Calibration standard:** the **CED sample rubrics are the calibration standard until the 2026 Scoring Guidelines post.** Do NOT calibrate against the 2026 released FRQs (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4) while they lack official scoring guidelines — they are valid practice but their point awards are unverified.
+- Once the gate passes (bias ≤ ±1 pt), resume the standard 8-week cadence.
+
+Full gate-B logic and the authority to declare readiness live in `../exam-skill-tracker.md` §(f).
+
 **Calibration log (update after each gate check):**
 
 | Date | Sample used | Your score | Official award | Gap | Passed? |

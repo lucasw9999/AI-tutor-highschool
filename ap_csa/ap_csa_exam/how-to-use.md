@@ -77,3 +77,28 @@ Run `diagnostic-exam.md` to establish the **real** current baseline (the prior c
 - Questions feel too easy → "harder / Analyze-Code emphasis."
 - Want timed feel → "drill me at pace, flag if I go over."
 - Killer error keeps repeating → "give me a focused rep set on [error type]."
+
+---
+
+## If you're behind — compression plan
+
+The readiness bar requires ≥6 mocks (or ≥4 for reduced-confidence "likely-5, reduced sample") with 3 consecutive qualifying in a ~6-week window, plus ≥1 mock in the final 2 weeks before the exam (see `exam-skill-tracker.md` §(f) for the authoritative criteria). This means:
+
+**Latest safe start for full-confidence path:** first full mock no later than **~mid-March 2027**. Starting later than mid-March compresses the 6-week window for 3 consecutive qualifying mocks and risks missing the final-2-week mock requirement.
+
+**If Phase 3's first full mock has not happened by January 2027, compress immediately:**
+
+1. **Drop untimed drilling.** Every session from this point is timed — MCQ at ≤129 s/question, FRQ in 90 min.
+2. **Weekly full timed mocks.** Move from the 2–3 week mock cadence to one full 3-hour mock per week.
+3. **Triage content repair.** Only fix the lowest-scoring unit or FRQ type — do not revisit content you are already hitting ≥75%.
+4. **Content-tutor gate:** if a week of timed work reveals a genuine knowledge hole (not a pacing or rubric issue), route it to `../tutor-prompt.md` for one focused session, then return to timed mocks immediately.
+5. **Reduced-confidence floor:** if the exam date makes ≥6 mocks impossible, aim for the reduced-confidence floor (≥4 mocks, 3 consecutive qualifying, labeled "likely-5, reduced sample") — see `exam-skill-tracker.md` §(f) Resilience & fallbacks.
+
+**Two hard deadlines — non-compressible (escalate to an adult if missed, not a study fix):**
+
+| Deadline | Window | Why it's hard |
+|---|---|---|
+| **Secure AP Classroom access** | Start of AP CSA course, ~September 2026 | Teacher-gated; no workaround for the real official item bank. Self-studying? Enroll with an AP-Course-Audit-approved online provider. |
+| **Register to sit the exam** | ~mid-November 2026 (through school AP Coordinator) | No registration = no May 2027 seat. Confirm the school administers AP CSA; if not, find an authorized school via the AP Course Ledger. |
+
+Missing either of these is not fixable by studying harder — it requires coordinating with a teacher, school, or provider immediately.
