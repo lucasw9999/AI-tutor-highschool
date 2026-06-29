@@ -1,6 +1,14 @@
 # Full Timed Mock Exams — Assembly, Timing, and Results Log
 
-**Purpose.** This file is the readiness keystone. The [readiness dashboard in `../exam-skill-tracker.md`](../exam-skill-tracker.md) requires the most recent **3 consecutive** full, timed practice exams — all taken within the last ~6 weeks — each hitting the conservative ≥80% composite bar and all other criteria. This file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full, timed mocks do.
+**Purpose.** This file is the readiness keystone. The [readiness dashboard in `../exam-skill-tracker.md`](../exam-skill-tracker.md) §(f) defines all pass/fail thresholds for readiness — this file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full, timed mocks do.
+
+**Qualifying-mock requirements (operational rules — thresholds in `../exam-skill-tracker.md` §(f)):**
+- **≥6 total logged mocks** before readiness is evaluated (no cherry-picking; every started timed mock is logged).
+- The 3 consecutive qualifying mocks must **span ≥10 days** (durability, not a hot streak) and fall **within ~6 weeks**.
+- **No item reused** within the prior 8 weeks across the qualifying window.
+- **≥1 qualifying mock from official material** (CED samples, 2026 released FRQs, or AP Classroom); ≥1 proctored if obtainable.
+- **≥1 qualifying mock within the final 2 weeks** before the exam.
+- Any mock that misses any criterion **breaks the 3-consecutive streak**; the count restarts at the next mock. Mocks may not be excluded as "off days."
 
 **Cross-links:** official sources → [`official-sources-index.md`](official-sources-index.md) · skill tracker → [`../exam-skill-tracker.md`](../exam-skill-tracker.md) · pacing strategy → [`../reference/pacing-and-strategy.md`](../reference/pacing-and-strategy.md) · FRQ rubric rules → [`../reference/frq-rubric-and-penalties.md`](../reference/frq-rubric-and-penalties.md) · sourcing/alignment guide → [`../reference/question-sources-and-access.md`](../reference/question-sources-and-access.md)
 
@@ -170,21 +178,52 @@ Composite = (MCQ score × 0.55) + (FRQ score × 0.45)
 
 ---
 
+## 4b. Difficulty-gap procedure (per `../exam-skill-tracker.md` §(f) criterion 5)
+
+After each official-material mock, compute the difficulty gap:
+
+```
+gap = mean(bank-assembled mock composites) − official-mock composite
+```
+
+- **If gap ≤ 7:** the bank is reasonably calibrated; proceed normally.
+- **If gap > 7:** the bank is presumed easier than official material. The bar shifts: the **official-mock composite must be ≥80%** (the mean no longer drives readiness), and **2 of the 3 qualifying mocks must be official** until a later window shows gap ≤ 7.
+
+Log the gap in the results table. When the official composite is not yet measured (no official mock taken), leave the gap column blank.
+
+---
+
+## 4c. Recalibration procedure (per `../exam-skill-tracker.md` §(f) criterion F)
+
+**Trigger:** within 1 week of College Board posting the 2026 score distribution / raw→5 conversion table.
+
+1. Read the official composite needed for a 5 (`C5`).
+2. Set the **bar = C5 + 8 points, floored at 78%** (never lower below 78% without a second confirming source).
+3. **Re-score all logged past mocks** against the official conversion. Any qualifying window that no longer passes the updated bar drops readiness below 100%.
+4. **Replace** the estimated composite→score table in §4 above and the CED-derived rubric in `../reference/frq-rubric-and-penalties.md` with the official ones.
+5. Re-run the grader-calibration gate (gate B in `../exam-skill-tracker.md` §(f)) against a 2026 Scoring-Guidelines sample.
+
+**Watch URLs:**
+- Score distribution: `apstudents.collegeboard.org/about-ap-scores/score-distributions`
+- 2026 Scoring Guidelines: `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf`
+
+---
+
 ## 5. Results log
 
-Fill one row after each mock. Use this to track progress toward the readiness bar — the **most recent 3 consecutive** full timed mocks (within ~6 weeks), each clearing every criterion — and to feed the skill tables in `../exam-skill-tracker.md`.
+Fill one row after each mock. Use this to track progress toward the readiness bar — the **most recent 3 consecutive** full timed mocks (within ~6 weeks), each clearing every criterion (thresholds in `../exam-skill-tracker.md` §(f)) — and to feed the skill tables in `../exam-skill-tracker.md`.
 
-| # | Date | Form used | MCQ raw | MCQ % | FRQ raw | FRQ % | Composite | Est. AP score | Weakest area (unit or FRQ type) | Tracker updated? |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | | | — / 42 | | — / 25 | | | | | ⬜ |
-| 2 | | | — / 42 | | — / 25 | | | | | ⬜ |
-| 3 | | | — / 42 | | — / 25 | | | | | ⬜ |
-| 4 | | | — / 42 | | — / 25 | | | | | ⬜ |
-| 5 | | | — / 42 | | — / 25 | | | | | ⬜ |
+| # | Date | Form used | Official / Proctored? | MCQ raw | MCQ % | FRQ raw | FRQ % | Composite | Difficulty gap vs official | P3 at-pace ok? (≤129 s) | FRQ grader calibrated? (±1 pt) | Est. AP score | Weakest area | Tracker updated? |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | | | | — / 42 | | — / 25 | | | | | | | | ⬜ |
+| 2 | | | | — / 42 | | — / 25 | | | | | | | | ⬜ |
+| 3 | | | | — / 42 | | — / 25 | | | | | | | | ⬜ |
+| 4 | | | | — / 42 | | — / 25 | | | | | | | | ⬜ |
+| 5 | | | | — / 42 | | — / 25 | | | | | | | | ⬜ |
 
 **"Tracker updated?"** = did you transfer the mock's MCQ accuracy by unit, FRQ scores by type, pacing result (finished in time / blanks), and any new killer-errors into `../exam-skill-tracker.md`? The tracker is worthless if the transfer is skipped.
 
-**Readiness gate:** The readiness bar requires ALL of the following to be simultaneously true on the **most recent 3 consecutive** full, timed mocks, all within the last ~6 weeks: (1) composite ≥ 80%; (2) MCQ overall ≥ 80%, each unit ≥ 75%, Analyze-Code (P3) ≥ 85% at pace, each other practice ≥ 70%; (3) each FRQ type ≥ 85% of its points, graded strictly to rubric — uncertain points not awarded; (4) both sections in time with ≤ 1 blank; (5) at least 1 of the 3 mocks built from official material (CED samples / 2026 FRQ / AP Classroom). All five must be green — see `../exam-skill-tracker.md` §(f) for the full checklist.
+**Readiness gate:** all pass/fail thresholds live in **`../exam-skill-tracker.md` §(f)** — that is the single authoritative source. All criteria A–F must be simultaneously green on the most recent 3 consecutive qualifying mocks.
 
 ---
 

@@ -34,7 +34,7 @@ Every **2–3 weeks**, run a full timed mock from `question-bank/practice-exams.
 - **Section II:** 4 FRQ, 90 min, typed in a plain editor — no autocomplete, no compiler, no run (mirrors the real digital exam).
 - Log the score breakdown to `exam-skill-tracker.md` and flag any new killer errors.
 
-Readiness = consistent high-scoring results across ≥3 full timed mocks, strictly graded, with no gaps in any unit, practice, or FRQ type. See `exam-skill-tracker.md` §(f) for the full five-part bar (criteria A–F).
+Readiness = consistent high-scoring results across ≥3 full timed mocks, strictly graded, with no gaps in any unit, practice, or FRQ type. See `exam-skill-tracker.md` §(f) for the full six-part bar (criteria A–F).
 
 ## Phased calendar — June 2026 to May 2027
 
