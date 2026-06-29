@@ -54,8 +54,8 @@ Run `diagnostic-exam.md` to establish the **real** current baseline (the prior c
 - Topic-complete MCQ by unit (`mcq-unit-1.md` through `mcq-unit-4.md`).
 - **1 graded FRQ per week** to the full rubric.
 - Two hard deadlines this phase:
-  - **Secure AP Classroom access** — the real official item bank is teacher-gated; enroll with an AP-Course-Audit-approved online provider early.
-  - **Register to sit the exam by ~mid-November 2026** — find an AP-administering school via the AP Course Ledger and contact its coordinator. The exam-order deadline is approximately mid-November. No deadline, no May 2027 seat.
+  - **Secure AP Classroom access** — the real official item bank is teacher-gated; get the join code from your AP CSA teacher at the start of the course. (Self-studying with no class? Enroll with an AP-Course-Audit-approved online provider instead.)
+  - **Register to sit the exam by ~mid-November 2026** — register through your school's AP Coordinator. **Confirm early that the school actually administers the AP CSA exam** (a small/private school may not offer every AP); if it doesn't, find a nearby authorized school via the AP Course Ledger. No deadline, no May 2027 seat. (See `reference/question-sources-and-access.md`.)
 
 ### Phase 3 — Winter 2026–27 (December–February)
 
