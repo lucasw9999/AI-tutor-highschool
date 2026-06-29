@@ -375,6 +375,158 @@ A) `true`   B) `false`   C) Compile error   D) A `NullPointerException` is throw
 
 ---
 
+**Q28. (Develop Code · 4.5 complete the segment — accumulate sum)**
+Fill the blank so `sum` ends up holding the total of all elements in `int[] a`.
+```java
+int sum = 0;
+for (int i = 0; i < a.length; i++) {
+    // BLANK
+}
+```
+A) `sum = a[i];`   B) `sum += a[i];`   C) `sum += i;`   D) `sum += a[sum];`
+
+**Answer: B.** Accumulate by adding each element to the running total: `sum += a[i];`. (A) overwrites, leaving only the last element; (C) adds indices, not values; (D) indexes by the running sum (likely out of bounds).
+`[topic 4.5][practice P2]`
+
+---
+
+**Q29. (Develop Code · 4.13 complete the segment — sum a 2D array)**
+Fill the inner-loop body so `total` holds the sum of every element of the rectangular array `int[][] g`.
+```java
+int total = 0;
+for (int r = 0; r < g.length; r++) {
+    for (int c = 0; c < g[r].length; c++) {
+        // BLANK
+    }
+}
+```
+A) `total += g[c][r];`   B) `total += g[r][c];`   C) `total += g[r];`   D) `total = g[r][c];`
+
+**Answer: B.** Row-major access of every cell uses `g[r][c]` with `r` the row and `c` the column. (A) swaps indices (out of bounds on non-square arrays); (C) adds a row reference (won't compile); (D) overwrites instead of accumulating.
+`[topic 4.13][practice P2]`
+
+---
+
+**Q30. (Develop Code · 4.10 complete the segment — count by condition in an ArrayList)**
+Fill the blank so `count` holds how many elements of `ArrayList<Integer> nums` are negative.
+```java
+int count = 0;
+for (int x : nums) {
+    // BLANK
+}
+```
+A) `if (x < 0) count++;`   B) `if (x > 0) count++;`   C) `count++;`   D) `if (x < 0) count = 0;`
+
+**Answer: A.** Increment only when the element is negative: `if (x < 0) count++;`. (B) counts positives; (C) counts all elements; (D) resets the counter.
+`[topic 4.10][practice P2]`
+
+---
+
+**Q31. (Design Code · 4.5/4.10 decompose a design — P1.A)**
+You must process a roster of scores to report (1) the average and (2) how many are above that average. Which overall design **best** decomposes the problem?
+A) A single loop that tries to compute the average and the above-average count in the same pass, dividing by the count before it is known.   B) First traverse once to compute the sum and derive the average; then traverse a second time comparing each score to the average and counting those above it.   C) Sort the scores, then assume the average is the middle element.   D) Store every score in a separate named variable and compare them by hand with an `if-else-if` chain.
+
+**Answer: B.** The average must be **fully known before** any score can be compared to it, so a clean decomposition is **two passes** (compute average, then count above it). (A) compares before the average exists; (C) confuses median with mean; (D) does not generalize to an arbitrary roster size.
+`[topic 4.5][practice P1]`
+
+---
+
+**Q32. (Use Computers Responsibly · 4.1 open-source license / IP violation)**
+A team ships a product that statically links a library released under a license requiring that **any distributed product including it must publish its own source code**. They distribute the binary but keep all their source closed. This is best described as:
+A) Fine, because compiled binaries are exempt from all software licenses.   B) A violation of the library's license terms (and thus the authors' intellectual-property rights).   C) An algorithmic-bias problem.   D) A runtime exception waiting to happen.
+
+**Answer: B.** Open-source licenses impose **conditions**; here the condition (publish source of the combined work) was ignored, violating the license and the authors' **IP** rights. Compiled distribution is still distribution — not exempt. (This is a license-obligation scenario, distinct from a plain no-attribution copy.)
+`[topic 4.1][practice P5]`
+
+---
+
+**Q33. (Use Computers Responsibly · 4.1 unintended consequence)**
+A social app adds an "engagement" feed that always shows whatever keeps users scrolling longest. Months later, users report it mostly surfaces outrage-bait and they feel worse, even though daily-use time rose. Which best describes this?
+A) A syntax error in the ranking code.   B) An **unintended consequence**: the system optimized exactly what it was told to (time-on-app) but produced real-world harm the designers did not intend.   C) A privacy breach.   D) Proof the algorithm is unbiased.
+
+**Answer: B.** The system worked **as specified** (maximize scrolling) yet caused harm nobody intended — the definition of an **unintended consequence** that responsible designers must anticipate. It is neither a code error, a privacy breach, nor evidence of fairness. (Distinct from the navigation-congestion and training-bias scenarios elsewhere.)
+`[topic 4.1][practice P5]`
+
+---
+
+**Q34. (Use Computers Responsibly · 4.1 data-privacy-vs-utility tradeoff)**
+A hospital wants to publish a patient data set so researchers can study a disease, but raw records identify individuals. Which option best balances **research utility against privacy**?
+A) Publish the full raw records, since research benefit outweighs everything.   B) Publish nothing, since any disclosure risk is unacceptable.   C) Release a version with direct identifiers removed/aggregated so trends remain studiable while individuals are not re-identifiable.   D) Replace every value with a random number so no real data remains.
+
+**Answer: C.** The responsible tradeoff **retains analytic value** while **protecting privacy** by de-identifying/aggregating before release. (A) ignores privacy; (B) ignores utility entirely; (D) destroys the data's usefulness. (A genuine utility-vs-privacy balance, distinct from pure privacy-risk or bias items.)
+`[topic 4.1][practice P5]`
+
+---
+
+**Q35. (Analyze Code · 4.6 Scanner nextDouble over a file)**
+A file `temps.txt` contains exactly:
+```
+98.6 99.1 100.4
+```
+What does this print? (inside a method that `throws IOException`)
+```java
+Scanner sc = new Scanner(new File("temps.txt"));
+double sum = 0.0;
+while (sc.hasNext()) {
+    sum += sc.nextDouble();
+}
+sc.close();
+System.out.println(sum);
+```
+A) `298.1`   B) `298`   C) `100.4`   D) `3`
+
+**Answer: A.** `nextDouble()` reads each whitespace-delimited token as a double: 98.6 + 99.1 + 100.4 = `298.1`. The `hasNext()` loop reads to end of file, then `close()`.
+`[topic 4.6][practice P3]`
+
+---
+
+**Q36. (Analyze Code · 4.6 Scanner nextBoolean over a file)**
+A file `flags.txt` contains exactly:
+```
+true false true true
+```
+What does this print? (inside a method that `throws IOException`)
+```java
+Scanner sc = new Scanner(new File("flags.txt"));
+int trues = 0;
+while (sc.hasNext()) {
+    if (sc.nextBoolean()) trues++;
+}
+sc.close();
+System.out.println(trues);
+```
+A) `3`   B) `4`   C) `1`   D) `2`
+
+**Answer: A.** `nextBoolean()` reads each token as a boolean; three are `true` → `trues = 3`.
+`[topic 4.6][practice P3]`
+
+---
+
+**Q37. (Analyze Code · 4.6 one nextLine per line)**
+A file `names.txt` contains exactly these three lines:
+```
+Ada Lovelace
+Alan Turing
+Grace Hopper
+```
+What does this print? (inside a method that `throws IOException`)
+```java
+Scanner sc = new Scanner(new File("names.txt"));
+int lines = 0;
+while (sc.hasNext()) {
+    String whole = sc.nextLine();   // read an entire line, spaces included
+    lines++;
+}
+sc.close();
+System.out.println(lines);
+```
+A) `3`   B) `6`   C) `1`   D) `2`
+
+**Answer: A.** Each `nextLine()` consumes one full line (including the internal space), so the loop runs once per line → `lines = 3`. (`nextLine` is used here as the **only** read method on this Scanner — never mixed with token methods.)
+`[topic 4.6][practice P3]`
+
+---
+
 ## Coverage note
 
-Unit 4 topics covered here: **4.1 (Q1,Q2), 4.2 (Q3,Q4), 4.3 (Q5,Q6,Q26), 4.4 (Q7,Q27), 4.5 (Q8,Q9,Q26), 4.6 (Q10), 4.7 (Q11,Q12), 4.8 (Q13), 4.9 (Q14,Q15), 4.10 (Q16,Q17), 4.11 (Q18), 4.12 (Q19), 4.13 (Q20,Q21), 4.14 (Q22), 4.15 (Q23), 4.16 (Q24), 4.17 (Q25)** — all 17 topics. Practices: **P1** (Q9, Q15, Q26), **P2** (Q12), **P3** (most), **P4** (Q3, Q21), **P5** (Q1, Q2 — privacy/bias/data fitness, topic 4.1). 27 items (weighted heavy, matching U4's 30–40% share).
+Unit 4 topics covered here: **4.1 (Q1,Q2,Q32,Q33,Q34), 4.2 (Q3,Q4), 4.3 (Q5,Q6,Q26), 4.4 (Q7,Q27), 4.5 (Q8,Q9,Q26,Q28,Q31), 4.6 (Q10,Q35,Q36,Q37), 4.7 (Q11,Q12), 4.8 (Q13), 4.9 (Q14,Q15), 4.10 (Q16,Q17,Q30), 4.11 (Q18), 4.12 (Q19), 4.13 (Q20,Q21,Q29), 4.14 (Q22), 4.15 (Q23), 4.16 (Q24), 4.17 (Q25)** — all 17 topics. Practices: **P1** (Q9, Q15, Q26, Q31 — incl. a 1.A design/decomposition item), **P2** (Q12, Q28, Q29, Q30), **P3** (most), **P4** (Q3, Q21), **P5** (Q1, Q2 privacy/bias/data fitness; Q32 open-source license/IP; Q33 unintended consequence; Q34 privacy-vs-utility tradeoff — topic 4.1). 37 items (weighted heavy, matching U4's 30–40% share).

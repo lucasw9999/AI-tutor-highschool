@@ -1267,6 +1267,256 @@ A) `[2, 5, 6, 9]`   B) `[2, 5, 9, 6]`   C) `[6, 2, 5, 9]`   D) `[2, 6, 5, 9]`
 
 ---
 
+## Q. Which change fixes the bug? (diagnose — Practice 3.D)
+
+Each item gives buggy code plus the *intended* behavior. Pick the one change that makes it meet the spec.
+
+**Q81. (Analyze Code · 4.5 fix an off-by-one bound)**
+This is intended to set `sum` to the total of all elements of `a`, but it currently throws an `ArrayIndexOutOfBoundsException`. Which single change fixes it?
+```java
+int[] a = {3, 6, 9, 12};
+int sum = 0;
+for (int i = 0; i <= a.length; i++) {
+    sum += a[i];
+}
+```
+A) Change the loop condition to `i < a.length`   B) Change `i = 0` to `i = 1`   C) Change `sum += a[i]` to `sum += a[i + 1]`   D) Change `a.length` to `a.length + 1`
+
+**Answer: A.** Valid indices are 0..3; `i <= a.length` lets `i` reach 4 (out of bounds). `i < a.length` stops at index 3. (B) skips index 0; (C) makes the access worse; (D) extends the bound further out.
+`[topic 4.5][practice P3]`
+
+---
+
+**Q82. (Analyze Code · 2.5 fix a condition-order / short-circuit bug)**
+This is intended to print `"long enough"` only when `s` is non-null **and** has more than 3 characters, never throwing an exception. It currently throws a `NullPointerException` when `s` is `null`. Which change fixes it?
+```java
+String s = null;
+if (s.length() > 3 && s != null) {
+    System.out.println("long enough");
+}
+```
+A) Swap the operands to `s != null && s.length() > 3`   B) Change `&&` to `||`   C) Change `> 3` to `>= 3`   D) Change `s.length()` to `s.substring(0)`
+
+**Answer: A.** The null check must come **first** so `&&` short-circuits before `s.length()` is called. The original calls `s.length()` on `null`. (B) `||` would still evaluate `s.length()`; (C)/(D) do not avoid the null call.
+`[topic 2.5][practice P3]`
+
+---
+
+**Q83. (Analyze Code · 4.9 fix remove-while-iterating)**
+This is intended to remove **every** `0` from `list`, but with `list = [0, 0, 4]` it leaves a `0` behind. Which change fixes it?
+```java
+for (int i = 0; i < list.size(); i++) {
+    if (list.get(i) == 0) {
+        list.remove(i);
+    }
+}
+```
+A) Iterate backward: `for (int i = list.size() - 1; i >= 0; i--)`   B) Change `list.remove(i)` to `list.set(i, 0)`   C) Change the condition to `i <= list.size()`   D) Add `i++;` inside the `if`
+
+**Answer: A.** Forward removal with `i++` skips the element shifted into the removed slot (`[0,0,4]` → remove index 0 → `[0,4]`, `i` advances to 1 and skips the surviving `0`). Iterating **backward** never skips a shifted element. (B) removes nothing; (C) goes out of bounds; (D) skips even more.
+`[topic 4.9][practice P3]`
+
+---
+
+## R. Describe the behavior / state the precondition (Practices 4.A / 4.B)
+
+**Q84. (Analyze Code · 4.14 state the precondition — binary search)**
+A method `int bSearch(int[] a, int target)` uses binary search and returns the index of `target` or `-1`. It works correctly only if ___ — which precondition must hold?
+A) `a` contains no duplicate values   B) `a` is sorted in ascending order   C) `target` is positive   D) `a.length` is a power of 2
+
+**Answer: B.** *Model answer:* Binary search assumes the array is **sorted** (ascending here); it halves the search space by comparing against the middle, which is only valid on ordered data. Duplicates, sign of `target`, and length being a power of 2 are irrelevant to correctness.
+`[topic 4.14][practice P4]`
+
+---
+
+**Q85. (Analyze Code · 2.9 state the precondition — average)**
+A method `double average(int[] a)` returns `sum / a.length` cast to a double. It works correctly only if ___ — which precondition must hold?
+A) `a` is sorted   B) `a.length > 0` (the array is non-empty)   C) every element is positive   D) `a.length` is even
+
+**Answer: B.** *Model answer:* Dividing by `a.length` throws an `ArithmeticException` (integer divide-by-zero) when the array is **empty**, so the precondition is `a.length > 0`. Order, sign, and parity of the length do not affect correctness.
+`[topic 2.9][practice P4]`
+
+---
+
+**Q86. (Analyze Code · 4.4 describe behavior — enhanced-for on primitives)**
+A method receives `int[] a` and runs `for (int x : a) { x = x * 2; }`, then the caller reads `a`. Describe the effect on the caller's array.
+A) Every element is doubled.   B) The array is unchanged, because `x` is a copy of each primitive element.   C) Only the first element changes.   D) A `ConcurrentModificationException` is thrown.
+
+**Answer: B.** *Model answer:* The enhanced-for variable `x` is a **copy** of each primitive element; reassigning `x` never writes back to the array, so the caller sees the array **unchanged**. (Object elements differ — calling a mutator through the loop variable would affect the shared object.)
+`[topic 4.4][practice P4]`
+
+---
+
+**Q87. (Analyze Code · 3.6 describe behavior — returning a field reference)**
+A `Roster` has `private int[] ids` and a method `public int[] getIds() { return ids; }` that returns the field directly (no copy). A caller does `int[] r = roster.getIds(); r[0] = -1;`. Describe the effect.
+A) The roster's internal array is unaffected, because arrays are copied on return.   B) The roster's internal `ids[0]` becomes `-1`, because the returned reference aliases the field's array.   C) A compile error occurs.   D) A `NullPointerException` is thrown.
+
+**Answer: B.** *Model answer:* Returning the field reference hands the caller an **alias** to the same array; mutating `r[0]` mutates `ids[0]` too. Returning a defensive copy would have protected the object's data.
+`[topic 3.6][practice P4]`
+
+---
+
+## S. Shared-stem sets
+
+**SET 1 (Q88–Q90).** Use this class for all three questions.
+```java
+public class Inventory {
+    private int[] counts;                       // one count per item slot
+    public Inventory(int[] c) { counts = c; }   // stores the reference
+    public int total() {
+        int t = 0;
+        for (int x : counts) t += x;
+        return t;
+    }
+    public int slot(int i) { return counts[i]; }
+}
+```
+
+**Q88. (Analyze Code · 4.5 set — what does it return)**
+For `int[] c = {2, 0, 5, 1};` and `Inventory inv = new Inventory(c);`, what does `inv.total()` return?
+A) `8`   B) `4`   C) `7`   D) `0`
+
+**Answer: A.** `total()` sums every element: 2+0+5+1 = `8`.
+`[topic 4.5][practice P3]`
+
+---
+
+**Q89. (Analyze Code · 3.6 set — describe the aliasing behavior)**
+Continuing SET 1: after `c[0] = 100;` is executed (the same `c` passed to the constructor), what does `inv.slot(0)` return?
+A) `2`   B) `100`   C) `0`   D) A `NullPointerException` is thrown.
+
+**Answer: B.** The constructor stored the **reference**, so the field `counts` aliases `c`; mutating `c[0]` changes the object's data → `slot(0)` returns `100`.
+`[topic 3.6][practice P3]`
+
+---
+
+**Q90. (Analyze Code · 4.3 set — state the precondition)**
+Continuing SET 1: `inv.slot(i)` works correctly only if ___ — which precondition must hold?
+A) `i` is even   B) `0 <= i && i < counts.length`   C) `counts` is sorted   D) `i` is positive
+
+**Answer: B.** *Model answer:* `slot(i)` indexes `counts[i]`; it must be a **valid index** (`0 <= i < counts.length`), or it throws an `ArrayIndexOutOfBoundsException`. Parity, order, and sign are irrelevant.
+`[topic 4.3][practice P4]`
+
+---
+
+**SET 2 (Q91–Q92).** Use this segment for both questions.
+```java
+String[] words = {"fig", "apple", "kiwi", "apple"};
+```
+
+**Q91. (Analyze Code · 1.15 set — count matches with .equals)**
+How many entries of `words` equal `"apple"` (use `.equals`)?
+```java
+int n = 0;
+for (String w : words) {
+    if (w.equals("apple")) n++;
+}
+System.out.println(n);
+```
+A) `1`   B) `2`   C) `3`   D) `0`
+
+**Answer: B.** Two entries (indices 1 and 3) equal `"apple"` by contents → `n = 2`. (`.equals` compares contents, the correct String test.)
+`[topic 1.15][practice P3]`
+
+---
+
+**Q92. (Analyze Code · 4.5 set — which change fixes a guard)**
+Continuing SET 2: this loop is intended to print the index of the first entry whose length is greater than 4, or `-1` if none. It currently prints the **last** matching index. Which change fixes it?
+```java
+int idx = -1;
+for (int i = 0; i < words.length; i++) {
+    if (words[i].length() > 4) idx = i;
+}
+System.out.println(idx);
+```
+A) Add `break;` immediately after `idx = i;`   B) Change `> 4` to `>= 4`   C) Change `idx = i` to `idx = words[i].length()`   D) Start the loop at `i = 1`
+
+**Answer: A.** Without stopping, `idx` is overwritten by every match, leaving the **last**. Adding `break;` after the first assignment captures the **first** match. (B) changes the threshold; (C) stores the wrong value; (D) skips index 0.
+`[topic 4.5][practice P3]`
+
+---
+
+## T. Multi-topic synthesis (≥2 topics)
+
+**Q93. (Analyze Code · 4.13 + 1.14 + 2.6 — 2D array of objects, null guard, .equals)**
+A `String[][] grid` may contain `null` entries. What does this print?
+```java
+String[][] grid = {{"a", null}, {"b", "a"}};
+int count = 0;
+for (int r = 0; r < grid.length; r++) {
+    for (int c = 0; c < grid[r].length; c++) {
+        if (grid[r][c] != null && grid[r][c].equals("a")) count++;
+    }
+}
+System.out.println(count);
+```
+A) `1`   B) `2`   C) `3`   D) A `NullPointerException` is thrown.
+
+**Answer: B.** The `!= null` guard short-circuits before `.equals`, so the `null` is skipped safely. Entries equal to `"a"`: `grid[0][0]` and `grid[1][1]` → `count = 2`.
+`[topic 4.13][practice P3]`
+
+---
+
+**Q94. (Analyze Code · 4.16 + 4.4 — recursion trace over an array)**
+What does `sumFrom(a, 0)` return for `int[] a = {4, 2, 7}`?
+```java
+public static int sumFrom(int[] a, int i) {
+    if (i >= a.length) return 0;
+    return a[i] + sumFrom(a, i + 1);
+}
+```
+A) `13`   B) `6`   C) `11`   D) `0`
+
+**Answer: A.** `sumFrom(a,0) = 4 + (2 + (7 + 0)) = 13` (base case at `i >= length` returns 0). Each call adds one element, then recurses on the next index.
+`[topic 4.16][practice P3]`
+
+---
+
+**Q95. (Analyze Code · 4.10 + 1.15 + 2.10 — ArrayList + String methods)**
+What is printed?
+```java
+ArrayList<String> list = new ArrayList<String>();
+list.add("cat,3");
+list.add("dog,5");
+int total = 0;
+for (String s : list) {
+    String[] parts = s.split(",");
+    total += Integer.parseInt(parts[1]);
+}
+System.out.println(total);
+```
+A) `8`   B) `35`   C) `2`   D) `53`
+
+**Answer: A.** Each element splits on the literal comma; `parts[1]` is the number; `Integer.parseInt` → 3 and 5; total = `8`.
+`[topic 4.10][practice P3]`
+
+---
+
+## U. String.compareTo trace
+
+**Q96. (Analyze Code · 1.15 compareTo sign)**
+Which is true about the sign of `"apple".compareTo("banana")`?
+```java
+System.out.println("apple".compareTo("banana"));
+```
+A) It is **negative**, because `"apple"` comes before `"banana"` lexicographically.   B) It is **0**, because both have content.   C) It is **positive**, because `"apple"` is shorter.   D) It throws an exception.
+
+**Answer: A.** `compareTo` returns the difference at the first differing position; `'a'` < `'b'`, so the result is **negative** (`"apple"` orders before `"banana"`). Equal strings give 0; a later-ordering receiver gives positive.
+`[topic 1.15][practice P3]`
+
+---
+
+## V. Merge sort trace
+
+**Q97. (Analyze Code · 4.17 merge-sort level trace)**
+Merge sort on `{6, 2, 7, 1}` recursively splits into single elements, then merges in pairs. After the **first level of merges** (each adjacent pair merged into a sorted pair), which pair of sub-results is correct?
+A) `{2, 6}` and `{1, 7}`   B) `{6, 2}` and `{7, 1}`   C) `{2, 7}` and `{1, 6}`   D) `{1, 2}` and `{6, 7}`
+
+**Answer: A.** The halves are `{6,2}` and `{7,1}`; merging each sorted pair gives `{2,6}` and `{1,7}`. (The final merge of those two would produce `{1,2,6,7}`, but the question asks for the first level only.)
+`[topic 4.17][practice P4]`
+
+---
+
 ## Coverage note
 
-This pack alone covers (≥1 trace each): **1.3, 1.5, 1.6, 1.9, 1.11, 1.14, 1.15, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 3.4, 3.6, 3.8, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15, 4.16, 4.17.** Practices used: **P3** (most), **P4** (Q38, Q63, Q74, Q76, Q77, Q80 — describe behavior / state effect). The remaining topics (1.1, 1.2, 1.4, 1.7, 1.8, 1.10, 1.12, 1.13, 2.1, 2.3, 3.1, 3.2, 3.3, 3.5, 3.7, 3.9, 4.1, 4.2) and practices P1/P2/P5 are covered in the per-unit packs.
+This pack alone covers (≥1 trace each): **1.3, 1.5, 1.6, 1.9, 1.11, 1.14, 1.15, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 3.4, 3.6, 3.8, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15, 4.16, 4.17.** Practices used: **P3** (most), **P4** (Q38, Q63, Q74, Q76, Q77, Q80, Q84–Q87, Q90, Q97 — describe behavior / state precondition). New diagnostic styles (Q81–Q97): **which-change-fixes-the-bug** (Q81–Q83, Q92), **state-the-precondition / describe-behavior** (Q84–Q87, Q90), **shared-stem sets** (Q88–Q90, Q91–Q92), **multi-topic synthesis** (Q93–Q95), **`String.compareTo` sign** (Q96), and **merge-sort level trace** (Q97). The remaining topics (1.1, 1.2, 1.4, 1.7, 1.8, 1.10, 1.12, 1.13, 2.1, 2.3, 3.1, 3.2, 3.3, 3.5, 3.7, 3.9, 4.1, 4.2) and practices P1/P2/P5 are covered in the per-unit packs.
