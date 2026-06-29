@@ -17,12 +17,11 @@ The real leak is converting "I know the concept" into points under exam conditio
 
 ## The win condition (honest)
 
-Nobody can literally guarantee a 5 — College Board has not yet published the redesigned score curve. The operational target is: **Lucas consistently scores in the 5 range on full, timed, official-style practice exams**, proven by four concrete metrics tracked in `exam-skill-tracker.md`:
+**What 100% means here:** NOT "covered the topics" — that's the old course's 100%, and it produced a 2–3. Here, 100% means Lucas scores ≥80% composite (MCQ 55% + FRQ 45%) on the most recent 3 consecutive full, timed mocks, while also hitting ≥80% MCQ overall, ≥75% per unit, ≥85% Analyze-Code, ≥70% per other practice, ≥85% per FRQ type (rubric-strict), both sections in time with ≤1 blank, and at least one of those mocks built from official material — ALL simultaneously. Only full, timed mocks move the readiness number; drills do not.
 
-1. ≥3 full timed mocks with weighted composite ~68%+ (estimate until CB publishes the real cutoff).
-2. Analyze-Code MCQ accuracy ≥85% at pace (~2:09/question).
-3. Each FRQ type averaging ≥85% of points across ≥3 attempts.
-4. Full sections finished within time with ≤1 blank.
+The full hardened definition, the coverage prerequisite, and the per-criterion checklist live in `exam-skill-tracker.md` §(f).
+
+**Honest caveat:** meeting that bar is the strongest real predictor of a 5, not a mathematical guarantee. The ≥80% composite target is deliberately conservative: historical AP CSA 5-cutoffs have been roughly 65–72% composite, and College Board has not published the redesigned curve. The extra cushion is the insurance against test-day variance and curve uncertainty.
 
 ## File index
 

@@ -1,6 +1,6 @@
 # Full Timed Mock Exams — Assembly, Timing, and Results Log
 
-**Purpose.** This file is the readiness keystone. The [readiness dashboard in `../exam-skill-tracker.md`](../exam-skill-tracker.md) requires ≥3 full, timed practice exams with a weighted composite in the estimated 5-range. This file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current.
+**Purpose.** This file is the readiness keystone. The [readiness dashboard in `../exam-skill-tracker.md`](../exam-skill-tracker.md) requires the most recent **3 consecutive** full, timed practice exams — all taken within the last ~6 weeks — each hitting the conservative ≥80% composite bar and all other criteria. This file tells you how to assemble a mock, run it under real conditions, score it, and log the result so `../exam-skill-tracker.md` stays current. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full, timed mocks do.
 
 **Cross-links:** official sources → [`official-sources-index.md`](official-sources-index.md) · skill tracker → [`../exam-skill-tracker.md`](../exam-skill-tracker.md) · pacing strategy → [`../reference/pacing-and-strategy.md`](../reference/pacing-and-strategy.md) · FRQ rubric rules → [`../reference/frq-rubric-and-penalties.md`](../reference/frq-rubric-and-penalties.md) · sourcing/alignment guide → [`../reference/question-sources-and-access.md`](../reference/question-sources-and-access.md)
 
@@ -153,14 +153,15 @@ Composite = (MCQ score × 0.55) + (FRQ score × 0.45)
 
 **Example:** 32/42 MCQ + 18/25 FRQ → MCQ = 76.2, FRQ = 72.0 → Composite = 76.2 × 0.55 + 72.0 × 0.45 = **41.9 + 32.4 = 74.3%**
 
-### Step 4 — Estimated AP score
+### Step 4 — Estimated AP score and readiness bar
 
-**Estimated 5-range cutoff: ~68% composite.** This is an estimate based on historical AP exam patterns. The College Board has not yet published the score curve for the redesigned exam. Re-baseline when the official curve is published.
+**Readiness bar (qualifying threshold): ≥80% composite.** This is deliberately conservative: historical AP CSA 5-cutoffs have been roughly 65–72% composite, and College Board has not published the score curve for the redesigned exam. The extra cushion absorbs test-day variance and curve uncertainty. This is an estimate, not a published number.
 
-| Estimated composite | Estimated AP score |
+| Composite | Estimated AP score |
 |---|---|
-| ≥ ~68% | 5 (estimate) |
-| ~55–67% | 4 (estimate) |
+| ≥ 80% (readiness bar) | 5 (high-confidence estimate) |
+| ~65–79% | 5 possible, but below the conservative readiness bar |
+| ~55–64% | 4 (estimate) |
 | ~42–54% | 3 (estimate) |
 | ~28–41% | 2 (estimate) |
 | < ~28% | 1 (estimate) |
@@ -183,7 +184,7 @@ Fill one row after each mock. Use this to track progress toward the ≥3-full-mo
 
 **"Tracker updated?"** = did you transfer the mock's MCQ accuracy by unit, FRQ scores by type, pacing result (finished in time / blanks), and any new killer-errors into `../exam-skill-tracker.md`? The tracker is worthless if the transfer is skipped.
 
-**Readiness gate:** "≥3 full timed practice exams with composite ≥ ~68%" is metric #1 in `../exam-skill-tracker.md` §(f). You must also meet metrics 2–4 (Analyze-Code ≥85% at pace; each FRQ type ≥85% across ≥3 attempts; no time-outs with ≤1 blank). All four must be green before declaring readiness.
+**Readiness gate:** The readiness bar requires ALL of the following to be simultaneously true on the **most recent 3 consecutive** full, timed mocks, all within the last ~6 weeks: (1) composite ≥ 80%; (2) MCQ overall ≥ 80%, each unit ≥ 75%, Analyze-Code (P3) ≥ 85% at pace, each other practice ≥ 70%; (3) each FRQ type ≥ 85% of its points, graded strictly to rubric — uncertain points not awarded; (4) both sections in time with ≤ 1 blank; (5) at least 1 of the 3 mocks built from official material (CED samples / 2026 FRQ / AP Classroom). All five must be green — see `../exam-skill-tracker.md` §(f) for the full checklist.
 
 ---
 
