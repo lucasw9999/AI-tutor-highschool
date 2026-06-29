@@ -123,7 +123,7 @@ Take a 10-minute break between sections (mirrors the real exam).
 
 ### Section II — FRQ (90 min)
 
-- Allocate roughly: Q1 ~20 min, Q2 ~22 min, Q3 ~18 min, Q4 ~22 min, review ~8 min.
+- Allocate roughly: Q1 ~22 min, Q2 ~22 min, Q3 ~18 min, Q4 ~20 min, review ~8 min.
 - Write in a plain text editor with no compiler, no syntax highlighting, no autocomplete.
 - **Never leave an FRQ blank.** Even a partial, commented skeleton earns partial credit. A blank earns zero.
 - Use clean indentation — the digital exam reader uses indentation as a signal of intent.

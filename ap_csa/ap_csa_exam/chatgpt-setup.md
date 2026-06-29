@@ -41,6 +41,9 @@ Same idea as the SAT and AP Precalc tutors. Requires **ChatGPT Plus** (no Plus? 
   - `exam-day-protocol.md`
   - `inheritance-hashmap-supplement.md`
 
+  **Parent file (1) — from the `ap_csa/` folder one level up:**
+  - `../mastery-tracker.md` (the content-mastery tracker; the examiner reads it alongside `exam-skill-tracker.md` to tell a careless slip from a true content gap)
+
 ## Step 3 — Test (right Preview panel)
 
 Type **"let's start"** to confirm it presents a diagnostic question (not a lecture). It should ask you to answer cold before explaining anything.
@@ -68,4 +71,4 @@ Option 1 is simpler for daily sessions; option 2 keeps the baseline clean for lo
 
 Paste `exam-tutor-prompt.md` (below the `---`) **plus** `exam-blueprint.md` and the **one** pack you are drilling that day, then "let's start." Free chats cannot hold all files at once, so load only what the session needs.
 
-> Claude works identically — set it up as a Claude **Project**: paste `exam-tutor-prompt.md` as the project instructions, then upload all 21 knowledge files above. Use it the same way.
+> Claude works identically — set it up as a Claude **Project**: paste `exam-tutor-prompt.md` as the project instructions, then upload all 23 knowledge files above (the 22 in `ap_csa_exam/` plus the parent `../mastery-tracker.md`). Use it the same way.
