@@ -183,6 +183,99 @@ public static ArrayList<String> titlesInGenre(ArrayList<Book> library, String ge
 
 ---
 
+### Practice FRQ 4 — `countMatchingPair` (5 points)  · **two parallel lists, matched by index**
+
+Two parallel `ArrayList`s describe the same students by position: `names.get(i)` is the name of student `i`, and `scores.get(i)` is that student's score. The two lists have the **same size**. Write `countMatchingPair`, which returns how many students have a score **at least** `passing` **and** whose name **equals** `targetName` (exact match). (Useful when several students share a name and you want only those who passed.)
+
+```java
+/** Returns the number of indices i where names.get(i) equals targetName
+ *  AND scores.get(i) >= passing.
+ *  Precondition: names and scores are non-null, the same size, with no null elements.
+ */
+public static int countMatchingPair(ArrayList<String> names,
+                                    ArrayList<Integer> scores,
+                                    String targetName, int passing) {
+    /* to be implemented */
+}
+```
+
+Example: if `names` is `["Ana","Bo","Ana","Ana"]` and `scores` is `[90, 50, 40, 75]`, then `countMatchingPair(names, scores, "Ana", 60)` returns `2` (index 0 with 90 and index 3 with 75; index 2 is "Ana" but 40 < 60).
+
+#### Sample solution
+
+```java
+public static int countMatchingPair(ArrayList<String> names,
+                                    ArrayList<Integer> scores,
+                                    String targetName, int passing) {
+    int count = 0;
+    for (int i = 0; i < names.size(); i++) {
+        if (names.get(i).equals(targetName) && scores.get(i) >= passing) {
+            count++;
+        }
+    }
+    return count;
+}
+```
+
+#### Rubric (5 points)
+
+| Pt | Criterion |
+|---|---|
+| 1 | Declares and initializes a counter to 0 |
+| 2 | Traverses by a **single shared index** with correct bounds (`i < names.size()`, equivalently `scores.size()`) — one loop indexing **both** lists, not two separate loops |
+| 3 | Reads the matching elements **at the same index** from both lists: `names.get(i)` and `scores.get(i)` |
+| 4 | Tests the name with `.equals(targetName)` (NOT `==`) **and** the score `>= passing`, incrementing only when **both** hold |
+| 5 | Returns the count |
+
+**Trace check.** `names=["Ana","Bo","Ana","Ana"]`, `scores=[90,50,40,75]`, `targetName="Ana"`, `passing=60`: i=0 `"Ana".equals("Ana")`✔ & `90>=60`✔ → count 1; i=1 `"Bo"`✘ skip; i=2 `"Ana"`✔ & `40>=60`✘ skip; i=3 `"Ana"`✔ & `75>=60`✔ → count 2 → returns **2** ✓. A single index reads both lists in lockstep; name compared with `.equals`; both conditions joined with `&&`. Points sum **5**.
+
+---
+
+### Practice FRQ 5 — `insertInOrder` (5 points)  · **insert in sorted position** (`add(int, E)`)
+
+An `ArrayList<Integer>` named `sorted` is kept in **non-decreasing** (ascending) order. Write `insertInOrder`, which inserts `value` into `sorted` so the list **stays in non-decreasing order**, and returns the index at which `value` was inserted. If `value` is greater than or equal to every element, it goes at the end. Use `add(int index, E)` to insert at a position.
+
+```java
+/** Inserts value into sorted (which is in non-decreasing order) so that it
+ *  remains non-decreasing, and returns the index where value was placed.
+ *  Precondition: sorted is non-null, in non-decreasing order, no null elements.
+ */
+public static int insertInOrder(ArrayList<Integer> sorted, int value) {
+    /* to be implemented */
+}
+```
+
+Example: if `sorted` is `[10, 20, 20, 40]` and `value` is `25`, then after the call `sorted` is `[10, 20, 20, 25, 40]` and the method returns `3`.
+
+#### Sample solution
+
+```java
+public static int insertInOrder(ArrayList<Integer> sorted, int value) {
+    int i = 0;
+    while (i < sorted.size() && sorted.get(i) < value) {
+        i++;
+    }
+    sorted.add(i, value);
+    return i;
+}
+```
+
+> **Why `< value`, not `<=`?** Scanning forward while elements are **strictly less than** `value` stops at the first element that is `>= value`, so `value` is inserted **before** any equal elements — keeping the list non-decreasing. The `&&` short-circuits: when `i` reaches `sorted.size()`, the loop stops before `sorted.get(i)` is evaluated, so there is no out-of-bounds access when `value` belongs at the end.
+
+#### Rubric (5 points)
+
+| Pt | Criterion |
+|---|---|
+| 1 | Initializes an insertion index (`i = 0`) |
+| 2 | Scans forward to find the insertion point: loops **while** `i < sorted.size()` **AND** `sorted.get(i) < value` (the size check first so `&&` short-circuits — no out-of-bounds when `value` belongs at the end) |
+| 3 | Uses the correct stop condition (`< value`) so the scan halts at the first element `>= value`, keeping the list non-decreasing |
+| 4 | Inserts with `sorted.add(i, value)` (the two-argument `add(int index, E)` that shifts later elements right — NOT `add(value)`, which would only append) |
+| 5 | Returns the insertion index `i` |
+
+**Trace check.** `sorted=[10,20,20,40]`, `value=25`: i=0 `0<4 && 10<25`✔ i=1; `20<25`✔ i=2; `20<25`✔ i=3; `40<25`✘ stop. `sorted.add(3, 25)` → `[10,20,20,25,40]`, returns **3** ✓. End case: `value=99` → scan runs to i=4, `4<4` false stops (short-circuit, no `get(4)`), `add(4,99)` appends → returns **4** ✓. Front case: `value=5` → i=0 `10<5`✘ stop, `add(0,5)` → `[5,10,20,20,40]`, returns **0** ✓. The two-argument `add(int, E)` shifts elements right; the size check precedes the `get` so there is no out-of-bounds. Points sum **5**.
+
+---
+
 ## (c) Signature point-losers for Q3
 
 Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/killer-errors-cheatsheet.md):
@@ -194,4 +287,6 @@ Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/ki
 | `==` to compare a String field of an element | #1 | Compare with `.equals`: `b.getGenre().equals(genre)`. `==` is a semantic error and costs the point. |
 | Re-implementing an element's provided accessor | #13 | If `getPages()`, `getGenre()`, `getTitle()` are given, **call them**. Don't reach for fields you can't see or recompute their values. |
 | Off-by-one bounds on the traversal | #2 | Valid indices are `0 .. size() - 1`; the loop condition is `i < size()` (forward) or `i >= 0` from `size() - 1` (backward). `i <= size()` throws `IndexOutOfBoundsException`. |
+| Two parallel lists out of sync (separate loops / different indices) | — (topic 4.10) | Lists matched **by position** must be read with **one shared index** in a single loop: `names.get(i)` and `scores.get(i)`. Two separate loops, or different index variables, break the pairing. |
+| Using `add(E)` when the task says insert at a position | — (topic 4.10) | `add(value)` only **appends** to the end — it cannot keep a list ordered. To insert into sorted position use the two-argument `add(int index, E)`, which shifts later elements right. Guard the scan with the size check **before** `get` so `&&` short-circuits at the end. |
 | Wrong return — returning the wrong thing or nothing | — (topic 4.10) | Match the contract: `removeBelow` returns the **count removed**, `titlesInGenre` returns a **new list**, `countLongBooks` returns the **count**. Build a fresh `result` list when asked for a list; never return the input. |

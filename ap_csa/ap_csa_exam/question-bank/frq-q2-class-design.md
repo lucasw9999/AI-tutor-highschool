@@ -215,6 +215,72 @@ public class Sensor {
 
 ---
 
+### Practice FRQ 4 — `Roster` (7 points)  · *`ArrayList` instance field*
+
+Design a complete class named `Roster` that meets this specification:
+
+- It stores two pieces of state: a **team name** (String) and a **list of member names** (an `ArrayList<String>`).
+- A constructor takes the team name. The list of members starts **empty**.
+- An accessor `getTeamName()` returns the team name.
+- A mutator `addMember(String name)` adds `name` to the end of the member list.
+- A method `size()` returns how many members are currently on the roster.
+- A method `countStartingWith(String letter)` returns how many member names **begin with** the one-character String `letter`. You may assume every member name has length ≥ 1 and `letter` has length 1.
+
+Write the **entire class**, including the instance variables, following encapsulation conventions.
+
+#### Sample solution
+
+```java
+public class Roster {
+    private String teamName;
+    private ArrayList<String> members;
+
+    public Roster(String name) {
+        teamName = name;
+        members = new ArrayList<String>();
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void addMember(String name) {
+        members.add(name);
+    }
+
+    public int size() {
+        return members.size();
+    }
+
+    public int countStartingWith(String letter) {
+        int count = 0;
+        for (int i = 0; i < members.size(); i++) {
+            String first = members.get(i).substring(0, 1);
+            if (first.equals(letter)) {
+                count++;
+            }
+        }
+        return count;
+    }
+}
+```
+
+#### Rubric (7 points)
+
+| Pt | Criterion |
+|---|---|
+| 1 | Class header `public class Roster` **and** both instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this) |
+| 2 | Two instance variables of the correct types: `String` teamName and `ArrayList<String>` members (a **collection** field, not a scalar) |
+| 3 | `public` constructor taking the team name; initializes `teamName` from the parameter |
+| 4 | Constructor initializes the list to a **new empty** `ArrayList<String>` (`new ArrayList<String>()`) — not left `null`, not handed an external list |
+| 5 | Accessor `getTeamName()` returns the team name; mutator `addMember(String name)` is `void` and calls `members.add(name)`; `size()` returns `members.size()` |
+| 6 | `countStartingWith` traverses the list with correct bounds (`i < members.size()`) using `members.get(i)`, and gets each first character with `substring(0, 1)` (NOT `charAt`) |
+| 7 | `countStartingWith` compares with `.equals(letter)` (NOT `==`), increments on a match, and returns the count |
+
+**Trace check.** `new Roster("Hawks")` → teamName "Hawks", members `[]`. `addMember("Ana")`, `addMember("Ben")`, `addMember("Amir")` → members `["Ana","Ben","Amir"]`; `size()` → **3** ✓. `getTeamName()` → **"Hawks"** ✓. `countStartingWith("A")` → `"A".equals("A")`✔ (1), `"B"`✘, `"A"`✔ (2) → **2** ✓. All fields `private`; the list is initialized to a new empty `ArrayList` in the constructor; first-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); traversal bound is `< members.size()`. Points sum **7**.
+
+---
+
 ## (c) Signature point-losers for Q2
 
 Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/killer-errors-cheatsheet.md):
@@ -223,6 +289,7 @@ Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/ki
 |---|---|---|
 | Non-`private` instance variables | #6 | Every instance variable is `private`; the class and constructor are `public`. This is the single dedicated **encapsulation point** — public or default-access fields forfeit it directly. |
 | Forgetting to initialize a field the constructor wasn't handed | — (topic 3.4) | The constructor must initialize **all** state. If `score`/`reading`/`occupied` isn't a parameter, set it to its starting value (`0`, `0.0`, `false`) explicitly in the constructor. |
+| Leaving a collection field `null` (or aliasing an external list) | — (topic 3.4) | A `private ArrayList<E>` (or array) field must be assigned a **new** empty collection in the constructor — `members = new ArrayList<String>();` — when the spec says it starts empty. A `null` field throws `NullPointerException` on the first `.add`/`.size`; storing a caller-supplied list creates an alias (out of scope here — initialize a fresh one). |
 | `==` to compare String state | #1 | Use `.equals(...)` in any method that compares a String field (`unlock`, `sameLabel`). `==` is a semantic error, not a forgiven slip. |
 | Wrong header: missing `public`, wrong return type, or wrong parameter order/types | — (topic 1.13, 3.5) | Match the spec exactly: accessors are non-`void` and return the field; mutators are `void`. Constructor parameter **order** must match the spec ("id then combination", "name then lives"). |
 | Mutator that should not change state, or accessor that mutates | — (topic 3.5) | Read each method's contract: `unlock` returns a boolean **without** changing state; an accessor never assigns. Don't add side effects the spec didn't ask for. |
