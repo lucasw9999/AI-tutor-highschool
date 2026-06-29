@@ -14,6 +14,14 @@ You already covered the content. The gap is **exam performance**: accurately tra
 4. It gives you 1–2 targeted reps and updates the `TRACKER UPDATE` block.
 5. At the end of the session, paste the `TRACKER UPDATE` into `exam-skill-tracker.md`. That is the whole loop.
 
+### What you do / What the examiner does for you
+
+| You do | The examiner does for you |
+|---|---|
+| Show up; answer cold (letter + why, or full FRQ code) | Picks today's focus; grades; diagnoses your exact slip |
+| Paste the `TRACKER UPDATE` block back into the tracker | Computes composites, streaks, gates, readiness %, freshness |
+| Run a timed mock when it tells you to | Tracks the 3-consecutive-mock bar; names the next unmet criterion |
+
 Session length: **30–40 min** on weekdays. Keep it short and consistent over long cramming sessions.
 
 ## The dual-system workflow
@@ -34,7 +42,7 @@ Every **2–3 weeks**, run a full timed mock from `question-bank/practice-exams.
 - **Section II:** 4 FRQ, 90 min, typed in a plain editor — no autocomplete, no compiler, no run (mirrors the real digital exam).
 - Log the score breakdown to `exam-skill-tracker.md` and flag any new killer errors.
 
-Readiness = consistent high-scoring results across ≥3 full timed mocks, strictly graded, with no gaps in any unit, practice, or FRQ type. See `exam-skill-tracker.md` §(f) for the full six-part bar (criteria A–F).
+Readiness = consistent high-scoring results across multiple full timed mocks, strictly graded, with no gaps in any unit, practice, or FRQ type. The examiner tracks all of this and will tell you when you've met the bar — you don't compute it. (Full criteria: `exam-skill-tracker.md` §(f).)
 
 ## Phased calendar — June 2026 to May 2027
 
@@ -65,11 +73,14 @@ Run `diagnostic-exam.md` to establish the **real** current baseline (the prior c
 
 ### Phase 4 — Spring 2027 (March–early May)
 
-- **≥3 full timed practice exams.** Drive every metric to the readiness bar.
-- **Fold in the 2026 Scoring Guidelines** (expected ~fall 2026; see `exam-blueprint.md` monitor items) — that is the first real redesigned-exam rubric. Update `reference/frq-rubric-and-penalties.md`.
-- Final pacing work + Bluebook realism (type FRQ answers in a plain text field, not a code editor).
+- **March through mid-April: drive for readiness.** Run ≥3 full timed practice exams from `question-bank/practice-exams.md`. Push every metric to the bar the examiner tracks. Fold in the 2026 Scoring Guidelines (expected ~fall 2026; see `exam-blueprint.md` monitor items) to keep the FRQ rubric current.
+- **Final ~7–10 days: taper, not sprint.** After the readiness bar is met (or ~7–10 days out, whichever comes first), stop drilling new material. Light review only: killer-errors cheatsheet + Java Quick Reference, 20–30 min/day. Protect sleep — especially the two nights before the exam.
+- **~5 days out: one last placement mock.** Run it, get the score, note any surprises. Then stop. No new content after that.
+- See `reference/exam-day-protocol.md` for the full final-week taper plan, test-day logistics, in-section strategy, and panic recovery.
 
 ### Exam — ~May 2027
+
+See `reference/exam-day-protocol.md`.
 
 ## If it drifts
 
@@ -82,17 +93,17 @@ Run `diagnostic-exam.md` to establish the **real** current baseline (the prior c
 
 ## If you're behind — compression plan
 
-The readiness bar requires ≥6 mocks (or ≥4 for reduced-confidence "likely-5, reduced sample") with 3 consecutive qualifying in a ~6-week window, plus ≥1 mock in the final 2 weeks before the exam (see `exam-skill-tracker.md` §(f) for the authoritative criteria). This means:
+The readiness bar has a mock-window requirement that needs several qualifying mocks within roughly a 6-week span before the exam. This means:
 
-**Latest safe start for full-confidence path:** first full mock no later than **~mid-March 2027**. Starting later than mid-March compresses the 6-week window for 3 consecutive qualifying mocks and risks missing the final-2-week mock requirement.
+**Latest safe start for full-confidence path:** first full mock no later than **~mid-March 2027**. Starting later compresses the window the examiner is tracking and risks running out of runway.
 
 **If Phase 3's first full mock has not happened by January 2027, compress immediately** (January is the early-warning trigger — get nervous and accelerate now to protect the mid-March hard latest-safe-start; mid-March is the true deadline, January is "start compressing or you'll run out of runway")**:**
 
 1. **Drop untimed drilling.** Every session from this point is timed — MCQ at ≤129 s/question, FRQ in 90 min.
 2. **Weekly full timed mocks.** Move from the 2–3 week mock cadence to one full 3-hour mock per week.
-3. **Triage content repair.** Only fix the lowest-scoring unit or FRQ type — do not revisit content you are already hitting ≥75%.
+3. **Triage content repair.** Only fix the lowest-scoring unit or FRQ type — do not revisit content you are already hitting at a strong rate.
 4. **Content-tutor gate:** if a week of timed work reveals a genuine knowledge hole (not a pacing or rubric issue), route it to `../tutor-prompt.md` for one focused session, then return to timed mocks immediately.
-5. **Reduced-confidence floor:** if the exam date makes ≥6 mocks impossible, aim for the reduced-confidence floor (≥4 mocks, 3 consecutive qualifying, labeled "likely-5, reduced sample") — see `exam-skill-tracker.md` §(f) Resilience & fallbacks.
+5. **If the exam date makes the full mock count impossible:** the examiner will tell you if you're behind and exactly what to compress — you don't compute this. It will name the specific unmet criterion and what the reduced-confidence path looks like.
 
 **Two hard deadlines — non-compressible (escalate to an adult if missed, not a study fix):**
 
