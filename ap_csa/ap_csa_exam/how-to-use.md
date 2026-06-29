@@ -20,7 +20,7 @@ You already covered the content. The gap is **exam performance**: accurately tra
 |---|---|
 | Show up; answer cold (letter + why, or full FRQ code) | Picks today's focus; grades; diagnoses your exact slip |
 | Paste the `TRACKER UPDATE` block back into the tracker | Computes composites, streaks, gates, readiness %, freshness |
-| Run a timed mock when it tells you to | Tracks the 3-consecutive-mock bar; names the next unmet criterion |
+| Run a timed mock when it tells you to | Tracks the multi-mock readiness bar; names the next unmet criterion |
 
 Session length: **30–40 min** on weekdays. Keep it short and consistent over long cramming sessions.
 

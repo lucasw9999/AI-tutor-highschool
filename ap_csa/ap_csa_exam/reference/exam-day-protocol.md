@@ -25,7 +25,7 @@ The week before the exam is a **taper**, not a sprint. Cramming new material at 
 | Day | Activity |
 |---|---|
 | **~5 days out** | One last full placement mock (timed, no notes, strict). This is the final §(f)-qualifying mock if needed. After it, stop mocking. |
-| **Days 4–2 out** | Light review only: `reference/killer-errors-cheatsheet.md` (10–15 min) + `reference/java-quick-reference-drills.md` (10–15 min). Nothing new. |
+| **Days 4–2 out** | Light review only: `killer-errors-cheatsheet.md` (10–15 min) + `java-quick-reference-drills.md` (10–15 min). Nothing new. |
 | **Day before** | Skim the killer-errors cheatsheet once. Then stop. Lay out everything you need for tomorrow. Sleep early. |
 | **Morning of** | Eat, get there early. No last-minute reviewing — your brain needs to be fresh, not stuffed. |
 
@@ -56,7 +56,7 @@ The week before the exam is a **taper**, not a sprint. Cramming new material at 
 
 ## 4. In-Section Strategy
 
-Full pacing numbers and protocols live in `reference/pacing-and-strategy.md` — read that file once before the exam week and follow it. Short version:
+Full pacing numbers and protocols live in `pacing-and-strategy.md` — read that file once before the exam week and follow it. Short version:
 
 **MCQ (Section I):**
 - Target ~2 min 9 sec per question.
@@ -68,7 +68,7 @@ Full pacing numbers and protocols live in `reference/pacing-and-strategy.md` —
 - **If you have not started a question with 20 minutes remaining, start it immediately.** A correct method header + a correct loop earns partial credit. A blank earns zero.
 - At the end: scan all four responses and write something on every blank part.
 
-For the full time-budget tables, triage protocol, and the 8 rules: `reference/pacing-and-strategy.md`.
+For the full time-budget tables, triage protocol, and the 8 rules: `pacing-and-strategy.md`.
 
 ---
 
@@ -80,7 +80,7 @@ Everyone hits a wall at some point. Here is what to do:
 Flag it, pick your best guess, and move to the next one immediately. You are not stuck — you are banking time. Come back with a fresher eye and banked minutes.
 
 **If a code trace feels impossible:**
-Write out a variable table (loop counter, accumulator, whatever changes) and fill it in row by row. Most "impossible" traces become mechanical once you stop doing them in your head. See `reference/pacing-and-strategy.md §4`.
+Write out a variable table (loop counter, accumulator, whatever changes) and fill it in row by row. Most "impossible" traces become mechanical once you stop doing them in your head. See `pacing-and-strategy.md §4`.
 
 **If you freeze on an FRQ:**
 Write the method header. Write a loop with the right structure and correct bounds. That combination earns points even if the body is incomplete. A frozen blank earns nothing — an honest attempt with the right skeleton earns something.
