@@ -2,6 +2,18 @@
 
 A drill-first, exam-condition system layered on top of `ap_csa/`. Its one job: close the gap between **covering the content** and **scoring a 5 under exam conditions**.
 
+> **You do NOT need to understand the readiness math.** Your whole job: open the examiner, answer the question it gives you (cold, with your reasoning), and paste back the one `TRACKER UPDATE` block it hands you. The examiner computes every score, streak, and gate and tells you the one number that matters and the one thing to do next. Criteria A–F live in `exam-skill-tracker.md §(f)` for the examiner to read — not for you to memorize.
+
+---
+
+### For the parent — the 3 things only an adult can do
+
+1. **AP Classroom access** — by ~September 2026, get the join code from Lucas's AP CSA teacher (or enroll him with an AP-Course-Audit-approved online provider if self-studying). This unlocks the official item bank that can't be accessed any other way.
+2. **Exam registration** — by ~mid-November 2026, confirm the school administers AP CSA and have the AP Coordinator place the order; if the school doesn't offer it, find a seat via the AP Course Ledger. There is no late path.
+3. **Proctor a mock or two** — sit nearby, hold the timer, enforce no-notes for at least one official-anchor mock. This is the closest thing to real exam conditions available before May.
+
+---
+
 ## The diagnosis
 
 Lucas finished the `ap_csa/` content course (~100% coverage) but scored **~2–3 on an official College Board redesigned practice exam**. Research confirms the gap is **exam performance, not missing topics**. The two things that looked missing (HashMap / inheritance) are **genuinely off the redesigned exam** — they were removed in the 2025 redesign.
@@ -19,7 +31,7 @@ The real leak is converting "I know the concept" into points under exam conditio
 
 **What 100% means here:** NOT "covered the topics" — that's the old course's 100%, and it produced a 2–3. Here, 100% means scoring well into 5 territory with margin across repeated full timed mocks, strictly graded, with no untrained gaps in any unit, practice, or FRQ type. Only full timed mocks move the readiness number; drills do not.
 
-Full hardened definition (prerequisites, grader-calibration gate, the five-criterion bar, freshness, burnout guard, and recalibration protocol): **see `exam-skill-tracker.md` §(f)**. That is the single source of truth — thresholds are not restated here.
+The examiner tracks all of this automatically — you don't read or manage it directly. (For the curious or for a parent reviewing the system: the full hardened definition with all thresholds and gates lives in `exam-skill-tracker.md` §(f).)
 
 **Honest caveat:** meeting that bar is the strongest real predictor of a 5, not a mathematical guarantee. The targets sit deliberately above the historical ~65–72% composite 5-cutoff as insurance against test-day variance and redesigned-curve uncertainty.
 
@@ -60,6 +72,7 @@ Full hardened definition (prerequisites, grader-calibration gate, the five-crite
 | **`killer-errors-cheatsheet.md`** | The single-page hit list of the most common point-losers, to review before every exam. |
 | **`java-quick-reference-drills.md`** | Drills on the exact bounded library (String/Math/ArrayList/Integer/Double/File/Scanner/Object). Fixes `charAt` drift: the exam uses `substring(i, i+1)` for a single character. |
 | **`question-sources-and-access.md`** | Redesign-aligned free + paid resources, what to avoid (still-inheritance editions), and exam logistics. |
+| **`exam-day-protocol.md`** | Exam-day and final-week execution guide: Bluebook setup, taper plan, test-day logistics, in-section strategy, and panic recovery. |
 | **`inheritance-hashmap-supplement.md`** | **For your school class only — NOT tested on the AP exam.** Light `extends`/`super`/override + `HashMap` basics for school safety. |
 
 ## How this complements `ap_csa/`

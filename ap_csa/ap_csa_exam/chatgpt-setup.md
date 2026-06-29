@@ -32,12 +32,13 @@ Same idea as the SAT and AP Precalc tutors. Requires **ChatGPT Plus** (no Plus? 
   - `practice-exams.md`
   - `official-sources-index.md`
 
-  **Reference (6):**
+  **Reference (7):**
   - `pacing-and-strategy.md`
   - `frq-rubric-and-penalties.md`
   - `killer-errors-cheatsheet.md`
   - `java-quick-reference-drills.md`
   - `question-sources-and-access.md`
+  - `exam-day-protocol.md`
   - `inheritance-hashmap-supplement.md`
 
 ## Step 3 — Test (right Preview panel)
