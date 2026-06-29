@@ -86,7 +86,7 @@ The readiness bar requires ≥6 mocks (or ≥4 for reduced-confidence "likely-5,
 
 **Latest safe start for full-confidence path:** first full mock no later than **~mid-March 2027**. Starting later than mid-March compresses the 6-week window for 3 consecutive qualifying mocks and risks missing the final-2-week mock requirement.
 
-**If Phase 3's first full mock has not happened by January 2027, compress immediately:**
+**If Phase 3's first full mock has not happened by January 2027, compress immediately** (January is the early-warning trigger — get nervous and accelerate now to protect the mid-March hard latest-safe-start; mid-March is the true deadline, January is "start compressing or you'll run out of runway")**:**
 
 1. **Drop untimed drilling.** Every session from this point is timed — MCQ at ≤129 s/question, FRQ in 90 min.
 2. **Weekly full timed mocks.** Move from the 2–3 week mock cadence to one full 3-hour mock per week.
