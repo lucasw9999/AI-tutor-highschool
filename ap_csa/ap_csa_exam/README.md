@@ -17,11 +17,11 @@ The real leak is converting "I know the concept" into points under exam conditio
 
 ## The win condition (honest)
 
-**What 100% means here:** NOT "covered the topics" — that's the old course's 100%, and it produced a 2–3. Here, 100% means Lucas scores ≥80% composite (MCQ 55% + FRQ 45%) on the most recent 3 consecutive full, timed mocks, while also hitting ≥80% MCQ overall, ≥75% per unit, ≥85% Analyze-Code, ≥70% per other practice, ≥85% per FRQ type (rubric-strict), both sections in time with ≤1 blank, and at least one of those mocks built from official material — ALL simultaneously. Only full, timed mocks move the readiness number; drills do not.
+**What 100% means here:** NOT "covered the topics" — that's the old course's 100%, and it produced a 2–3. Here, 100% means scoring well into 5 territory with margin across repeated full timed mocks, strictly graded, with no untrained gaps in any unit, practice, or FRQ type. Only full timed mocks move the readiness number; drills do not.
 
-The full hardened definition, the coverage prerequisite, and the per-criterion checklist live in `exam-skill-tracker.md` §(f).
+Full hardened definition (prerequisites, grader-calibration gate, the five-criterion bar, freshness, burnout guard, and recalibration protocol): **see `exam-skill-tracker.md` §(f)**. That is the single source of truth — thresholds are not restated here.
 
-**Honest caveat:** meeting that bar is the strongest real predictor of a 5, not a mathematical guarantee. The ≥80% composite target is deliberately conservative: historical AP CSA 5-cutoffs have been roughly 65–72% composite, and College Board has not published the redesigned curve. The extra cushion is the insurance against test-day variance and curve uncertainty.
+**Honest caveat:** meeting that bar is the strongest real predictor of a 5, not a mathematical guarantee. The targets sit deliberately above the historical ~65–72% composite 5-cutoff as insurance against test-day variance and redesigned-curve uncertainty.
 
 ## File index
 

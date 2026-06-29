@@ -116,14 +116,11 @@ FRQs are graded point-by-point to a strict rubric. Common ways to lose points on
 
 **Target:** each FRQ type averaging ≥85% of points across ≥3 attempts.
 
-### Readiness Bar (all four must be met, not just composite)
+### Readiness Bar
 
-| Metric | Target |
-|---|---|
-| Full timed practice exams | ≥3 exams with weighted composite in estimated 5-range |
-| Analyze-Code MCQ accuracy | ≥85% at ~2:09/question pace |
-| Each FRQ type | Average ≥85% of available points across ≥3 attempts |
-| Section completion | Both 90-min sections finished within time with ≤1 blank |
+Ready = scoring well into 5 territory with margin on repeated full timed mocks, strictly graded, with no untrained gaps across any unit, practice, or FRQ type.
+
+**Authoritative definition: see `exam-skill-tracker.md` §(f) — do not restate the thresholds here.**
 
 ---
 
@@ -131,13 +128,13 @@ FRQs are graded point-by-point to a strict rubric. Common ways to lose points on
 
 **The only published AP CSA score distribution is from the OLD exam** (pre-redesign; 2025: 5 = 25.6%). The College Board has **not yet published** a score curve or raw→5 mapping for the redesigned exam (effective Fall 2025).
 
-Historically, AP CSA has required roughly **65–70% of the composite** to earn a 5. This blueprint uses **~68% as an estimated readiness cutoff** — treat it as a planning estimate, not a guarantee.
+Historically, AP CSA has required roughly **65–72% of the composite** to earn a 5 (this is the historical 5-cutoff, not our readiness target). Our readiness bar deliberately sits above this to absorb test-day variance and redesigned-curve uncertainty.
 
 **Update this file when College Board publishes:**
 - The redesigned-exam score distribution (watch `apstudents.collegeboard.org/about-ap-scores/score-distributions` — CSA columns blank as of 2026-06-27; expected later in summer 2026)
 - The 2026 Scoring Guidelines (watch `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` — 404 as of 2026-06-27; expected ~fall 2026)
 
-Until the real curve is published, readiness is determined by the **four-metric bar** in §(e), not just composite score.
+Until the real curve is published, readiness is determined by the **multi-criterion bar in `exam-skill-tracker.md` §(f)** — not by composite alone.
 
 ---
 
