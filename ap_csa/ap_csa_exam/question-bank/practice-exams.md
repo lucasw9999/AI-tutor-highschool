@@ -161,13 +161,13 @@ Composite = (MCQ score × 0.55) + (FRQ score × 0.45)
 
 **Example:** 32/42 MCQ + 18/25 FRQ → MCQ = 76.2, FRQ = 72.0 → Composite = 76.2 × 0.55 + 72.0 × 0.45 = **41.9 + 32.4 = 74.3%**
 
-### Step 4 — Estimated AP score and readiness bar
+### Step 4 — Estimated AP score (orientation only)
 
-**Readiness bar (qualifying threshold): ≥80% composite.** This is deliberately conservative: historical AP CSA 5-cutoffs have been roughly 65–72% composite, and College Board has not published the score curve for the redesigned exam. The extra cushion absorbs test-day variance and curve uncertainty. This is an estimate, not a published number.
+This composite→score mapping is a **rough orientation estimate, not the readiness bar.** The actual readiness thresholds — composite mean/min, per-unit, per-practice, FRQ, calibration, mock-count, freshness — are defined ONLY in [`../exam-skill-tracker.md`](../exam-skill-tracker.md) §(f); do not treat any single number here as "ready." Historical AP CSA 5-cutoffs have been roughly 65–72% composite; College Board has not published the redesigned curve, which is why §(f) sets a deliberately conservative bar with margin.
 
 | Composite | Estimated AP score |
 |---|---|
-| ≥ 80% (readiness bar) | 5 (high-confidence estimate) |
+| ≥ ~80% | 5 territory (see `../exam-skill-tracker.md` §(f) for the actual readiness bar) |
 | ~65–79% | 5 possible, but below the conservative readiness bar |
 | ~55–64% | 4 (estimate) |
 | ~42–54% | 3 (estimate) |
