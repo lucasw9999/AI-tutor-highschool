@@ -238,6 +238,43 @@ A) `public double value;` with no methods   B) `private double value;` with a pu
 
 ---
 
+**Q19. (Develop Code · 3.5 complete the segment — accessor body)**
+A `BankAccount` has `private double balance;`. Fill the blank so `getBalance` is a correct accessor (reports the balance without changing state).
+```java
+public double getBalance() {
+    // BLANK
+}
+```
+A) `balance = 0;`   B) `return balance;`   C) `this.balance = balance;`   D) `System.out.println(balance);`
+
+**Answer: B.** An accessor **returns** the field's value and leaves state unchanged: `return balance;`. (A) and (C) modify state (and (A) zeroes it); (D) prints but returns nothing — it won't compile for a `double` return type.
+`[topic 3.5][practice P2]`
+
+---
+
+**Q20. (Develop Code · 3.4 complete the segment — initialize all fields)**
+A `Point` has `private int x, y;`. Fill the constructor body so **both** fields are initialized from the parameters.
+```java
+public Point(int x, int y) {
+    // BLANK
+}
+```
+A) `x = x; y = y;`   B) `this.x = x; this.y = y;`   C) `this.x = y; this.y = x;`   D) `x = this.x; y = this.y;`
+
+**Answer: B.** With parameters shadowing the fields, `this.x`/`this.y` are the fields and the bare names are the parameters: `this.x = x; this.y = y;`. (A) assigns parameters to themselves (fields stay 0); (C) swaps them; (D) copies backward (fields stay 0).
+`[topic 3.4][practice P2]`
+
+---
+
+**Q21. (Design Code · 3.1 decompose a design — P1.A)**
+You are designing a program that reads a list of orders, computes each order's tax, prints a receipt, and at the end prints the grand total. Which decomposition **best** applies procedural abstraction and avoids repeated code?
+A) Write one long `main` method that inlines the tax math everywhere it is needed.   B) Write a `computeTax(double amount)` method and a `printReceipt(Order o)` method, and have `main` loop over the orders calling them, accumulating the total.   C) Make `computeTax` a separate program the user runs by hand for each order.   D) Copy-paste the tax formula into each branch of an `if-else-if` chain so every case is self-contained.
+
+**Answer: B.** Decomposing the repeated work into parameterized methods (`computeTax`, `printReceipt`) and calling them from a loop is **procedural abstraction / code reuse** — the standard design. (A)/(D) duplicate the tax math; (C) is not a single program.
+`[topic 3.1][practice P1]`
+
+---
+
 ## Coverage note
 
-Unit 3 topics covered here: **3.1 (Q1,Q2,Q18), 3.2 (Q3,Q4,Q5), 3.3 (Q6,Q7,Q18), 3.4 (Q8,Q9), 3.5 (Q10,Q11), 3.6 (Q12), 3.7 (Q13,Q14), 3.8 (Q15), 3.9 (Q16,Q17)** — all 9 topics. Practices: **P1** (Q18), **P2** (Q8, Q16), **P3** (Q7, Q9, Q11–Q15, Q17), **P4** (Q1, Q2, Q6, Q10), **P5** (Q3, Q4, Q5 — ethics/bias/IP/harm, topic 3.2). 18 items.
+Unit 3 topics covered here: **3.1 (Q1,Q2,Q18,Q21), 3.2 (Q3,Q4,Q5), 3.3 (Q6,Q7,Q18), 3.4 (Q8,Q9,Q20), 3.5 (Q10,Q11,Q19), 3.6 (Q12), 3.7 (Q13,Q14), 3.8 (Q15), 3.9 (Q16,Q17)** — all 9 topics. Practices: **P1** (Q18, Q21 — incl. a 1.A design/decomposition item), **P2** (Q8, Q16, Q19, Q20), **P3** (Q7, Q9, Q11–Q15, Q17), **P4** (Q1, Q2, Q6, Q10), **P5** (Q3, Q4, Q5 — ethics/bias/IP/harm, topic 3.2). 21 items.

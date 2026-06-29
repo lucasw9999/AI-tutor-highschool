@@ -364,6 +364,38 @@ A) `if (value / divisor > 10 && divisor != 0)`   B) `if (divisor != 0 && value /
 
 ---
 
+**Q26. (Develop Code · 2.9 complete the segment — count multiples)**
+Fill the blank so `count` ends up holding how many integers in `1..n` are multiples of 3.
+```java
+int count = 0;
+for (int i = 1; i <= n; i++) {
+    if ( /* BLANK */ ) count++;
+}
+```
+A) `i / 3 == 0`   B) `i % 3 == 0`   C) `i % 3 == 1`   D) `i * 3 == 0`
+
+**Answer: B.** A multiple of 3 leaves remainder 0: `i % 3 == 0`. (A) tests `i/3` being 0 (only `i = 1, 2`); (C) tests remainder 1; (D) is true only for `i = 0`, which the loop never reaches.
+`[topic 2.9][practice P2]`
+
+---
+
+**Q27. (Develop Code · 2.11 complete the segment — inner bound for a triangle)**
+This is meant to print a right triangle of stars: row 1 one star, row 2 two stars, …, row `n` `n` stars. Fill the inner-loop condition.
+```java
+for (int r = 1; r <= n; r++) {
+    for (int c = 1; /* BLANK */; c++) {
+        System.out.print("*");
+    }
+    System.out.println();
+}
+```
+A) `c <= n`   B) `c <= r`   C) `c < r`   D) `c <= n - r`
+
+**Answer: B.** Row `r` should print `r` stars, so the inner loop runs `c = 1..r`: condition `c <= r`. (A) prints `n` stars every row (a rectangle); (C) prints `r−1`; (D) prints a shrinking count.
+`[topic 2.11][practice P2]`
+
+---
+
 ## Coverage note
 
-Unit 2 topics covered here: **2.1 (Q1,Q2), 2.2 (Q3,Q4), 2.3 (Q5,Q6), 2.4 (Q7,Q8), 2.5 (Q9,Q10,Q25), 2.6 (Q11,Q12), 2.7 (Q13,Q14), 2.8 (Q15,Q16), 2.9 (Q17,Q18), 2.10 (Q19,Q20), 2.11 (Q21,Q22), 2.12 (Q23,Q24)** — all 12 topics. Practices: **P1** (Q25), **P2** (Q6, Q14, Q16, Q20), **P3** (most), **P4** (Q1, Q24). 25 items (weighted heavy, matching U2's 25–35% share).
+Unit 2 topics covered here: **2.1 (Q1,Q2), 2.2 (Q3,Q4), 2.3 (Q5,Q6), 2.4 (Q7,Q8), 2.5 (Q9,Q10,Q25), 2.6 (Q11,Q12), 2.7 (Q13,Q14), 2.8 (Q15,Q16), 2.9 (Q17,Q18,Q26), 2.10 (Q19,Q20), 2.11 (Q21,Q22,Q27), 2.12 (Q23,Q24)** — all 12 topics. Practices: **P1** (Q25), **P2** (Q6, Q14, Q16, Q20, Q26, Q27), **P3** (most), **P4** (Q1, Q24). 27 items (weighted heavy, matching U2's 25–35% share).
