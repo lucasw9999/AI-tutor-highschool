@@ -18,9 +18,9 @@ What is printed?
 int a = 17, b = 5;
 System.out.println(a / b + "." + a % b);
 ```
-A) `3.2`   B) `3.4`   C) `3.0`   D) `4.2`
+A) `3.4`   B) `3.0`   C) `3.2`   D) `4.2`
 
-**Answer: A.** Integer division `17 / 5 = 3`; `17 % 5 = 2`; concatenated with `"."` (string mode once a String appears) → `"3.2"`.
+**Answer: C.** Integer division `17 / 5 = 3`; `17 % 5 = 2`; concatenated with `"."` (string mode once a String appears) → `"3.2"`.
 `[topic 1.3][practice P3]`
 
 ---
@@ -42,9 +42,9 @@ What is printed?
 ```java
 System.out.println(1 + 2 + "x" + 1 + 2);
 ```
-A) `3x12`   B) `3x3`   C) `12x12`   D) `1212x`
+A) `3x3`   B) `12x12`   C) `1212x`   D) `3x12`
 
-**Answer: A.** Evaluated left to right: `1+2 = 3` (still ints), then `3 + "x" = "3x"`, then `"3x"+1 = "3x1"`, `+2 = "3x12"`.
+**Answer: D.** Evaluated left to right: `1+2 = 3` (still ints), then `3 + "x" = "3x"`, then `"3x"+1 = "3x1"`, `+2 = "3x12"`.
 `[topic 1.3][practice P3]`
 
 ---
@@ -55,9 +55,9 @@ What is the result of running this segment?
 int x = 8, y = 0;
 System.out.println(x / y);
 ```
-A) `0`   B) `8`   C) The program throws an `ArithmeticException`.   D) Nothing is printed; it returns `null`.
+A) `0`   B) `8`   C) The program throws an `ArithmeticException`.   D) It prints `Infinity`.
 
-**Answer: C.** Integer division by zero throws `ArithmeticException` at runtime before anything prints.
+**Answer: C.** Integer division by zero throws `ArithmeticException` at runtime before anything prints. (`Infinity` only arises from `double` division like `8.0 / 0.0`, not integer division.)
 `[topic 1.3][practice P3]`
 
 ---
@@ -82,9 +82,9 @@ double price = 4.5;
 int rounded = (int)(price + 0.5);
 System.out.println(rounded);
 ```
-A) `4`   B) `5`   C) `4.5`   D) `5.0`
+A) `4`   B) `4.5`   C) `5`   D) `5.0`
 
-**Answer: B.** `4.5 + 0.5 = 5.0`; `(int)` truncates `5.0 → 5`. The `+0.5`-then-truncate idiom rounds to nearest; the result is an `int`, so no decimal point.
+**Answer: C.** `4.5 + 0.5 = 5.0`; `(int)` truncates `5.0 → 5`. The `+0.5`-then-truncate idiom rounds to nearest; the result is an `int`, so no decimal point.
 `[topic 1.5][practice P3]`
 
 ---
@@ -108,9 +108,9 @@ What is printed?
 int big = Integer.MAX_VALUE;
 System.out.println(big + 1);
 ```
-A) `2147483648`   B) `Integer.MAX_VALUE`   C) `-2147483648`   D) The program throws an exception.
+A) `2147483648`   B) `Integer.MAX_VALUE`   C) `-2147483648`   D) `0`
 
-**Answer: C.** Adding 1 to `Integer.MAX_VALUE` **overflows** and wraps to `Integer.MIN_VALUE` = `-2147483648`. No exception is thrown for overflow.
+**Answer: C.** Adding 1 to `Integer.MAX_VALUE` **overflows** and wraps to `Integer.MIN_VALUE` = `-2147483648`. No exception is thrown for overflow, and it does not saturate at the max or reset to `0`.
 `[topic 1.5][practice P3]`
 
 ---
@@ -138,9 +138,9 @@ n *= 2;
 n %= 7;
 System.out.println(n);
 ```
-A) `34`   B) `6`   C) `5`   D) `0`
+A) `34`   B) `5`   C) `0`   D) `6`
 
-**Answer: B.** `20 - 3 = 17`; `17 * 2 = 34`; `34 % 7 = 6` (34 = 4·7 + 6).
+**Answer: D.** `20 - 3 = 17`; `17 * 2 = 34`; `34 % 7 = 6` (34 = 4·7 + 6).
 `[topic 1.6][practice P3]`
 
 ---
@@ -152,9 +152,9 @@ What is printed?
 ```java
 System.out.println(Math.pow(2, 5));
 ```
-A) `32`   B) `32.0`   C) `10.0`   D) `25.0`
+A) `32`   B) `10.0`   C) `32.0`   D) `25.0`
 
-**Answer: B.** `Math.pow(2, 5)` returns a **double**, `2^5 = 32.0` (printed with the decimal point).
+**Answer: C.** `Math.pow(2, 5)` returns a **double**, `2^5 = 32.0` (printed with the decimal point).
 `[topic 1.11][practice P3]`
 
 ---
@@ -164,9 +164,9 @@ What is printed?
 ```java
 System.out.println(Math.abs(-9) + (int) Math.sqrt(20));
 ```
-A) `13`   B) `14`   C) `9`   D) `13.0`
+A) `14`   B) `9`   C) `13.0`   D) `13`
 
-**Answer: A.** `Math.abs(-9) = 9` (int overload). `Math.sqrt(20) ≈ 4.47`, cast to `int` truncates to `4`. `9 + 4 = 13`.
+**Answer: D.** `Math.abs(-9) = 9` (int overload). `Math.sqrt(20) ≈ 4.47`, cast to `int` truncates to `4`. `9 + 4 = 13`.
 `[topic 1.11][practice P3]`
 
 ---
@@ -195,9 +195,9 @@ if (y != 0 && x / y > 1) {
     System.out.println("B");
 }
 ```
-A) `A`   B) `B`   C) An `ArithmeticException` is thrown.   D) Nothing.
+A) `A`   B) An `ArithmeticException` is thrown.   C) `B`   D) Nothing.
 
-**Answer: B.** `y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.
+**Answer: C.** `y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.
 `[topic 2.5][practice P3]`
 
 ---
@@ -211,9 +211,9 @@ if (b || check()) {
 }
 // check() prints nothing relevant; question is how many times it is called
 ```
-A) 0   B) 1   C) 2   D) It depends on the file.
+A) 1   B) 2   C) It depends on the file.   D) 0
 
-**Answer: A.** `true || ...` short-circuits — once the left side is `true`, the right operand `check()` is **never called**.
+**Answer: D.** `true || ...` short-circuits — once the left side is `true`, the right operand `check()` is **never called**.
 `[topic 2.5][practice P3]`
 
 ---
@@ -233,9 +233,9 @@ A) `true`   B) `false`   C) It is a compile error.   D) `null`
 
 **Q17. (Analyze Code · 2.6 De Morgan equivalence)**
 Given `int x`, which expression is **always equal** to `!(x > 0 && x < 10)`?
-A) `x <= 0 || x >= 10`   B) `x <= 0 && x >= 10`   C) `x < 0 || x > 10`   D) `!(x > 0) && !(x < 10)`
+A) `x <= 0 && x >= 10`   B) `x < 0 || x > 10`   C) `x <= 0 || x >= 10`   D) `!(x > 0) && !(x < 10)`
 
-**Answer: A.** De Morgan: `!(A && B)` = `!A || !B`. `!(x>0)` = `x<=0`, `!(x<10)` = `x>=10`, joined by `||`.
+**Answer: C.** De Morgan: `!(A && B)` = `!A || !B`. `!(x>0)` = `x<=0`, `!(x<10)` = `x>=10`, joined by `||`.
 `[topic 2.6][practice P3]`
 
 ---
@@ -295,9 +295,9 @@ if (x > 5)
     else
         System.out.println("mid");
 ```
-A) `high`   B) `mid`   C) Nothing.   D) `high` then `mid`
+A) `high`   B) Nothing.   C) `high` then `mid`   D) `mid`
 
-**Answer: B.** The `else` binds to the **nearest** `if` (`x > 10`). `x > 5` true, enter; `x > 10` false → the inner `else` runs → `mid`.
+**Answer: D.** The `else` binds to the **nearest** `if` (`x > 10`). `x > 5` true, enter; `x > 10` false → the inner `else` runs → `mid`.
 `[topic 2.4][practice P3]`
 
 ---
@@ -314,9 +314,9 @@ while (n < 100) {
 }
 System.out.println(count);
 ```
-A) `6`   B) `7`   C) `8`   D) `64`
+A) `6`   B) `8`   C) `64`   D) `7`
 
-**Answer: B.** n: 1→2→4→8→16→32→64→128, one `count++` per step. The loop multiplies 7 times (128 is the first value ≥ 100). `count = 7`.
+**Answer: D.** n: 1→2→4→8→16→32→64→128, one `count++` per step. The loop multiplies 7 times (128 is the first value ≥ 100). `count = 7`.
 `[topic 2.7][practice P3]`
 
 ---
@@ -362,9 +362,9 @@ for (int k = 5; k > 0; k--) {
 }
 System.out.println(total);
 ```
-A) `15`   B) `10`   C) `0`   D) `5`
+A) `10`   B) `0`   C) `15`   D) `5`
 
-**Answer: A.** k = 5,4,3,2,1; total = 5+4+3+2+1 = `15`. The decrementing `for` is equivalent to a `while` with `k--` at the bottom.
+**Answer: C.** k = 5,4,3,2,1; total = 5+4+3+2+1 = `15`. The decrementing `for` is equivalent to a `while` with `k--` at the bottom.
 `[topic 2.8][practice P3]`
 
 ---
@@ -397,9 +397,9 @@ for (int i = 1; i <= 30; i++) {
 }
 System.out.println(count);
 ```
-A) `6`   B) `7`   C) `8`   D) `4`
+A) `6`   B) `8`   C) `4`   D) `7`
 
-**Answer: B.** Multiples of 4 in 1..30: 4,8,12,16,20,24,28 → `7`.
+**Answer: D.** Multiples of 4 in 1..30: 4,8,12,16,20,24,28 → `7`.
 `[topic 2.9][practice P3]`
 
 ---
@@ -429,9 +429,9 @@ What is printed?
 String s = "programming";
 System.out.println(s.substring(3, 7));
 ```
-A) `gram`   B) `ogra`   C) `ramm`   D) `gramm`
+A) `ogra`   B) `ramm`   C) `gram`   D) `gramm`
 
-**Answer: A.** Indices 3,4,5,6 (the `to` index 7 is **excluded**). `p(0)r(1)o(2)g(3)r(4)a(5)m(6)` → `gram` (length = 7−3 = 4).
+**Answer: C.** Indices 3,4,5,6 (the `to` index 7 is **excluded**). `p(0)r(1)o(2)g(3)r(4)a(5)m(6)` → `gram` (length = 7−3 = 4).
 `[topic 1.15][practice P3]`
 
 ---
@@ -442,9 +442,9 @@ What is printed?
 String s = "abcdef";
 System.out.println(s.substring(4));
 ```
-A) `ef`   B) `def`   C) `cdef`   D) `e`
+A) `def`   B) `ef`   C) `cdef`   D) `e`
 
-**Answer: A.** `substring(4)` returns from index 4 to the end: characters at 4 (`e`) and 5 (`f`) → `ef`.
+**Answer: B.** `substring(4)` returns from index 4 to the end: characters at 4 (`e`) and 5 (`f`) → `ef`.
 `[topic 1.15][practice P3]`
 
 ---
@@ -472,9 +472,9 @@ for (int i = 0; i < s.length(); i++) {
 }
 System.out.println(out);
 ```
-A) `hello`   B) `olleh`   C) `o`   D) `h`
+A) `hello`   B) `o`   C) `h`   D) `olleh`
 
-**Answer: B.** Each char (`s.substring(i, i+1)`) is prepended, reversing the string: `olleh`. (This is the in-syllabus reverse algorithm; there is no `charAt`.)
+**Answer: D.** Each char (`s.substring(i, i+1)`) is prepended, reversing the string: `olleh`. (This is the in-syllabus reverse algorithm; there is no `charAt`.)
 `[topic 2.10][practice P3]`
 
 ---
@@ -519,9 +519,9 @@ for (int i = 0; i < 5; i++) {
 }
 System.out.println(total);
 ```
-A) `15`   B) `25`   C) `10`   D) `20`
+A) `25`   B) `10`   C) `20`   D) `15`
 
-**Answer: A.** Inner runs i+1 times: 1+2+3+4+5 = `15` (the inner condition is `j <= i`).
+**Answer: D.** Inner runs i+1 times: 1+2+3+4+5 = `15` (the inner condition is `j <= i`).
 `[topic 2.11][practice P3]`
 
 ---
@@ -605,9 +605,9 @@ int[] a = new int[3];
 boolean[] b = new boolean[2];
 System.out.println(a[1] + " " + b[0]);
 ```
-A) `0 false`   B) `0 true`   C) `null false`   D) `0 0`
+A) `0 true`   B) `null false`   C) `0 false`   D) `0 0`
 
-**Answer: A.** `new` zero-fills arrays with type defaults: `int` → `0`, `boolean` → `false`.
+**Answer: C.** `new` zero-fills arrays with type defaults: `int` → `0`, `boolean` → `false`.
 `[topic 4.3][practice P3]`
 
 ---
@@ -638,9 +638,9 @@ for (int x : arr) {
 }
 System.out.println(arr[0] + " " + arr[1] + " " + arr[2]);
 ```
-A) `10 20 30`   B) `1 2 3`   C) `0 0 0`   D) `10 2 3`
+A) `10 20 30`   B) `0 0 0`   C) `10 2 3`   D) `1 2 3`
 
-**Answer: B.** The enhanced-for variable `x` is a **copy** of each primitive element; reassigning `x` does **not** change the array. Output unchanged: `1 2 3`.
+**Answer: D.** The enhanced-for variable `x` is a **copy** of each primitive element; reassigning `x` does **not** change the array. Output unchanged: `1 2 3`.
 `[topic 4.4][practice P3]`
 
 ---
@@ -672,9 +672,9 @@ for (int i = 0; i < a.length - 1; i++) {
 }
 System.out.println(a[0] + " " + a[1] + " " + a[2] + " " + a[3]);
 ```
-A) `20 30 40 40`   B) `20 30 40 0`   C) `10 20 30 40`   D) `40 40 40 40`
+A) `20 30 40 0`   B) `10 20 30 40`   C) `20 30 40 40`   D) `40 40 40 40`
 
-**Answer: A.** Each element copies the one to its right; the last element is never overwritten, so it duplicates: `{20,30,40,40}`.
+**Answer: C.** Each element copies the one to its right; the last element is never overwritten, so it duplicates: `{20,30,40,40}`.
 `[topic 4.5][practice P3]`
 
 ---
@@ -708,9 +708,9 @@ int n = Integer.parseInt(s);
 Integer boxed = n + 8;
 System.out.println(boxed);
 ```
-A) `50`   B) `428`   C) `42`   D) `"50"`
+A) `428`   B) `42`   C) `"50"`   D) `50`
 
-**Answer: A.** `parseInt("42") = 42`; `42 + 8 = 50`; the `int` 50 **autoboxes** into the `Integer boxed`, printed as `50`.
+**Answer: D.** `parseInt("42") = 42`; `42 + 8 = 50`; the `int` 50 **autoboxes** into the `Integer boxed`, printed as `50`.
 `[topic 4.7][practice P3]`
 
 ---
@@ -721,9 +721,9 @@ What is printed?
 double d = Double.parseDouble("3.5") + Double.parseDouble("1.5");
 System.out.println(d);
 ```
-A) `5.0`   B) `5`   C) `3.51.5`   D) `4.0`
+A) `5`   B) `3.51.5`   C) `5.0`   D) `4.0`
 
-**Answer: A.** `3.5 + 1.5 = 5.0`, printed as a double with the decimal point.
+**Answer: C.** `3.5 + 1.5 = 5.0`, printed as a double with the decimal point.
 `[topic 4.7][practice P3]`
 
 ---
@@ -765,9 +765,9 @@ list.add(1, 6);
 list.set(0, 9);
 System.out.println(list);
 ```
-A) `[9, 6, 8]`   B) `[9, 8, 6]`   C) `[5, 6, 8]`   D) `[9, 6, 8, 1]`
+A) `[9, 8, 6]`   B) `[5, 6, 8]`   C) `[9, 6, 8, 1]`   D) `[9, 6, 8]`
 
-**Answer: A.** `[5]` → `[5,8]` → `add(1,6)` inserts at index 1 shifting right → `[5,6,8]` → `set(0,9)` replaces index 0 → `[9,6,8]`.
+**Answer: D.** `[5]` → `[5,8]` → `add(1,6)` inserts at index 1 shifting right → `[5,6,8]` → `set(0,9)` replaces index 0 → `[9,6,8]`.
 `[topic 4.8][practice P3]`
 
 ---
@@ -817,9 +817,9 @@ for (int x : nums) {
 }
 System.out.println(count);
 ```
-A) `2`   B) `3`   C) `1`   D) `4`
+A) `3`   B) `1`   C) `2`   D) `4`
 
-**Answer: A.** Elements > 5: 7 and 10 → count = `2` (4 and 3 are not). Enhanced-for unboxes each `Integer`.
+**Answer: C.** Elements > 5: 7 and 10 → count = `2` (4 and 3 are not). Enhanced-for unboxes each `Integer`.
 `[topic 4.10][practice P3]`
 
 ---
@@ -851,9 +851,9 @@ int[][] g = {{1, 2, 3, 4},
              {5, 6, 7, 8}};
 System.out.println(g.length + " " + g[0].length);
 ```
-A) `2 4`   B) `4 2`   C) `8 8`   D) `2 2`
+A) `4 2`   B) `8 8`   C) `2 2`   D) `2 4`
 
-**Answer: A.** `g.length` = number of **rows** = 2; `g[0].length` = number of **columns** = 4.
+**Answer: D.** `g.length` = number of **rows** = 2; `g[0].length` = number of **columns** = 4.
 `[topic 4.11][practice P3]`
 
 ---
@@ -872,9 +872,9 @@ for (int r = 0; r < g.length; r++) {
 }
 System.out.println(sum);
 ```
-A) `21`   B) `15`   C) `12`   D) `6`
+A) `15`   B) `12`   C) `21`   D) `6`
 
-**Answer: A.** All six elements: 1+2+3+4+5+6 = `21`.
+**Answer: C.** All six elements: 1+2+3+4+5+6 = `21`.
 `[topic 4.12][practice P3]`
 
 ---
@@ -907,9 +907,9 @@ for (int[] row : g) {
 }
 System.out.println(sum);
 ```
-A) `9`   B) `15`   C) `24`   D) `12`
+A) `15`   B) `24`   C) `12`   D) `9`
 
-**Answer: A.** In a 2D enhanced-for the outer variable is a **1D array (a row)**: `row[0]` of each row = 2 + 6 + 1 = `9`.
+**Answer: D.** In a 2D enhanced-for the outer variable is a **1D array (a row)**: `row[0]` of each row = 2 + 6 + 1 = `9`.
 `[topic 4.12][practice P3]`
 
 ---
@@ -948,9 +948,9 @@ for (int r = 0; r < g.length; r++) {
 }
 System.out.println(count);
 ```
-A) `4`   B) `5`   C) `3`   D) `9`
+A) `5`   B) `3`   C) `4`   D) `9`
 
-**Answer: A.** Count of 1s: row0 has 1, row1 has 2, row2 has 1 → `4`.
+**Answer: C.** Count of 1s: row0 has 1, row1 has 2, row2 has 1 → `4`.
 `[topic 4.13][practice P3]`
 
 ---
@@ -1000,9 +1000,9 @@ public static void main(String[] args) {
     System.out.println(list);
 }
 ```
-A) `[1]`   B) `[1, 99]`   C) `[99]`   D) `[]`
+A) `[1]`   B) `[99]`   C) `[]`   D) `[1, 99]`
 
-**Answer: B.** The parameter is an **alias** to the same object. Mutating it (`add(99)`) through the parameter changes the caller's list → `[1, 99]`.
+**Answer: D.** The parameter is an **alias** to the same object. Mutating it (`add(99)`) through the parameter changes the caller's list → `[1, 99]`.
 `[topic 3.6][practice P3]`
 
 ---
@@ -1070,9 +1070,9 @@ public static void f(int n) {
     f(n - 1);
 }
 ```
-A) `3 2 1`   B) `1 2 3`   C) `0 1 2 3`   D) `3 2 1 0`
+A) `1 2 3`   B) `0 1 2 3`   C) `3 2 1`   D) `3 2 1 0`
 
-**Answer: A.** Prints **before** recursing, decreasing: `3 2 1 ` then `f(0)` returns without printing.
+**Answer: C.** Prints **before** recursing, decreasing: `3 2 1 ` then `f(0)` returns without printing.
 `[topic 4.16][practice P3]`
 
 ---
@@ -1086,9 +1086,9 @@ public static void g(int n) {
     System.out.print(n + " ");
 }
 ```
-A) `1 2 3`   B) `3 2 1`   C) `0 1 2 3`   D) Nothing.
+A) `3 2 1`   B) `0 1 2 3`   C) Nothing.   D) `1 2 3`
 
-**Answer: A.** The recursive call happens **first**, so prints unwind on the way back up: `1 2 3`. (Contrast Q66, where the print is before the call.)
+**Answer: D.** The recursive call happens **first**, so prints unwind on the way back up: `1 2 3`. (Contrast Q66, where the print is before the call.)
 `[topic 4.16][practice P3]`
 
 ---
@@ -1116,9 +1116,9 @@ public static int t(int n) {
     return t(n - 1) + t(n - 2);
 }
 ```
-A) `3`   B) `5`   C) `2`   D) `4`
+A) `5`   B) `2`   C) `3`   D) `4`
 
-**Answer: A.** `t(4)=t(3)+t(2)`; `t(3)=t(2)+t(1)`; `t(2)=t(1)+t(0)=1+0=1`; so `t(3)=1+1=2`, `t(4)=2+1=3`.
+**Answer: C.** `t(4)=t(3)+t(2)`; `t(3)=t(2)+t(1)`; `t(2)=t(1)+t(0)=1+0=1`; so `t(3)=1+1=2`, `t(4)=2+1=3`.
 `[topic 4.16][practice P3]`
 
 ---
@@ -1126,13 +1126,13 @@ A) `3`   B) `5`   C) `2`   D) `4`
 ## O. Search & sort — TRACE ONLY
 
 **Q70. (Analyze Code · 4.17 binary search step count)**
-On the sorted array below, binary search for `target = 7` examines which indices, in order? (low/high inclusive, `mid = (low+high)/2`)
+On the sorted array below, binary search for `target = 11` examines which indices, in order? (low/high inclusive, `mid = (low+high)/2`)
 ```java
 int[] a = {1, 3, 5, 7, 9, 11, 13};   // indices 0..6
 ```
-A) `3` (found immediately)   B) `0, 1, 2, 3`   C) `3, 4, 5`   D) `6, 3, 0`
+A) `3, 5`   B) `3` (found immediately)   C) `0, 1, 2, 3, 4, 5`   D) `6, 3, 0`
 
-**Answer: A.** First `mid = (0+6)/2 = 3`; `a[3] == 7` → found on the **first** probe. Binary search halves the space and starts in the middle.
+**Answer: A.** First `mid = (0+6)/2 = 3`; `a[3] = 7 < 11` → search the right half, `low = 4`. Next `mid = (4+6)/2 = 5`; `a[5] == 11` → found. The probed indices are `3, 5` (two probes). Binary search halves the space each step, not a linear scan.
 `[topic 4.17][practice P3]`
 
 ---
@@ -1148,9 +1148,9 @@ A) `1`   B) `2`   C) `3`   D) `5`
 
 **Q72. (Analyze Code · 4.15 selection sort one pass)**
 Selection sort puts the **minimum** of the unsorted segment at the front each pass. After the **first** pass on `{5, 2, 9, 1, 7}`, what is the array?
-A) `{1, 2, 9, 5, 7}`   B) `{1, 2, 5, 7, 9}`   C) `{2, 5, 9, 1, 7}`   D) `{1, 5, 2, 9, 7}`
+A) `{1, 2, 5, 7, 9}`   B) `{2, 5, 9, 1, 7}`   C) `{1, 5, 2, 9, 7}`   D) `{1, 2, 9, 5, 7}`
 
-**Answer: A.** Pass 1 finds the min (1 at index 3) and swaps it with index 0: `{1, 2, 9, 5, 7}` (5 and 1 swap; the rest stay).
+**Answer: D.** Pass 1 finds the min (1 at index 3) and swaps it with index 0: `{1, 2, 9, 5, 7}` (5 and 1 swap; the rest stay).
 `[topic 4.15][practice P3]`
 
 ---
@@ -1166,9 +1166,9 @@ A) `{3, 4, 5, 1}`   B) `{3, 4, 1, 5}`   C) `{1, 3, 4, 5}`   D) `{4, 3, 5, 1}`
 
 **Q74. (Analyze Code · 4.17 merge sort split structure — describe behavior)**
 Merge sort on `{8, 3, 5, 1}` recursively splits, then merges sorted halves. Which sequence of *merged* results is correct?
-A) merge `{3,8}` and `{1,5}` → `{1, 3, 5, 8}`   B) merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}`   C) `{8, 3, 5, 1}` is already returned unchanged   D) merge `{1,3}` and `{5,8}` → `{1, 3, 5, 8}`
+A) merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}`   B) `{8, 3, 5, 1}` is already returned unchanged   C) merge `{3,8}` and `{1,5}` → `{1, 3, 5, 8}`   D) merge `{1,3}` and `{5,8}` → `{1, 3, 5, 8}`
 
-**Answer: A.** Split into `{8,3}`→sorted `{3,8}` and `{5,1}`→sorted `{1,5}`; merging those sorted halves interleaves to `{1,3,5,8}`.
+**Answer: C.** Split into `{8,3}`→sorted `{3,8}` and `{5,1}`→sorted `{1,5}`; merging those sorted halves interleaves to `{1,3,5,8}`.
 `[topic 4.17][practice P4]`
 
 ---
@@ -1184,9 +1184,9 @@ for (int x : a) sum += x;
 double avg = sum / a.length;
 System.out.println(avg);
 ```
-A) `2.3333333333333335`   B) `2.0`   C) `7.0`   D) `2`
+A) `2.3333333333333335`   B) `7.0`   C) `2`   D) `2.0`
 
-**Answer: B.** `sum = 7`, `a.length = 3`. `sum / a.length` is **integer** division `7/3 = 2` (computed before the assignment to `double`), then widened → `2.0`. (To get 2.33 you would cast first.)
+**Answer: D.** `sum = 7`, `a.length = 3`. `sum / a.length` is **integer** division `7/3 = 2` (computed before the assignment to `double`), then widened → `2.0`. (To get 2.33 you would cast first.)
 `[topic 2.9][practice P3]`
 
 ---
@@ -1199,9 +1199,9 @@ s.substring(0, 1);
 s = s + "!";
 System.out.println(s);
 ```
-A) `go!`   B) `g`   C) `go`   D) `g!`
+A) `g`   B) `go`   C) `g!`   D) `go!`
 
-**Answer: A.** Strings are **immutable**; `s.substring(0,1)` returns a new string that is discarded (`s` unchanged). Then `s + "!"` builds a new string `"go!"` assigned back to `s`.
+**Answer: D.** Strings are **immutable**; `s.substring(0,1)` returns a new string that is discarded (`s` unchanged). Then `s + "!"` builds a new string `"go!"` assigned back to `s`.
 `[topic 1.15][practice P4]`
 
 ---
@@ -1215,9 +1215,9 @@ for (Counter c : cs) {
 }
 System.out.println(cs[0].get() + " " + cs[1].get());
 ```
-A) `0 0`   B) `1 1`   C) `2 2`   D) Compile error
+A) `1 1`   B) `0 0`   C) `2 2`   D) Compile error
 
-**Answer: B.** The enhanced-for copies the **reference**, not the object. Calling the mutator `inc()` through `c` changes the shared object → each counter is `1`. (Contrast Q42: reassigning a primitive copy does nothing.)
+**Answer: A.** The enhanced-for copies the **reference**, not the object. Calling the mutator `inc()` through `c` changes the shared object → each counter is `1`. (Contrast Q42: reassigning a primitive copy does nothing.)
 `[topic 4.4][practice P4]`
 
 ---
@@ -1235,9 +1235,9 @@ while (i != -1) {
 }
 System.out.println(count);
 ```
-A) `3`   B) `2`   C) `4`   D) `0`
+A) `2`   B) `3`   C) `4`   D) `0`
 
-**Answer: A.** Finds `X` at 1, chop → `bXcXd`; at 1, chop → `cXd`; at 1, chop → `d`; now `indexOf("X") = -1`, stop. count = `3`.
+**Answer: B.** Finds `X` at 1, chop → `bXcXd`; at 1, chop → `cXd`; at 1, chop → `d`; now `indexOf("X") = -1`, stop. count = `3`.
 `[topic 2.10][practice P3]`
 
 ---
@@ -1251,9 +1251,9 @@ for (int i = 0; i < a.length; i++) b[i] = a[i];
 b[0] = 100;
 System.out.println(a[0] + " " + b[0]);
 ```
-A) `1 100`   B) `100 100`   C) `1 1`   D) `100 1`
+A) `100 100`   B) `1 1`   C) `100 1`   D) `1 100`
 
-**Answer: A.** Element-by-element copy makes `b` independent; changing `b[0]` does not affect `a[0]`. (Contrast `int[] b = a;`, which would alias.)
+**Answer: D.** Element-by-element copy makes `b` independent; changing `b[0]` does not affect `a[0]`. (Contrast `int[] b = a;`, which would alias.)
 `[topic 4.5][practice P3]`
 
 ---
@@ -1280,9 +1280,9 @@ for (int i = 0; i <= a.length; i++) {
     sum += a[i];
 }
 ```
-A) Change the loop condition to `i < a.length`   B) Change `i = 0` to `i = 1`   C) Change `sum += a[i]` to `sum += a[i + 1]`   D) Change `a.length` to `a.length + 1`
+A) Change `i = 0` to `i = 1`   B) Change `sum += a[i]` to `sum += a[i + 1]`   C) Change the loop condition to `i < a.length`   D) Change `a.length` to `a.length + 1`
 
-**Answer: A.** Valid indices are 0..3; `i <= a.length` lets `i` reach 4 (out of bounds). `i < a.length` stops at index 3. (B) skips index 0; (C) makes the access worse; (D) extends the bound further out.
+**Answer: C.** Valid indices are 0..3; `i <= a.length` lets `i` reach 4 (out of bounds). `i < a.length` stops at index 3. (A) skips index 0; (B) makes the access worse; (D) extends the bound further out.
 `[topic 4.5][practice P3]`
 
 ---
@@ -1311,9 +1311,9 @@ for (int i = 0; i < list.size(); i++) {
     }
 }
 ```
-A) Iterate backward: `for (int i = list.size() - 1; i >= 0; i--)`   B) Change `list.remove(i)` to `list.set(i, 0)`   C) Change the condition to `i <= list.size()`   D) Add `i++;` inside the `if`
+A) Change `list.remove(i)` to `list.set(i, 0)`   B) Change the condition to `i <= list.size()`   C) Add `i++;` inside the `if`   D) Iterate backward: `for (int i = list.size() - 1; i >= 0; i--)`
 
-**Answer: A.** Forward removal with `i++` skips the element shifted into the removed slot (`[0,0,4]` → remove index 0 → `[0,4]`, `i` advances to 1 and skips the surviving `0`). Iterating **backward** never skips a shifted element. (B) removes nothing; (C) goes out of bounds; (D) skips even more.
+**Answer: D.** Forward removal with `i++` skips the element shifted into the removed slot (`[0,0,4]` → remove index 0 → `[0,4]`, `i` advances to 1 and skips the surviving `0`). Iterating **backward** never skips a shifted element. (A) removes nothing; (B) goes out of bounds; (C) skips even more.
 `[topic 4.9][practice P3]`
 
 ---
@@ -1392,9 +1392,9 @@ A) `2`   B) `100`   C) `0`   D) A `NullPointerException` is thrown.
 
 **Q90. (Analyze Code · 4.3 set — state the precondition)**
 Continuing SET 1: `inv.slot(i)` works correctly only if ___ — which precondition must hold?
-A) `i` is even   B) `0 <= i && i < counts.length`   C) `counts` is sorted   D) `i` is positive
+A) `i` is even   B) `counts` is sorted   C) `i` is positive   D) `0 <= i && i < counts.length`
 
-**Answer: B.** *Model answer:* `slot(i)` indexes `counts[i]`; it must be a **valid index** (`0 <= i < counts.length`), or it throws an `ArrayIndexOutOfBoundsException`. Parity, order, and sign are irrelevant.
+**Answer: D.** *Model answer:* `slot(i)` indexes `counts[i]`; it must be a **valid index** (`0 <= i < counts.length`), or it throws an `ArrayIndexOutOfBoundsException`. Parity, order, and sign are irrelevant.
 `[topic 4.3][practice P4]`
 
 ---
@@ -1429,9 +1429,9 @@ for (int i = 0; i < words.length; i++) {
 }
 System.out.println(idx);
 ```
-A) Add `break;` immediately after `idx = i;`   B) Change `> 4` to `>= 4`   C) Change `idx = i` to `idx = words[i].length()`   D) Start the loop at `i = 1`
+A) Change `> 4` to `>= 4`   B) Change `idx = i` to `idx = words[i].length()`   C) Add `break;` immediately after `idx = i;`   D) Start the loop at `i = 1`
 
-**Answer: A.** Without stopping, `idx` is overwritten by every match, leaving the **last**. Adding `break;` after the first assignment captures the **first** match. (B) changes the threshold; (C) stores the wrong value; (D) skips index 0.
+**Answer: C.** Without stopping, `idx` is overwritten by every match, leaving the **last**. Adding `break;` after the first assignment captures the **first** match. (A) changes the threshold; (B) stores the wrong value; (D) skips index 0.
 `[topic 4.5][practice P3]`
 
 ---
@@ -1465,9 +1465,9 @@ public static int sumFrom(int[] a, int i) {
     return a[i] + sumFrom(a, i + 1);
 }
 ```
-A) `13`   B) `6`   C) `11`   D) `0`
+A) `6`   B) `11`   C) `0`   D) `13`
 
-**Answer: A.** `sumFrom(a,0) = 4 + (2 + (7 + 0)) = 13` (base case at `i >= length` returns 0). Each call adds one element, then recurses on the next index.
+**Answer: D.** `sumFrom(a,0) = 4 + (2 + (7 + 0)) = 13` (base case at `i >= length` returns 0). Each call adds one element, then recurses on the next index.
 `[topic 4.16][practice P3]`
 
 ---
@@ -1499,9 +1499,9 @@ Which is true about the sign of `"apple".compareTo("banana")`?
 ```java
 System.out.println("apple".compareTo("banana"));
 ```
-A) It is **negative**, because `"apple"` comes before `"banana"` lexicographically.   B) It is **0**, because both have content.   C) It is **positive**, because `"apple"` is shorter.   D) It throws an exception.
+A) It is **0**, because both have content.   B) It is **positive**, because `"apple"` is shorter.   C) It is **negative**, because `"apple"` comes before `"banana"` lexicographically.   D) It throws an exception.
 
-**Answer: A.** `compareTo` returns the difference at the first differing position; `'a'` < `'b'`, so the result is **negative** (`"apple"` orders before `"banana"`). Equal strings give 0; a later-ordering receiver gives positive.
+**Answer: C.** `compareTo` returns the difference at the first differing position; `'a'` < `'b'`, so the result is **negative** (`"apple"` orders before `"banana"`). Equal strings give 0; a later-ordering receiver gives positive.
 `[topic 1.15][practice P3]`
 
 ---
