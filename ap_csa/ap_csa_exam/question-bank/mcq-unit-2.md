@@ -25,9 +25,9 @@ x = x + 5;
 x = x * 2;
 System.out.println(x);
 ```
-A) `9`   B) `12`   C) `4`   D) `14`
+A) `9`   B) `12`   C) `7`   D) `14`
 
-**Answer: D.** Statements run **in sequence**: `2 → 7 → 14`.
+**Answer: D.** Statements run **in sequence**: `2 → 7 → 14`. (C) `7` is the value after only the first assignment — the slip of forgetting that the last line (`x = x * 2`) still runs.
 `[topic 2.1][practice P3]`
 
 ---
@@ -137,9 +137,9 @@ What is the value of `r`?
 ```java
 boolean r = !false || false && false;
 ```
-A) `false`   B) compile error   C) `null`   D) `true`
+A) `false`   B) compile error   C) It is unspecified — the answer depends on which operator binds first.   D) `true`
 
-**Answer: D.** `!false = true`; `false && false = false`; `true || false = true`. (`!` binds tightest, then `&&`, then `||`.)
+**Answer: D.** `!false = true`; `false && false = false`; `true || false = true`. (`!` binds tightest, then `&&`, then `||`.) (A) is the wrong-precedence value from binding left to right as `(!false || false) && false` = `false`; (C) is false — Java fixes this precedence, so the result is fully determinate.
 `[topic 2.5][practice P3]`
 
 ---

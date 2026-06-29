@@ -40,9 +40,9 @@ What is printed?
 ```java
 System.out.println("a\\b\"c");
 ```
-A) `ab c`   B) `a\\b\"c`   C) `a\b"c`   D) `a\b\c`
+A) `a\b\"c`   B) `a\\b\"c`   C) `a\b"c`   D) `a\b\c`
 
-**Answer: C.** `\\` is one backslash; `\"` is one double quote. So the output is `a\b"c`.
+**Answer: C.** `\\` is one backslash; `\"` is one double quote. So the output is `a\b"c`. (A) collapses `\\` correctly but leaves `\"` unprocessed; (B) processes no escapes at all; (D) drops the quote.
 `[topic 1.3][practice P3]`
 
 ---
@@ -67,9 +67,9 @@ What is printed?
 String s = null;
 System.out.println(s);
 ```
-A) An empty line   B) A `NullPointerException` is thrown.   C) The empty string `""` (nothing visible)   D) `null`
+A) An empty line   B) A `NullPointerException` is thrown.   C) Nothing is printed; the call is skipped because `s` is `null`.   D) `null`
 
-**Answer: D.** Printing a `null` reference prints the text `null`; only **calling a method** on `null` would throw `NullPointerException` (B). It does not print an empty line (A) or an empty string (C).
+**Answer: D.** Printing a `null` reference prints the text `null`; only **calling a method** on `null` would throw `NullPointerException` (B). It does not print an empty line (A), and the call is **not** skipped — `println` runs and emits `null` (C).
 `[topic 1.4][practice P3]`
 
 ---

@@ -211,9 +211,9 @@ if (b || check()) {
 }
 // check() prints nothing relevant; question is how many times it is called
 ```
-A) 1   B) 2   C) It depends on the file.   D) 0
+A) 1   B) 2   C) 3   D) 0
 
-**Answer: D.** `true || ...` short-circuits — once the left side is `true`, the right operand `check()` is **never called**.
+**Answer: D.** `true || ...` short-circuits — once the left side is `true`, the right operand `check()` is **never called**. (A) is the count if you think `||` always evaluates the right side; (B) double-counts a re-evaluation when the body runs; (C) imagines the `if` re-polls `check()` until it settles.
 `[topic 2.5][practice P3]`
 
 ---
@@ -221,12 +221,12 @@ A) 1   B) 2   C) It depends on the file.   D) 0
 **Q16. (Analyze Code · 2.5 logical precedence ! > && > ||)**
 What is the value of `result`?
 ```java
-boolean a = false, b = true, c = false;
+boolean a = true, b = false, c = true;
 boolean result = a || b && !c;
 ```
-A) `true`   B) `false`   C) It is a compile error.   D) `null`
+A) `true`   B) `false`   C) It does not compile — `&&` and `||` cannot be combined without parentheses.   D) It is unspecified — the result depends on operand evaluation order.
 
-**Answer: A.** Precedence: `!c = true`; then `b && true = true`; then `a || true = true`.
+**Answer: A.** Precedence is `!` > `&&` > `||`: `!c = false`; then `b && false = false`; then `a || false = true`. (B) is the wrong-precedence value from grouping left to right as `(a || b) && !c` = `true && false` = `false`; (C) is false — Java fully defines this precedence, so no parentheses are required; (D) is false — operand order is fully specified (left to right), so the result is determinate.
 `[topic 2.5][practice P3]`
 
 ---

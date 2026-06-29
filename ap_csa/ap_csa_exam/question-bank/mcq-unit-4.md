@@ -148,9 +148,9 @@ int b = a + 3;          // unbox, add
 Integer c = b;          // autobox
 System.out.println(c);
 ```
-A) `53`   B) `5`   C) `8`   D) `Integer`
+A) `53`   B) `5`   C) `8`   D) `11`
 
-**Answer: C.** `a` autoboxes 5; `a + 3` unboxes to 5, adds → `b = 8`; `c` autoboxes 8 → prints `8`. `Integer` is immutable but reassigning `c` is fine.
+**Answer: C.** `a` autoboxes 5; `a + 3` unboxes to 5, adds → `b = 8`; `c` autoboxes 8 → prints `8`. `Integer` is immutable but reassigning `c` is fine. (A) treats `+` as String concatenation; (B) forgets the `+ 3`; (D) adds 3 a second time when reassigning `c`.
 `[topic 4.7][practice P3]`
 
 ---
@@ -334,9 +334,9 @@ public static int f(int n) {
     return f(n - 1) + 2;
 }
 ```
-A) `6`   B) `5`   C) `8`   D) `11`
+A) `7`   B) `5`   C) `9`   D) `11`
 
-**Answer: D.** `f(0)=5`; `f(1)=5+2=7`; `f(2)=7+2=9`; `f(3)=9+2=11`.
+**Answer: D.** `f(0)=5`; `f(1)=5+2=7`; `f(2)=7+2=9`; `f(3)=9+2=11`. (A) `7` adds the `+2` only once (no full unrolling); (B) `5` stops at the base case; (C) `9` unrolls one step too few (the value of `f(2)`).
 `[topic 4.16][practice P3]`
 
 ---
