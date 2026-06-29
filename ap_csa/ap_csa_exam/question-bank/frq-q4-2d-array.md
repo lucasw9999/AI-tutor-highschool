@@ -185,6 +185,124 @@ public static int countAvailable(Seat[][] hall) {
 
 ---
 
+### Practice FRQ 4 — `heaviestColumn` (6 points)  · **genuinely column-major** (each column as a unit)
+
+Write `heaviestColumn`, which returns the **index of the column whose values sum to the largest total** in the rectangular 2D array `grid`. Process the grid **column by column**: the outer loop walks columns, the inner loop walks the rows of that one column to total it. If two columns tie for the largest sum, return the **smaller** column index.
+
+```java
+/** Returns the index of the column with the greatest column-sum.
+ *  On a tie, returns the smaller column index.
+ *  Precondition: grid is rectangular with at least one row and one column.
+ */
+public static int heaviestColumn(int[][] grid) {
+    /* to be implemented */
+}
+```
+
+Example: for
+```
+{{1, 5, 0},
+ {2, 5, 1},
+ {3, 0, 1}}
+```
+the column sums are column 0 = 6, column 1 = 10, column 2 = 2, so the method returns `1`.
+
+#### Sample solution
+
+```java
+public static int heaviestColumn(int[][] grid) {
+    int bestCol = 0;
+    int bestSum = 0;
+    for (int r = 0; r < grid.length; r++) {
+        bestSum += grid[r][0];
+    }
+    for (int c = 1; c < grid[0].length; c++) {
+        int colSum = 0;
+        for (int r = 0; r < grid.length; r++) {
+            colSum += grid[r][c];
+        }
+        if (colSum > bestSum) {
+            bestSum = colSum;
+            bestCol = c;
+        }
+    }
+    return bestCol;
+}
+```
+
+> **Why column-major here?** Each column must be totaled as a whole before it can be compared, so the **outer** loop fixes a column `c` and the **inner** loop runs the rows `0 .. grid.length - 1` accumulating that column's sum. Seeding `bestSum` from column 0 (and comparing strictly with `>`) makes ties resolve to the smaller index.
+
+#### Rubric (6 points)
+
+| Pt | Criterion |
+|---|---|
+| 1 | Tracks a best column index and its sum, seeded from a **real column** (column 0's full sum), not from 0 — so all-negative grids work and the answer is always a valid column |
+| 2 | **Outer** loop iterates over **columns** using `grid[0].length` (or `grid[r].length`) — the column index is the outer loop variable (column-major) |
+| 3 | **Inner** loop iterates over the **rows** of the current column using `grid.length`, accumulating that column's sum (a fresh `colSum` reset per column) |
+| 4 | Accesses cells as `grid[r][c]` (row index first, column second) with the column held fixed across the inner loop |
+| 5 | Compares each column sum to the best with `>` (strict, so a tie keeps the smaller index) and updates both the best sum and best column index |
+| 6 | Returns the best column **index** |
+
+**Trace check.** Grid above: seed col 0 sum = 1+2+3 = 6, bestCol 0. c=1: colSum 5+5+0 = 10; `10>6`✔ bestSum 10, bestCol 1. c=2: colSum 0+1+1 = 2; `2>10`✘ → returns **1** ✓. Tie check: with column sums `[6,6]`, col 0 seeds best, col 1 `6>6`✘ → keeps **0** (smaller index) ✓. Outer loop = columns, inner = rows, `colSum` reset each column, cells `grid[r][c]`. Points sum **6**.
+
+---
+
+### Practice FRQ 5 — `borderSum` (6 points)  · **sub-section / region only** (the border, not the whole grid)
+
+Write `borderSum`, which returns the sum of only the values on the **border** (outermost edge) of the rectangular 2D array `grid` — the entire first row, the entire last row, and the first and last columns of the rows in between. Interior cells are **not** counted.
+
+```java
+/** Returns the sum of the values on the outer border of grid.
+ *  Precondition: grid is rectangular with at least one row and one column.
+ */
+public static int borderSum(int[][] grid) {
+    /* to be implemented */
+}
+```
+
+Example: for
+```
+{{1, 2, 3},
+ {4, 5, 6},
+ {7, 8, 9}}
+```
+the border values are 1, 2, 3, 4, 6, 7, 8, 9 (everything except the center 5), so the method returns `40`.
+
+#### Sample solution
+
+```java
+public static int borderSum(int[][] grid) {
+    int rows = grid.length;
+    int cols = grid[0].length;
+    int sum = 0;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (r == 0 || r == rows - 1 || c == 0 || c == cols - 1) {
+                sum += grid[r][c];
+            }
+        }
+    }
+    return sum;
+}
+```
+
+> **Why the `||` test, not four separate loops?** A cell is on the border exactly when it is in the first or last row **or** the first or last column. Testing `r == 0 || r == rows - 1 || c == 0 || c == cols - 1` inside one traversal counts each border cell **exactly once** — including the corners — and avoids double-counting that separate edge loops risk. This also handles a single-row, single-column, or 1×1 grid correctly (every cell satisfies the test).
+
+#### Rubric (6 points)
+
+| Pt | Criterion |
+|---|---|
+| 1 | Declares and initializes an accumulator to 0 |
+| 2 | Outer loop over **rows** with `grid.length`; inner loop over **columns** with `grid[r].length` (or `grid[0].length`) — correct dimensions, not swapped |
+| 3 | Accesses each cell as `grid[r][c]` (row first, column second) |
+| 4 | Restricts to the **border region** with the condition `r == 0 || r == grid.length - 1 || c == 0 || c == grid[0].length - 1` (last row/col use `length - 1`) |
+| 5 | Adds only border cells to the accumulator — each border cell counted exactly once (corners not double-counted) |
+| 6 | Returns the border sum |
+
+**Trace check.** 3×3 grid above (rows 3, cols 3): r=0 all in border → +1+2+3 = 6; r=1: c=0 border +4, c=1 interior (`1!=0,1!=2,1!=0,1!=2`) skip, c=2 border +6 → +10 (sum 16); r=2 all in border → +7+8+9 = 24 → total **6+10+24 = 40** ✓ (center 5 excluded). 1×1 grid `{{9}}`: r=0,c=0 satisfies `r==0` → +9 → returns **9** ✓. The `||` test selects exactly the border and counts each such cell once. Points sum **6**.
+
+---
+
 ## (c) Signature point-losers for Q4
 
 Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/killer-errors-cheatsheet.md):
@@ -196,5 +314,7 @@ Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/ki
 | Initializing a max/min tracker to 0 | — (topic 4.5) | Seed the extreme from a **real cell** (e.g., `grid[0][col]`), not 0. A grid of all-negative values would otherwise return 0 wrongly. `Math.max`/`Math.min` are off the reference — track with an `if`. |
 | Off-by-one bounds on either dimension | #2, #3 | Last valid row = `grid.length - 1`, last valid column = `grid[r].length - 1`; loop with `<`, not `<=`. `grid.length`/`grid[r].length` are **attributes** (no parentheses). |
 | Assuming a jagged shape (or hard-coding a width) | — (exclusion 16) | Grids here are rectangular, but still size the inner loop from `grid[r].length` (robust per-row) rather than a literal — never assume a fixed column count. |
+| Column-major: not resetting the per-column accumulator | — (topic 4.13) | For genuine column-major work the **outer** loop fixes a column and the **inner** loop runs the rows; reset the column accumulator (`colSum = 0`) **inside** the outer loop, once per column, or sums leak across columns. |
+| Sub-section: counting cells outside the region (or double-counting) | — (topic 4.13) | Process **only** the asked region. A border is `r == 0 || r == rows - 1 || c == 0 || c == cols - 1` inside one traversal (each cell once); the main diagonal is `r == c`; a single row/column fixes that index. Last row/column use `length - 1`. |
 | `==` to compare String cell contents | #1 | If cells are Strings, compare with `.equals`, not `==`. |
 | Re-implementing a provided element accessor | #13 | If `isReserved()` (or any element method) is given, **call it** — don't reach for fields you can't see. |

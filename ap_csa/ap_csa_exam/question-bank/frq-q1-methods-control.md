@@ -266,6 +266,176 @@ public String initials() {
 
 ---
 
+### Practice FRQ 4 — `ScoreCard` (7 points)  · *Part B uses `split`*
+
+A `ScoreCard` class works with comma-delimited records. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:
+
+```java
+/** Returns the score recorded for round number r.
+ *  Precondition: 1 <= r <= roundCount().
+ */
+public static int scoreOf(int r) { /* implementation not shown */ }
+
+/** Returns the total number of rounds recorded (>= 0). */
+public static int roundCount() { /* implementation not shown */ }
+```
+
+**Part A (4 points).** Write `totalScore`, which returns the sum of the scores over all recorded rounds. Rounds are numbered `1` through `roundCount()` inclusive. Use the provided methods.
+
+```java
+/** Returns the sum of the scores of all recorded rounds.
+ *  Returns 0 if there are no rounds.
+ */
+public static int totalScore() {
+    /* to be implemented in Part A */
+}
+```
+
+For example, if there are 4 rounds with scores 10, 25, 0, 7, then `totalScore()` returns `42`.
+
+**Part B (3 points).** A player record is a single String of the form `"name,score,score,score"` — a name, then one or more whole-number scores, all separated by commas, for example `"Ana,10,25,7"`. Write `recordTotal`, which returns the **sum of the numeric scores** in the record (the name is **not** a number and must be skipped). You may assume `record` is not `null`, contains at least the name and one score, and that every field after the name parses as an `int`.
+
+```java
+/** Returns the sum of the numeric scores in record, which has the form
+ *  "name,score,score,...". The first field (name) is skipped.
+ *  Precondition: record is not null and has the form above with >= 1 score.
+ */
+public static int recordTotal(String record) {
+    /* to be implemented in Part B */
+}
+```
+
+For example, `recordTotal("Ana,10,25,7")` returns `42`, and `recordTotal("Bo,5")` returns `5`.
+
+#### Sample solution
+
+```java
+public static int totalScore() {
+    int sum = 0;
+    for (int r = 1; r <= roundCount(); r++) {
+        sum += scoreOf(r);
+    }
+    return sum;
+}
+
+public static int recordTotal(String record) {
+    String[] parts = record.split(",");
+    int sum = 0;
+    for (int i = 1; i < parts.length; i++) {
+        sum += Integer.parseInt(parts[i]);
+    }
+    return sum;
+}
+```
+
+#### Rubric (7 points)
+
+**Part A — `totalScore` (4 points)**
+
+| Pt | Criterion |
+|---|---|
+| 1 | Declares and initializes an accumulator to 0 (returns 0 when there are no rounds) |
+| 2 | Loops over round numbers `1` through `roundCount()` **inclusive** (correct bounds: `r <= roundCount()`) |
+| 3 | Calls the provided `scoreOf(r)` (does not re-implement the score lookup) |
+| 4 | Adds each score to the accumulator and returns the sum |
+
+**Part B — `recordTotal` (3 points)**
+
+| Pt | Criterion |
+|---|---|
+| 5 | Splits `record` on `","` with `split(",")` into a `String[]` |
+| 6 | Traverses the score fields, **starting at index 1** to skip the name (correct off-by-one: `i = 1`, not `i = 0`), with correct bounds `i < parts.length` |
+| 7 | Converts each score field with `Integer.parseInt(parts[i])`, accumulates the sum, and returns it |
+
+**Trace check.** Part A: scores 10,25,0,7 → sum 0; r=1 +10 (10), r=2 +25 (35), r=3 +0 (35), r=4 +7 (42) → returns **42** ✓. Part B: `"Ana,10,25,7"` → `split(",")` = `["Ana","10","25","7"]`, length 4; i=1 `parseInt("10")`=10 (sum 10), i=2 `parseInt("25")`=25 (sum 35), i=3 `parseInt("7")`=7 (sum 42) → returns **42** ✓; `"Bo,5"` → `["Bo","5"]`, i=1 +5 → **5** ✓. Points sum **4 + 3 = 7**. The split delimiter `","` is a literal (no regex metacharacter — in-scope); the loop starts at 1 to skip the name; `Integer.parseInt` is on the Quick Reference.
+
+---
+
+### Practice FRQ 5 — `WordList` (7 points)  · *Part B uses `compareTo`*
+
+A `WordList` class works with a list of words. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:
+
+```java
+/** Returns the word at position i.  Precondition: 0 <= i < wordCount(). */
+public static String wordAt(int i) { /* implementation not shown */ }
+
+/** Returns the number of words (>= 1). */
+public static int wordCount() { /* implementation not shown */ }
+```
+
+**Part A (4 points).** Write `countBefore`, which returns how many words come **strictly before** the String `target` in alphabetical (lexicographic) order. A word `w` comes before `target` when `w.compareTo(target)` is **negative**. Words are numbered `0` through `wordCount() - 1`. Use the provided methods.
+
+```java
+/** Returns the number of words that come strictly before target lexicographically.
+ *  Precondition: target is not null.
+ */
+public static int countBefore(String target) {
+    /* to be implemented in Part A */
+}
+```
+
+For example, if the words are `"pear", "apple", "mango", "kiwi"` and `target` is `"mango"`, the method returns `2` (`"apple"` and `"kiwi"` come before `"mango"`; `"pear"` does not, and `"mango"` is not strictly before itself).
+
+**Part B (3 points).** Write `alphabeticallyFirst`, which returns the word that comes **first** in lexicographic order among all the words. You may assume there is at least one word. Use the provided methods.
+
+```java
+/** Returns the lexicographically smallest word among all words.
+ *  Precondition: wordCount() >= 1.
+ */
+public static String alphabeticallyFirst() {
+    /* to be implemented in Part B */
+}
+```
+
+For the words above, `alphabeticallyFirst()` returns `"apple"`.
+
+#### Sample solution
+
+```java
+public static int countBefore(String target) {
+    int count = 0;
+    for (int i = 0; i < wordCount(); i++) {
+        if (wordAt(i).compareTo(target) < 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+public static String alphabeticallyFirst() {
+    String first = wordAt(0);
+    for (int i = 1; i < wordCount(); i++) {
+        if (wordAt(i).compareTo(first) < 0) {
+            first = wordAt(i);
+        }
+    }
+    return first;
+}
+```
+
+#### Rubric (7 points)
+
+**Part A — `countBefore` (4 points)**
+
+| Pt | Criterion |
+|---|---|
+| 1 | Declares and initializes a counter to 0 |
+| 2 | Loops over all positions `0` through `wordCount() - 1` (correct bounds: `i < wordCount()`), calling the provided `wordAt(i)` |
+| 3 | Compares with `compareTo`, testing **strictly before** as `wordAt(i).compareTo(target) < 0` (negative, not `<= 0`) |
+| 4 | Increments the counter on a match and returns the count |
+
+**Part B — `alphabeticallyFirst` (3 points)**
+
+| Pt | Criterion |
+|---|---|
+| 5 | Seeds the running "first" word from a **real word** (`wordAt(0)`), not from `""` or `null` |
+| 6 | Traverses the remaining words and uses `wordAt(i).compareTo(first) < 0` to detect a word that comes earlier, updating `first` when so |
+| 7 | Returns the lexicographically first word |
+
+**Trace check.** Part A: words `"pear","apple","mango","kiwi"`, `target="mango"` → `"pear".compareTo("mango")` is positive ✘; `"apple".compareTo("mango")` negative ✔ (1); `"mango".compareTo("mango")` is 0, not `< 0` ✘; `"kiwi".compareTo("mango")` negative ✔ (2) → returns **2** ✓. Part B: first=`"pear"`; i=1 `"apple".compareTo("pear")`<0 ✔ first=`"apple"`; i=2 `"mango".compareTo("apple")` positive ✘; i=3 `"kiwi".compareTo("apple")` positive ✘ → returns **"apple"** ✓. Points sum **4 + 3 = 7**. `compareTo` is on the Quick Reference; strict-before uses `< 0` (excludes equal words); the running min is seeded from `wordAt(0)` so it is always a real word.
+
+---
+
 ## (c) Signature point-losers for Q1
 
 Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/killer-errors-cheatsheet.md):
@@ -277,5 +447,7 @@ Cross-referenced to [`../reference/killer-errors-cheatsheet.md`](../reference/ki
 | Off-by-one loop bounds in Part A | #2 | If the range is "1 through n inclusive", use `i <= n` (or `id <= count()`); if it's "0 through size−1", use `i < size()`. State the inclusivity from the prompt and match it. |
 | Mishandling the `indexOf` "not found" case | — (see topic 1.15) | `indexOf` returns `-1` when the substring is absent. **Guard it** (`if (idx == -1) return ...;`) before calling `substring`, or you misformat / throw `StringIndexOutOfBoundsException`. |
 | Wrong `substring` bounds (off-by-one on `to`) | — | `substring(from, to)` includes `from`, **excludes** `to`; its length is `to − from`. "Part before index k" is `substring(0, k)`; "part after index k" is `substring(k + 1)`. |
+| Misreading `compareTo`'s sign | — (topic 1.15) | `a.compareTo(b)` is **negative** when `a` comes before `b`, `0` when equal, positive when after. "Strictly before" = `< 0` (excludes equal); "before or equal" = `<= 0`. Don't compare String order with `<`/`>` operators — those are for primitives only. |
+| Forgetting `split` returns a `String[]` (and the name field) | — (topic 4.6) | `split(",")` returns a `String[]`; index it with `[i]` and bound with `.length` (attribute, no parens). When the first field is a label/name, start the score loop at `i = 1`. Use only a literal delimiter (no regex metacharacters). |
 | Re-implementing a provided helper | #13 | If `distanceOf`, `nameAt`, `size`, etc. are given, **call them**. Copying their body inline costs the "use the provided method" point. |
 | Leaving Part B blank when Part A was hard | #10 | The two parts score independently — a correct Part B earns its 3 points even if Part A is wrong. Never leave either part blank. |
