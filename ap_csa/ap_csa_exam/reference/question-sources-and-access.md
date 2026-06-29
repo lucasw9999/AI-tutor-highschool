@@ -37,12 +37,12 @@ Past FRQs are valuable for rubric practice, but the format changed. Apply these 
 
 **AP Classroom is teacher-gated.** A self-studying student cannot open it directly. Logging in brings you to a screen that asks for a join code; without one, you see only limited AP Daily video content — **not** the Progress Checks, Question Bank, or secure full practice exams.
 
-**How to get full access (two paths):**
+**How to get full access:**
 
-1. **Enroll with an AP-Course-Audit-approved online provider.** These providers have AP teachers who can issue a join code. Examples include APEX Learning, Virtual Virginia, and similar CB-authorized online AP programs. This is the most reliable self-study path.
-2. **Join through a school AP class.** If you're taking AP CSA at a school that offers it, the teacher issues the join code automatically at enrollment.
+1. **If you're enrolled in an AP CSA class (Lucas's case):** your teacher issues the join code automatically — just ask for it at the start of the course. This is the normal path and needs nothing extra. (It does depend on the teacher actually using AP Classroom; most do, but confirm.)
+2. **If you're self-studying with no class:** enroll with an AP-Course-Audit-approved online provider (e.g., APEX Learning, Virtual Virginia, or a similar CB-authorized online AP program) whose AP teacher can issue a join code.
 
-Do this **early** — AP Classroom access is tied to enrollment in a specific teacher's course section.
+Either way, do this **early** — AP Classroom access is tied to a specific teacher's course section.
 
 ---
 
@@ -50,14 +50,13 @@ Do this **early** — AP Classroom access is tied to enrollment in a specific te
 
 Sitting the AP exam requires being registered through an AP-administering school. You do **not** self-register through College Board.
 
-**The process:**
-1. Go to the **AP Course Ledger** (apcourseledger.collegeboard.org) → search for AP Computer Science A → find an authorized school near you (or one that accepts outside test-takers).
-2. Contact that school's **AP Coordinator** directly.
-3. The school places your exam order with College Board. **Exam-order deadline is approximately mid-November** for the following May exam.
+**If you attend a school that administers the AP CSA exam (Lucas's case):** register through your school's **AP Coordinator** in the fall — the school places your exam order. Because a **small or private school does not always administer every AP exam**, confirm two things early:
+1. That your school is set up to give the **AP CSA** exam this cycle (ask the AP Coordinator directly — don't assume).
+2. That your exam order is placed by the **~mid-November** deadline.
 
-> **For May 2027: contact an AP Coordinator and confirm your seat by October–November 2026. Missing this window means no May 2027 seat — there is no late-registration path for outside test-takers.**
+**If your school does NOT administer AP CSA:** use the **AP Course Ledger** (apcourseledger.collegeboard.org) → search AP Computer Science A → find a nearby authorized school that accepts outside test-takers → contact its AP Coordinator. Same ~mid-November deadline.
 
-Self-study + exam-only registration (no join code, no class): you can sit the exam but you access only limited resources — AP Daily videos and the CED samples. The full Progress Check / Question Bank bank requires AP Classroom access (above).
+> **For May 2027: confirm the seat by October–November 2026. Missing this window means no May 2027 seat — there is no late-registration path.**
 
 ---
 
