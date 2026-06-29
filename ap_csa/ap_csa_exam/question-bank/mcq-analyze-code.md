@@ -1711,7 +1711,7 @@ A) `28`   B) `15`   C) `23`   D) `5`
 
 ---
 
-**Q107. (Analyze Code · 4.13 sub-region (interior, excluding the last row/column) accumulate)**
+**Q107. (Analyze Code · 4.13 sub-region (top-left block, dropping the last row/column) accumulate)**
 What is printed?
 ```java
 int[][] g = {{1, 2, 3},
