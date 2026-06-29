@@ -10,27 +10,27 @@
 
 **Q1. (Use Computers Responsibly · 4.1 privacy / data fitness)**
 A fitness app collects users' precise GPS location every minute and stores it indefinitely on a server. Which is the **most significant** responsible-computing concern?
-A) The data set is too small to be useful.   B) Continuously collecting and retaining precise location data creates a serious **privacy** risk if it is exposed or misused.   C) GPS coordinates cannot be stored in an array.   D) The app will necessarily contain a logic error.
+A) Continuously collecting and retaining precise location data creates a serious **privacy** risk if it is exposed or misused.   B) It is mainly algorithmic bias against users who move around frequently.   C) The only real concern is that the data set is too large to process efficiently.   D) It risks a logic error because GPS can return negative coordinates.
 
-**Answer: B.** Collecting fine-grained personal data (location) and keeping it indefinitely is a classic **privacy** risk — the central data-collection ethics concern. The others are false or irrelevant.
+**Answer: A.** Collecting fine-grained personal data (location) and keeping it indefinitely is a classic **privacy** risk — the central data-collection ethics concern. (B) misframes it as bias, (C) as performance, and (D) as a coding bug — none is the core issue.
 `[topic 4.1][practice P5]`
 
 ---
 
 **Q2. (Use Computers Responsibly · 4.1 algorithmic bias / fitness of data)**
 A model predicting loan risk is trained on historical approvals from an era with discriminatory lending. Deploying it as-is is risky mainly because:
-A) The data is too recent to be reliable.   B) The historical data is **not fit for the purpose** — it encodes past bias, which the model will reproduce.   C) Arrays cannot store financial data.   D) The model will run out of memory.
+A) It is purely a privacy issue, since loan records are sensitive.   B) The historical data is **not fit for the purpose** — it encodes past bias, which the model will reproduce.   C) It will overfit, fixable simply by adding more of the same historical approvals.   D) The only real risk is that the model runs too slowly to be useful.
 
-**Answer: B.** **Fitness of data for a purpose**: biased historical data makes the model reproduce that bias. The other options are false.
+**Answer: B.** **Fitness of data for a purpose**: biased historical data makes the model reproduce that bias. (A) misframes it as privacy; (C) as overfitting — but more of the same skewed data deepens the bias; (D) as performance.
 `[topic 4.1][practice P5]`
 
 ---
 
 **Q3. (Document Code · 4.2 data set / one-at-a-time access)**
 The shared idea behind arrays, `ArrayList`s, and file streams is that they are **data sets** whose elements are accessed:
-A) all simultaneously in one operation   B) one at a time (sequentially or by index)   C) only in reverse order   D) only if they are sorted
+A) all simultaneously in one operation   B) only in reverse order   C) one at a time (sequentially or by index)   D) only if they are sorted
 
-**Answer: B.** A data set is processed by accessing elements **one at a time** — by index or sequentially. None of the structures require simultaneous, reverse-only, or sorted access.
+**Answer: C.** A data set is processed by accessing elements **one at a time** — by index or sequentially. None of the structures require simultaneous, reverse-only, or sorted access.
 `[topic 4.2][practice P4]`
 
 ---
@@ -45,18 +45,18 @@ for (int i = 0; i < data.length; i++) {
 }
 System.out.println(sum);
 ```
-A) `14`   B) `13`   C) `5`   D) `15`
+A) `13`   B) `5`   C) `15`   D) `14`
 
-**Answer: A.** Sequential one-at-a-time access summing every element: 3+1+4+1+5 = `14`.
+**Answer: D.** Sequential one-at-a-time access summing every element: 3+1+4+1+5 = `14`.
 `[topic 4.2][practice P3]`
 
 ---
 
 **Q5. (Analyze Code · 4.3 length attribute, no parens)**
 Which expression correctly gives the number of elements in `int[] arr`?
-A) `arr.length()`   B) `arr.size()`   C) `arr.length`   D) `length(arr)`
+A) `arr.length`   B) `arr.length()`   C) `arr.size()`   D) `arr.length() - 1`
 
-**Answer: C.** For an **array**, `length` is an **attribute** — no parentheses. (`length()` is a String method; `size()` is an ArrayList method — the classic length/size trap.)
+**Answer: A.** For an **array**, `length` is an **attribute** — no parentheses. (`length()` (B) is a String method; `size()` (C) is an ArrayList method — the classic length/size trap; (D) adds both that confusion and an off-by-one.)
 `[topic 4.3][practice P3]`
 
 ---
@@ -68,18 +68,18 @@ int[] a = new int[4];
 a[4] = 9;
 System.out.println(a[4]);
 ```
-A) `9`   B) `0`   C) An `ArrayIndexOutOfBoundsException` is thrown.   D) `null`
+A) `9`   B) An `ArrayIndexOutOfBoundsException` is thrown.   C) `0`   D) `null`
 
-**Answer: C.** Valid indices for length 4 are 0..3; `a[4]` is out of bounds → `ArrayIndexOutOfBoundsException` at the assignment.
+**Answer: B.** Valid indices for length 4 are 0..3; `a[4]` is out of bounds → `ArrayIndexOutOfBoundsException` at the assignment.
 `[topic 4.3][practice P3]`
 
 ---
 
 **Q7. (Analyze Code · 4.4 indexed vs enhanced-for equivalence)**
 Which loop prints the same output as `for (int x : a) System.out.print(x);` for `int[] a`?
-A) `for (int i = 0; i <= a.length; i++) System.out.print(a[i]);`   B) `for (int i = 0; i < a.length; i++) System.out.print(a[i]);`   C) `for (int i = 1; i < a.length; i++) System.out.print(a[i]);`   D) `for (int i = a.length; i > 0; i--) System.out.print(a[i]);`
+A) `for (int i = 0; i <= a.length; i++) System.out.print(a[i]);`   B) `for (int i = 1; i < a.length; i++) System.out.print(a[i]);`   C) `for (int i = 0; i < a.length; i++) System.out.print(a[i]);`   D) `for (int i = a.length; i > 0; i--) System.out.print(a[i]);`
 
-**Answer: B.** Enhanced-for visits every element in order, index 0..length−1 — exactly `i = 0; i < a.length; i++`. (A) goes out of bounds; (C) skips index 0; (D) is reversed and out of bounds.
+**Answer: C.** Enhanced-for visits every element in order, index 0..length−1 — exactly `i = 0; i < a.length; i++`. (A) goes out of bounds; (B) skips index 0; (D) is reversed and out of bounds.
 `[topic 4.4][practice P3]`
 
 ---
@@ -93,9 +93,9 @@ for (int i = 0; i < a.length; i++) {
 }
 System.out.println(a[0] + "" + a[1] + a[2] + a[3] + a[4]);
 ```
-A) `02040`   B) `10305`   C) `00000`   D) `12345`
+A) `10305`   B) `00000`   C) `12345`   D) `02040`
 
-**Answer: A.** Odd elements (1,3,5 at indices 0,2,4) replaced with 0 → `{0,2,0,4,0}` → prints `02040`.
+**Answer: D.** Odd elements (1,3,5 at indices 0,2,4) replaced with 0 → `{0,2,0,4,0}` → prints `02040`.
 `[topic 4.5][practice P3]`
 
 ---
@@ -133,9 +133,9 @@ while (sc.hasNext()) {
 sc.close();
 System.out.println(total);
 ```
-A) `165`   B) `90`   C) `75`   D) `2`
+A) `90`   B) `165`   C) `75`   D) `2`
 
-**Answer: A.** Reads token pairs: ("Amy",90), ("Bo",75); total = 90 + 75 = `165`. `hasNext()` controls the loop; `close()` at the end. (No `nextLine` mixing.)
+**Answer: B.** Reads token pairs: ("Amy",90), ("Bo",75); total = 90 + 75 = `165`. `hasNext()` controls the loop; `close()` at the end. (No `nextLine` mixing.)
 `[topic 4.6][practice P3]`
 
 ---
@@ -148,18 +148,18 @@ int b = a + 3;          // unbox, add
 Integer c = b;          // autobox
 System.out.println(c);
 ```
-A) `8`   B) `53`   C) `5`   D) `Integer`
+A) `53`   B) `5`   C) `8`   D) `Integer`
 
-**Answer: A.** `a` autoboxes 5; `a + 3` unboxes to 5, adds → `b = 8`; `c` autoboxes 8 → prints `8`. `Integer` is immutable but reassigning `c` is fine.
+**Answer: C.** `a` autoboxes 5; `a + 3` unboxes to 5, adds → `b = 8`; `c` autoboxes 8 → prints `8`. `Integer` is immutable but reassigning `c` is fine.
 `[topic 4.7][practice P3]`
 
 ---
 
 **Q12. (Develop Code · 4.7 parse text to number)**
 A file token is the String `"  -12 "`'s trimmed form `"-12"`. Which converts it to the `int` value `-12`?
-A) `Integer.valueOf` (not on the reference)   B) `Integer.parseInt("-12")`   C) `(int) "-12"`   D) `Double.parseDouble("-12")`
+A) `Integer.parseInt("  -12 ")` (the untrimmed token)   B) `Double.parseDouble("-12")`   C) `(int) "-12"`   D) `Integer.parseInt("-12")`
 
-**Answer: B.** `Integer.parseInt(String)` parses a signed decimal integer → `-12`. (C) cannot cast a String to int; (D) yields a `double` (`-12.0`), not an `int`.
+**Answer: D.** `Integer.parseInt(String)` parses a signed decimal integer → `-12`. (A) passes the untrimmed token, whose spaces make `parseInt` throw `NumberFormatException`; (B) yields a `double` (`-12.0`), not an `int`; (C) cannot cast a String to `int`.
 `[topic 4.7][practice P2]`
 
 ---
@@ -189,18 +189,18 @@ list.add(10);
 list.add(20);
 System.out.println(list.get(2));
 ```
-A) `20`   B) `0`   C) An `IndexOutOfBoundsException` is thrown.   D) `null`
+A) `20`   B) An `IndexOutOfBoundsException` is thrown.   C) `0`   D) `null`
 
-**Answer: C.** Size 2 → valid indices 0..1; `get(2)` throws `IndexOutOfBoundsException`.
+**Answer: B.** Size 2 → valid indices 0..1; `get(2)` throws `IndexOutOfBoundsException`.
 `[topic 4.9][practice P3]`
 
 ---
 
 **Q15. (Develop Code · 4.9 fix remove-while-iterating — P1)**
 You want to remove every `0` from an `ArrayList<Integer>`. Which loop design is **correct** (no skipped elements, no exception)?
-A) Enhanced-for: `for (int x : list) if (x == 0) list.remove(...);`   B) Backward index loop: `for (int i = list.size() - 1; i >= 0; i--) if (list.get(i) == 0) list.remove(i);`   C) Forward loop with `i++` always: removing at `i` then `i++`   D) `for (int i = 0; i < list.size(); i++) list.remove(i);`
+A) Enhanced-for: `for (int x : list) if (x == 0) list.remove(...);`   B) Forward loop with `i++` always: removing at `i` then `i++`   C) Backward index loop: `for (int i = list.size() - 1; i >= 0; i--) if (list.get(i) == 0) list.remove(i);`   D) `for (int i = 0; i < list.size(); i++) list.remove(i);`
 
-**Answer: B.** Iterating **backward** means a left-shift after `remove` never skips an unexamined element. (A) throws `ConcurrentModificationException`; (C) skips the shifted-in element; (D) removes the wrong elements as the list shrinks.
+**Answer: C.** Iterating **backward** means a left-shift after `remove` never skips an unexamined element. (A) throws `ConcurrentModificationException`; (B) skips the shifted-in element; (D) removes the wrong elements as the list shrinks.
 `[topic 4.9][practice P1]`
 
 ---
@@ -215,9 +215,9 @@ for (int i = list.size() - 1; i >= 0; i--) {
 }
 System.out.println(list);
 ```
-A) `[7, 9]`   B) `[4, 2]`   C) `[4, 7, 2, 9]`   D) `[]`
+A) `[4, 2]`   B) `[4, 7, 2, 9]`   C) `[]`   D) `[7, 9]`
 
-**Answer: A.** Backward delete-by-condition removes elements < 5 (the 2 and the 4), leaving `[7, 9]` in order. Backward traversal avoids skips.
+**Answer: D.** Backward delete-by-condition removes elements < 5 (the 2 and the 4), leaving `[7, 9]` in order. Backward traversal avoids skips.
 `[topic 4.10][practice P3]`
 
 ---
@@ -264,9 +264,9 @@ for (int c = 0; c < g[0].length; c++) {
 }
 System.out.println(sum);
 ```
-A) `21`   B) `6`   C) `12`   D) `15`
+A) `6`   B) `12`   C) `21`   D) `15`
 
-**Answer: A.** Column-major still visits every cell once: 1+2+3+4+5+6 = `21` (order differs from row-major, total is the same).
+**Answer: C.** Column-major still visits every cell once: 1+2+3+4+5+6 = `21` (order differs from row-major, total is the same).
 `[topic 4.12][practice P3]`
 
 ---
@@ -283,18 +283,18 @@ for (int r = 0; r < g.length; r++) {
 }
 System.out.println(sum);
 ```
-A) `12`   B) `13`   C) `21`   D) `2`
+A) `13`   B) `21`   C) `2`   D) `12`
 
-**Answer: A.** Sums column 0 down all rows: 2 + 4 + 6 = `12`.
+**Answer: D.** Sums column 0 down all rows: 2 + 4 + 6 = `12`.
 `[topic 4.13][practice P3]`
 
 ---
 
 **Q21. (Document Code · 4.13 describe a 2D algorithm — precondition)**
 A method `int countPositive(int[][] g)` returns how many entries of `g` are `> 0`. For it to work without an exception on an empty-row situation, what precondition is most appropriate?
-A) `g` is sorted.   B) `g` is a rectangular (non-jagged) array with each row of the same length.   C) `g` contains only positive numbers.   D) `g.length == g[0].length`.
+A) `g` is a rectangular (non-jagged) array with each row of the same length.   B) `g` is sorted.   C) `g` contains only positive numbers.   D) `g.length == g[0].length`.
 
-**Answer: B.** The course assumes **rectangular** 2D arrays; that is the precondition that makes `g[r].length`/`g[0].length` traversal safe. Sorting (A), all-positive (C), and square (D) are not required.
+**Answer: A.** The course assumes **rectangular** 2D arrays; that is the precondition that makes `g[r].length`/`g[0].length` traversal safe. Sorting (B), all-positive (C), and square (D) are not required.
 `[topic 4.13][practice P4]`
 
 ---
@@ -310,18 +310,18 @@ for (int i = 0; i < a.length; i++) {
 }
 System.out.println(result);
 ```
-A) `-1`   B) `0`   C) `3`   D) `8`
+A) `0`   B) `-1`   C) `3`   D) `8`
 
-**Answer: A.** `8` is not in the array, so `result` stays `-1` (the standard "not found" sentinel from a linear search).
+**Answer: B.** `8` is not in the array, so `result` stays `-1` (the standard "not found" sentinel from a linear search).
 `[topic 4.14][practice P3]`
 
 ---
 
 **Q23. (Analyze Code · 4.15 selection sort after two passes)**
 Selection sort places the minimum of the unsorted segment at the front each pass. After **two** passes on `{30, 10, 20, 40}`, what is the array?
-A) `{10, 20, 30, 40}`   B) `{10, 20, 40, 30}`   C) `{10, 30, 20, 40}`   D) `{20, 10, 30, 40}`
+A) `{10, 20, 40, 30}`   B) `{10, 30, 20, 40}`   C) `{10, 20, 30, 40}`   D) `{20, 10, 30, 40}`
 
-**Answer: A.** Pass 1: min 10 → front: `{10, 30, 20, 40}`. Pass 2: min of `{30,20,40}` is 20, swap with index 1: `{10, 20, 30, 40}`. (Here it is fully sorted after two passes.)
+**Answer: C.** Pass 1: min 10 → front: `{10, 30, 20, 40}`. Pass 2: min of `{30,20,40}` is 20, swap with index 1: `{10, 20, 30, 40}`. (Here it is fully sorted after two passes.)
 `[topic 4.15][practice P3]`
 
 ---
@@ -334,18 +334,18 @@ public static int f(int n) {
     return f(n - 1) + 2;
 }
 ```
-A) `11`   B) `6`   C) `5`   D) `8`
+A) `6`   B) `5`   C) `8`   D) `11`
 
-**Answer: A.** `f(0)=5`; `f(1)=5+2=7`; `f(2)=7+2=9`; `f(3)=9+2=11`.
+**Answer: D.** `f(0)=5`; `f(1)=5+2=7`; `f(2)=7+2=9`; `f(3)=9+2=11`.
 `[topic 4.16][practice P3]`
 
 ---
 
 **Q25. (Analyze Code · 4.17 binary search trace)**
 On the sorted array `{2, 5, 8, 11, 14, 17, 20}` (indices 0..6), binary search for `target = 17` first examines index 3 (value 11). Which index does it examine **next**? (`mid = (low+high)/2`)
-A) `4`   B) `5`   C) `6`   D) `2`
+A) `5`   B) `4`   C) `6`   D) `2`
 
-**Answer: B.** `17 > 11` → search the upper half: `low = 4, high = 6`, `mid = (4+6)/2 = 5`. Next index examined is `5` (value 17, found).
+**Answer: A.** `17 > 11` → search the upper half: `low = 4, high = 6`, `mid = (4+6)/2 = 5`. Next index examined is `5` (value 17, found).
 `[topic 4.17][practice P3]`
 
 ---
@@ -368,9 +368,9 @@ for (Cell c : row) {
 }
 System.out.println(row[2].isOn());
 ```
-A) `true`   B) `false`   C) Compile error   D) A `NullPointerException` is thrown.
+A) `false`   B) Compile error   C) `true`   D) A `NullPointerException` is thrown.
 
-**Answer: A.** The enhanced-for copies each **reference**; calling the mutator `light()` changes the shared object. `row[2]` is now on → `true`.
+**Answer: C.** The enhanced-for copies each **reference**; calling the mutator `light()` changes the shared object. `row[2]` is now on → `true`.
 `[topic 4.4][practice P3]`
 
 ---
@@ -383,9 +383,9 @@ for (int i = 0; i < a.length; i++) {
     // BLANK
 }
 ```
-A) `sum = a[i];`   B) `sum += a[i];`   C) `sum += i;`   D) `sum += a[sum];`
+A) `sum = a[i];`   B) `sum += i;`   C) `sum += a[sum];`   D) `sum += a[i];`
 
-**Answer: B.** Accumulate by adding each element to the running total: `sum += a[i];`. (A) overwrites, leaving only the last element; (C) adds indices, not values; (D) indexes by the running sum (likely out of bounds).
+**Answer: D.** Accumulate by adding each element to the running total: `sum += a[i];`. (A) overwrites, leaving only the last element; (B) adds indices, not values; (C) indexes by the running sum (likely out of bounds).
 `[topic 4.5][practice P2]`
 
 ---
@@ -400,9 +400,9 @@ for (int r = 0; r < g.length; r++) {
     }
 }
 ```
-A) `total += g[c][r];`   B) `total += g[r][c];`   C) `total += g[r];`   D) `total = g[r][c];`
+A) `total += g[r][c];`   B) `total += g[c][r];`   C) `total += g[r];`   D) `total = g[r][c];`
 
-**Answer: B.** Row-major access of every cell uses `g[r][c]` with `r` the row and `c` the column. (A) swaps indices (out of bounds on non-square arrays); (C) adds a row reference (won't compile); (D) overwrites instead of accumulating.
+**Answer: A.** Row-major access of every cell uses `g[r][c]` with `r` the row and `c` the column. (B) swaps indices (out of bounds on non-square arrays); (C) adds a row reference (won't compile); (D) overwrites instead of accumulating.
 `[topic 4.13][practice P2]`
 
 ---
@@ -415,45 +415,45 @@ for (int x : nums) {
     // BLANK
 }
 ```
-A) `if (x < 0) count++;`   B) `if (x > 0) count++;`   C) `count++;`   D) `if (x < 0) count = 0;`
+A) `if (x > 0) count++;`   B) `if (x < 0) count++;`   C) `count++;`   D) `if (x < 0) count = 0;`
 
-**Answer: A.** Increment only when the element is negative: `if (x < 0) count++;`. (B) counts positives; (C) counts all elements; (D) resets the counter.
+**Answer: B.** Increment only when the element is negative: `if (x < 0) count++;`. (A) counts positives; (C) counts all elements; (D) resets the counter.
 `[topic 4.10][practice P2]`
 
 ---
 
 **Q31. (Design Code · 4.5/4.10 decompose a design — P1.A)**
 You must process a roster of scores to report (1) the average and (2) how many are above that average. Which overall design **best** decomposes the problem?
-A) A single loop that tries to compute the average and the above-average count in the same pass, dividing by the count before it is known.   B) First traverse once to compute the sum and derive the average; then traverse a second time comparing each score to the average and counting those above it.   C) Sort the scores, then assume the average is the middle element.   D) Store every score in a separate named variable and compare them by hand with an `if-else-if` chain.
+A) A single loop that tries to compute the average and the above-average count in the same pass, dividing by the count before it is known.   B) Sort the scores, then assume the average is the middle element.   C) First traverse once to compute the sum and derive the average; then traverse a second time comparing each score to the average and counting those above it.   D) Store every score in a separate named variable and compare them by hand with an `if-else-if` chain.
 
-**Answer: B.** The average must be **fully known before** any score can be compared to it, so a clean decomposition is **two passes** (compute average, then count above it). (A) compares before the average exists; (C) confuses median with mean; (D) does not generalize to an arbitrary roster size.
+**Answer: C.** The average must be **fully known before** any score can be compared to it, so a clean decomposition is **two passes** (compute average, then count above it). (A) compares before the average exists; (B) confuses median with mean; (D) does not generalize to an arbitrary roster size.
 `[topic 4.5][practice P1]`
 
 ---
 
 **Q32. (Use Computers Responsibly · 4.1 open-source license / IP violation)**
 A team ships a product that statically links a library released under a license requiring that **any distributed product including it must publish its own source code**. They distribute the binary but keep all their source closed. This is best described as:
-A) Fine, because compiled binaries are exempt from all software licenses.   B) A violation of the library's license terms (and thus the authors' intellectual-property rights).   C) An algorithmic-bias problem.   D) A runtime exception waiting to happen.
+A) Fine, because compiled binaries are exempt from all software licenses.   B) An algorithmic-bias problem.   C) A runtime exception waiting to happen.   D) A violation of the library's license terms (and thus the authors' intellectual-property rights).
 
-**Answer: B.** Open-source licenses impose **conditions**; here the condition (publish source of the combined work) was ignored, violating the license and the authors' **IP** rights. Compiled distribution is still distribution — not exempt. (This is a license-obligation scenario, distinct from a plain no-attribution copy.)
+**Answer: D.** Open-source licenses impose **conditions**; here the condition (publish source of the combined work) was ignored, violating the license and the authors' **IP** rights. Compiled distribution is still distribution — not exempt (A). (This is a license-obligation scenario, distinct from a plain no-attribution copy.)
 `[topic 4.1][practice P5]`
 
 ---
 
 **Q33. (Use Computers Responsibly · 4.1 unintended consequence)**
 A social app adds an "engagement" feed that always shows whatever keeps users scrolling longest. Months later, users report it mostly surfaces outrage-bait and they feel worse, even though daily-use time rose. Which best describes this?
-A) A syntax error in the ranking code.   B) An **unintended consequence**: the system optimized exactly what it was told to (time-on-app) but produced real-world harm the designers did not intend.   C) A privacy breach.   D) Proof the algorithm is unbiased.
+A) An **unintended consequence**: the system optimized exactly what it was told to (time-on-app) but produced real-world harm the designers did not intend.   B) A privacy breach.   C) Proof the algorithm is unbiased.   D) A syntax error in the ranking code.
 
-**Answer: B.** The system worked **as specified** (maximize scrolling) yet caused harm nobody intended — the definition of an **unintended consequence** that responsible designers must anticipate. It is neither a code error, a privacy breach, nor evidence of fairness. (Distinct from the navigation-congestion and training-bias scenarios elsewhere.)
+**Answer: A.** The system worked **as specified** (maximize scrolling) yet caused harm nobody intended — the definition of an **unintended consequence** that responsible designers must anticipate. It is neither a privacy breach (B), evidence of fairness (C), nor a code error (D). (Distinct from the navigation-congestion and training-bias scenarios elsewhere.)
 `[topic 4.1][practice P5]`
 
 ---
 
 **Q34. (Use Computers Responsibly · 4.1 data-privacy-vs-utility tradeoff)**
 A hospital wants to publish a patient data set so researchers can study a disease, but raw records identify individuals. Which option best balances **research utility against privacy**?
-A) Publish the full raw records, since research benefit outweighs everything.   B) Publish nothing, since any disclosure risk is unacceptable.   C) Release a version with direct identifiers removed/aggregated so trends remain studiable while individuals are not re-identifiable.   D) Replace every value with a random number so no real data remains.
+A) Publish the full raw records, since research benefit outweighs everything.   B) Release a version with direct identifiers removed/aggregated so trends remain studiable while individuals are not re-identifiable.   C) Publish nothing, since any disclosure risk is unacceptable.   D) Replace every value with a random number so no real data remains.
 
-**Answer: C.** The responsible tradeoff **retains analytic value** while **protecting privacy** by de-identifying/aggregating before release. (A) ignores privacy; (B) ignores utility entirely; (D) destroys the data's usefulness. (A genuine utility-vs-privacy balance, distinct from pure privacy-risk or bias items.)
+**Answer: B.** The responsible tradeoff **retains analytic value** while **protecting privacy** by de-identifying/aggregating before release. (A) ignores privacy; (C) ignores utility entirely; (D) destroys the data's usefulness. (A genuine utility-vs-privacy balance, distinct from pure privacy-risk or bias items.)
 `[topic 4.1][practice P5]`
 
 ---
@@ -473,9 +473,9 @@ while (sc.hasNext()) {
 sc.close();
 System.out.println(sum);
 ```
-A) `298.1`   B) `298`   C) `100.4`   D) `3`
+A) `298`   B) `100.4`   C) `298.1`   D) `3`
 
-**Answer: A.** `nextDouble()` reads each whitespace-delimited token as a double: 98.6 + 99.1 + 100.4 = `298.1`. The `hasNext()` loop reads to end of file, then `close()`.
+**Answer: C.** `nextDouble()` reads each whitespace-delimited token as a double: 98.6 + 99.1 + 100.4 = `298.1`. The `hasNext()` loop reads to end of file, then `close()`.
 `[topic 4.6][practice P3]`
 
 ---
@@ -495,9 +495,9 @@ while (sc.hasNext()) {
 sc.close();
 System.out.println(trues);
 ```
-A) `3`   B) `4`   C) `1`   D) `2`
+A) `4`   B) `1`   C) `2`   D) `3`
 
-**Answer: A.** `nextBoolean()` reads each token as a boolean; three are `true` → `trues = 3`.
+**Answer: D.** `nextBoolean()` reads each token as a boolean; three are `true` → `trues = 3`.
 `[topic 4.6][practice P3]`
 
 ---

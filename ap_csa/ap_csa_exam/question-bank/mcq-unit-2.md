@@ -10,9 +10,9 @@
 
 **Q1. (Document Code · 2.1 control-flow categories)**
 The three building blocks of control flow are sequencing, selection, and repetition. Which construct provides **selection**?
-A) Statements executed one after another in order   B) An `if-else` statement   C) A `for` loop   D) A method call
+A) Statements executed one after another in order   B) A `for` loop   C) An `if-else` statement   D) A method call
 
-**Answer: B.** **Selection** chooses between paths — `if`/`if-else`. Sequencing = straight-line order (A); repetition = loops (C).
+**Answer: C.** **Selection** chooses between paths — `if`/`if-else`. Sequencing = straight-line order (A); repetition = loops (B).
 `[topic 2.1][practice P4]`
 
 ---
@@ -25,9 +25,9 @@ x = x + 5;
 x = x * 2;
 System.out.println(x);
 ```
-A) `14`   B) `9`   C) `12`   D) `4`
+A) `9`   B) `12`   C) `4`   D) `14`
 
-**Answer: A.** Statements run **in sequence**: `2 → 7 → 14`.
+**Answer: D.** Statements run **in sequence**: `2 → 7 → 14`.
 `[topic 2.1][practice P3]`
 
 ---
@@ -65,9 +65,9 @@ if (n >= 0) {
     System.out.println("neg");
 }
 ```
-A) `nonneg`   B) `neg`   C) Both   D) Nothing
+A) `nonneg`   B) Both   C) `neg`   D) Nothing
 
-**Answer: B.** `-4 >= 0` is `false`, so the `else` runs → `neg`.
+**Answer: C.** `-4 >= 0` is `false`, so the `else` runs → `neg`.
 `[topic 2.3][practice P3]`
 
 ---
@@ -77,9 +77,9 @@ Which boolean test, in the blank, prints `"even"` exactly when `n` is even?
 ```java
 if ( /* BLANK */ ) System.out.println("even");
 ```
-A) `n / 2 == 0`   B) `n % 2 == 0`   C) `n % 2 == 1`   D) `n == 2`
+A) `n / 2 == 0`   B) `n % 2 == 1`   C) `n == 2`   D) `n % 2 == 0`
 
-**Answer: B.** `n % 2 == 0` is true iff `n` is divisible by 2 (even). (A) tests `n/2` being 0 (only −1..1); (C) tests odd; (D) only `n` equal to 2.
+**Answer: D.** `n % 2 == 0` is true iff `n` is divisible by 2 (even). (A) tests `n/2` being 0 (only −1..1); (B) tests odd; (C) only `n` equal to 2.
 `[topic 2.3][practice P2]`
 
 ---
@@ -93,9 +93,9 @@ else if (score >= 80) System.out.println("B");
 else if (score >= 70) System.out.println("C");
 else                  System.out.println("F");
 ```
-A) `B`   B) `C`   C) `F`   D) `A`
+A) `C`   B) `B`   C) `F`   D) `A`
 
-**Answer: B.** `70 >= 90` false; `70 >= 80` false; `70 >= 70` true → `C` (boundary is inclusive). The chain stops there.
+**Answer: A.** `70 >= 90` false; `70 >= 80` false; `70 >= 70` true → `C` (boundary is inclusive). The chain stops there.
 `[topic 2.4][practice P3]`
 
 ---
@@ -125,9 +125,9 @@ int[] a = {};            // length 0
 if (a.length > 0 && a[0] == 5) System.out.println("yes");
 else System.out.println("no");
 ```
-A) `yes`   B) `no`   C) An `ArrayIndexOutOfBoundsException` is thrown.   D) Nothing
+A) `yes`   B) An `ArrayIndexOutOfBoundsException` is thrown.   C) `no`   D) Nothing
 
-**Answer: B.** `a.length > 0` is `false`, so `&&` short-circuits and `a[0]` is never evaluated — no exception. Prints `no`. (This is the standard guard idiom.)
+**Answer: C.** `a.length > 0` is `false`, so `&&` short-circuits and `a[0]` is never evaluated — no exception. Prints `no`. (This is the standard guard idiom.)
 `[topic 2.5][practice P3]`
 
 ---
@@ -137,9 +137,9 @@ What is the value of `r`?
 ```java
 boolean r = !false || false && false;
 ```
-A) `true`   B) `false`   C) compile error   D) `null`
+A) `false`   B) compile error   C) `null`   D) `true`
 
-**Answer: A.** `!false = true`; `false && false = false`; `true || false = true`. (`!` binds tightest, then `&&`, then `||`.)
+**Answer: D.** `!false = true`; `false && false = false`; `true || false = true`. (`!` binds tightest, then `&&`, then `||`.)
 `[topic 2.5][practice P3]`
 
 ---
@@ -160,9 +160,9 @@ String a = "dog";
 String b = "do" + "g";
 System.out.println(a.equals(b));
 ```
-A) `true`   B) `false`   C) Compile error   D) `dog`
+A) `false`   B) `true`   C) Compile error   D) `dog`
 
-**Answer: A.** `.equals` compares **contents**; both hold `"dog"` → `true`. (Regardless of how each was built, contents match.)
+**Answer: B.** `.equals` compares **contents**; both hold `"dog"` → `true`. (Regardless of how each was built, contents match.)
 `[topic 2.6][practice P3]`
 
 ---
@@ -177,9 +177,9 @@ while (i <= 4) {
 }
 System.out.println(product);
 ```
-A) `24`   B) `6`   C) `120`   D) `10`
+A) `6`   B) `120`   C) `24`   D) `10`
 
-**Answer: A.** i = 1,2,3,4 → product = 1·1·2·3·4 = `24` (4 factorial). The loop runs while `i <= 4`.
+**Answer: C.** i = 1,2,3,4 → product = 1·1·2·3·4 = `24` (4 factorial). The loop runs while `i <= 4`.
 `[topic 2.7][practice P3]`
 
 ---
@@ -193,9 +193,9 @@ while (n > 0) {
     // (missing update statement)
 }
 ```
-A) Add `n++;` in the body   B) Add `n--;` in the body   C) Change the condition to `n >= 0`   D) Change `print` to `println`
+A) Add `n++;` in the body   B) Change the condition to `n >= 0`   C) Change `print` to `println`   D) Add `n--;` in the body
 
-**Answer: B.** The loop variable is never updated, so it spins forever. `n--` counts 5→1, then `n=0` fails `n > 0`, printing `5 4 3 2 1`. (A) increments away from the exit; (C) doesn't stop it.
+**Answer: D.** The loop variable is never updated, so it spins forever. `n--` counts 5→1, then `n=0` fails `n > 0`, printing `5 4 3 2 1`. (A) increments away from the exit; (B) doesn't stop it.
 `[topic 2.7][practice P2]`
 
 ---
@@ -207,9 +207,9 @@ for (int i = 10; i >= 1; i -= 3) {
     System.out.println(i);
 }
 ```
-A) `3`   B) `4`   C) `5`   D) `10`
+A) `4`   B) `3`   C) `5`   D) `10`
 
-**Answer: B.** i = 10, 7, 4, 1 (next would be −2, which fails `i >= 1`). **4** iterations.
+**Answer: A.** i = 10, 7, 4, 1 (next would be −2, which fails `i >= 1`). **4** iterations.
 `[topic 2.8][practice P3]`
 
 ---
@@ -241,9 +241,9 @@ for (int x : a) {
 }
 System.out.println(sum + " " + count);
 ```
-A) `20 4`   B) `20 3`   C) `4 20`   D) `16 4`
+A) `20 3`   B) `4 20`   C) `20 4`   D) `16 4`
 
-**Answer: A.** sum = 4+6+8+2 = 20; count = 4 elements. Output `20 4`.
+**Answer: C.** sum = 4+6+8+2 = 20; count = 4 elements. Output `20 4`.
 `[topic 2.9][practice P3]`
 
 ---
@@ -256,9 +256,9 @@ int last = n % 10;
 boolean evenLast = (last % 2 == 0);
 System.out.println(last + " " + evenLast);
 ```
-A) `4 true`   B) `4 false`   C) `1 true`   D) `3 true`
+A) `4 false`   B) `1 true`   C) `3 true`   D) `4 true`
 
-**Answer: A.** `1234 % 10 = 4` (last digit); `4 % 2 == 0` → `true`. Output `4 true`.
+**Answer: D.** `1234 % 10 = 4` (last digit); `4 % 2 == 0` → `true`. Output `4 true`.
 `[topic 2.9][practice P3]`
 
 ---
@@ -305,9 +305,9 @@ for (int i = 0; i < 3; i++) {
 }
 System.out.println(n);
 ```
-A) `7`   B) `12`   C) `9`   D) `16`
+A) `7`   B) `9`   C) `12`   D) `16`
 
-**Answer: B.** Outer 3 × inner 4 = `12`.
+**Answer: C.** Outer 3 × inner 4 = `12`.
 `[topic 2.11][practice P3]`
 
 ---
@@ -323,9 +323,9 @@ for (int i = 1; i <= 3; i++) {
 }
 System.out.println(sum);
 ```
-A) `6`   B) `9`   C) `3`   D) `7`
+A) `9`   B) `3`   C) `7`   D) `6`
 
-**Answer: A.** Inner runs (3−i+1) times: i=1→3, i=2→2, i=3→1 → 3+2+1 = `6`.
+**Answer: D.** Inner runs (3−i+1) times: i=1→3, i=2→2, i=3→1 → 3+2+1 = `6`.
 `[topic 2.11][practice P3]`
 
 ---
@@ -339,9 +339,9 @@ for (int i = 0; i < n; i++) {
     }
 }
 ```
-A) `n²`   B) `n(n−1)/2`   C) `n`   D) `n²/2 + n`
+A) `n(n−1)/2`   B) `n²`   C) `n`   D) `n²/2 + n`
 
-**Answer: B.** Inner runs `i` times for i = 0..n−1: total 0+1+…+(n−1) = `n(n−1)/2`.
+**Answer: A.** Inner runs `i` times for i = 0..n−1: total 0+1+…+(n−1) = `n(n−1)/2`.
 `[topic 2.12][practice P3]`
 
 ---
@@ -357,9 +357,9 @@ A) X and Y run the same number of times.   B) Y runs roughly `n` times as often 
 
 **Q25. (Develop Code · 2.1/2.5 design a guarded test — P1)**
 You must print `"safe"` only when `divisor` is nonzero **and** `value / divisor` exceeds 10, without ever throwing an `ArithmeticException`. Which design is correct?
-A) `if (value / divisor > 10 && divisor != 0)`   B) `if (divisor != 0 && value / divisor > 10)`   C) `if (divisor != 0 || value / divisor > 10)`   D) `if (value / divisor > 10)`
+A) `if (value / divisor > 10 && divisor != 0)`   B) `if (divisor != 0 || value / divisor > 10)`   C) `if (divisor != 0 && value / divisor > 10)`   D) `if (value / divisor > 10)`
 
-**Answer: B.** Put the `divisor != 0` guard **first** so `&&` short-circuits before the division. (A) divides first → can throw; (C) `||` still evaluates the division when divisor is 0; (D) has no guard.
+**Answer: C.** Put the `divisor != 0` guard **first** so `&&` short-circuits before the division. (A) divides first → can throw; (B) `||` still evaluates the division when divisor is 0; (D) has no guard.
 `[topic 2.5][practice P1]`
 
 ---
@@ -372,9 +372,9 @@ for (int i = 1; i <= n; i++) {
     if ( /* BLANK */ ) count++;
 }
 ```
-A) `i / 3 == 0`   B) `i % 3 == 0`   C) `i % 3 == 1`   D) `i * 3 == 0`
+A) `i % 3 == 0`   B) `i / 3 == 0`   C) `i % 3 == 1`   D) `i * 3 == 0`
 
-**Answer: B.** A multiple of 3 leaves remainder 0: `i % 3 == 0`. (A) tests `i/3` being 0 (only `i = 1, 2`); (C) tests remainder 1; (D) is true only for `i = 0`, which the loop never reaches.
+**Answer: A.** A multiple of 3 leaves remainder 0: `i % 3 == 0`. (B) tests `i/3` being 0 (only `i = 1, 2`); (C) tests remainder 1; (D) is true only for `i = 0`, which the loop never reaches.
 `[topic 2.9][practice P2]`
 
 ---
