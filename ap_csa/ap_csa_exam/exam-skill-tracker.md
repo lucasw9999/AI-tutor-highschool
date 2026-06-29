@@ -84,16 +84,56 @@ One row per recurring error pattern. Status advances from ⬜ → 🟢 / ⭐ as 
 
 ## (f) Readiness dashboard
 
-All four metrics must be green to declare "ready for a 5." Drawn verbatim from spec §12.
+> **Note:** The old course's "100% = covered topics" is explicitly NOT this metric. Covering topics produced a ~2–3. This dashboard is the only readiness measure that counts.
 
-| # | Readiness metric | Status | Evidence |
+### Coverage prerequisite (check this first)
+
+Before any mock counts toward the readiness bar, confirm every CED topic (1.1–4.17), all 5 Computational Thinking practices, all four FRQ-type variants, and all real MCQ styles have been drilled and measured. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full, timed mocks do.
+
+| Prerequisite | Status | Notes |
+|---|---|---|
+| All CED topics (1.1–4.17) drilled | ⬜ | See `topic-coverage-matrix.md` |
+| All 5 CT practices drilled | ⬜ | P1–P5; see (a) table above |
+| All 4 FRQ-type variants drilled (≥3 attempts each) | ⬜ | Q1–Q4; see (d) table above |
+| All MCQ styles drilled | ⬜ | Unit MCQ + Analyze-Code pack |
+
+### Definition of 100% / Ready for a 5
+
+**ALL of the following must be simultaneously true on the MOST RECENT 3 CONSECUTIVE full, timed mocks (90 min MCQ + 90 min FRQ each), all taken within the last ~6 weeks:**
+
+| # | Criterion | Floor | Status | Evidence |
+|---|---|---|---|---|
+| 1 | **Composite ≥ 80%** of the weighted total (MCQ 55% + FRQ 45%). *(Conservative: historical CSA 5-cutoff has been ~65–72% composite; the extra cushion absorbs test-day variance and redesigned-curve uncertainty. This is an estimate, not a published number.)* | ≥ 80% | ⬜ | 0 / 3 qualifying mocks |
+| 2a | **MCQ overall ≥ 80%** | ≥ 80% | ⬜ | No data yet |
+| 2b | **Each unit (U1–U4) ≥ 75%** | ≥ 75% each | ⬜ | No data yet |
+| 2c | **Analyze-Code (P3, 37–53% of MCQ) ≥ 85% at pace** (~2:09/question) | ≥ 85% | ⬜ | No data yet |
+| 2d | **Each other practice (P1 Design, P2 Develop, P4 Document, P5 Responsible) ≥ 70%** | ≥ 70% each | ⬜ | No data yet |
+| 3 | **Each FRQ type (Q1–Q4) ≥ 85% of its points**, graded STRICTLY to the official rubric — uncertain points are NOT awarded (Q1 ≥6/7, Q2 ≥6/7, Q3 ≥4.25/5, Q4 ≥5.1/6) | ≥ 85% each | ⬜ | No data yet |
+| 4 | **Both sections completed within time, with 0–1 blanks** | ≤ 1 blank | ⬜ | No data yet |
+| 5 | **At least 1 of the 3 qualifying mocks is built from OFFICIAL material** (CED samples / 2026 released FRQ / AP Classroom), not only the original bank | ≥ 1 official | ⬜ | No data yet |
+
+**100% = ALL five criteria simultaneously green on the most recent 3 consecutive full timed mocks.** When any criterion is unmet, the tracker reads < 100% and names the specific unmet criterion. Do not declare "ready" on any subset.
+
+**Honest caveat:** meeting all five criteria is the strongest real predictor of a 5, not a mathematical guarantee. The margin above the historical 5-cutoff is the insurance.
+
+### Per-unit MCQ floor tracking
+
+| Unit | Floor | Recent accuracy | Status |
 |---|---|---|---|
-| 1 | **≥3 full timed practice exams** with weighted composite in the estimated 5-range (~68%+ composite, or re-based when CB publishes the real cutoff) | ⬜ | 0 / 3 done |
-| 2 | **Analyze-Code MCQ accuracy ≥85% at pace** (~2:09 / question) | ⬜ | No data yet |
-| 3 | **Each FRQ type averaging ≥85% of points** across ≥3 attempts (Q1 ≥6/7, Q2 ≥6/7, Q3 ≥4.25/5, Q4 ≥5.1/6) | ⬜ | No data yet |
-| 4 | **Full sections finished within time with ≤1 blank** (both Section I and Section II) | ⬜ | No data yet |
+| U1 Using Objects & Methods | ≥ 75% | — | ⬜ |
+| U2 Selection & Iteration | ≥ 75% | — | ⬜ |
+| U3 Class Creation | ≥ 75% | — | ⬜ |
+| U4 Data Collections | ≥ 75% | — | ⬜ |
 
-**Ready = all 4 checked.** Do not declare "ready" on any subset.
+### Per-practice MCQ floor tracking
+
+| Practice | Floor | Recent accuracy | Status |
+|---|---|---|---|
+| P1 Design Code | ≥ 70% | — | ⬜ |
+| P2 Develop Code | ≥ 70% | — | ⬜ |
+| P3 Analyze Code | ≥ 85% | — | ⬜ |
+| P4 Document Code | ≥ 70% | — | ⬜ |
+| P5 Use Computers Responsibly | ≥ 70% | — | ⬜ |
 
 ---
 
@@ -110,4 +150,4 @@ All four metrics must be green to declare "ready for a 5." Drawn verbatim from s
 - The examiner reads **both** this file (exam skill performance) **and** [`../mastery-tracker.md`](../mastery-tracker.md) (content mastery) at the start of each session.
 - This tracker — not the prior "100% coverage" claim — plus the diagnostic are the real baseline. The old claim is unverified; start from the diagnostic output.
 - All pacing targets assume the digital Bluebook format (90 min Section I, 90 min Section II; Java Quick Reference provided throughout; no calculator).
-- Score curve: estimated ~68% composite → 5 until College Board publishes the redesigned cutoff (monitor §10 of design spec). Re-baseline when published.
+- Readiness bar: ≥80% composite on the most recent 3 consecutive full timed mocks (conservative — historical CSA 5-cutoff ~65–72% composite; the cushion absorbs redesigned-curve uncertainty). Re-baseline if College Board publishes an official cutoff for the redesigned exam.
