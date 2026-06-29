@@ -82,13 +82,11 @@ One row per recurring error pattern. Status advances from ⬜ → 🟢 / ⭐ as 
 
 ---
 
-## (f) Readiness dashboard
+## (f) Readiness dashboard — Definition of 100% / Ready for a 5
 
-> **Note:** The old course's "100% = covered topics" is explicitly NOT this metric. Covering topics produced a ~2–3. This dashboard is the only readiness measure that counts.
+> **Note:** "100% = ready for a 5" is NOT topic coverage. Covering topics produced a ~2–3. This section is the only readiness measure that counts. The per-practice / per-unit / per-FRQ tables below feed criteria 2 and 3 of the bar.
 
-### Coverage prerequisite (check this first)
-
-Before any mock counts toward the readiness bar, confirm every CED topic (1.1–4.17), all 5 Computational Thinking practices, all four FRQ-type variants, and all real MCQ styles have been drilled and measured. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full, timed mocks do.
+**A. Coverage prerequisite** — must be satisfied before any mock counts toward the readiness number. Every CED topic (1.1–4.17), all 5 Computational Thinking practices, all 4 FRQ-type variants, and all MCQ styles must have been drilled and measured. Drills, untimed work, and partial practice build skill but **never move the readiness number** — only full timed mocks do.
 
 | Prerequisite | Status | Notes |
 |---|---|---|
@@ -97,26 +95,56 @@ Before any mock counts toward the readiness bar, confirm every CED topic (1.1–
 | All 4 FRQ-type variants drilled (≥3 attempts each) | ⬜ | Q1–Q4; see (d) table above |
 | All MCQ styles drilled | ⬜ | Unit MCQ + Analyze-Code pack |
 
-### Definition of 100% / Ready for a 5
+**B. Grader-calibration gate** — must pass before any FRQ self-score counts toward the bar. The grader (examiner) must BLIND-grade an officially-scored sample response — a CED sample-FRQ response (which carries official point awards) or, once posted, a 2026 Scoring-Guidelines sample — and land **within ±1 point** of the official award on each FRQ. Re-test **every 8 weeks** and **immediately after College Board posts the 2026 Scoring Guidelines**. If off by >1 point, FRQ scores are presumed inflated: subtract the measured bias and do not count FRQ toward readiness until re-calibrated.
 
-**ALL of the following must be simultaneously true on the MOST RECENT 3 CONSECUTIVE full, timed mocks (90 min MCQ + 90 min FRQ each), all taken within the last ~6 weeks:**
+| Gate B check | Status | Last calibrated | Bias measured |
+|---|---|---|---|
+| Grader within ±1 pt of official sample | ⬜ | — | — |
+
+**C. The bar** — evaluated on the **most recent 3 consecutive QUALIFYING full timed mocks** (90-min MCQ + 90-min FRQ). A mock is *qualifying* only if: it is fully **logged** (every started timed mock is logged — no cherry-picking; a mock that misses any criterion **breaks the 3-consecutive streak**, which restarts at the next mock); the 3 **span ≥10 days** (durability, not a hot streak); they fall **within ~6 weeks**; they are drawn from a **total of ≥6 logged mocks**; they reuse **no item seen in the prior 8 weeks**; and the window includes **≥1 mock from official material** (≥1 **proctored** official mock if obtainable). On those 3 mocks, ALL of the following must hold:
 
 | # | Criterion | Floor | Status | Evidence |
 |---|---|---|---|---|
-| 1 | **Composite ≥ 80%** of the weighted total (MCQ 55% + FRQ 45%). *(Conservative: historical CSA 5-cutoff has been ~65–72% composite; the extra cushion absorbs test-day variance and redesigned-curve uncertainty. This is an estimate, not a published number.)* | ≥ 80% | ⬜ | 0 / 3 qualifying mocks |
+| 1 | **Composite** (MCQ 55% + FRQ 45%): **mean of the 3 ≥ 82%, lowest of the 3 ≥ 78%, and no mock more than 5 points below the one before it** (non-declining). | mean ≥82%, floor ≥78%, non-declining | ⬜ | 0 / 3 qualifying mocks |
 | 2a | **MCQ overall ≥ 80%** | ≥ 80% | ⬜ | No data yet |
 | 2b | **Each unit (U1–U4) ≥ 75%** | ≥ 75% each | ⬜ | No data yet |
-| 2c | **Analyze-Code (P3, 37–53% of MCQ) ≥ 85% at pace** (~2:09/question) | ≥ 85% | ⬜ | No data yet |
+| 2c | **Analyze-Code (P3) ≥ 85% at pace** — each P3 item answered in ≤129 s; a P3 item taking >180 s counts as wrong for the at-pace check | ≥ 85% | ⬜ | No data yet |
 | 2d | **Each other practice (P1 Design, P2 Develop, P4 Document, P5 Responsible) ≥ 70%** | ≥ 70% each | ⬜ | No data yet |
-| 3 | **Each FRQ type (Q1–Q4) ≥ 85% of its points**, graded STRICTLY to the official rubric — uncertain points are NOT awarded (Q1 ≥6/7, Q2 ≥6/7, Q3 ≥4.25/5, Q4 ≥5.1/6) | ≥ 85% each | ⬜ | No data yet |
-| 4 | **Both sections completed within time, with 0–1 blanks** | ≤ 1 blank | ⬜ | No data yet |
-| 5 | **At least 1 of the 3 qualifying mocks is built from OFFICIAL material** (CED samples / 2026 released FRQ / AP Classroom), not only the original bank | ≥ 1 official | ⬜ | No data yet |
+| 3 | **Each FRQ type (Q1–Q4) ≥ 85% of its points**, strict-graded by a **calibrated** grader (gate B passed; uncertain → point NOT awarded). (Q1 ≥6/7, Q2 ≥6/7, Q3 ≥4.25/5, Q4 ≥5.1/6) | ≥ 85% each | ⬜ | No data yet |
+| 4 | **Both sections completed in time, ≤ 1 blank** | ≤ 1 blank | ⬜ | No data yet |
+| 5 | **Difficulty check:** if (mean composite on original-bank mocks − composite on the official-material mock) **> 7 points**, the bank is presumed easier → the bar becomes **the official mock's composite ≥ 80%** (not the average) and **2 of the 3** mocks must be official until a later window shows gap ≤ 7. | gap ≤ 7 (or elevated bar applies) | ⬜ | No data yet |
 
-**100% = ALL five criteria simultaneously green on the most recent 3 consecutive full timed mocks.** When any criterion is unmet, the tracker reads < 100% and names the specific unmet criterion. Do not declare "ready" on any subset.
+**D. Freshness** — a 100% reading **expires after 6 weeks**. If the exam is farther out, it reads **"provisional-ready,"** re-confirmed by **1 fresh qualifying mock every 4 weeks**; **≥1 qualifying mock must fall within the final 2 weeks** before the exam.
 
-**Honest caveat:** meeting all five criteria is the strongest real predictor of a 5, not a mathematical guarantee. The margin above the historical 5-cutoff is the insurance.
+| Freshness check | Status | Last qualifying mock | Next required |
+|---|---|---|---|
+| Reading current (≤6 weeks) | ⬜ | — | — |
+| Final-2-week mock (if exam ≤2 weeks out) | ⬜ | — | — |
+
+**E. Burnout guard** — if composite **drops ≥8 points across 2 consecutive mocks while topic mastery is unchanged**, treat it as **fatigue, not skill regression** → prescribe a **3–5 day rest / light review**, do NOT add drilling.
+
+| Burnout check | Status | Notes |
+|---|---|---|
+| No ≥8-point drop across 2 consecutive mocks (or prescribed rest taken) | ⬜ | — |
+
+**F. Recalibration (within 1 week of CB posting the 2026 score distribution / raw→5 conversion):** read the official composite needed for a 5 (`C5`); set the **bar = C5 + 8 points, floored at 78%** (never lower it below 78% without a second confirming source); **re-score all logged past mocks** against the official conversion (windows that no longer pass drop readiness below 100%); replace the estimated composite→score table and the CED-derived rubric with the official ones, then re-run gate B.
+
+| Recalibration check | Status | Notes |
+|---|---|---|
+| Official 2026 score distribution published | ⬜ | Watch `apstudents.collegeboard.org/about-ap-scores/score-distributions` |
+| Bar updated to C5 + 8 pts (floor 78%) | ⬜ | — |
+| All logged mocks re-scored against official conversion | ⬜ | — |
+| Gate B re-run against 2026 Scoring Guidelines | ⬜ | Watch `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` |
+
+---
+
+**100% — "Exam-ready: high-confidence 5"** = A–F all satisfied. Below that, the tracker reads a number <100 and **names the specific unmet criterion.** Do not declare ready on any subset.
+
+**Honest caveat:** meeting all criteria A–F is the strongest real predictor of a 5, not a mathematical guarantee. The margins (mean ≥82% vs the ~65–72% historical 5-line; ±1-pt grader calibration; ≥6 mocks) are the insurance against test-day variance and curve uncertainty.
 
 ### Per-unit MCQ floor tracking
+
+*(feeds criterion 2b above)*
 
 | Unit | Floor | Recent accuracy | Status |
 |---|---|---|---|
@@ -126,6 +154,8 @@ Before any mock counts toward the readiness bar, confirm every CED topic (1.1–
 | U4 Data Collections | ≥ 75% | — | ⬜ |
 
 ### Per-practice MCQ floor tracking
+
+*(feeds criteria 2c and 2d above)*
 
 | Practice | Floor | Recent accuracy | Status |
 |---|---|---|---|
@@ -150,4 +180,4 @@ Before any mock counts toward the readiness bar, confirm every CED topic (1.1–
 - The examiner reads **both** this file (exam skill performance) **and** [`../mastery-tracker.md`](../mastery-tracker.md) (content mastery) at the start of each session.
 - This tracker — not the prior "100% coverage" claim — plus the diagnostic are the real baseline. The old claim is unverified; start from the diagnostic output.
 - All pacing targets assume the digital Bluebook format (90 min Section I, 90 min Section II; Java Quick Reference provided throughout; no calculator).
-- Readiness bar: ≥80% composite on the most recent 3 consecutive full timed mocks (conservative — historical CSA 5-cutoff ~65–72% composite; the cushion absorbs redesigned-curve uncertainty). Re-baseline if College Board publishes an official cutoff for the redesigned exam.
+- Readiness bar: the full A–F definition lives in §(f) above — it is the single source of truth. Do not restate thresholds elsewhere.
