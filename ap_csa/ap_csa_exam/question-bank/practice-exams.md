@@ -172,7 +172,7 @@ Composite = (MCQ score × 0.55) + (FRQ score × 0.45)
 
 ## 5. Results log
 
-Fill one row after each mock. Use this to track progress toward the ≥3-full-mock readiness requirement and to feed the skill tables in `../exam-skill-tracker.md`.
+Fill one row after each mock. Use this to track progress toward the readiness bar — the **most recent 3 consecutive** full timed mocks (within ~6 weeks), each clearing every criterion — and to feed the skill tables in `../exam-skill-tracker.md`.
 
 | # | Date | Form used | MCQ raw | MCQ % | FRQ raw | FRQ % | Composite | Est. AP score | Weakest area (unit or FRQ type) | Tracker updated? |
 |---|---|---|---|---|---|---|---|---|---|---|
