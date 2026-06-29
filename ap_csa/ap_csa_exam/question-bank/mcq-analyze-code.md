@@ -1517,6 +1517,266 @@ A) `{2, 6}` and `{1, 7}`   B) `{6, 2}` and `{7, 1}`   C) `{2, 7}` and `{1, 6}`  
 
 ---
 
+## W. Hard multi-step traces (3+ interacting steps — real-exam depth)
+
+> These items deliberately chain three or more dependent steps (nested bounds, aliasing across calls, build-then-reparse, sub-region + guard, accumulating recursion, helper-in-a-loop). Trace on paper; a single skipped step changes the answer. Each distractor maps to a specific misconception.
+
+**Q98. (Analyze Code · 2.11 + 2.12 inner bound depends on outer index, weighted accumulate)**
+What is printed?
+```java
+int sum = 0;
+for (int i = 1; i <= 3; i++) {
+    for (int j = 1; j <= i; j++) {
+        sum += i * j;
+    }
+}
+System.out.println(sum);
+```
+A) `36`   B) `18`   C) `25`   D) `14`
+
+**Answer: C.** Inner runs `j = 1..i`. i=1: `1*1=1`. i=2: `2*1 + 2*2 = 2+4=6`. i=3: `3*1+3*2+3*3 = 3+6+9=18`. Total `1+6+18 = 25`. (B) forgets i=1's term region; (D) sums only `i*1` per row; (A) treats the inner bound as a fixed 3.
+`[topic 2.11][practice P3]`
+
+---
+
+**Q99. (Analyze Code · 3.6 + 1.9 object aliased through TWO method calls, mutation read later)**
+What is printed? (assume the `Box` class shown)
+```java
+public class Box {
+    private int v;
+    public Box(int start) { v = start; }
+    public void add(int n) { v += n; }
+    public int get() { return v; }
+}
+// in another class:
+public static void grow(Box b) { b.add(10); }
+public static void shrink(Box b) { b.add(-3); }
+
+public static void main(String[] args) {
+    Box box = new Box(5);
+    grow(box);
+    shrink(box);
+    System.out.println(box.get());
+}
+```
+A) `5`   B) `15`   C) `2`   D) `12`
+
+**Answer: D.** Each parameter is an **alias** to the same `Box`. `grow` → v = 5+10 = 15; `shrink` → v = 15−3 = 12; `get()` reads `12`. (A) assumes pass-by-value protects the object; (B) misses `shrink`; (C) misses `grow`.
+`[topic 3.6][practice P3]`
+
+---
+
+**Q100. (Analyze Code · 1.15 + 2.10 build a String across a loop, then re-parse with indexOf/substring)**
+What is printed?
+```java
+String csv = "";
+for (int i = 1; i <= 3; i++) {
+    csv = csv + i + ",";
+}
+// csv is now "1,2,3,"
+int firstComma = csv.indexOf(",");
+String rest = csv.substring(firstComma + 1);
+System.out.println(rest.indexOf(","));
+```
+A) `0`   B) `1`   C) `2`   D) `3`
+
+**Answer: B.** The loop builds `"1,2,3,"`. `indexOf(",")` = 1; `substring(2)` = `"2,3,"`. In `"2,3,"` the first comma is at index `1`. (A) reads the original string's comma; (C)/(D) miscount the chopped string.
+`[topic 1.15][practice P3]`
+
+---
+
+**Q101. (Analyze Code · 4.12 + 1.14 + 2.6 column-major traversal + null guard + .equals)**
+A `String[][] grid` may contain `null`. What is printed?
+```java
+String[][] grid = {{"x", "y"},
+                   {null, "x"},
+                   {"x", "z"}};
+int count = 0;
+for (int c = 0; c < grid[0].length; c++) {
+    for (int r = 0; r < grid.length; r++) {
+        if (grid[r][c] != null && grid[r][c].equals("x")) {
+            count++;
+        }
+    }
+}
+System.out.println(count);
+```
+A) `3`   B) `2`   C) `4`   D) A `NullPointerException` is thrown.
+
+**Answer: A.** Column-major still visits every cell. The `!= null` guard short-circuits before `.equals`, so the `null` at `grid[1][0]` is skipped safely. Cells equal to `"x"`: `grid[0][0]`, `grid[1][1]`, `grid[2][0]` → `3`. (B) misses one `"x"`; (C) miscounts; (D) ignores the guard.
+`[topic 4.12][practice P3]`
+
+---
+
+**Q102. (Analyze Code · 4.16 recursion trace — accumulates across calls)**
+What does `m(3)` return?
+```java
+public static int m(int n) {
+    if (n == 0) return 0;
+    return m(n - 1) + n * n;
+}
+```
+A) `9`   B) `14`   C) `6`   D) `13`
+
+**Answer: B.** `m(3) = m(2) + 9 = (m(1) + 4) + 9 = ((m(0) + 1) + 4) + 9 = 0 + 1 + 4 + 9 = 14` (sum of squares 1+4+9). (A) returns only the last term; (C) sums `n` not `n*n`; (D) drops the `1`.
+`[topic 4.16][practice P3]`
+
+---
+
+**Q103. (Analyze Code · 1.9 + 2.9 helper called inside a loop, result feeds an accumulator)**
+What is printed?
+```java
+public static int digits(int n) {
+    int d = 0;
+    while (n > 0) { d++; n = n / 10; }
+    return d;
+}
+
+public static void main(String[] args) {
+    int[] vals = {7, 88, 105, 4};
+    int total = 0;
+    for (int x : vals) {
+        total += digits(x);
+    }
+    System.out.println(total);
+}
+```
+A) `4`   B) `204`   C) `7`   D) `8`
+
+**Answer: C.** `digits` returns the digit count: `digits(7)=1`, `digits(88)=2`, `digits(105)=3`, `digits(4)=1`; accumulated `1+2+3+1 = 7`. (A) counts elements; (B) sums the values; (D) miscounts a digit length.
+`[topic 1.9][practice P3]`
+
+---
+
+**Q104. (Analyze Code · 2.11 + 1.15 nested loop builds a String, then its length is read)**
+What is printed?
+```java
+String out = "";
+for (int r = 1; r <= 4; r++) {
+    for (int c = 1; c <= r; c++) {
+        out = out + "*";
+    }
+    out = out + "|";
+}
+System.out.println(out.length());
+```
+A) `14`   B) `10`   C) `4`   D) `11`
+
+**Answer: A.** Row r appends r stars then one `|`: stars total `1+2+3+4 = 10`, plus `4` bars = `14` characters. (B) counts only stars; (C) counts only bars/rows; (D) drops a bar.
+`[topic 2.11][practice P3]`
+
+---
+
+**Q105. (Analyze Code · 3.6 + 4.10 ArrayList aliased through a method, then caller mutates and reads)**
+What is printed? (assume `ArrayList` imported)
+```java
+public static void seed(ArrayList<Integer> a) {
+    a.add(1);
+    a.add(2);
+}
+
+public static void main(String[] args) {
+    ArrayList<Integer> list = new ArrayList<Integer>();
+    seed(list);
+    list.add(0, 9);
+    list.remove(2);
+    System.out.println(list);
+}
+```
+A) `[9, 1, 2]`   B) `[1, 2]`   C) `[9, 2]`   D) `[9, 1]`
+
+**Answer: D.** `seed` mutates the **same** list (alias) → `[1, 2]`. `add(0, 9)` inserts at front → `[9, 1, 2]`. `remove(2)` deletes index 2 (`2`) → `[9, 1]`. (A) misses the remove; (B) assumes pass-by-value; (C) removes the wrong element.
+`[topic 3.6][practice P3]`
+
+---
+
+**Q106. (Analyze Code · 2.10 + 4.7 split a String, loop the tokens, parse + accumulate under a condition)**
+What is printed?
+```java
+String data = "3,10,2,8,5";
+String[] parts = data.split(",");
+int total = 0;
+for (int i = 0; i < parts.length; i++) {
+    int n = Integer.parseInt(parts[i]);
+    if (n > 4) {
+        total += n;
+    }
+}
+System.out.println(total);
+```
+A) `28`   B) `15`   C) `23`   D) `5`
+
+**Answer: C.** `split(",")` → `["3","10","2","8","5"]`. Parse each; keep those `> 4`: 10, 8, 5 → `10+8+5 = 23` (3 and 2 are skipped). (A) sums everything; (B) sums the skipped-plus-one; (D) keeps only the last.
+`[topic 2.10][practice P3]`
+
+---
+
+**Q107. (Analyze Code · 4.13 sub-region (interior, excluding the last row/column) accumulate)**
+What is printed?
+```java
+int[][] g = {{1, 2, 3},
+             {4, 5, 6},
+             {7, 8, 9}};
+int sum = 0;
+for (int r = 0; r < g.length - 1; r++) {
+    for (int c = 0; c < g[r].length - 1; c++) {
+        sum += g[r][c];
+    }
+}
+System.out.println(sum);
+```
+A) `21`   B) `12`   C) `45`   D) `15`
+
+**Answer: B.** The bounds `r < length−1` and `c < length−1` cover only the top-left 2×2 sub-region: `g[0][0..1]` and `g[1][0..1]` = 1+2+4+5 = `12`. (A) adds the third column; (C) sums the whole array; (D) sums one row.
+`[topic 4.13][practice P3]`
+
+---
+
+**Q108. (Analyze Code · 4.16 recursion trace — digit accumulation via `%`/`/`)**
+What does `r(4729)` return?
+```java
+public static int r(int n) {
+    if (n == 0) return 0;
+    return n % 10 + r(n / 10);
+}
+```
+A) `22`   B) `18`   C) `4729`   D) `9`
+
+**Answer: A.** Each call peels the last digit and recurses on the rest: `9 + r(472) = 9 + (2 + r(47)) = 9 + 2 + (7 + r(4)) = 9 + 2 + 7 + (4 + r(0)) = 9+2+7+4 = 22`. (B) drops the `4`; (C) returns the input; (D) returns only the first digit.
+`[topic 4.16][practice P3]`
+
+---
+
+**Q109. (Analyze Code · 3.5 + 3.6 mutator + accessor of an object called across a loop, conditional state-update)**
+What is printed? (assume the `Counter` class shown)
+```java
+public class Counter {
+    private int count;
+    public Counter() { count = 0; }
+    public void bump() { count++; }
+    public int get() { return count; }
+}
+// in another class:
+public static void main(String[] args) {
+    Counter c = new Counter();
+    int[] data = {2, 5, 4, 7, 6};
+    for (int x : data) {
+        if (x % 2 == 0) {
+            c.bump();
+        }
+    }
+    System.out.println(c.get() * 10 + data.length);
+}
+```
+A) `30`   B) `55`   C) `50`   D) `35`
+
+**Answer: D.** `bump()` runs once per even value: 2, 4, 6 → count = 3. Then `get() * 10 + data.length = 3*10 + 5 = 35`. (A) drops the `+ data.length`; (C) counts all five values as bumps then drops the length; (B) over-counts the evens.
+`[topic 3.5][practice P3]`
+
+---
+
 ## Coverage note
 
 This pack alone covers (≥1 trace each): **1.3, 1.5, 1.6, 1.9, 1.11, 1.14, 1.15, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.11, 2.12, 3.4, 3.6, 3.8, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.10, 4.11, 4.12, 4.13, 4.14, 4.15, 4.16, 4.17.** Practices used: **P3** (most), **P4** (Q38, Q63, Q74, Q76, Q77, Q80, Q84–Q87, Q90, Q97 — describe behavior / state precondition). New diagnostic styles (Q81–Q97): **which-change-fixes-the-bug** (Q81–Q83, Q92), **state-the-precondition / describe-behavior** (Q84–Q87, Q90), **shared-stem sets** (Q88–Q90, Q91–Q92), **multi-topic synthesis** (Q93–Q95), **`String.compareTo` sign** (Q96), and **merge-sort level trace** (Q97). The remaining topics (1.1, 1.2, 1.4, 1.7, 1.8, 1.10, 1.12, 1.13, 2.1, 2.3, 3.1, 3.2, 3.3, 3.5, 3.7, 3.9, 4.1, 4.2) and practices P1/P2/P5 are covered in the per-unit packs.
+
+**Hard multi-step traces (Q98–Q109):** twelve items that each chain **3+ interacting steps** to match real-exam depth — nested loop with index-dependent inner bound (Q98, Q104), object/`ArrayList` aliased through one or more method calls then read after mutation (Q99, Q105, Q109), build-a-String-then-reparse (Q100), column-major + null guard + `.equals` (Q101), accumulating recursion (Q102, Q108), helper-in-a-loop feeding an accumulator (Q103), split-then-parse-under-condition (Q106), and a 2D sub-region traversal (Q107). New-item answer keys are balanced **3 each across A/B/C/D** (A: Q101,Q104,Q108 · B: Q100,Q102,Q107 · C: Q98,Q103,Q106 · D: Q99,Q105,Q109), keeping the pack's overall distribution even.

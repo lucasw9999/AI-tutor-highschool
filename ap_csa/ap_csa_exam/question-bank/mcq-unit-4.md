@@ -527,6 +527,34 @@ A) `3`   B) `6`   C) `1`   D) `2`
 
 ---
 
+**Q38. (Document Code · 4.2 choosing the right structure — fixed vs growing data set)**
+You are collecting an **unknown number** of survey responses one at a time as they arrive, and the count is not known in advance. Which data structure is the **most appropriate** fit, and why?
+A) A fixed-size array, because arrays always perform better than any other structure.   B) An `ArrayList`, because its size grows as each element is added one at a time, so you need not know the count in advance.   C) A single `int` variable, because you only ever need the latest response.   D) A 2D array, because all survey data must be rectangular.
+
+**Answer: B.** A data set whose size is **not known ahead of time** and grows one element at a time fits an `ArrayList` (mutable size via `add`). A plain array (A) needs its length fixed at creation; a single variable (C) cannot hold many responses; a 2D array (D) imposes an irrelevant rectangular shape.
+`[topic 4.2][practice P4]`
+
+---
+
+**Q39. (Analyze Code · 4.2 one-at-a-time access — find the single largest value)**
+What is printed? (a data set scanned one element at a time)
+```java
+int[] readings = {12, 7, 25, 19, 25, 4};
+int best = readings[0];
+for (int i = 1; i < readings.length; i++) {
+    if (readings[i] > best) {
+        best = readings[i];
+    }
+}
+System.out.println(best);
+```
+A) `25`   B) `12`   C) `4`   D) `92`
+
+**Answer: A.** Accessing the data set one element at a time and keeping the largest seen so far: `best` rises 12 → 25 and stays (the second 25 is not strictly greater) → `25`. (B) is only the seed; (C) is the last element; (D) is the sum, not the max.
+`[topic 4.2][practice P3]`
+
+---
+
 ## Coverage note
 
-Unit 4 topics covered here: **4.1 (Q1,Q2,Q32,Q33,Q34), 4.2 (Q3,Q4), 4.3 (Q5,Q6,Q26), 4.4 (Q7,Q27), 4.5 (Q8,Q9,Q26,Q28,Q31), 4.6 (Q10,Q35,Q36,Q37), 4.7 (Q11,Q12), 4.8 (Q13), 4.9 (Q14,Q15), 4.10 (Q16,Q17,Q30), 4.11 (Q18), 4.12 (Q19), 4.13 (Q20,Q21,Q29), 4.14 (Q22), 4.15 (Q23), 4.16 (Q24), 4.17 (Q25)** — all 17 topics. Practices: **P1** (Q9, Q15, Q26, Q31 — incl. a 1.A design/decomposition item), **P2** (Q12, Q28, Q29, Q30), **P3** (most), **P4** (Q3, Q21), **P5** (Q1, Q2 privacy/bias/data fitness; Q32 open-source license/IP; Q33 unintended consequence; Q34 privacy-vs-utility tradeoff — topic 4.1). 37 items (weighted heavy, matching U4's 30–40% share).
+Unit 4 topics covered here: **4.1 (Q1,Q2,Q32,Q33,Q34), 4.2 (Q3,Q4,Q38,Q39), 4.3 (Q5,Q6,Q26), 4.4 (Q7,Q27), 4.5 (Q8,Q9,Q26,Q28,Q31), 4.6 (Q10,Q35,Q36,Q37), 4.7 (Q11,Q12), 4.8 (Q13), 4.9 (Q14,Q15), 4.10 (Q16,Q17,Q30), 4.11 (Q18), 4.12 (Q19), 4.13 (Q20,Q21,Q29), 4.14 (Q22), 4.15 (Q23), 4.16 (Q24), 4.17 (Q25)** — all 17 topics. Practices: **P1** (Q9, Q15, Q26, Q31 — incl. a 1.A design/decomposition item), **P2** (Q12, Q28, Q29, Q30), **P3** (most), **P4** (Q3, Q21, Q38), **P5** (Q1, Q2 privacy/bias/data fitness; Q32 open-source license/IP; Q33 unintended consequence; Q34 privacy-vs-utility tradeoff — topic 4.1). 39 items (weighted heavy, matching U4's 30–40% share). The thin topic **4.2** (intro to data sets) now carries four items: choosing the right structure for a growing data set (Q38) and one-at-a-time max scan (Q39) supplement the original Q3/Q4.

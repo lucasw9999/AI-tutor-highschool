@@ -240,6 +240,32 @@ A) `s.charAt(0)`   B) `s.substring(0, 1)`   C) `s.substring(1)`   D) `s.get(0)`
 
 ---
 
+**Q21. (Document Code · 1.7 API / libraries / packages — what `import` does)**
+A program needs the `ArrayList` class, which lives in the `java.util` package. What is the purpose of the line `import java.util.ArrayList;` at the top of the file?
+A) It copies the source code of `ArrayList` into your file so it can be compiled.   B) It downloads the `ArrayList` library from the internet at run time.   C) It tells the compiler where `ArrayList` lives so you can refer to it by its short name instead of its full package-qualified name.   D) It creates a new `ArrayList` object you can immediately use.
+
+**Answer: C.** An `import` makes a class from a **package/library** available by its simple name; it does not copy source, download anything, or create an object. The class still has to be instantiated with `new ArrayList<...>()`. (A)/(B) misdescribe how libraries are used; (D) confuses importing with constructing.
+`[topic 1.7][practice P4]`
+
+---
+
+**Q22. (Analyze Code · 1.10 calling static vs instance methods — `ClassName.method()` vs needing an object)**
+Given the class below, which call is **correct**?
+```java
+public class Util {
+    public static int triple(int n) { return 3 * n; }   // static
+    public int label() { return 1; }                     // instance
+}
+// elsewhere:
+Util u = new Util();
+```
+A) `Util.label()` calls the instance method directly on the class.   B) `triple(4)` works from another class without naming `Util`.   C) `u.triple(4)` is the only legal way to call `triple`.   D) `Util.triple(4)` calls the static method on the class; `u.label()` calls the instance method on the object.
+
+**Answer: D.** A **static** method belongs to the class and is called `ClassName.method(...)` (`Util.triple(4)`); an **instance** method needs an object (`u.label()`). (A) calls an instance method with no object; (B) omits the class name from another class; (C) wrongly claims an object is required for the static call.
+`[topic 1.10][practice P3]`
+
+---
+
 ## Coverage note
 
-Unit 1 topics covered here: **1.1 (Q1,Q2), 1.2 (Q3), 1.3 (Q4), 1.4 (Q5,Q6), 1.5 (Q7), 1.6 (Q8), 1.7 (Q9), 1.8 (Q10), 1.9 (Q11,Q12), 1.10 (Q13), 1.11 (Q14), 1.12 (Q15), 1.13 (Q16,Q17), 1.14 (Q18), 1.15 (Q19,Q20)** — all 15 topics. Practices: **P2** (Q5, Q17, Q20), **P3** (most), **P4** (Q1, Q9, Q10, Q15). 20 items.
+Unit 1 topics covered here: **1.1 (Q1,Q2), 1.2 (Q3), 1.3 (Q4), 1.4 (Q5,Q6), 1.5 (Q7), 1.6 (Q8), 1.7 (Q9,Q21), 1.8 (Q10), 1.9 (Q11,Q12), 1.10 (Q13,Q22), 1.11 (Q14), 1.12 (Q15), 1.13 (Q16,Q17), 1.14 (Q18), 1.15 (Q19,Q20)** — all 15 topics. Practices: **P2** (Q5, Q17, Q20), **P3** (most), **P4** (Q1, Q9, Q10, Q15, Q21). 22 items. The thin topics **1.7** (API/libraries/packages — what `import` does, Q21) and **1.10** (static vs instance calls — `ClassName.method()` vs needing an object, Q22) each now carry a second item.
