@@ -32,3 +32,7 @@ Each folder's own **`README.md`** explains that subject in detail — what it is
 - **Practice questions are original,** written to match the *style and rubric structure* of each exam. Official exam questions are **cited and linked to the source, never reproduced.**
 - **Literary study packs** use brief, attributed quotations for commentary and analysis (educational use); always quote from your own copy of the text.
 - Maintained as a **private repository** for one student's personal preparation.
+
+## License
+
+Original materials in this repository are released under the **[Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)](LICENSE)** — you may **reuse and adapt them for non-commercial purposes with attribution; commercial use is not permitted.** The third-party quotations, official exam questions (cited/linked, not reproduced), and trademarks referenced above are **not** covered by this grant and remain the property of their owners. See [`LICENSE`](LICENSE) for details.
