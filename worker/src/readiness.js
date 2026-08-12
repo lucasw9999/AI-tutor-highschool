@@ -5,10 +5,12 @@
 // readiness is a computed verdict over proctored mock evidence, and it can only
 // reach 100 when every criterion in the subject config holds simultaneously.
 //
-// Two rules are structural, not stylistic:
+// Three rules are structural, not stylistic:
 //   1. Drills cannot move readiness. Only attempts tied to a proctored mock count.
 //   2. Model-graded work (FRQs) cannot move readiness until the grader has been
 //      calibrated against an officially scored response.
+//   3. The window being judged must itself contain an official College Board
+//      sitting. An official mock elsewhere in the logbook anchors nothing.
 
 import { isServerGraded, MODEL_GRADED } from './grade.js'
 
