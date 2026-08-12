@@ -107,13 +107,32 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
       })
       return open ? sitting.id : null
     },
-    async openGap(g) {
-      if (!state.gaps.some((x) => x.subject === g.subject && x.topic === g.topic && !x.cleared_at)) {
-        state.gaps.push({ ...g, taught_at: null, cleared_at: null })
-      }
+    /**
+     * The same two conditions db.js's statement carries, in the same order.
+     *
+     * The PRIMARY KEY is (subject, topic, opened_at) — which does NOT dedupe two
+     * opens a millisecond apart — and the NOT EXISTS on an uncleared row is what
+     * actually keeps one topic to one open gap. This fake used to dedupe on
+     * (subject, topic, uncleared) ALONE, which was stricter than the schema, so no
+     * test here could see two concurrent /next calls writing two rows for one gap
+     * and open_gaps naming the topic twice. See tests/db.test.js, over real SQLite.
+     */
+    async openGap({ subject, topic, opened_at }) {
+      const samePk = state.gaps.some((x) => x.subject === subject && x.topic === topic && x.opened_at === opened_at)
+      const alreadyOpen = state.gaps.some((x) => x.subject === subject && x.topic === topic && !x.cleared_at)
+      if (samePk || alreadyOpen) return
+      state.gaps.push({ subject, topic, opened_at, taught_at: null, cleared_at: null })
     },
+    /** Same contract as db.js: how many rows this call changed, so a race cannot report success. */
     async markTaught({ subject, topic, taught_at }) {
-      for (const g of state.gaps) if (g.subject === subject && g.topic === topic && !g.cleared_at) g.taught_at = taught_at
+      let changed = 0
+      for (const g of state.gaps) {
+        if (g.subject === subject && g.topic === topic && !g.cleared_at) {
+          g.taught_at = taught_at
+          changed++
+        }
+      }
+      return changed
     },
     async clearGap({ subject, topic, cleared_at }) {
       for (const g of state.gaps) if (g.subject === subject && g.topic === topic && !g.cleared_at) g.cleared_at = cleared_at

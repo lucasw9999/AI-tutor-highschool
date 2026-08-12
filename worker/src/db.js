@@ -253,18 +253,52 @@ export function makeDb(D1) {
       return r?.mock_id ?? null
     },
 
+    /**
+     * Open a gap on a topic, unless one is already open on it.
+     *
+     * The PRIMARY KEY is (subject, topic, opened_at), so OR IGNORE alone does NOT
+     * make this idempotent: every request carries its own millisecond clock, and
+     * handleNext reads the gaps table and then writes it with no transaction
+     * available. Two concurrent /next calls on one freshly evidenced gap therefore
+     * wrote TWO rows, and `open_gaps` then listed the topic twice in every response
+     * the model reads aloud to the student.
+     *
+     * The NOT EXISTS is inside the statement for the same reason claimServe's guard
+     * is: because the check and the insert are one statement, a second open row
+     * cannot land whatever the interleaving. OR IGNORE stays for the primary key —
+     * a fresh gap opened at the same millisecond as a CLEARED row's opened_at would
+     * otherwise raise a constraint error, which is the one case OR IGNORE was
+     * already covering.
+     */
     openGap({ subject, topic, opened_at }) {
       return run(
-        `INSERT OR IGNORE INTO gaps (subject, topic, opened_at) VALUES (?,?,?)`,
-        subject, topic, opened_at,
+        `INSERT OR IGNORE INTO gaps (subject, topic, opened_at)
+         SELECT ?,?,?
+          WHERE NOT EXISTS (
+            SELECT 1 FROM gaps WHERE subject = ? AND topic = ? AND cleared_at IS NULL
+          )`,
+        subject, topic, opened_at, subject, topic,
       )
     },
 
-    markTaught({ subject, topic, taught_at }) {
-      return run(
+    /**
+     * Mark the lesson delivered, and report whether THIS call marked it.
+     *
+     * @returns {Promise<number>} 1 when a row changed, 0 when there was no open gap
+     *          on that topic to mark (a topic name where an id belongs, or a gap
+     *          closed since the caller read it).
+     *
+     * The count is the point. handleTaught reads the open gaps and then writes, and
+     * a /taught racing the /log that closes the gap matched nothing here — so
+     * discarding the count reported ok:true and promised that the topic "will come
+     * back with no hints" about a gap an unaided correct answer had already closed.
+     */
+    async markTaught({ subject, topic, taught_at }) {
+      const r = await run(
         `UPDATE gaps SET taught_at = ? WHERE subject = ? AND topic = ? AND cleared_at IS NULL`,
         taught_at, subject, topic,
       )
+      return Number(r?.meta?.changes ?? r?.changes ?? 0)
     },
 
     clearGap({ subject, topic, cleared_at }) {
