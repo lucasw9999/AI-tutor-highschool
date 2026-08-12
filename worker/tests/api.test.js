@@ -131,8 +131,17 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
       m.ended_at = ended_at
       return 1
     },
+    /**
+     * Conditional score write, same contract as db.js: 1 when this call stored the
+     * score, 0 when the sitting is not closed or was already scored. `blanks` is
+     * the "never scored" test there too, because a sitting that WAS scored and
+     * legitimately produced no composite still has a blank count.
+     */
     async scoreMock({ id, composite_pct, blanks }) {
-      Object.assign(await this.mock(id), { composite_pct, blanks })
+      const m = await this.mock(id)
+      if (!m || !m.ended_at || m.composite_pct != null || m.blanks != null) return 0
+      Object.assign(m, { composite_pct, blanks })
+      return 1
     },
   }
 }
@@ -1227,6 +1236,81 @@ withSeed('a full sitting is scored over the questions it can be scored on, not m
   assert.equal(r.blanks, 0, 'the free-response questions the bank cannot ask are not bubbles he left empty')
   assert.match(r.basis, /Multiple choice only/, 'and the basis must say what the composite covers')
   assert.doesNotMatch(r.basis, /never reached/, 'nothing can be "never reached" that was never offered')
+})
+
+// ---------------------------------------------------------------------------
+// A sitting stranded between being closed and being scored
+//
+// handleMockSubmit closes the sitting BEFORE it reads the answers it scores, and
+// that ordering is deliberate and correct: it is what tells a concurrent /log
+// that the paper is in. But it leaves two writes with a gap between them, and the
+// gap is the most CPU-expensive stretch in the codebase — the composite, the
+// blank count, then a full readiness recomputation over the subject's whole
+// history — so a Worker CPU kill lands there preferentially.
+//
+// What that used to leave behind: {ended_at set, composite_pct null, blanks
+// null} on a sitting with 42 mechanically gradeable answers, disclosed forever as
+// having "had nothing that could be graded mechanically", with /mock/submit
+// returning 409 on every retry. A real 42-question sitting, lost, with a false
+// reason attached.
+//
+// Driven over REAL SQLite, because the whole defect is which of two writes
+// landed.
+// ---------------------------------------------------------------------------
+
+withSeed('a sitting stranded between closing and scoring can still be scored, and is not disclosed with a false reason', async () => {
+  const { db, sqlite } = realDb()
+  const expected = CSA.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+  await sitMock({ db, mock: m.mock, n: expected, spacing: 60 })
+
+  // The scoring write dies. Everything before it — the close, and the 42 answers
+  // — is already on disk.
+  const killed = { ...db, scoreMock: async () => { throw new Error('Worker exceeded CPU time limit') } }
+  await assert.rejects(
+    () => handleMockSubmit({ db: killed, mockId: m.mock, config: CSA, now: at(expected * 60 + 300) }),
+    /CPU/,
+  )
+  const stranded = sqlite.prepare('SELECT ended_at, composite_pct, blanks FROM mocks WHERE id = ?').get(m.mock)
+  assert.ok(stranded.ended_at, 'the close landed, which is what makes this recoverable at all')
+  assert.equal(stranded.composite_pct, null, 'and the score did not')
+  assert.equal(stranded.blanks, null, 'nor the blank count — nothing of the scoring write landed')
+
+  // The disclosure must not invent a reason. 42 answers were mechanically graded.
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(expected * 60 + 600) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `a closed sitting with no composite must stay visible: ${JSON.stringify(s.advisories)}`)
+  assert.doesNotMatch(
+    adv, /graded mechanically/,
+    `all ${expected} of its answers WERE graded mechanically, so that cannot be the reason given: ${adv}`,
+  )
+  assert.match(adv, /submit/i, 'and the disclosure has to name the way out, because there is one')
+
+  // The way out. Re-submitting a closed-but-unscored sitting scores it.
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(expected * 60 + 900) })
+  assert.equal(r.answered, expected)
+  assert.equal(r.counted, true, 'a sitting that was sat cannot be lost to a failure between two writes')
+  assert.equal(r.composite_pct, 100, 'every answer came off the real key')
+  assert.equal(r.status.proctored_mocks, 1)
+  assert.equal(
+    sqlite.prepare('SELECT composite_pct, blanks FROM mocks WHERE id = ?').get(m.mock).composite_pct, 100,
+    'and the STORED composite is what a later readiness read sees',
+  )
+  assert.equal(
+    sqlite.prepare('SELECT ended_at FROM mocks WHERE id = ?').get(m.mock).ended_at, stranded.ended_at,
+    'the paper was handed in when it was handed in; a rescue may not move that',
+  )
+
+  // Once, though. A scored sitting is closed for good, and stops being disclosed.
+  await assert.rejects(
+    () => handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(expected * 60 + 1200) }),
+    (e) => e instanceof ApiError && e.status === 409,
+  )
+  const after = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(expected * 60 + 1500) })
+  assert.ok(
+    !after.advisories.some((a) => /not scored/i.test(a)),
+    `a scored sitting must stop being advertised as unscored: ${JSON.stringify(after.advisories)}`,
+  )
 })
 
 test('days_to_exam counts calendar days in one fixed zone', async () => {

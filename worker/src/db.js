@@ -315,9 +315,36 @@ export function makeDb(D1) {
       return Number(r?.meta?.changes ?? r?.changes ?? 0)
     },
 
-    /** Store what a closed sitting scored. Only the caller that closed it may. */
-    scoreMock({ id, composite_pct, blanks }) {
-      return run(`UPDATE mocks SET composite_pct = ?, blanks = ? WHERE id = ?`, composite_pct, blanks, id)
+    /**
+     * Store what a closed sitting scored, and report whether THIS call stored it.
+     *
+     * @returns {Promise<number>} 1 when this call wrote the score, 0 when the
+     *          sitting is not closed, or had already been scored by someone else.
+     *
+     * WHY IT IS CONDITIONAL. closeMock and this are two writes with a gap between
+     * them, and the gap is where the composite, the blank count and a full
+     * readiness recomputation happen — the most CPU-expensive stretch in the
+     * request, so a Worker CPU kill lands there preferentially. That left
+     * {ended_at set, composite_pct null, blanks null}: a sitting closed and never
+     * scored, which handleMockSubmit can now finish on a later call. The guard is
+     * what makes finishing it safe — two racing rescues both compute a composite,
+     * and exactly one may store one, so the other is refused rather than allowed
+     * to overwrite it.
+     *
+     * `blanks IS NULL` is the test for "never scored", not `composite_pct IS
+     * NULL`: a sitting that WAS scored and legitimately produced no composite (too
+     * little of the section reached, no clock, a section the bank cannot supply)
+     * has a null composite too, and re-scoring those forever would reopen the
+     * "already submitted" refusal that stops one sitting being counted twice. This
+     * method is the only writer of `blanks`, so a NULL there means it never ran.
+     */
+    async scoreMock({ id, composite_pct, blanks }) {
+      const r = await run(
+        `UPDATE mocks SET composite_pct = ?, blanks = ?
+          WHERE id = ? AND ended_at IS NOT NULL AND composite_pct IS NULL AND blanks IS NULL`,
+        composite_pct, blanks, id,
+      )
+      return Number(r?.meta?.changes ?? r?.changes ?? 0)
     },
   }
 }
