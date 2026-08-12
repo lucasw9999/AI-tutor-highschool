@@ -113,6 +113,29 @@ test('duplicate item ids are an error', () => {
   assert.match(validate([item(), item()], TOPICS, NO_BANK).errors.join('|'), /duplicate item id/)
 })
 
+test('duplicate topic ids (same subject) are an error', () => {
+  // topics has PRIMARY KEY (subject, id) and to-sql.js emits INSERT OR REPLACE
+  // for topics exactly as it does for items, so a copy-pasted row here means D1
+  // receives one row fewer than the build reports writing — the same failure
+  // mode the item-id duplicate gate above exists to catch, unguarded for topics.
+  const dup = [
+    { id: '1.3', subject: 'ap_csa', unit: '1', ek: 'Integer division truncates' },
+    { id: '1.3', subject: 'ap_csa', unit: '1', ek: 'Integer division truncates, again' },
+  ]
+  assert.match(validate([item()], dup, NO_BANK).errors.join('|'), /duplicate topic id/)
+})
+
+test('the same topic id in two different subjects is not a duplicate', () => {
+  // Topic ids are only unique WITHIN a subject (42 of 48 Precalc ids collide
+  // with CSA ids), so this must not be flagged.
+  const topics = [
+    { id: '1.1', subject: 'ap_csa', ek: 'CSA idea' },
+    { id: '1.1', subject: 'ap_precalc', ek: 'Precalc idea' },
+  ]
+  const errors = validate([], topics, NO_BANK).errors
+  assert.deepEqual(errors.filter((e) => /duplicate topic id/.test(e)), [])
+})
+
 // --- letter-valued options that collide with an option label (N7) ---------
 
 test('an option whose text is a bare letter matching a DIFFERENT option label is an error', () => {
@@ -307,6 +330,46 @@ test('feasibility: a subject with no items in this build is not judged', () => {
   // this one must not double-report it as an impossible bank.
   const f = feasibility([], standards())
   assert.deepEqual([...f.errors, ...f.warnings], [])
+})
+
+// --- feasibility: a config with a missing or misshapen "exam" block must not
+// gate silently. mcq/frq both resolve to null when the block is absent or its
+// keys are misnamed, `questions` is then 0, and an early return used to skip
+// every check with no error and no warning — a gate that quietly stops gating.
+
+test('feasibility: a config with a typo\'d exam block ("exams" not "exam") is an explicit ERROR, not silence', () => {
+  // Exactly the shipped-config risk: CSA uses exam.mcq_count, Precalc uses
+  // exam.mcq_no_calc_count + exam.mcq_calc_count — a third subject getting the
+  // key wrong is plausible, and nothing else validates a config's shape.
+  const { errors, warnings } = feasibility(bank(10), { subject: 'x', exams: { mcq_count: 40 } })
+  assert.equal(warnings.length, 0, JSON.stringify(warnings))
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /\bx\b/, 'must name the config')
+  assert.match(errors[0], /exam/i, 'must name the field it expected')
+})
+
+test('feasibility: a config with no exam block at all is an explicit ERROR, not silence', () => {
+  const { errors, warnings } = feasibility(bank(10), { subject: 'y', readiness: { total_logged_mocks_min: 3 } })
+  assert.equal(warnings.length, 0, JSON.stringify(warnings))
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /\by\b/)
+})
+
+test('feasibility: an exam block present but not resolving to any questions is an ERROR when readiness is present', () => {
+  // The block exists (so it is not "missing entirely") but its keys inside
+  // are wrong, so mcq/frq both resolve to null/0 just the same.
+  const { errors } = feasibility(
+    bank(10),
+    { subject: 'z', exam: { count: 40 }, readiness: { total_logged_mocks_min: 3 } },
+  )
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /\bz\b/)
+})
+
+test('feasibility: a null config is an explicit ERROR, not silence', () => {
+  const { errors, warnings } = feasibility(bank(10), null)
+  assert.equal(warnings.length, 0, JSON.stringify(warnings))
+  assert.equal(errors.length, 1, JSON.stringify(errors))
 })
 
 test('feasibility runs from validate() over every configured subject', () => {

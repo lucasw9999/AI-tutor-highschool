@@ -73,7 +73,12 @@ test('B2: a Precalc topic with no items still warns when CSA has an item at the 
       stem: 'What is printed?', options: { A: 'a', B: 'b', C: 'c', D: 'd' }, answer: 'A',
     },
   ]
-  const { warnings } = validate(items, topics)
+  // A 1-item fixture is not a claim about either subject's whole bank, so pass
+  // NO_BANK explicitly rather than fall through validate()'s default of reading
+  // the real worker/config/*.json off disk — see the next test for what that
+  // default mixes into a result nobody asked it for.
+  const { errors, warnings } = validate(items, topics, [])
+  assert.deepEqual(errors, [])
   const noItems = warnings.filter((w) => /has no items/.test(w))
   assert.equal(noItems.length, 1, `expected exactly one has-no-items warning, got ${JSON.stringify(noItems)}`)
   assert.match(noItems[0], /ap_precalc/)
@@ -87,10 +92,16 @@ test('B2: an item may not borrow a topic id that exists only in another subject'
   const items = [
     { id: 'pc-x', subject: 'ap_precalc', kind: 'constructed_model_graded', topic: '1.5', stem: 's', solution: 'sol' },
   ]
-  const { errors } = validate(items, topics)
-  assert.ok(
-    errors.some((e) => e.includes('pc-x') && e.includes('1.5') && /coverage matrix/.test(e)),
-    `expected a cross-subject topic error, got ${JSON.stringify(errors)}`,
+  // A 1-item fixture tagged ap_precalc is not a claim about ap_precalc's whole
+  // bank, so feasibility must not run over it — pass NO_BANK explicitly rather
+  // than fall through validate()'s default of reading the real worker/config/*.json
+  // off disk, which would mix that subject's real feasibility findings into a
+  // result this test never asked about.
+  const { errors } = validate(items, topics, [])
+  assert.deepEqual(
+    errors,
+    ['pc-x: topic 1.5 is not in the coverage matrix for ap_precalc'],
+    `expected exactly the cross-subject topic error, got ${JSON.stringify(errors)}`,
   )
 })
 
