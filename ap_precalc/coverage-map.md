@@ -44,7 +44,7 @@ All three exam units carry roughly equal weight — **none is skippable.**
 - **graphing-calculator-skills.md** — the exact calculator moves the exam rewards (zeros, intersections, regressions for the modeling FRQs).
 - **exam-strategy-and-scoring.md** — timing, the 4 FRQ types, what graders reward, common point-losers, what earns a 4–5.
 - **skills-and-weightings.md** — the 3 Mathematical Practices / 8 skills + their exam weights + per-FRQ skill map (where to spend time: 1.C "construct functions" + Practice 1 are heaviest).
-- **practice-resources-and-exam-day.md** — where to get real released items (AP Central / AP Classroom), Bluebook + handwritten-FRQ mechanics, the rehearsable sample booklet.
+- **practice-resources-and-exam-day.md** — where to get real released items (AP Central / AP Classroom), the verified third-party stack + the AVOID list, Bluebook + handwritten-FRQ mechanics, and the sample FRQ booklet (⚠️ **posts early 2027** — a diarised task, not a download you can do today).
 - **2027-exam-changes.md** — the verified May-2027 format change (read first).
 
 ---
