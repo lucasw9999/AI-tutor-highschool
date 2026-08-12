@@ -61,13 +61,21 @@ export function parsePracticeItems(text, filename) {
       subject: 'ap_precalc',
       unit: meta.unit,
       number: s.num,
-      kind: 'constructed',
+      // These are worked-solution practice problems, not single-answer items:
+      // "give the zeros and their multiplicities, and say whether the graph
+      // crosses or bounces" has no canonical short answer. So they are declared
+      // model-graded rather than left with a null key, which would otherwise be
+      // treated as a mismatch and mark every answer WRONG. Model-graded work is
+      // excluded from every readiness floor.
+      kind: 'constructed_model_graded',
       difficulty,
       calc_allowed: calc,
       tested_on_exam: meta.tested,
       stem: `${s.rest}\n${stemTail}`.replace(/\s+/g, ' ').trim(),
       solution: solMatch ? solMatch[1].replace(/\s+/g, ' ').trim() : null,
-      answer: null, // Plan 4 authors a keyed short answer so the server can grade
+      // The printed solution is the feedback the student sees after answering.
+      explanation: solMatch ? solMatch[1].replace(/\s+/g, ' ').trim() : null,
+      answer: null,
       answer_variants: [],
     }
   })

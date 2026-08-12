@@ -11,6 +11,8 @@
 // pattern. And a gap does not close when the lesson is delivered — it closes
 // when he gets one right cold, with no hints.
 
+import { isServerGraded } from './grade.js'
+
 /** Two distinct items missed on one topic is a concept gap, not bad luck. */
 export const GAP_THRESHOLD = 2
 
@@ -25,6 +27,9 @@ export function detectGaps(attempts, { threshold = GAP_THRESHOLD } = {}) {
   const hinted = new Map()
   for (const a of attempts) {
     if (a.topic == null) continue
+    // An ungraded attempt is not a miss. Treating one as evidence of confusion
+    // would open a concept gap the student never demonstrated.
+    if (!isServerGraded(a)) continue
     if (!missedItems.has(a.topic)) missedItems.set(a.topic, new Set())
     if (!a.correct) missedItems.get(a.topic).add(a.item_id)
     if (a.hints_used) hinted.set(a.topic, (hinted.get(a.topic) ?? 0) + 1)

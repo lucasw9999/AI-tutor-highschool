@@ -475,5 +475,401 @@
     "common_mistake": "mid=2 (`a[2]=6`, 5<6 → high=1); mid=0 (`a[0]=2`, 5>2 → low=1); mid=1 (`a[1]=4`, 5>4 → low=2). Now low>high → stop. **3** comparisons.",
     "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
     "complete": true
+  },
+  {
+    "topic": "1.1",
+    "subject": "ap_precalc",
+    "plain_idea": "AROC over [a, b] is the slope of the straight line (secant) connecting the two endpoints on the graph. It's \"rise over run\" for a function.",
+    "worked_example": "$f(x)=x^2$, find AROC on [1, 4].\n$\\dfrac{f(4)-f(1)}{4-1}=\\dfrac{16-1}{3}=\\dfrac{15}{3}=5.$",
+    "common_mistake": "Flipping the order — numerator must match the denominator's direction. Always (top output − bottom output) over (top input − bottom input).",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.2",
+    "subject": "ap_precalc",
+    "plain_idea": "Concavity tells you whether the *rate of change itself* is speeding up or slowing down.\n- **Concave UP** (curls upward, like a cup): rate of change is **increasing**.\n- **Concave DOWN** (curls over, like a frown): rate of change is **decreasing**.\n\nA secant line on a concave-**down** graph lies **below** the curve between the points → a linear estimate **underestimates** the true value there. (This exact reasoning was Q2(B)(iii) in BOTH 2024 and 2025.)",
+    "worked_example": "$f$ is increasing and concave down on [0, 10]. You estimate $f(5)$ using the AROC from 0 to 10. Is your estimate too high or too low?\nConcave down → secant is below the curve → estimate is **too low** (an underestimate).",
+    "common_mistake": "Confusing \"increasing\" with \"concave up.\" A function can be increasing while concave down (rising but leveling off). *Increasing/decreasing* = is the output going up or down. *Concavity* = is the rate going up or down. They're independent.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.3",
+    "subject": "ap_precalc",
+    "plain_idea": "Far left and far right, a polynomial behaves like its **leading term** $a_nx^n$ only.",
+    "worked_example": "End behavior of $f(x)=-2x^3+5x^2-1$.\nLeading term $-2x^3$ (odd degree, negative coeff): $\\displaystyle\\lim_{x\\to\\infty}f(x)=-\\infty$ and $\\displaystyle\\lim_{x\\to-\\infty}f(x)=+\\infty$.",
+    "common_mistake": "Bad **limit notation**. The Chief Reader flagged this BOTH years — students got the behavior right but lost the point. You need ALL FOUR pieces: the word **lim**, the **x→(±∞)** underneath, the **function**, and the **value**. \"It goes to infinity\" earns zero.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.4",
+    "subject": "ap_precalc",
+    "plain_idea": "A zero is where $f(x)=0$ (an x-intercept if real). **Multiplicity** = how many times that factor repeats, and it controls how the graph behaves at that x-intercept.\n- **Odd multiplicity** (1, 3, …): graph **crosses** the x-axis.\n- **Even multiplicity** (2, 4, …): graph **touches and bounces** (tangent to axis).\n\nA degree-$n$ polynomial has exactly $n$ zeros counting multiplicity and complex ones. **Complex (non-real) zeros come in conjugate pairs** ($a+bi$ with $a-bi$).",
+    "worked_example": "$f(x)=(x-2)^2(x+1)$. Zeros and behavior?\n$x=2$ (multiplicity 2 → **bounces**), $x=-1$ (multiplicity 1 → **crosses**). Degree = 3.",
+    "common_mistake": "Assuming every zero crosses the axis. Even multiplicity bounces — getting this wrong means you draw the graph wrong and miss MCQs that ask to match equations to graphs.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.5",
+    "subject": "ap_precalc",
+    "plain_idea": "- **Even:** $f(-x)=f(x)$ → symmetric about the **y-axis** (e.g., $x^2$, $\\cos$). Even-power terms only.\n- **Odd:** $f(-x)=-f(x)$ → symmetric about the **origin** (e.g., $x^3$, $\\sin$). Odd-power terms only.",
+    "worked_example": "Is $f(x)=x^3-4x$ even, odd, or neither?\n$f(-x)=(-x)^3-4(-x)=-x^3+4x=-(x^3-4x)=-f(x)$ → **odd**.",
+    "common_mistake": "Stopping after computing $f(-x)$ without comparing it to **both** $f(x)$ and $-f(x)$. If it matches neither, the answer is \"neither.\"",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.6",
+    "subject": "ap_precalc",
+    "plain_idea": "Factor top and bottom first.\n- **Hole (removable):** a factor that cancels from both numerator and denominator. The hole is at that x-value.\n- **Vertical asymptote (VA):** a factor in the denominator that does **NOT** cancel. Output → ±∞ there.",
+    "worked_example": "$f(x)=\\dfrac{(x-3)(x+1)}{(x-3)(x-5)}$.\n$(x-3)$ cancels → **hole at $x=3$**. $(x-5)$ remains → **VA at $x=5$**. (Find the hole's y-value by plugging $x=3$ into the simplified form: $\\frac{3+1}{3-5}=-2$, hole at $(3,-2)$.)",
+    "common_mistake": "Calling every denominator zero a vertical asymptote. If it cancels, it's a HOLE, not a VA. Always factor and cancel first.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.7",
+    "subject": "ap_precalc",
+    "plain_idea": "Compare the degrees of numerator (N) and denominator (D):\n- **deg N < deg D** → horizontal asymptote **y = 0**.\n- **deg N = deg D** → horizontal asymptote **y = ratio of leading coefficients**.\n- **deg N = deg D + 1** → **slant (oblique) asymptote**; do polynomial long division, the quotient (drop remainder) is the line.\n- **deg N > deg D + 1** → no horizontal/slant asymptote (end behavior follows the quotient polynomial).",
+    "worked_example": "Slant asymptote of $f(x)=\\dfrac{x^2+1}{x-1}$.\nLong division: $x^2+1 \\div (x-1)=x+1$ remainder 2. Slant asymptote: **y = x + 1**.",
+    "common_mistake": "Reaching for a horizontal asymptote when the top degree is bigger. Equal degrees → ratio of leading coeffs (NOT y = 0); top one bigger → slant, do the division.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.8",
+    "subject": "ap_precalc",
+    "plain_idea": "Same function, different forms for different jobs:\n- **Factored form** reveals **zeros** instantly: $f(x)=2(x-3)(x+1)$.\n- **Standard form** reveals **end behavior / leading coefficient / y-intercept**: $f(x)=2x^2-4x-6$.",
+    "worked_example": "Quadratic model through (0, 25), (2, 30), (4, 34).\nFrom (0,25): $c=25$. From (2,30): $4a+2b+25=30 \\Rightarrow 4a+2b=5$. From (4,34): $16a+4b+25=34 \\Rightarrow 16a+4b=9$. Solve: double the first ($8a+4b=10$), subtract from second ($8a=-1$) → $a=-0.125$, then $b=2.75$.",
+    "common_mistake": "On modeling FRQs, students give answers with no work. Q2 is the 2nd-lowest-scoring FRQ. **Set up the equations explicitly**, and watch sign/decimal accuracy.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.9",
+    "subject": "ap_precalc",
+    "plain_idea": "Starting from $f(x)$, build $g(x)=a\\,f(b(x-h))+k$:\n- **k**: vertical shift (up if +).\n- **h**: horizontal shift (RIGHT if $x-h$ with +h — opposite of intuition).\n- **a**: vertical stretch (|a|>1) / compress; reflect over x-axis if a<0.\n- **b**: horizontal stretch/compress by 1/|b|; reflect over y-axis if b<0.",
+    "worked_example": "Describe $g(x)=-2f(x-3)+1$ vs $f$.\nRight 3, vertical stretch ×2, reflect over x-axis, up 1.",
+    "common_mistake": "Inside-the-parentheses changes are **horizontal and backwards**: $f(x-3)$ moves RIGHT 3 (not left), and $f(2x)$ **compresses** by ½ (not stretch). Outside changes are vertical and behave normally.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.10",
+    "subject": "ap_precalc",
+    "plain_idea": "A **piecewise function** is built from different rules on **non-overlapping** intervals of the domain — one formula here, a different one there.",
+    "worked_example": null,
+    "common_mistake": "Using the wrong piece at a boundary — watch the **≤ vs <** at each breakpoint to see which rule owns the endpoint.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": false
+  },
+  {
+    "topic": "1.11",
+    "subject": "ap_precalc",
+    "plain_idea": null,
+    "worked_example": null,
+    "common_mistake": null,
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": false
+  },
+  {
+    "topic": "2.1",
+    "subject": "ap_precalc",
+    "plain_idea": "A sequence is a list of numbers following a rule. **Arithmetic** = you *add* the same number each step (constant difference). **Geometric** = you *multiply* by the same number each step (constant ratio). Arithmetic ↔ linear; geometric ↔ exponential.",
+    "worked_example": "Geometric sequence with $g_1 = 5$, $g_4 = 135$. Find the rule.\n- $g_4 = g_1 r^{3} \\Rightarrow 135 = 5r^3 \\Rightarrow r^3 = 27 \\Rightarrow r = 3$.\n- Rule: $g_n = 5\\cdot 3^{\\,n-1}$.",
+    "common_mistake": "Mixing up the indexing. If it starts at $a_0$, the $n$-th listed term uses exponent/multiplier $n$; if it starts at $a_1$, use $n-1$. Always check what the first term's index is.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.2",
+    "subject": "ap_precalc",
+    "plain_idea": "Linear functions change by a **constant amount** over equal-length input intervals (add the same thing). Exponential functions change by a **constant proportion/ratio** (multiply by the same factor). This is the #1 conceptual idea the exam tests — including FRQ Q1 2025, which asked students to identify a table as exponential by checking ratios.",
+    "worked_example": "Which model fits? x = 0,1,2,3 → y = 4, 6, 9, 13.5.\n- Differences: +2, +3, +4.5 → not constant → not linear.\n- Ratios: 6/4 = 1.5, 9/6 = 1.5, 13.5/9 = 1.5 → constant → **exponential**, $y = 4(1.5)^x$.",
+    "common_mistake": "Only checking differences and declaring \"not linear, so I don't know.\" The exam wants you to immediately test the **ratio** next. Constant ratio = exponential, full stop.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.3",
+    "subject": "ap_precalc",
+    "plain_idea": "$f(x) = a\\cdot b^{x}$. Here $a$ = initial value (y-intercept, the value at $x=0$), $b$ = base = the growth/decay factor. $b>1$ → **growth**; $0<b<1$ → **decay**. The graph has a **horizontal asymptote** (default $y=0$).",
+    "worked_example": "A \\$2000 investment grows 5% per year. Value after $t$ years, and after 10 years?\n- $V(t) = 2000(1.05)^t$.\n- $V(10) = 2000(1.05)^{10} \\approx 2000(1.6289) \\approx \\$3257.79$.",
+    "common_mistake": "Writing the decay base wrong. \"Decreases 12% per year\" is $b = 1 - 0.12 = 0.88$, **not** $0.12$. And the asymptote of $a\\cdot b^x + k$ is $y=k$, not $y=0$.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.4",
+    "subject": "ap_precalc",
+    "plain_idea": "$(f\\circ g)(x) = f(g(x))$ — do the **inside first**, feed its output into the outside function. Order matters; $f(g(x)) \\neq g(f(x))$ in general.",
+    "worked_example": "$f(x)=x^2+1$, $g(x)=2^x$. Find $f(g(3))$.\n- Inside: $g(3) = 2^3 = 8$.\n- Outside: $f(8) = 8^2+1 = 65$.",
+    "common_mistake": "Composing in the wrong order, or — with a graph/table — misreading which value to look up. For $h(3)=g(f(3))$, you find $f(3)$ FIRST (from the graph/table), then plug that into $g$. Track inside-out.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.5",
+    "subject": "ap_precalc",
+    "plain_idea": "The inverse $f^{-1}$ undoes $f$: it swaps inputs and outputs. If $(a,b)$ is on $f$, then $(b,a)$ is on $f^{-1}$. A function has an inverse only if it's **one-to-one** (passes the horizontal line test). To find it algebraically: swap $x$ and $y$, solve for $y$.",
+    "worked_example": "$f(x) = 2^x - 5$. Find $f^{-1}(x)$.\n- $y = 2^x - 5 \\Rightarrow$ swap: $x = 2^y - 5 \\Rightarrow x+5 = 2^y \\Rightarrow y = \\log_2(x+5)$.\n- $f^{-1}(x) = \\log_2(x+5)$.",
+    "common_mistake": "Confusing $f^{-1}(x)$ with $\\dfrac{1}{f(x)}$. The inverse is NOT the reciprocal. Also, when asked \"does $f$ have an inverse?\", justify with the **horizontal line test / one-to-one**, not the vertical line test (that just checks it's a function at all).",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.6",
+    "subject": "ap_precalc",
+    "plain_idea": "A log answers \"what exponent?\" $\\log_b x = y$ means $b^y = x$. It's the inverse of $b^x$. $\\log$ (no base) = base 10; $\\ln$ = base $e$.",
+    "worked_example": "Evaluate $\\log_2 32$ and $\\ln(e^4)$.\n- $\\log_2 32$: \"2 to what power is 32?\" $2^5=32$, so $=5$.\n- $\\ln(e^4) = 4$ (log and exp same base undo each other).",
+    "common_mistake": "Forgetting the **domain restriction**. $\\log(x-3)$ requires $x>3$. On modeling FRQs, ignoring domain on a log model loses points.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.7",
+    "subject": "ap_precalc",
+    "plain_idea": "Three rules turn products into sums, quotients into differences, and exponents into coefficients. Used to **condense** to a single log or **expand** — both directions appear on FRQ Q4.",
+    "worked_example": "Condense $3\\log x + \\log y - 2\\log z$ into a single log.\n- Power rule first: $\\log x^3 + \\log y - \\log z^2$.\n- Product/quotient: $\\log\\!\\left(\\dfrac{x^3 y}{z^2}\\right)$.",
+    "common_mistake": "Inventing fake rules. $\\log(M+N) \\neq \\log M + \\log N$, and $\\dfrac{\\log M}{\\log N} \\neq \\log M - \\log N$. The sum rule applies to the log of a **product**, never a sum. Also apply the power rule **before** combining.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.8",
+    "subject": "ap_precalc",
+    "plain_idea": "To solve for a variable in an exponent, take a log of both sides. To solve a log equation, exponentiate (rewrite in exponential form) — then **check for extraneous solutions** (domain!).",
+    "worked_example": "Solve $5\\cdot 3^{x}=45$.\n- $3^x = 9 = 3^2 \\Rightarrow x = 2$.",
+    "common_mistake": "Not checking domain after solving log equations — solutions that make any log's argument $\\le 0$ must be thrown out. And on Part A, leave exact ($\\ln 4$, not 1.386).",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.9",
+    "subject": "ap_precalc",
+    "plain_idea": "Fit a model to data/context, then use it to predict or interpret. **Exponential model** $y=ab^t$ when there's a constant percent rate. **Logarithmic model** $y=a+b\\ln(t+c)$ when growth is fast-then-leveling. This is FRQ Q2 territory (the second-hardest FRQ).",
+    "worked_example": "$G(t)=a+b\\ln(t+1)$ with $G(0)=40$ and $G(91)=76$.\n- $t=0$: $a + b\\ln(1) = a + 0 = 40 \\Rightarrow a=40$.\n- $t=91$: $40 + b\\ln(92) = 76 \\Rightarrow b = \\dfrac{36}{\\ln 92} \\approx \\dfrac{36}{4.5218} \\approx 7.961$.\n- Model: $G(t)=40+7.961\\ln(t+1)$.",
+    "common_mistake": "Failing to **explain reasoning** about concavity / model limits. E.g., \"the average rate of change estimate is *less than* the true value because the graph is **concave down**, so the secant line lies below the curve.\" Memorize this concavity-vs-secant argument — it's near-zero-scoring on the exam, so it's free points if you nail it.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.10",
+    "subject": "ap_precalc",
+    "plain_idea": "A **semi-log plot** puts the y-axis on a **log scale** (and x linear). On this plot, **exponential data becomes a straight line.** That's the whole point: it's a visual test for \"is this exponential?\"\n\n> **Exam scope (important):** On the AP exam, semi-log means the **log scale is on the y-axis ONLY, to linearize EXPONENTIAL data.** Putting the *x*-axis on a log scale (to linearize logarithmic data) and full **log-log** plots are **OUT of scope** — don't study them. The exam writes the linearized form as $y=(\\log_n b)x+\\log_n a$ for a log base $n>1$.",
+    "worked_example": "A semi-log plot ($\\log_{10} y$ vs $x$) is a line through $(0, 1)$ and $(2, 3)$. Find the exponential model.\n- Slope $=\\dfrac{3-1}{2-0}=1=\\log b \\Rightarrow b=10^{1}=10$.\n- Intercept $=1=\\log a \\Rightarrow a=10^{1}=10$.\n- Model: $y = 10\\cdot 10^{x}$.",
+    "common_mistake": "Thinking the points on a semi-log plot are the actual data values. They're the **logs** of the data. Slope is $\\log b$, not $b$ — you must un-log to recover the base and initial value.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.11",
+    "subject": "ap_precalc",
+    "plain_idea": "Once you fit a model, you judge how good it is.\n- **Error (residual)** at a point = **predicted − actual** value. Positive error = the model **overestimates** there; negative = **underestimates**.\n- **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*\n- **Context can make an over- or under-estimate preferable.** The exam may ask which is \"better\" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn't a universal \"right\" choice, it depends on the scenario. Justify with the context.",
+    "worked_example": null,
+    "common_mistake": "Calling a model \"good\" because the curve looks close, ignoring the residual plot — or saying an estimate is \"wrong\" when the question wants *over vs under* and *why that's appropriate here*.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": false
+  },
+  {
+    "topic": "3.1",
+    "subject": "ap_precalc",
+    "plain_idea": "A radian measures angle by arc length on a circle of radius 1. Once around = 2π radians = 360°. On the unit circle, the point at angle θ is **(cos θ, sin θ)**.",
+    "worked_example": "5π/6 is in QII (between π/2 and π). Reference angle = π − 5π/6 = π/6. cos is **negative** in QII. cos(π/6) = √3/2 → **cos(5π/6) = −√3/2.**",
+    "common_mistake": "Wrong sign because you skipped the quadrant check. Always do **reference angle first, then slap on the quadrant sign.**",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.2",
+    "subject": "ap_precalc",
+    "plain_idea": "Sine and cosine make repeating \"waves.\" Four numbers fully describe any wave.",
+    "worked_example": "Max 18, min 0, one full cycle every 2 units, max occurs at x = 1.\n- d = (18+0)/2 = **9**; a = (18−0)/2 = **9**; b = 2π/2 = **π**.\n- Cosine peaks at its shift, and the max is at x = 1, so **f(x) = 9 cos(π(x − 1)) + 9.**",
+    "common_mistake": "Forgetting to **factor b out** before reading the phase shift. In sin(πx − π) the shift is c where πx − π = π(x − 1) → shift = 1, not π.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.3",
+    "subject": "ap_precalc",
+    "plain_idea": null,
+    "worked_example": "max 40, min 2, period 60, max at t = 0.\nd = 21, a = 19, quarter-period = 15. Points: **(0, 40) → (15, 21) → (30, 2) → (45, 21) → (60, 40)** [cycle 1], then **(75, 21) → (90, 2) → (105, 21) → (120, 40)** [cycle 2]. Draw the midline at **y = 21**.",
+    "common_mistake": "plotting only one cycle, or forgetting to **draw/label the midline** — both are explicitly required.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": false
+  },
+  {
+    "topic": "3.4",
+    "subject": "ap_precalc",
+    "plain_idea": "On any piece of a wave the exam asks two things: is the function **positive/negative** and **increasing/decreasing**, AND is the **rate of change increasing or decreasing** (concavity — no calculus needed, just read the curve).",
+    "worked_example": "On an interval a sinusoid is below the midline and heading from the midline down toward the minimum. Describe it.\n→ Function is **negative and decreasing**; it's the valley region so it's **concave up**, meaning the **rate of change is increasing** (the descent is slowing as it nears the bottom).",
+    "common_mistake": "Conflating \"decreasing\" (the value going down) with \"rate of change decreasing\" (the slope getting smaller). Different claims — Chief Reader flags this every year.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.5",
+    "subject": "ap_precalc",
+    "plain_idea": "tan θ = sin θ/cos θ. It has **no amplitude**, repeats every **π** (not 2π), and shoots to ±∞ (vertical asymptotes) where cos = 0.",
+    "worked_example": "period = π/|2| = **π/2.** Asymptotes where 2x = π/2 + πk → x = π/4 + πk/2.",
+    "common_mistake": "Using 2π/b (the sine rule) for tangent's period. Tangent's base period is **π.**",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.6",
+    "subject": "ap_precalc",
+    "plain_idea": "arcsin/arccos/arctan undo trig, but only on a restricted piece so the answer is unique. **The range restriction is the whole game.**",
+    "worked_example": "Need an angle in [−π/2, π/2] with sine −1/2. That's **−π/6.** (Not 7π/6 — out of range.)",
+    "common_mistake": "Giving an answer outside the inverse function's range (e.g., arccos returning a negative angle). arccos output is **never negative.**",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.7",
+    "subject": "ap_precalc",
+    "plain_idea": "Find ALL angles that work, not just the one the calculator/unit circle hands you. Sine/cosine repeat every 2π; tangent every π.",
+    "worked_example": "sin x = √3/2 → in [0, 2π): x = **π/3** and x = **2π/3** (sine positive in QI and QII).\nAll solutions: **x = π/3 + 2πk** and **x = 2π/3 + 2πk.**",
+    "common_mistake": "Reporting only one solution. sin x = √3/2 has **two** per cycle. Forgetting the \"+2πk / +πk\" loses the generality point.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.8",
+    "subject": "ap_precalc",
+    "plain_idea": "Just flips. **sec = 1/cos, csc = 1/sin, cot = 1/tan = cos/sin.**",
+    "worked_example": "sec = 1/cos. cos(π/3) = 1/2 → **sec(π/3) = 2.**",
+    "common_mistake": "Mixing up the pairs — **sec goes with cos** (both start with the \"co\"-cross-up rule: se**c**↔**c**os... easiest is just memorize sec=1/cos, csc=1/sin).",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.9",
+    "subject": "ap_precalc",
+    "plain_idea": "Algebra rewrite rules. The exam's #1 use: simplify a messy expression to \"a single term\" or solve an equation by substituting an identity.",
+    "worked_example": null,
+    "common_mistake": "Reaching for sum/double-angle when a **Pythagorean swap** (1 − sin²x = cos²x) is what's needed. Look for \"1 ± (squared trig)\" patterns first.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": false
+  },
+  {
+    "topic": "3.10",
+    "subject": "ap_precalc",
+    "plain_idea": "Locate a point by **distance r from origin and angle θ**, instead of (x, y). A polar function r = f(θ) traces a curve as θ sweeps around.",
+    "worked_example": "x = 4 cos(2π/3) = 4·(−1/2) = **−2**; y = 4 sin(2π/3) = 4·(√3/2) = **2√3.** Point: **(−2, 2√3).**",
+    "common_mistake": "Letting the calculator drift into **degree mode** — every polar/trig value comes out wrong. Lock RADIAN mode.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.11",
+    "subject": "ap_precalc",
+    "plain_idea": "As θ increases, watch whether **r (distance from origin) grows or shrinks**, and how fast. The exam asks this verbally — \"is the distance from the origin increasing?\" — and via average rate of change of r.",
+    "worked_example": null,
+    "common_mistake": "Confusing \"r increasing\" with \"the curve moving up.\" In polar, increasing r means moving **away from the origin**, regardless of direction.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": false
+  },
+  {
+    "topic": "4.1",
+    "subject": "ap_precalc",
+    "plain_idea": "Instead of `y = f(x)`, both `x` and `y` are written in terms of a third variable `t` (often \"time\"): `x = f(t)`, `y = g(t)`. As `t` increases, the point `(x, y)` traces a path — this captures **direction and timing**, which a plain `y = f(x)` can't.",
+    "worked_example": "`x = t + 1`, `y = t² ` for `t` in `[-2, 2]`. Eliminate `t`:\n- From the first: `t = x − 1`.\n- Substitute: `y = (x − 1)²`. → a parabola with vertex at `(1, 0)`.\n- Direction: at `t = −2`, `(x,y) = (−1, 4)`; at `t = 0`, `(1, 0)`; at `t = 2`, `(3, 4)`. So it moves **left-to-right** through the vertex.",
+    "common_mistake": "Forgetting the **domain restriction**. The parameter's range limits which part of the curve exists. Here `t ∈ [−2,2]` means `x ∈ [−1, 3]` only — not the whole parabola.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.2",
+    "subject": "ap_precalc",
+    "plain_idea": "In a parametric path, `x` and `y` each change as `t` changes. Compare their **average rates of change over a `t`-interval**.",
+    "worked_example": "`x = t²`, `y = 3t`. On `t ∈ [1, 3]`:\n- ARoC of `x` = `(9 − 1)/(3 − 1) = 4`.\n- ARoC of `y` = `(9 − 3)/(3 − 1) = 3`.\n- Both positive → point moves right and up over this interval.",
+    "common_mistake": "Treating `t` like `x`. The rate of `y` with respect to `t` is **not** the slope of the curve; it's how fast `y` changes per unit `t`.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.3",
+    "subject": "ap_precalc",
+    "plain_idea": null,
+    "worked_example": "Circle centered `(2, −1)`, radius 3:\n`x = 2 + 3cos t`, `y = −1 + 3sin t`. Check: `(x−2)² + (y+1)² = 9cos²t + 9sin²t = 9`. ✓",
+    "common_mistake": "Putting `sin` on `x` and `cos` on `y`, or forgetting to add the center `(h, k)`. Convention: `cos → x`, `sin → y`.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": false
+  },
+  {
+    "topic": "4.4",
+    "subject": "ap_precalc",
+    "plain_idea": "An equation like `x² + y² = 25` defines a relationship between `x` and `y` without `y` being isolated. It may **fail the vertical line test** (not a function), so you often split it into pieces.",
+    "worked_example": "`x² + y² = 25` → `y = ±√(25 − x²)`. The `+` branch is the top semicircle (a function); the full circle is **not** a function of `x`.",
+    "common_mistake": "Dropping the `±` when solving — that silently throws away half the graph.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.5",
+    "subject": "ap_precalc",
+    "plain_idea": "Curves you get from slicing a cone: circle, ellipse, parabola, hyperbola. You identify them from their standard-form equations.\n\n| Conic | Standard form (centered at `(h,k)`) | Tell-tale sign |\n|---|---|---|\n| **Circle** | `(x−h)² + (y−k)² = r²` | both squared, **same coeff**, `+` |\n| **Ellipse** | `(x−h)²/a² + (y−k)²/b² = 1` | both squared, **different** coeffs, **same sign**, `+` |\n| **Parabola** | `y = a(x−h)² + k` (or `x = a(y−k)²+h`) | **only one** variable squared |\n| **Hyperbola** | `(x−h)²/a² − (y−k)²/b² = 1` | both squared, **opposite signs** (a `−`) |",
+    "worked_example": "`x² + y² − 6x + 4y − 12 = 0`.\n- Group: `(x² − 6x) + (y² + 4y) = 12`.\n- Complete squares: `(x² − 6x + 9) + (y² + 4y + 4) = 12 + 9 + 4`.\n- → `(x − 3)² + (y + 2)² = 25`. **Circle**, center `(3, −2)`, radius `5`.",
+    "common_mistake": "When completing the square, forgetting to **add the same number to the right side**. And missing that **equal coefficients = circle** vs. unequal = ellipse.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.6",
+    "subject": "ap_precalc",
+    "plain_idea": "A vector has **magnitude (length) and direction**. Written in components `⟨a, b⟩` (from initial to terminal point).",
+    "worked_example": "`u = ⟨3, −4⟩`, `v = ⟨1, 2⟩`.\n- `u + v = ⟨4, −2⟩`.\n- `‖u‖ = √(9 + 16) = √25 = 5`.\n- Unit vector of `u` = `⟨3/5, −4/5⟩`.\n- `u · v = (3)(1) + (−4)(2) = 3 − 8 = −5` (not perpendicular).",
+    "common_mistake": "Subtracting points in the wrong order (`initial − terminal` instead of `terminal − initial`) — flips the vector's direction.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.7",
+    "subject": "ap_precalc",
+    "plain_idea": "A function whose **output is a vector** that changes with `t`: `p(t) = ⟨x(t), y(t)⟩`. This is just the parametric idea written in vector form — the position of a moving object at time `t`.",
+    "worked_example": "`p(t) = ⟨2t, t² − 1⟩`. At `t = 3`: `p(3) = ⟨6, 8⟩` — the object is at point `(6, 8)`.",
+    "common_mistake": "Confusing the **position vector** (where it is) with a direction/velocity vector. `p(t)` here gives location.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.8",
+    "subject": "ap_precalc",
+    "plain_idea": "A rectangular grid of numbers. Add/subtract entry-by-entry; multiply rows-by-columns.",
+    "worked_example": "`[[1,2],[3,4]] · [[5,6],[7,8]]`:\n- Top-left: `1·5 + 2·7 = 19`. Top-right: `1·6 + 2·8 = 22`.\n- Bottom-left: `3·5 + 4·7 = 43`. Bottom-right: `3·6 + 4·8 = 50`.\n- → `[[19, 22], [43, 50]]`.",
+    "common_mistake": "Multiplying matrices **entrywise** (like addition). Matrix multiplication is row-into-column dot products, and **order matters**.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.9",
+    "subject": "ap_precalc",
+    "plain_idea": null,
+    "worked_example": "`A = [[4, 3], [2, 1]]`.\n- `det = (4)(1) − (3)(2) = 4 − 6 = −2`.\n- `A⁻¹ = (1/−2)·[[1, −3], [−2, 4]] = [[−1/2, 3/2], [1, −2]]`.\n- Check `det ≠ 0` ✓, so the inverse exists.",
+    "common_mistake": "Forgetting to **divide by the determinant**, or mis-placing the swap/negate pattern. Memorize: *\"swap the diagonal, negate the off-diagonal, over det.\"*",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": false
+  },
+  {
+    "topic": "4.10",
+    "subject": "ap_precalc",
+    "plain_idea": "A 2×2 matrix can act as a **function** that takes an input vector and outputs a transformed vector: `A·v`. Geometrically it rotates / scales / reflects / shears the plane. The **determinant = area scaling factor** (and a negative det means orientation flips).",
+    "worked_example": "`A = [[0, −1], [1, 0]]` (a 90° rotation). Transform `v = ⟨2, 0⟩`:\n`A·v = ⟨(0)(2) + (−1)(0), (1)(2) + (0)(0)⟩ = ⟨0, 2⟩`. → point `(2,0)` rotated 90° CCW to `(0, 2)`. ✓",
+    "common_mistake": "Writing the vector as a row and multiplying on the wrong side. For `A·v`, the vector is a **column on the right**.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.11",
+    "subject": "ap_precalc",
+    "plain_idea": "A matrix can encode how a system moves between states each step (e.g., population, market share). Multiply the **state vector** by the **transition matrix** to advance one step; multiply repeatedly (or use `Aⁿ`) for `n` steps.",
+    "worked_example": "City/suburb populations. `A = [[0.9, 0.2], [0.1, 0.8]]`, start `⟨100, 50⟩` (city, suburb):\n- After 1 step: `A·⟨100,50⟩ = ⟨0.9·100 + 0.2·50, 0.1·100 + 0.8·50⟩ = ⟨100, 50⟩`... let's recompute: `⟨90 + 10, 10 + 40⟩ = ⟨100, 50⟩`. (This start happens to be steady.) Try start `⟨100, 0⟩`: `A·⟨100,0⟩ = ⟨90, 10⟩` — 90 stay in city, 10 move to suburb.",
+    "common_mistake": "Multiplying in the wrong order or transposing the transition matrix — columns must match how the state vector is laid out (here columns = \"where you're coming from\").",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
   }
 ]

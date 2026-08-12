@@ -59,15 +59,53 @@ export function asNumber(text) {
 }
 
 /**
+ * Kinds the server refuses to score. These go to the model and are recorded
+ * `graded_by: 'model'`, which excludes them from every mechanical readiness
+ * floor until the grader is calibrated.
+ */
+export const MODEL_GRADED = new Set(['frq', 'constructed_model_graded'])
+
+/**
+ * True when an attempt's verdict was reached mechanically, and may therefore
+ * count toward a performance number.
+ *
+ * Excludes model-graded work (quarantined until the grader is calibrated) and
+ * unkeyed items (never graded at all). Treats a missing `graded_by` as
+ * server-graded, since the field post-dates the earliest attempt rows.
+ *
+ * Every place that computes a percentage or counts a miss must filter through
+ * this. Counting an ungraded attempt as a miss would blame the student for a gap
+ * in the question bank.
+ */
+export function isServerGraded(attempt) {
+  return attempt.graded_by !== 'model' && attempt.graded_by !== 'unkeyed'
+}
+
+/**
  * Grade one attempt against a stored item.
  *
  * Returns { correct, blank, graded_by, keyed, detail }. `graded_by` is 'server'
- * whenever the verdict is mechanical; 'model' only for rubric-scored FRQs, which
- * this function refuses to score.
+ * only when the verdict is mechanical, 'model' for rubric-scored work, and
+ * 'unkeyed' when the item itself is missing an answer key.
  */
 export function grade(item, response) {
-  if (item.kind === 'frq') {
+  if (MODEL_GRADED.has(item.kind)) {
     return { correct: 0, blank: isBlank(response), graded_by: 'model', keyed: null, detail: 'rubric' }
+  }
+
+  // An item with no answer key cannot be graded. Returning `correct: 0` with
+  // graded_by 'server' would tell the student he got it WRONG when the content
+  // is what is missing — a false negative caused by a gap in the bank rather
+  // than by anything he did. This is reported as ungraded instead, and
+  // 'unkeyed' attempts are excluded from every readiness floor.
+  if (item.answer == null || String(item.answer).trim() === '') {
+    return {
+      correct: 0,
+      blank: isBlank(response),
+      graded_by: 'unkeyed',
+      keyed: null,
+      detail: 'no_answer_key',
+    }
   }
 
   if (isBlank(response)) {
