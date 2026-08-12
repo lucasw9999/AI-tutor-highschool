@@ -236,7 +236,7 @@ $P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b
 **P12 (exam-level, calculator).** For $f(x)=0.5x^3-2x^2-x+3$, use a graphing calculator to find all real zeros to 3 decimals, and state the end behavior in limit notation.
 <details><summary>Solution</summary>
 
-Graph/solve: zeros ≈ **$x\approx-1.115,\ 1.000,\ 4.115$** (calculator roots; sums/products check out). End behavior (odd degree, positive leading coeff $0.5x^3$): $\displaystyle\lim_{x\to\infty}f(x)=\infty,\ \displaystyle\lim_{x\to-\infty}f(x)=-\infty$.
+Graph/solve: zeros ≈ **$x\approx-1.273,\ 1.140,\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\frac{b}{a}=-\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)=-6.000$, which must equal $-\frac{d}{a}=-\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\displaystyle\lim_{x\to\infty}f(x)=\infty,\ \displaystyle\lim_{x\to-\infty}f(x)=-\infty$.
 </details>
 
 ---

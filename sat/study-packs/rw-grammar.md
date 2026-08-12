@@ -255,7 +255,7 @@ Words like *however, therefore, in fact, for example, meanwhile* are **Transitio
 A) room, B) room; C) room D) room: but
 
 **Q2.** Maria packed three things for the trip ______ a map, a compass, and a water bottle.
-A) : B) ; C) , D) ;
+A) : B) ; C) , D) (no punctuation)
 
 **Q3.** The novel's protagonist ______ a quiet bookkeeper — undergoes a dramatic transformation.
 A) , B) — C) ; D) (

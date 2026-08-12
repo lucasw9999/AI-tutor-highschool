@@ -116,7 +116,7 @@ Words like *however, therefore, for example, in fact, meanwhile, nevertheless* t
    A) `fly` B) `flies` C) `are flying` D) `have flown`
 
 3. ______ from the summit, the entire valley looked impossibly small.
-   A) `Viewing` B) `Viewed` C) `To view` D) `When we viewed it`
+   A) `Viewing` B) `Viewed` C) `To view` D) `Having viewed`
 
 4. My oldest sister, a marine biologist ______ studies coral reefs off the coast of Belize.
    A) `, who` B) `who` C) `—` D) `,`
@@ -153,7 +153,7 @@ Words like *however, therefore, for example, in fact, meanwhile, nevertheless* t
 
 2. **B** (`flies`). Subject = *flock* (singular collective noun), not *geese*. Ignore the prepositional phrase "of geese." A singular subject needs *flies*. *Rule: subject-verb agreement + ignore the middle phrase.*
 
-3. **B** (`Viewed`). *Viewed from the summit, the entire valley looked impossibly small* — the past-participial opener correctly modifies the noun right after the comma (*the entire valley*, which is what's viewed), and it's the concise, SAT-preferred phrasing. A (*Viewing*) makes the valley do the viewing (dangling); C (*To view*) dangles; D (*When we viewed it*) is grammatical but wordier and adds the redundant pronoun *it*. *Rule: a participial opener must modify the noun directly after the comma — and prefer the concise, non-dangling option.*
+3. **B** (`Viewed`). *Viewed from the summit, the entire valley looked impossibly small* — the past-participial opener correctly modifies the noun right after the comma (*the entire valley*, which is the thing being viewed). Every other choice leaves a **dangling modifier**, because the valley cannot do the viewing: A (*Viewing*), C (*To view*), and D (*Having viewed*) all attach the act of viewing to *the entire valley*. *Rule: a participial opener must modify the noun directly after the comma — and only one choice here is grammatical.*
 
 4. **D** (`,`). The appositive *a marine biologist* is non-essential and must be **closed with a comma** (matching the comma after *sister*), leaving *studies* as the sentence's main verb: *My oldest sister, a marine biologist, studies coral reefs off the coast of Belize.* A (`, who`) turns the rest into a subordinate *who*-clause, so the sentence is left with **no main verb → a fragment**; B (`who`, no comma) also fragments it; C (dash) mismatches the opening comma. *Rule: close a non-essential appositive with matching punctuation, and every sentence needs a main verb.*
 
