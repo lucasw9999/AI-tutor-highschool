@@ -25,6 +25,13 @@ function attempt(item_id, topic, correct, daysAgo, extra = {}) {
   return { item_id, topic, correct, ts: ago(daysAgo), hints_used: 0, conditions: 'cold', ...extra }
 }
 
+/** The same three topics plus `d`, which the class covers but the exam does not. */
+const META_WITH_CLASS_ONLY = new Map([...META, ['d', { exam_weight_low: 0, exam_weight_high: 0, tested_on_exam: 0 }]])
+const ITEMS_WITH_CLASS_ONLY = [
+  ...ITEMS,
+  ...[1, 2, 3].map((i) => ({ id: `d${i}`, topic: 'd', unit: '4', kind: 'mcq', answer: 'A' })),
+]
+
 test('topicStats tracks streaks in chronological order', () => {
   const s = topicStats([
     attempt('a1', 'a', 0, 10),
@@ -121,12 +128,61 @@ test('selection priority', async (t) => {
     assert.equal(r, null, 'bank exhausted rather than recycling a 3-day-old question')
   })
 
-  await t.test('the same history always yields the same question', () => {
-    const attempts = [attempt('a1', 'a', 0, 20), attempt('b1', 'b', 0, 18)]
-    const runs = Array.from({ length: 5 }, () =>
-      pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW }).item.id,
+  // Rewritten from an earlier version that called pickNext five times with the
+  // SAME array object, which could only ever catch a clock or RNG read. The real
+  // risk is input-order sensitivity: an unsorted `pool[0]` returns a different
+  // item when the bank arrives in a different order, which breaks the replay
+  // guarantee in the module header.
+  await t.test('the same history yields the same question however the bank is ordered', () => {
+    // Four items per topic, so the pools below hold more than one candidate and
+    // an unsorted pick is visible.
+    const items = ['a', 'b', 'c'].flatMap((topic) =>
+      [1, 2, 3, 4].map((i) => ({ id: `${topic}${i}`, topic, unit: '1', kind: 'mcq', answer: 'A' })),
     )
-    assert.equal(new Set(runs).size, 1, `nondeterministic: ${runs.join(',')}`)
+    const scenarios = [
+      {
+        name: 'gap re-test drawn from reused items',
+        args: {
+          attempts: [1, 2, 3, 4].map((i) => attempt(`b${i}`, 'b', 0, 60)),
+          gaps: [{ topic: 'b', opened_at: ago(59), taught_at: ago(58), cleared_at: null }],
+        },
+      },
+      {
+        name: 'weakest topic',
+        args: {
+          attempts: [
+            attempt('a1', 'a', 0, 20), attempt('a2', 'a', 1, 19),
+            attempt('b1', 'b', 0, 18), attempt('b2', 'b', 0, 17),
+            attempt('c1', 'c', 1, 16), attempt('c2', 'c', 1, 15),
+          ],
+        },
+      },
+      {
+        name: 'spaced review drawn from reused items',
+        args: {
+          reuseDays: 20,
+          attempts: [
+            attempt('a1', 'a', 0, 40), attempt('a2', 'a', 1, 39),
+            attempt('a3', 'a', 1, 38), attempt('a4', 'a', 1, 37),
+            ...['b', 'c'].flatMap((tp) => [1, 2, 3, 4].map((i) => attempt(`${tp}${i}`, tp, 1, 30))),
+          ],
+        },
+      },
+    ]
+    for (const s of scenarios) {
+      const base = { topicMeta: META, config: CFG, now: NOW, ...s.args }
+      const orders = {
+        given: items,
+        reversed: [...items].reverse(),
+        rotated: [...items.slice(5), ...items.slice(0, 5)],
+      }
+      const picked = Object.entries(orders).map(([label, order]) => {
+        const r = pickNext({ ...base, items: order })
+        return `${label}=${r.priority}:${r.item.id}`
+      })
+      const distinct = new Set(picked.map((p) => p.split('=')[1]))
+      assert.equal(distinct.size, 1, `${s.name}: order-dependent — ${picked.join(', ')}`)
+    }
   })
 
   await t.test('a topic not tested on the exam is skipped for coverage', () => {
@@ -140,6 +196,120 @@ test('selection priority', async (t) => {
     const r = pickNext({ items: ITEMS, attempts: [], topicMeta: META, config: CFG, now: NOW })
     assert.ok(r.reason.length > 20)
     assert.ok(r.priority)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A partially consumed bank. Every test above starts from a virgin bank, where
+// the unseen pool covers every item and the reuse fallback is never exercised.
+// These drive the case the student actually reaches after a few weeks: some
+// topics used up, others barely touched.
+// ---------------------------------------------------------------------------
+
+test('selection on a partially consumed bank', async (t) => {
+  await t.test('a taught gap is re-tested from reusable items when its topic has no unseen ones', () => {
+    // Every b item was answered 60 days ago — past the reuse window, so all
+    // three are servable again. a and c are still untouched, so the global
+    // unseen pool is not empty; only b's share of it is.
+    const attempts = [1, 2, 3].map((i) => attempt(`b${i}`, 'b', 0, 60))
+    const gaps = [{ topic: 'b', opened_at: ago(59), taught_at: ago(58), cleared_at: null }]
+    const r = pickNext({ items: ITEMS, attempts, gaps, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'gap_retest', 'an open taught gap outranks a coverage hole on another topic')
+    assert.equal(r.item.topic, 'b')
+  })
+
+  await t.test('the weakest topic is served from reusable items when it has no unseen ones', () => {
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`b${i}`, 'b', 0, 60)), // b at 0%, whole topic consumed
+      attempt('a1', 'a', 1, 60),
+      attempt('c1', 'c', 1, 60),
+    ]
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'weakest')
+    assert.equal(r.item.topic, 'b', 'b is at 0% and its questions are reusable again')
+  })
+
+  await t.test('a due review is served from reusable items when its topic has no unseen ones', () => {
+    const attempts = [
+      attempt('a1', 'a', 0, 40), attempt('a2', 'a', 1, 39),
+      attempt('a3', 'a', 1, 38), attempt('a1', 'a', 1, 37), // a at 75%: at the floor, not below it
+      attempt('b1', 'b', 1, 30), attempt('c1', 'c', 1, 30),
+    ]
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 20 })
+    assert.equal(r.priority, 'review')
+    assert.equal(r.item.topic, 'a')
+    assert.match(r.reason, /missed it before/)
+  })
+
+  await t.test('within a topic, a never-asked question is preferred over one due for reuse', () => {
+    const attempts = [attempt('b1', 'b', 0, 60), attempt('b2', 'b', 0, 59)]
+    const gaps = [{ topic: 'b', opened_at: ago(58), taught_at: ago(57), cleared_at: null }]
+    const r = pickNext({ items: ITEMS, attempts, gaps, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.item.id, 'b3', 'b1 and b2 are reusable, but b3 has never been asked')
+  })
+
+  await t.test('with two taught gaps open, the one opened first is re-tested first', () => {
+    // Passed newest-first; the oldest gap must still win, or a long-open gap can
+    // be starved indefinitely by newer ones.
+    const gaps = [
+      { topic: 'c', opened_at: ago(4), taught_at: ago(3), cleared_at: null },
+      { topic: 'b', opened_at: ago(9), taught_at: ago(8), cleared_at: null },
+    ]
+    const r = pickNext({ items: ITEMS, attempts: [], gaps, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'gap_retest')
+    assert.equal(r.item.topic, 'b', 'b has been open five days longer than c')
+  })
+
+  await t.test('breadth does not claim everything is at its floor when a weak topic merely ran out of questions', () => {
+    // b is at 0%, but all three b items were answered three days ago, so none
+    // can be served yet. The student must not be told he is above every floor.
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`b${i}`, 'b', 0, 3)),
+      attempt('a1', 'a', 1, 3),
+      attempt('c1', 'c', 1, 3),
+    ]
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'breadth')
+    assert.doesNotMatch(r.reason, /at or above its floor/, 'b is at 0% against a floor of 75')
+    assert.match(r.reason, /^b is at 0%, below the 75%/)
+    assert.match(r.reason, /no questions left/)
+  })
+
+  await t.test('breadth prefers a reusable on-exam question over an unseen class-only one', () => {
+    // All nine on-exam items are past the reuse window; only the class-only
+    // topic still has never-asked items. The exam filter must survive that.
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 60))
+    const r = pickNext({
+      items: ITEMS_WITH_CLASS_ONLY, attempts, topicMeta: META_WITH_CLASS_ONLY, config: CFG, now: NOW,
+    })
+    assert.equal(r.priority, 'breadth')
+    assert.notEqual(r.item.topic, 'd', 'class-only material must not displace nine available on-exam questions')
+  })
+
+  await t.test('spaced review does not spend the session on class-only material', () => {
+    const attempts = [
+      attempt('d1', 'd', 0, 40), attempt('d2', 'd', 1, 39), // d is missed-then-correct and due
+      attempt('a1', 'a', 1, 30), attempt('a2', 'a', 1, 30), // a3 is still unasked
+      ...['b', 'c'].flatMap((tp) => [1, 2, 3].map((i) => attempt(`${tp}${i}`, tp, 1, 30))),
+    ]
+    const r = pickNext({
+      items: ITEMS_WITH_CLASS_ONLY, attempts, topicMeta: META_WITH_CLASS_ONLY, config: CFG, now: NOW,
+    })
+    assert.notEqual(r.priority, 'review', 'a topic the exam excludes from readiness must not drive review')
+    assert.equal(r.item.id, 'a3', 'the on-exam question comes first')
+  })
+
+  await t.test('a taught gap on class-only material is still re-tested, or it could never close', () => {
+    // Deliberately NOT filtered by tested_on_exam: gaps open on any topic the
+    // student misses twice, and a gap only closes on a cold correct answer on
+    // that same topic. Filtering here would leave it open forever.
+    const attempts = [attempt('d1', 'd', 0, 10), attempt('d2', 'd', 0, 9)]
+    const gaps = [{ topic: 'd', opened_at: ago(9), taught_at: ago(8), cleared_at: null }]
+    const r = pickNext({
+      items: ITEMS_WITH_CLASS_ONLY, attempts, gaps, topicMeta: META_WITH_CLASS_ONLY, config: CFG, now: NOW,
+    })
+    assert.equal(r.priority, 'gap_retest')
+    assert.equal(r.item.id, 'd3')
   })
 })
 
