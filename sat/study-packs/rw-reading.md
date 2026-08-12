@@ -1,6 +1,6 @@
 # Reading & Writing — Information & Ideas + Craft & Structure
 
-**Why this matters for your score:** These two domains are ~54% of your Reading & Writing section (~25–29 of 54 questions). They're where the nastiest hard-Module-2 traps hide, so cleaning them up is the single biggest lever to push RW from "okay" toward a 750+ — your half of a 1500.
+**Why this matters for your score:** These two domains are ~54% of your Reading & Writing section (~25–29 of the **50 scored** questions). They're where the nastiest hard-Module-2 traps hide, so cleaning them up is the single biggest lever to push RW from "okay" toward a 750+ — your half of a 1500.
 
 ---
 
@@ -116,8 +116,19 @@
 
 **Traps to watch:** (a) a number that's **accurate but irrelevant** to the claim; (b) a number that's **misread** (wrong axis, wrong series, or direction reversed — "more" when the data say "fewer").
 
+> **⚠️ What this pack can and can't drill.** The table-based items below are the real thing — read them exactly as you'd read a table in Bluebook. But this is a plain-text file, so it **cannot show you an actual bar graph, line graph or scatterplot**, and none of the items here fake one with ASCII art. Roughly half of real Quantitative Evidence items use a *graph*, not a table, and reading axes and gridlines is a distinct skill. **Get that rep in Bluebook and the official Question Bank** — see `../reference/practice-resources.md`. Don't assume that because you can do these, you can read a scatterplot under time pressure.
+
 **Worked example:**
-> A table shows average daily steps: City A = 6,200; City B = 9,400; City C = 7,100. *Claim: residents of the city with the most steps walked well above the others.*
+
+> **Average daily steps, by city**
+>
+> | City | Average daily steps |
+> |---|---|
+> | City A | 6,200 |
+> | City B | 9,400 |
+> | City C | 7,100 |
+>
+> *Claim: residents of the city with the most steps walked well above the others.*
 
 *Q: Which choice uses data from the table to support the claim?*
 - (A) City A residents averaged 6,200 steps. → **accurate but irrelevant** (A isn't the most).
@@ -227,9 +238,9 @@
 
 ---
 
-# PRACTICE SET (12 questions — mixed, like the real test)
+# PRACTICE SET (14 questions — mixed, like the real test)
 
-*Do all 12, then check. For every miss, re-read the trap rule above it. Answers + reasoning at the very bottom — don't peek.*
+*Do all 14, then check. For every miss, re-read the trap rule above it. Answers + reasoning at the very bottom — don't peek.*
 
 > **Note on the letters:** the correct answers below are spread across A, B, C and D on purpose. The real SAT has no answer-letter pattern, so "when in doubt, pick B" is a habit that will cost you marks. Work the text, not the letters.
 
@@ -257,9 +268,18 @@ Which finding, if true, would most strongly support Okafor's hypothesis?
 - (C) Shrubs that dropped their leaves earliest survived the longest droughts, while root water content varied randomly.
 - (D) The shrub is found only in deserts receiving less than 100 mm of rain a year.
 
-**Q4.** A line graph shows a region's wildfires per decade: 1980s = 12; 1990s = 18; 2000s = 26; 2010s = 41. *Claim: the regional wildfire rate has risen sharply over the four decades, with the steepest jump in the most recent decade.*
+**Q4.** **Wildfires per decade, one region**
 
-Which choice most effectively uses data from the graph to support the claim?
+| Decade | Wildfires |
+|---|---|
+| 1980s | 12 |
+| 1990s | 18 |
+| 2000s | 26 |
+| 2010s | 41 |
+
+*Claim: the regional wildfire rate has risen sharply over the four decades, with the steepest jump in the most recent decade.*
+
+Which choice most effectively uses data from the table to support the claim?
 - (A) The region had 12 wildfires in the 1980s.
 - (B) Wildfires decreased in the 2010s.
 - (C) The number rose from 12 in the 1980s to 18 in the 1990s.
@@ -323,13 +343,45 @@ Which choice most reasonably completes the inference that bleaching is concernin
 - (C) coral reefs cover most of the ocean floor.
 - (D) bleaching will drive a quarter of all marine species to extinction.
 
-**Q12.** A table shows recycling rates: Town X = 31%; Town Y = 54%; Town Z = 47%. *Claim: the town with the highest recycling rate exceeded the lowest by more than 20 percentage points.*
+**Q12.** **Household recycling rate, by town**
+
+| Town | Recycling rate |
+|---|---|
+| Town X | 31% |
+| Town Y | 54% |
+| Town Z | 47% |
+
+*Claim: the town with the highest recycling rate exceeded the lowest by more than 20 percentage points.*
 
 Which choice most effectively uses data from the table to support the claim?
 - (A) Town X recycled 31% of its waste.
 - (B) Town Z had the highest recycling rate.
 - (C) Town Y exceeded Town Z by 7 percentage points.
 - (D) Town Y, at 54%, exceeded Town X's 31% by 23 percentage points.
+
+**Q13.** **Share of each bird's diet, by food type**
+
+| Species | Insects | Fruit |
+|---|---|---|
+| Warbler | 82% | 12% |
+| Thrush | 45% | 48% |
+| Waxwing | 11% | 85% |
+
+*Claim: the species that relies most heavily on insects takes very little fruit.*
+
+Which choice most effectively uses data from the table to support the claim?
+- (A) The thrush's diet is 45% insects and 48% fruit.
+- (B) The warbler's diet is 82% insects and only 12% fruit.
+- (C) The waxwing takes 85% of its diet as fruit.
+- (D) The warbler takes more fruit than the waxwing.
+
+**Q14.** Museums once displayed artefacts with little context, as curiosities to be admired. [Modern exhibits instead build a narrative, placing each object within the society that made it.] Critics of the newer approach argue that the story can end up overwhelming the object itself.
+
+What is the function of the bracketed sentence in the text as a whole?
+- (A) It introduces the shift in practice that the rest of the text then qualifies.
+- (B) It states the criticism that the author goes on to endorse.
+- (C) It defines what counts as an artefact.
+- (D) It concedes that the older style of display was superior.
 
 ---
 
@@ -359,11 +411,15 @@ Which choice most effectively uses data from the table to support the claim?
 
 **Q12 — D.** *(Quantitative)* Claim = highest minus lowest > 20 points. Highest = Y (54), lowest = X (31); 54−31 = 23 > 20. (D) is true AND on-target. (A) accurate but irrelevant. (B) misread (Y is highest, not Z). (C) is true number-wise (54−47 = 7) but compares the highest with the *middle* town, so it never addresses highest-vs-**lowest** — and 7 wouldn't clear 20 anyway.
 
+**Q13 — B.** *(Quantitative)* First find the species the claim is about: the most insect-reliant is the **warbler** at 82%. Then the claim's second half needs its fruit share to be low — 12% is. (B) delivers both halves. (A) is accurate but about the thrush, which isn't the most insect-reliant. (C) is accurate but about the waxwing, the *least* insect-reliant — the opposite end of the table. (D) is simply false (warbler fruit 12% < waxwing fruit 85%) — the misread trap. *Lesson: a quantitative answer must be true AND about the right row.*
+
+**Q14 — A.** *(Text Structure & Purpose / Function)* The bracketed sentence marks the change from curiosity-cabinet display to narrative display; the final sentence then complicates that change ("Critics… argue"). So its job is to set up the shift the text goes on to qualify. (B) reverses the roles — the criticism is the *last* sentence, and the author reports rather than endorses it. (C) out of scope (nothing is defined). (D) reversal (the text never says the old way was better).
+
 ---
 
 ## Quick self-scoring
-- **11–12 right:** on track for a 750+ RW. Drill only your missed skill type.
-- **8–10:** solid base; the misses are almost always one trap family — find which one keeps catching you (usually over-reach or off-task evidence) and target it.
-- **≤7:** slow down to the 5-step loop and *predict before reading choices.* Most early misses vanish when you stop letting the choices lead you.
+- **13–14 right:** on track for a 750+ RW. Drill only your missed skill type.
+- **10–12:** solid base; the misses are almost always one trap family — find which one keeps catching you (usually over-reach or off-task evidence) and target it.
+- **≤9:** slow down to the 5-step loop and *predict before reading choices.* Most early misses vanish when you stop letting the choices lead you.
 
 **Your two highest-leverage habits:** (1) predict the answer before reading the options, every time; (2) on every miss, name the trap family out loud. Do that and these ~27 questions become your strongest domain.

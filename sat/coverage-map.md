@@ -56,3 +56,37 @@
 3. **`rw-reading`** + **`rw-expression`** (technique-heavy).
 4. **`desmos-calculator-skills`** + **`test-strategy-and-pacing`**.
 5. **Full adaptive practice tests** (Bluebook) + relentless **error log** → repeat to 1500+.
+
+---
+
+## ⚠️ Known gaps in this repo's own question bank (measured 12 August 2026)
+
+**Read this before authoring new items.** The packs do not yet mirror the real test's weighting. This is recorded honestly rather than quietly, so the next person to write items knows where to aim instead of adding more of what's already plentiful.
+
+### Coverage vs the real weighting
+
+| Domain | Items here | Share of its section | Real weight | Verdict |
+|---|---|---|---|---|
+| Algebra | 12 | 27.9% | ~35% | **thin** |
+| Advanced Math | 12 | 27.9% | ~35% | **thin** |
+| Problem-Solving & Data | 11 | 25.6% | ~15% | **over-weighted** |
+| Geometry & Trigonometry | 8 | 18.6% | ~15% | about right |
+| Reading (Info & Ideas + Craft & Structure) | 24 *(`rw-reading` 14 + `vocab-in-context` 10)* | 49.0% | ~54% | **thin** |
+| Expression of Ideas | 13 | 26.5% | ~20% | **over-weighted** |
+| Standard English Conventions | 12 | 24.5% | ~26% | about right |
+
+Algebra + Advanced Math together are **55.8%** of the math items here against **~70%** on a real form. Counted on its own, without the `vocab-in-context` set, `rw-reading` is only **35.9%** of the RW items against a ~54% target — so Reading is the thinnest area in the whole bank.
+
+**Where to aim:** new items go to **Advanced Math**, **Algebra**, and **Reading (Information & Ideas / Craft & Structure)**. Do **not** add more Problem-Solving & Data or Expression of Ideas items until the others catch up.
+
+> One deliberate wrinkle: three of the Problem-Solving & Data items are recent **table-reading** additions, which pushed that domain from 22.2% to 25.6% — further over-weight. That was the right trade, because the format gap below mattered more than the count. The fix is to add Algebra and Advanced Math items, not to delete the tables.
+
+### Format gap: figures and graphs
+
+Genuine **markdown tables** now ship in `rw-reading` (4 of them) and `math-problem-solving-data`, so the table-reading case is covered and drillable.
+
+**Still missing, and not fakeable in plain text:**
+- **Bar graphs, line graphs and scatterplots.** Information & Ideas explicitly tests informational graphics, and Problem-Solving & Data Analysis tests two-variable data and scatterplots. Roughly half of real quantitative items use a graph rather than a table, and reading axes, units and gridlines is its own skill.
+- **Geometry figures.** Geometry items on the real test lean on a diagram; every geometry item here is stated in words.
+
+These are deliberately **not** faked with ASCII art — a bad drawing teaches a bad habit. Get these reps in **Bluebook** and the official **Question Bank** (see `reference/practice-resources.md`), and treat any graph or figure item on a practice test as a priority error-log entry, because this bank cannot rehearse it.

@@ -57,6 +57,34 @@ Translate slowly: "is" → =, "of" → ×, "what" → the variable. Define the v
 **P7.** Convert 72 inches per second to feet per minute. `[GI]`
 **P8.** Which has the larger standard deviation: {50,50,50,50} or {10,40,60,90}? Why?
 
+---
+
+### Table-reading practice (this is a real tested format — do these slowly)
+
+> On the real test this domain hands you an actual **two-way table**, data table or scatterplot to read. Read the row and column headings *first*, before you look at the question.
+
+**P9. Two-way table — how students travel to school**
+
+| | Bus | Bike | Walk | Total |
+|---|---|---|---|---|
+| **Year 9** | 42 | 30 | 28 | 100 |
+| **Year 10** | 55 | 20 | 45 | 120 |
+| **Total** | 97 | 50 | 73 | 220 |
+
+What fraction of **Year 10** students walk to school? Give your answer as a decimal. `[GI]`
+
+**P10.** Using the same table: one student is picked at random **from those who walk**. What is the probability the student is in Year 9? Round to three decimal places. `[GI]`
+
+**P11. Data table — club membership**
+
+| Year | Members |
+|---|---|
+| 2022 | 100 |
+| 2023 | 140 |
+| 2024 | 182 |
+
+In which one-year period was the **percent** increase greater, and what was it?
+
 ### Answers
 - **P1:** 6/4 = x/10 → x = 15 → **15 eggs**.
 - **P2:** 40 = 0.80·orig → orig = **$50**. *(Trap: it's not $48 — don't add 20% back; divide.)*
@@ -66,6 +94,9 @@ Translate slowly: "is" → =, "of" → ×, "what" → the variable. Define the v
 - **P6:** 90/120 = **0.75** (denominator = adults, not 200).
 - **P7:** 72 in/s ·(1 ft/12 in)·(60 s/min) = 6·60 = **360 ft/min**.
 - **P8:** {10,40,60,90} — it's far more spread out; the first set has zero spread (SD = 0).
+- **P9:** **0.375**. Year 10 walkers ÷ Year 10 total = 45/120 = 3/8 = 0.375. *The row total (120) is the denominator — not the grand total 220.*
+- **P10:** **0.384**. The question conditions on **walkers**, so the denominator is the Walk *column* total, 73: 28/73 = 0.3835… → **0.384**. *Trap: 28/220 = 0.127 (grand total) and 28/100 = 0.28 (Year 9 row) are both wrong denominators. This one item is the whole "denominator discipline" rule.*
+- **P11:** **2022→2023, a 40% increase.** 2022→2023: 40/100 = **40%**. 2023→2024: 42/140 = **30%**. *Trap: the raw gain is bigger in the second period (+42 vs +40), so "bigger jump" instinct picks the wrong period. Percent change divides by the **original**, and 140 is a bigger original than 100.*
 
 ## Don't get these wrong
 1. **Denominator discipline** on tables/probability — condition on the right group.
