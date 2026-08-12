@@ -289,6 +289,39 @@ test('two concurrent /mock/submit calls close and score one sitting exactly once
   }
 })
 
+test('two concurrent rescues of a stranded sitting score it exactly once', async () => {
+  // A sitting closed by a submit that died before it scored can be finished by a
+  // later submit — see api.test.js for the recovery itself. Its mutex is the
+  // conditional scoring write rather than the close, because the close already
+  // happened, so the race has to be held here: two rescues both compute a
+  // composite, and exactly one may store one.
+  const answered = CSA.exam.mcq_count
+  const { db, sqlite } = freshDb()
+  seedSection(sqlite)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+  await sitSection(db, m.mock, answered)
+
+  const killed = { ...db, scoreMock: async () => { throw new Error('Worker exceeded CPU time limit') } }
+  await assert.rejects(() => handleMockSubmit({ db: killed, mockId: m.mock, config: CSA, now: at(answered * 60) }), /CPU/)
+  assert.equal(
+    sqlite.prepare('SELECT blanks FROM mocks WHERE id = ?').get(m.mock).blanks, null,
+    'the fixture must genuinely be a sitting closed with no score written',
+  )
+
+  const results = await Promise.allSettled([
+    handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(answered * 60 + 60) }),
+    handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(answered * 60 + 65) }),
+  ])
+  const ok = results.filter((r) => r.status === 'fulfilled')
+  const refused = results.filter((r) => r.status === 'rejected')
+  assert.equal(ok.length, 1, 'exactly one of two concurrent rescues may store a composite')
+  assert.equal(refused.length, 1, 'and the loser must be refused, not allowed to overwrite it')
+  assert.ok(refused[0].reason instanceof ApiError, `got ${refused[0].reason}`)
+  assert.equal(refused[0].reason.status, 409)
+  assert.equal(sqlite.prepare('SELECT composite_pct FROM mocks WHERE id = ?').get(m.mock).composite_pct, 100)
+  assert.equal(ok[0].value.status.proctored_mocks, 1, 'one sitting, not two')
+})
+
 test('a first-time /log racing /mock/submit cannot be counted against a frozen composite', async () => {
   const expected = CSA.exam.mcq_count
   // Three runs, and the interleaving is scheduled rather than hoped for.
