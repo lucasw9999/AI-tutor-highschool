@@ -2,6 +2,8 @@
 
 Lucas's own problem-first study system to go from "knows Python, no Java" to a **5 on AP CSA (May 2027)** in the fewest hours. Built around three ideas borrowed from good tutoring systems (incl. DeepTutor): a **complete coverage map**, a **persistent mastery tracker**, and a **Socratic problem-first tutor**.
 
+> **For the parent — after scores post (verified 12 August 2026):** a score can be **canceled** (free, but irreversible — exam fee not refunded, must be requested by June 15 of the exam year) or **withheld** from one specific college (reversible, $10 per recipient, ordering opens in early July). That decision has to be made before scores post, not after. Credit for a given score also varies by school — see `docs/ap-scores-and-credit.md` for the deadlines, the caveats, and where to check a specific college.
+
 ## The files
 | File | What it is |
 |---|---|

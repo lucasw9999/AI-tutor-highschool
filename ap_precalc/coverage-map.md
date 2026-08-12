@@ -8,6 +8,7 @@
 
 > ⚠️ **AP CSA is the very next day — Wed, May 12, 2027.** Two AP exams back to back; plan the final week around both.
 > ⚠️ **The exam format changed for May 2027** (Lucas's year). Numbers below are the new format (College Board CED Clarifications, effective Fall 2026). **Course content is unchanged** — all study packs stay valid. Details + source: `reference/2027-exam-changes.md`.
+> ⚠️ **AP Precalculus credit is inconsistent, and zero at UC.** UC's own admissions site: "No credit is awarded for the Precalculus exam offered in 2024 and beyond" — at any score — while CSU and USC do credit it. A 4 or a 5 does not buy the same thing at every school, and this can change year to year. Score-cancellation/withholding deadlines + where to check a specific school's policy: `../docs/ap-scores-and-credit.md` (verified 12 August 2026).
 
 | Section | Count | Weight | Calculator |
 |---|---|---|---|
