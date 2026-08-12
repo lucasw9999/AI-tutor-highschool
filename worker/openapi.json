@@ -770,6 +770,13 @@
                   ],
                   "description": "How many questions a real sitting of this section contains. Answering far fewer makes it a practice set rather than a mock."
                 },
+                "scored_out_of": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "How many questions composite_pct was actually divided by. Lower than expected when part of the section cannot be asked or marked from this bank, or when some answers need model grading — basis says which. Null when there is no composite. expected, not this, is the section's real size."
+                },
                 "scored": {
                   "type": "integer",
                   "description": "How many answers were graded mechanically. Unanswered questions still count as wrong, so this is not always the denominator."
