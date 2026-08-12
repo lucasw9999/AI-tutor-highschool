@@ -13,6 +13,9 @@
 | Per item (average) | **≈ 2 min 9 sec** (≈ 2:09) | ≈ 22.5 min (budget varies; see §4) |
 | Weight | 55% of composite | 45% of composite |
 | Java Quick Reference | Provided | Provided |
+| Time cues | On-screen clock only — **turns red at 5 min left; no proctor updates or warnings** | Same |
+| Moving between questions | Free, until time expires | Free, until time expires |
+| What gets credit | The answer you select | **Only text typed into the response field** — paper and annotations score zero |
 | Guessing penalty | **None — never leave blank** | N/A (write something for partial credit) |
 
 **No guessing penalty. Ever. A blank and a wrong answer both score zero, but a guess has a real chance of being right. Never leave an MCQ blank.**
@@ -82,6 +85,23 @@ This has three concrete consequences:
 
 **Practice implication:** All FRQ practice should be done in a plain text editor — not an IDE. Disable autocomplete, do not compile, do not run. Build the habits that work on the real exam, not habits that depend on tooling you will not have.
 
+### 5a. Two directions from the app itself (verified 12 August 2026)
+
+Quoted from the 2026 AP CSA Section II directions in Bluebook:
+
+> "You may use the available paper for scratch work, but credit will only be given for responses entered in this application. Text you enter as an annotation will not be included as part of your answer."
+
+> "You can go back and forth between questions in this section until time expires. The clock will turn red when 5 minutes remain—the proctor will not give you any time updates or warnings."
+
+**What each one costs you if you don't know it:**
+
+1. **Paper and annotations earn zero.** Trace on paper all you like — that is the method in §4 and it is the right method — but a reader only ever sees what is typed in the response field. An annotation is a note to yourself, not part of your answer. So every trace that turns into real logic has to be **transcribed into the box**, and you have to leave time for that: it is part of the question's budget, not a bonus at the end.
+2. **You get exactly one time cue, and it is visual.** No proctor call-outs, no "30 minutes remaining," no warning at all — just the on-screen clock turning **red at 5 minutes**. That means:
+   - **You are your own timekeeper.** The checkpoints in §7 and §8 are not optional decoration; they are the only pacing you will get. Glance at the clock at each one. A watch that isn't a smartwatch is allowed, and helps.
+   - **Red = sweep, not panic.** Red clock is the trigger to stop new logic and do the blank-sweep (fill every blank MCQ / type a header and a loop into every blank FRQ part, and copy in anything that only exists on paper).
+   - **Practise it in mocks.** Run every timed mock with the clock in front of you and nobody calling time, and make the last 5 minutes a sweep. If your mocks are proctored by a person holding a timer, you are training for a cue that will not exist on 12 May 2027.
+3. **Free movement inside a section.** You can go back and forth between questions in a section until time expires — which is exactly what makes the flag-and-return triage in §3 safe.
+
 ---
 
 ## 6. No Guessing Penalty — Never Leave an MCQ Blank
@@ -102,8 +122,11 @@ The AP exam does **not** subtract points for wrong answers. Wrong = blank = 0. A
 | 0:00 | Start. Work at pace ≈ 2:09/question. Flag anything requiring a long trace. |
 | ~45:00 | Halfway (Q21). Check: time remaining ÷ questions remaining. Recalibrate if behind. |
 | ~75:00 | 15 min left. Commit guesses on all remaining flagged questions — stop new analysis. |
-| ~88:00 | 2 min left. Scan every question for blanks. Fill all blanks with a best guess. |
+| **~85:00** | **The clock turns red: 5 minutes left. This is the only warning you get — the proctor gives none.** Stop new analysis for good and start the blank sweep. |
+| ~88:00 | 2 min left. Last pass: every single question has a letter selected. |
 | 90:00 | Time up. |
+
+**Nobody will announce these checkpoints.** Bluebook shows a clock; you have to look at it. Build the glance-at-the-clock habit into every timed mock so it is automatic on 12 May 2027.
 
 ---
 
@@ -119,17 +142,19 @@ The AP exam does **not** subtract points for wrong answers. Wrong = blank = 0. A
 
 **Hard rule:** if you have not started a question with 20 minutes remaining, **start it immediately** — even a correct method header + a correct loop earns partial credit. A blank earns 0.
 
-At the end of the section: scan all four responses for blank parts. Write something — anything showing the right intent — on every blank part.
+**The red clock is the sweep trigger.** At 5 minutes remaining Bluebook turns the clock red, and that is the entire warning system — no proctor will say anything (§5a). When it turns red: stop writing new logic and scan all four responses. Type a method header and a correctly-bounded loop into every blank part, and **copy in any logic that so far only exists on your scratch paper** — paper and annotations are not scored, only what is in the response field.
 
 ---
 
-## 9. The 8 Rules (cut this out)
+## 9. The 10 Rules (cut this out)
 
 1. **≈ 2:09 per MCQ** — recompute time ÷ questions at the halfway point.
 2. **Never leave an MCQ blank** — no penalty; always guess.
 3. **Eliminate, then guess** — each elimination raises odds.
 4. **Cap any question at ≈ 2× the average** — flag and move on.
-5. **First pass gimmes, second pass flags** — triage long traces.
+5. **First pass gimmes, second pass flags** — triage long traces; you may move between questions until time expires.
 6. **Explicit variable table** for every trace — never trace in your head.
 7. **FRQ: plain editor, no compiler, no run** — build habits that match Bluebook.
 8. **Never leave an FRQ part blank** — write the header + a loop for partial credit.
+9. **Watch your own clock** — the only cue is the clock turning **red at 5 minutes**; the proctor gives no updates or warnings.
+10. **Type it or it doesn't count** — scratch paper and annotations are never scored; red clock = transcribe and sweep.
