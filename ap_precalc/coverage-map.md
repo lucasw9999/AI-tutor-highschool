@@ -21,7 +21,7 @@
 3. **Modeling a Periodic Context** (no calculator)
 4. **Symbolic Manipulation** (no calculator) — **lowest-scoring FRQ both years (mean 1.28/6 in 2024, 1.93/6 in 2025); biggest point-gain opportunity**
 
-Hybrid digital: MCQ in Bluebook; FRQs handwritten. **Calculator: an approved physical graphing calculator is permitted, *and* a built-in Desmos is available in Bluebook** → see `reference/graphing-calculator-skills.md`.
+Hybrid digital: MCQ in Bluebook; FRQs handwritten. **Calculator: a graphing calculator is REQUIRED — not merely "permitted" — on the calculator parts, MCQ Part B and FRQ Part A.** College Board, verbatim (verified 12 August 2026): *"The AP Precalculus Exam requires using a graphing calculator on Part B of Section I Multiple Choice and Part A of Section II Free Response."* An approved **handheld** satisfies it (**up to 2 permitted handhelds**) *and/or* the **built-in Desmos in Bluebook** — and **only the Bluebook-built-in Desmos is allowed on exam day, not the web or app version.** Conversely, *"Most of the AP Exam will need to be completed without the use of technology."* → see `reference/graphing-calculator-skills.md`.
 
 **Encouraging:** ~**50% (2024) → ~54% (2025) → 58% (2026) of all students score a 4 or 5** — the 2026 breakdown was 5 = 29%, 4 = 29%, 3 = 24%, 2 = 11%, 1 = 7%, so **82% scored 3 or higher** (verified 2026-08-11). A strong score is genuinely achievable with focused prep.
 
