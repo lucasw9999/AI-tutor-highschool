@@ -10,7 +10,7 @@ compatibility_date = "2026-08-01"
 binding = "DB"
 database_name = "ap-tutor"
 # Filled in by `wrangler d1 create ap-tutor`.
-database_id = "PLACEHOLDER_SET_AT_DEPLOY"
+database_id = "51bef13b-5610-4528-9d5f-7ff128aef8fc"
 
 [observability]
 enabled = true
