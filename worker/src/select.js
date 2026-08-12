@@ -23,7 +23,7 @@
 // Priorities 1, 3 and 4 are all remediation — they aim the paper at what he is
 // worst at — and the exam he is preparing for is aimed at nothing. A sitting is
 // sampled for breadth in proportion to exam weight instead, because the composite
-// it produces is the only number that can move readiness. Three rules make that
+// it produces is the only number that can move readiness. Four rules make that
 // claim true rather than decorative:
 //   - The whole paper is composed by that one rule, coverage holes included. A
 //     coverage pass that runs FIRST orders by exam weight descending and walks
@@ -33,6 +33,12 @@
 //     unit weight replicated onto every topic row in that unit, so normalizing it
 //     across topics gives a unit weight x topicCount — a 60% unit with one topic
 //     loses to a 40% unit with three.
+//   - It is apportioned over every exam-tested question this paper has not yet
+//     asked, and freshness is decided AFTER the unit is chosen. Apportioning over
+//     only the questions outside the reuse window instead makes that window a
+//     filter on which UNITS may appear at all, and the selector works the heavy
+//     units first, so theirs go stale first: seven days of ordinary CSA drilling
+//     shut the heaviest unit on the exam out of the paper completely.
 //   - It draws ONLY on material the exam tests, and refuses when that runs out.
 //     Padding a paper from the class-only tiers puts material readiness
 //     deliberately excludes into a composite that has no unit filter.
@@ -46,9 +52,17 @@
 // for weeks. It serves the least-recently-seen item instead and SAYS, in the same
 // `reason` the student reads, that this is a question he has already answered and
 // therefore a memory check rather than fresh evidence. Two rules keep that honest:
-// an item inside the window is never preferred over one outside it, and no item
-// may appear twice on the SAME paper — the same question twice is not two
+// a repeat never displaces a fresh question WITHIN the pool being drawn from, and
+// no item may appear twice on the SAME paper — the same question twice is not two
 // questions of evidence, whatever the bank is short of.
+//
+// "Within the pool being drawn from" is the exact scope, and the qualifier is
+// load-bearing. In ordinary practice the pool is the whole bank, so the rule is
+// global: while any item anywhere is outside the window, nothing inside it is
+// served. Inside a sitting the pool is the topic the exam-weighted apportionment
+// landed on, so a unit whose own questions are all inside the window contributes
+// labelled repeats rather than nothing at all. The alternative is a paper missing
+// a unit, which is silent and scores him HIGH on the material he skipped.
 //
 // A degraded repeat is reported twice over: in the `reason` the student reads, and
 // as `repeat: true` plus a `repeat_of` marker naming the earlier answer, which is
@@ -137,9 +151,10 @@ function examWeight(topic, topicMeta) {
  * @param {'mock'|null} sampling  'mock' samples a proctored sitting instead of
  *        teaching: the remediation priorities (1, 3, 4) are skipped and the WHOLE
  *        paper — coverage holes included — is drawn in proportion to exam weight,
- *        at unit granularity, from exam-tested material only. `mockId` says which
- *        sitting, so the balance is measured over THIS paper rather than his whole
- *        history.
+ *        at unit granularity, over every exam-tested question this paper has not
+ *        yet asked. Freshness is a preference inside the chosen topic, not a filter
+ *        on which units may be sampled. `mockId` says which sitting, so the balance
+ *        is measured over THIS paper rather than his whole history.
  * @param {number|null} reuseDays  Overrides readiness.reuse_days, for tests.
  * @param {Set<string>|string[]|null} excludeItemIds  Item ids that must not be
  *        served, whatever the pools say. This is the caller's window on serves it
@@ -151,12 +166,13 @@ function examWeight(topic, topicMeta) {
  *          repeat?: true, repeat_of?: {item_id: string, last_answered_at: string,
  *          days_since: number}}|null}
  *          `repeat: true` marks a question he has answered inside the no-repeat
- *          window, served because the bank had nothing fresher; `repeat_of` says
- *          which answer made it one, and the `reason` says so in words too. null
- *          when there is no item left that this paper has not already asked — the
- *          bank being smaller than one sitting, which tools/build/validate.js fails
- *          the build over — or, inside a sitting, when the exam-tested bank is
- *          exhausted and the only thing left to serve would be off-syllabus.
+ *          window, served because the pool it was drawn from had nothing fresher;
+ *          `repeat_of` says which answer made it one, and the `reason` says so in
+ *          words too. null when there is no item left that this paper has not
+ *          already asked — the bank being smaller than one sitting, which
+ *          tools/build/validate.js fails the build over — or, inside a sitting, when
+ *          the exam-tested bank is exhausted and the only thing left to serve would
+ *          be off-syllabus.
  */
 export function pickNext({
   items, attempts = [], gaps = [], topicMeta = new Map(), config, now, reuseDays = null,
@@ -218,17 +234,24 @@ export function pickNext({
   // allowed to ask is inside the window — which read as "nothing servable" and
   // refused the second Precalc sitting at question one.
   const universe = inMock ? servableAtAll.filter(onExam) : servableAtAll
-  const outsideWindow = universe.filter((it) => {
+  /** Never answered, or answered long enough ago to be evidence again. */
+  const isFresh = (it) => {
     const seen = lastSeen.get(it.id)
     return !seen || ageDays(seen, now) >= reuseWindow
-  })
+  }
+  const outsideWindow = universe.filter(isFresh)
 
   // The bank is worked through: nothing is outside the window. Serving a repeat
   // and labelling it beats serving nothing — a student who has answered
-  // everything recently still needs practice, and a 409 gives him none. Note this
-  // is decided GLOBALLY, never per topic: while any item anywhere is outside the
-  // window, a within-window item stays unservable, so a repeat can never displace
-  // a fresh question.
+  // everything recently still needs practice, and a 409 gives him none.
+  //
+  // In ordinary practice this is decided GLOBALLY: while any item anywhere is
+  // outside the window, a within-window item stays unservable, so a repeat can
+  // never displace a fresh question. Inside a sitting that global rule cannot be
+  // primary, because there it decides which UNITS may appear on the paper at all —
+  // see the mock branch. `repeating` therefore says only whether the whole bank is
+  // worked through, which is what the student-facing sentence in `serve` needs to
+  // get right; whether a given serve is a repeat is a property of that ITEM.
   const repeating = !outsideWindow.length
   const servable = repeating ? universe : outsideWindow
   // Nothing left to ask. Outside a sitting that means the bank is smaller than one
@@ -240,7 +263,10 @@ export function pickNext({
   // Precalc that was 6 of every 42 questions, on every sitting, under a reason
   // claiming the paper was weighted like the exam. A 409 he can act on beats a
   // quietly off-syllabus score.
-  if (!servable.length) return null
+  //
+  // `universe` empty and `servable` empty are the same condition: `outsideWindow`
+  // is a subset of `universe`, and `repeating` is exactly "that subset is empty".
+  if (!universe.length) return null
 
   const unseen = servable.filter((it) => !lastSeen.has(it.id))
   /**
@@ -249,6 +275,14 @@ export function pickNext({
    * Every return goes through here, so no branch can hand back a remembered
    * question dressed up as fresh evidence. The sentence lands in the `reason` the
    * status view and /next both show verbatim.
+   *
+   * The test is on the ITEM, not on whether the whole bank is worked through. In
+   * ordinary practice the two coincide — nothing inside the window is servable
+   * until everything is — but a sitting apportions the paper across units first
+   * and prefers freshness inside the chosen topic, so it can reach for a
+   * remembered question while other units still hold fresh ones. That is a real
+   * trade (see the mock branch), and it is only an honest one if the question it
+   * serves is labelled for what it is.
    *
    * The same fact also leaves in machine-readable form, as `repeat: true` plus a
    * `repeat_of` marker naming the earlier answer. Prose alone cannot be acted on,
@@ -267,37 +301,48 @@ export function pickNext({
    *     been re-sized.
    */
   const serve = (choice) => {
-    if (!repeating) return choice
     const seen = lastSeen.get(choice.item.id)
-    const days = seen ? calendarDaysAgo(seen, now) : null
-    const when = days == null ? ''
-      : ` — you answered it ${days <= 0 ? 'earlier today' : days === 1 ? 'yesterday' : `${days} days ago`}`
+    if (!seen || ageDays(seen, now) >= reuseWindow) return choice
+    const days = calendarDaysAgo(seen, now)
+    const when = days <= 0 ? 'earlier today' : days === 1 ? 'yesterday' : `${days} days ago`
+    // Only claim the whole bank is used up when it is. Inside a sitting the
+    // shortage can be local to the topic the apportionment landed on, and telling
+    // him the bank is empty when three other units still hold fresh questions is
+    // a claim he can check and find false.
+    const shortage = repeating
+      ? 'the bank has nothing left that you have not already seen'
+      : `every question left on ${choice.item.topic} is one you have answered recently`
     return {
       ...choice,
       repeat: true,
-      ...(seen && {
-        repeat_of: { item_id: choice.item.id, last_answered_at: seen, days_since: ageDays(seen, now) },
-      }),
-      reason: `${choice.reason} You have answered this exact question before${when}, and the bank has nothing left ` +
-        `that you have not already seen, so getting it right here is a memory check rather than fresh evidence.`,
+      repeat_of: { item_id: choice.item.id, last_answered_at: seen, days_since: ageDays(seen, now) },
+      reason: `${choice.reason} You have answered this exact question before — you answered it ${when}, and ` +
+        `${shortage}, so getting it right here is a memory check rather than fresh evidence.`,
     }
   }
 
   /**
-   * The servable items for ONE topic: never-asked ones when it still has any,
-   * otherwise ones whose reuse window has passed — or, once the whole bank is
-   * inside the window, its most-forgotten ones.
+   * The servable items for ONE topic, out of `pool`: its never-asked ones when it
+   * still has any, then the ones whose reuse window has passed, and only then its
+   * most-forgotten ones.
    *
    * Keyed on the topic itself, never on whether some OTHER topic still has
    * unseen items — a topic whose whole pool has been consumed has to stay
    * reachable, or the branch asking for it is silently skipped and the student
    * is sent somewhere he did not need to go. Sorted so that replaying the same
    * history picks the same item however the bank was ordered.
+   *
+   * `pool` defaults to `servable`, where the reuse decision has already been taken
+   * globally and the second tier is therefore everything. A sitting passes
+   * `universe` instead and relies on all three tiers, which is what keeps "a repeat
+   * never displaces a fresh question" true of the pool actually being drawn from.
    */
-  const poolFor = (topic) => {
-    const own = unseen.filter((it) => it.topic === topic)
-    if (own.length) return own.sort((a, b) => a.id.localeCompare(b.id))
-    return servable.filter((it) => it.topic === topic).sort(byMostForgotten)
+  const poolFor = (topic, pool = servable) => {
+    const own = pool.filter((it) => it.topic === topic)
+    const never = own.filter((it) => !lastSeen.has(it.id))
+    if (never.length) return never.sort((a, b) => a.id.localeCompare(b.id))
+    const reusable = own.filter(isFresh)
+    return (reusable.length ? reusable : own).sort(byMostForgotten)
   }
 
   /**
@@ -374,13 +419,31 @@ export function pickNext({
   // aiming at a weakness does harm. Coverage (2, above) stays: a topic he has
   // never attempted is part of the paper, not a weakness being chased.
   if (inMock) {
-    // `servable` is already the exam-tested material this paper has not asked,
-    // and — deliberately — with no `unseen`-first tier over it. A tier that gates
-    // the whole pool on never-asked items drops any unit that has already been
-    // through its own share of the bank, which is another way to shut a unit out
-    // of a paper. Freshness is a preference WITHIN the chosen topic, which poolFor
-    // applies, not a filter on which topics may be sampled at all.
-    const topics = [...new Set(servable.map((it) => it.topic))]
+    // The paper is apportioned over `universe`: ALL exam-tested material this
+    // sitting has not already asked, whether or not it is inside the reuse window.
+    // Freshness is decided AFTER the unit is chosen, by poolFor, which prefers a
+    // never-asked question, then one whose window has passed, then the most
+    // forgotten.
+    //
+    // Gating the apportionment on the reuse window instead — sampling only from
+    // `servable` — turns a freshness preference into a filter on which UNITS may
+    // appear on the paper at all, because the selector works the heavy units first
+    // and their items therefore cross into the window first. On the real CSA bank
+    // at 20 answers a day, seven days of ordinary drilling left unit 4 with 0 items
+    // outside a 28-day window and 88 inside, while units 1-3 still held fresh ones:
+    // the 38-question sitting came out u1 31.6% / u2 47.4% / u3 21.1% / u4 0.0%
+    // against entitlements of 20.2 / 30.3 / 14.1 / 35.4, and two days later
+    // 57.9 / 0.0 / 42.1 / 0.0. handleMockSubmit scores the whole paper into
+    // composite_pct with no unit filter, so a student who could do units 1-3 and
+    // not unit 4 — worth 72 on the real weighting, a clear fail — scored 89.5 and
+    // cleared composite_floor_min on a paper that never asked the unit he cannot do.
+    // Overstating readiness is the one failure this project cannot ship.
+    //
+    // The trade is deliberate and it is the cheaper one: a remembered question is
+    // still practice, it is labelled a repeat in the `reason` and in `repeat_of`,
+    // and a caller can exclude it from the score. A unit missing from the paper is
+    // silent and inflates the only number that moves readiness.
+    const topics = [...new Set(universe.map((it) => it.topic))]
 
     // Exam weight is a property of the UNIT. The bank replicates a unit's weight
     // onto every topic row inside it, so normalizing across TOPICS yields a share
@@ -433,10 +496,22 @@ export function pickNext({
     // Deterministic, like every other branch — no RNG anywhere — so a disputed
     // sitting replays question for question. Keys are stringified because an item
     // may carry a NULL topic, and a bank defect must not crash the sitting.
+    //
+    // Two units owed the same share AND carrying the same exam weight are
+    // interchangeable as far as the sample is concerned, and the order between them
+    // used to fall through to the unit's NAME, which is arbitrary. Break that tie
+    // on evidence quality instead: the unit that can still supply a never-asked
+    // question goes first. It cannot distort the paper — the loser is owed exactly
+    // as much and takes the next question — and it stops the paper serving a
+    // remembered question ahead of a fresh one it could have had for nothing.
+    const unitsWithNeverAsked = new Set(
+      universe.filter((it) => !lastSeen.has(it.id)).map((it) => unitOf(it.topic)),
+    )
     const [nextUnit] = [...unitTopics.keys()]
       .map((unit) => ({ unit, owed: share(unit) * (asked + 1) - (askedInUnit.get(unit) ?? 0) }))
       .sort((a, b) => b.owed - a.owed
         || unitWeight.get(b.unit) - unitWeight.get(a.unit)
+        || Number(unitsWithNeverAsked.has(b.unit)) - Number(unitsWithNeverAsked.has(a.unit))
         || a.unit.localeCompare(b.unit))
 
     // Inside the unit, spread across its topics: the one this paper has asked
@@ -446,11 +521,11 @@ export function pickNext({
       .map((topic) => ({ topic, n: askedOnTopic.get(topic) ?? 0 }))
       .sort((a, b) => a.n - b.n || String(a.topic).localeCompare(String(b.topic)))
 
-    const item = poolFor(nextTopic.topic)[0]
+    const item = poolFor(nextTopic.topic, universe)[0]
     // A topic with no attempts behind it is a coverage hole wherever it turns up,
     // and saying so is more use to the student than the generic sampling sentence.
     // What has changed is only which topic gets asked: the apportionment above
-    // chose it, so no unit can be walked past.
+    // chose it out of every unit the exam tests, so no unit can be walked past.
     if (!attempted.has(nextTopic.topic)) {
       return serve({
         item,
