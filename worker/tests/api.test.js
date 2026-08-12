@@ -1,7 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { handleNext, handleLog, handleTaught, handleMockStart, handleMockSubmit, handleStatus, ApiError } from '../src/api.js'
+import { readFileSync, existsSync } from 'node:fs'
+import { DatabaseSync } from 'node:sqlite'
+import { makeDb } from '../src/db.js'
+import { handleNext, handleLog, handleTaught, handleMockStart, handleMockSubmit, handleStatus, handleDashboard, ApiError } from '../src/api.js'
 
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
 const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', import.meta.url)))
@@ -663,6 +665,186 @@ test('a mock sitting spreads across the exam instead of drilling the weak topic'
   assert.equal(
     new Set(served).size, 2,
     `both topics carry exam weight, so a 4-question sitting must reach both — got ${served.join(', ')}`,
+  )
+})
+
+// ---------------------------------------------------------------------------
+// A serve issued inside a sitting cannot be cashed in after that sitting closes
+//
+// Driven over REAL SQLite, the real schema and the real seeded bank rather than
+// the fake above. /next's open-mock guard closed one door; this is the other
+// one, and a fake that is more capable than the driver has hidden exactly this
+// class of defect before.
+// ---------------------------------------------------------------------------
+
+const SEED = new URL('../seed.sql', import.meta.url)
+const seeded = existsSync(SEED)
+const withSeed = seeded ? test : test.skip
+if (!seeded) console.warn('worker/seed.sql missing — run `npm run seed:sql` first; skipping real-SQLite api tests')
+
+/** The subset of the D1 binding db.js uses, over node:sqlite. */
+function d1(sqlite) {
+  return {
+    prepare(sql) {
+      const stmt = sqlite.prepare(sql)
+      let args = []
+      const api = {
+        bind(...a) {
+          args = a.map((v) => (typeof v === 'boolean' ? (v ? 1 : 0) : v))
+          return api
+        },
+        all: async () => ({ results: stmt.all(...args) }),
+        first: async () => stmt.all(...args)[0] ?? null,
+        run: async () => stmt.run(...args),
+      }
+      return api
+    },
+  }
+}
+
+function realDb() {
+  const sqlite = new DatabaseSync(':memory:')
+  sqlite.exec(readFileSync(SEED, 'utf8'))
+  return { sqlite, db: makeDb(d1(sqlite)) }
+}
+
+/**
+ * Exactly the evidence readiness.js judges a window on: the attempts tied to the
+ * window's mock ids (`attempts.filter((a) => ids.has(a.mock_id))`), reduced to
+ * the numbers the criteria are computed from. If a post-submit keystroke can
+ * move anything in here, it can move mcq_overall and every per-unit floor.
+ */
+async function mockEvidence(db, subject, mockId) {
+  const rows = (await db.attempts(subject)).filter((a) => a.mock_id === mockId)
+  const graded = rows.filter((a) => a.graded_by === 'server')
+  const byUnit = {}
+  for (const a of graded) {
+    const u = (byUnit[a.unit] ??= { n: 0, right: 0 })
+    u.n++
+    if (a.correct) u.right++
+  }
+  return {
+    rows: rows.length,
+    mcq_pct: graded.length ? (graded.filter((a) => a.correct).length / graded.length) * 100 : null,
+    byUnit,
+  }
+}
+
+withSeed('an answer given after the sitting closed cannot be added to it', async () => {
+  const { db, sqlite } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+  const expected = CSA.exam.mcq_count
+
+  // Sit the section, answering everything correctly off the real key, and leave
+  // the last question outstanding: served, on screen, never answered — exactly
+  // what happens when time is called with one question to go.
+  let answered = 0
+  for (let i = 0; answered < expected - 1; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 60), mockId: m.mock })
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(i * 60 + 30) })
+    answered++
+  }
+  const stranded = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(5000), mockId: m.mock })
+  assert.equal(stranded.type, 'question')
+
+  const before = await mockEvidence(db, 'ap_csa', m.mock)
+  assert.equal(before.rows, expected - 1, 'the sitting stands at 41 answers with one question stranded')
+
+  const submitted = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(5400) })
+  assert.equal(submitted.counted, true, '41 of 42 clears the coverage floor, so this is a scored sitting')
+  const storedMock = sqlite.prepare('SELECT ended_at, composite_pct, blanks FROM mocks WHERE id = ?').get(m.mock)
+
+  // Eleven hours later, untimed, unproctored, with the paper handed in: he
+  // answers the question that was still on screen when time was called.
+  const late = await handleLog({
+    db, serveId: stranded.serve, response: 'B', config: CSA, now: at(5400 + 11 * 3600),
+  })
+
+  // The answer is not thrown away — he did the work — but it is ordinary
+  // practice, not evidence about how he performs under exam conditions.
+  const rows = await db.attempts('ap_csa')
+  const lateRow = rows[rows.length - 1]
+  assert.equal(rows.length, expected, 'the answer is still recorded, not lost')
+  assert.equal(lateRow.mock_id, null, 'a post-submit answer must not be filed under the sitting')
+  assert.equal(lateRow.conditions, 'cold', 'work done after the timer stopped is not proctored evidence')
+  assert.ok(late.note, 'and he must be told which pile it landed in')
+  assert.match(late.note, /submitted|after the/i)
+
+  // The whole point: the judged window's evidence is byte-for-byte what it was
+  // when the paper was handed in. Before this was fixed it went 41 rows -> 42,
+  // moving mcq_overall and the affected unit's floor on one keystroke.
+  assert.deepEqual(await mockEvidence(db, 'ap_csa', m.mock), before,
+    'a keystroke made after the sitting ended must not move the evidence it is judged on')
+  assert.deepEqual(
+    sqlite.prepare('SELECT ended_at, composite_pct, blanks FROM mocks WHERE id = ?').get(m.mock), storedMock,
+    'and the stored sitting must be untouched',
+  )
+  assert.equal(late.status.proctored_mocks, 1, 'still exactly one scored sitting')
+  assert.equal(late.status.questions_answered, expected, 'the answer counts as practice')
+})
+
+// ---------------------------------------------------------------------------
+// blanks and the composite must tell the same story
+// ---------------------------------------------------------------------------
+
+test('questions a sitting never reached count as blank, exactly as they count as wrong', async () => {
+  const db = ctxFullBank()
+  const expected = CSA.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  // 38 of 42, every one of them right: the composite already counts the 4 he
+  // never reached as wrong, so the blank count cannot report zero.
+  for (let i = 0; i < expected - 4; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 60), mockId: m.mock })
+    await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(i * 60 + 40) })
+  }
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(4000) })
+
+  assert.equal(r.composite_pct, 90.5, '38 right out of the 42 the section expects')
+  assert.equal(r.blanks, 4, 'the 4 he never reached are blank answers on the sheet, not zero blanks')
+  assert.equal(db.state.mocks[0].blanks, 4, 'and the stored number the blanks criterion reads must agree')
+  assert.match(r.basis, /never reached/, 'and the basis must say so in words')
+})
+
+// ---------------------------------------------------------------------------
+// A sitting that is recorded but not scored must not silently disappear
+// ---------------------------------------------------------------------------
+
+test('a sitting recorded but not scored stays visible, with the pace implication named', async () => {
+  const db = ctxFullBank()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+  // 37 of 42: he ran out of time, which is precisely the failure a mock exists
+  // to expose. One question either side of this flips scored/unscored, and the
+  // unscored side used to leave no trace at all beyond questions_answered.
+  for (let i = 0; i < 37; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 60), mockId: m.mock })
+    await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(i * 60 + 40) })
+  }
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(4000) })
+  assert.equal(r.counted, false)
+  assert.equal(r.composite_pct, null)
+  assert.equal(r.blanks, 5, 'the 5 he never reached are still blanks on the sheet')
+  assert.match(r.basis, /never reached/)
+  assert.doesNotMatch(r.basis, /as wrong/, 'nothing in an unscored sitting was marked at all, so nothing "counted as wrong"')
+
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(9000) })
+  assert.equal(s.proctored_mocks, 0, 'an unscored sitting is still not a scored proctored mock')
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `a real proctored sitting must not vanish from the summary: ${JSON.stringify(s.advisories)}`)
+  assert.match(adv, /37 of 42/, 'say how far he actually got')
+  assert.match(adv, /pace|ran out of time|time/i, 'and name what that means')
+
+  // And it has to resurface, not be shown once at submit time and forgotten.
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(9100) })
+  assert.ok(q.status.advisories.some((a) => /not scored/i.test(a)), 'every response carries it')
+  assert.ok(r.status.advisories.some((a) => /not scored/i.test(a)), 'including the submit response itself')
+
+  // The parent dashboard lists scored mocks only, so it hid the same sitting.
+  const dash = await handleDashboard({ db, configs: { ap_csa: CSA }, now: at(9200) })
+  assert.ok(
+    dash.subjects[0].readiness.advisories.some((a) => /not scored/i.test(a)),
+    'the parent must see the sitting too, not a card that says nothing happened',
   )
 })
 
