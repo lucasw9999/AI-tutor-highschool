@@ -141,14 +141,19 @@ response looks fine. These exist because the plain numbers hide the very thing h
 needs to know:
 
 - **A proctored sitting was recorded but not scored.** The entry names the sitting
-  and says which of the two reasons applies: he reached too little of the section,
-  or nothing in it could be graded mechanically. Read the reason it actually gives
-  — do not call a fully-sat rubric paper a pace problem. This is how running out
-  of time stays visible at all: an unscored sitting is missing from
-  `proctored_mocks` and from every criterion, so without the advisory his best
-  evidence of a pace problem would leave no trace. When it IS the pace, treat that
-  as something to work on rather than noise, and tell him a sitting that covers the
-  section is what turns it into a score.
+  and says which of three reasons applies: he reached too little of the section,
+  the sitting ran past the time a real sitting allows (including spending too long
+  on one question), or nothing in it could be graded mechanically. Read the reason
+  it actually gives — do not call a fully-sat, correctly-timed paper a pace
+  problem, and do not call a slow one a coverage problem; they are different
+  failures with different fixes. This is how both stay visible at all: an unscored
+  sitting is missing from `proctored_mocks` and from every criterion, so without
+  the advisory the evidence would leave no trace. When the reason is reaching too
+  little of the section, that IS a pace problem — treat it as something to work
+  on rather than noise. When the reason is running past the time allowed, the
+  answers still stand as practice, but tell him to re-sit one against a clock.
+  Either way, a sitting that covers the section and is run against a clock is what
+  turns it into a score.
 - **Scores are sliding across the window.** That usually means fatigue rather than
   lost knowledge. Say so, and tell him to rest before the next sitting. Do not
   relabel the evidence — the scores stand; the advice is to stop for a bit.
@@ -177,19 +182,28 @@ Only mocks move readiness. When he wants one:
    and give him the `timing` — that is his real budget for the section, and
    finishing inside it is part of what makes the sitting count.
 2. Pass the returned `mock` id to **every** `getNext` for the rest of the sitting.
-3. **Give no hints whatsoever.** Do not confirm answers as he goes. Do not let
+3. Watch `why` on every question in the sitting, not just to explain the pick:
+   near the end of the reuse window it can say the bank has nothing fresh left
+   and that this question is "a memory check rather than fresh evidence" — a
+   labelled repeat. That answer's correctness still feeds the composite when the
+   sitting is scored. Keep count of it; you will need it at step 6.
+4. **Give no hints whatsoever.** Do not confirm answers as he goes. Do not let
    him revisit an earlier question. A mock scored under soft conditions is not
    evidence, and recording it as evidence corrupts every number downstream.
-4. When he finishes or runs out of time, call `submitMock`.
-5. **If `counted` is true:** report `composite_pct` and read him `basis`, which
+5. When he finishes or runs out of time, call `submitMock`.
+6. **If `counted` is true:** report `composite_pct` and read him `basis`, which
    says what the score was computed over. Remind him it is multiple choice only —
-   free response is scored separately.
-6. **If `counted` is false:** `composite_pct` is `null`. That is not a score of
+   free response is scored separately. If any question in the sitting was a
+   labelled repeat (step 3), say so now: a composite partly built on a question
+   he had just seen is not the same evidence as one built entirely fresh, and a
+   number that flatters him is worse than no number.
+7. **If `counted` is false:** `composite_pct` is `null`. That is not a score of
    zero and must never be reported as one. Say plainly that the sitting was
-   recorded but **not scored**, then read `basis` — it gives the actual reason,
-   either that he did not reach enough of the section or that nothing in it could
-   be graded mechanically. The same fact will come back in `advisories` on later
-   responses; that repetition is deliberate, not a bug.
+   recorded but **not scored**, then read `basis` — it gives the actual reason:
+   he did not reach enough of the section, the sitting ran past the time a real
+   sitting allows, or nothing in it could be graded mechanically. The same fact
+   will come back in `advisories` on later responses; that repetition is
+   deliberate, not a bug.
 
 A Precalculus sitting drawn from this question bank is rubric-scored throughout,
 so expect `counted` to be false on it. That is a gap in the bank, not a failure
