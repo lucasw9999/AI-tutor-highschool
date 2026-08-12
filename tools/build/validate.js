@@ -22,14 +22,28 @@ const topicKey = (subject, id) => `${subject ?? '?'}:${id}`
 const MODEL_GRADED_KINDS = new Set(['frq', 'constructed_model_graded'])
 
 /**
+ * Strips trivial decoration (surrounding whitespace, a wrapping backtick
+ * pair, a trailing period) and returns the option's text as an uppercase
+ * letter, or null if it isn't a bare single letter at all.
+ */
+function bareLetter(text) {
+  if (typeof text !== 'string') return null
+  let t = text.trim()
+  if (t.length > 2 && t.startsWith('`') && t.endsWith('`')) t = t.slice(1, -1).trim()
+  t = t.replace(/\.$/, '').trim()
+  return /^[A-Za-z]$/.test(t) ? t.toUpperCase() : null
+}
+
+/**
  * Errors block the build; warnings print but allow it.
  *
  * Runs over EVERY subject. The MCQ-shaped assertions (practice tag, four options,
- * key present and among them) are gated on `kind === 'mcq'`, because a
- * model-graded constructed-response item legitimately has no options and no key —
- * build.js holds those to their own contract instead. Everything that is true of
- * any item at all — unique id, a topic that exists in its own subject, a stem a
- * student can actually read — is checked universally.
+ * key present and among them, and no option text that collides with a label) are
+ * gated on `kind === 'mcq'`, because a model-graded constructed-response item
+ * legitimately has no options and no key — build.js holds those to their own
+ * contract instead. Everything that is true of any item at all — unique id, a
+ * topic that exists in its own subject, a stem a student can actually read — is
+ * checked universally.
  *
  * Off-syllabus scanning covers stem and options only — explanations legitimately
  * discuss banned constructs in order to warn against them. Items that deliberately
@@ -58,6 +72,27 @@ export function validate(items, topics) {
       if (!it.answer) errors.push(`${it.id}: no answer key`)
       if (it.options && it.answer && !(it.answer in it.options)) {
         errors.push(`${it.id}: answer key ${it.answer} is not one of the options`)
+      }
+      if (it.options) {
+        const labels = Object.keys(it.options)
+        for (const [label, text] of Object.entries(it.options)) {
+          const bare = bareLetter(text)
+          // A bare letter matching this option's OWN label is fine: reading the
+          // response as a letter and matching it against option text both land
+          // on the same option, so there is nothing to disambiguate. A bare
+          // letter matching a DIFFERENT option's label is genuinely ambiguous —
+          // the grader has no way to tell which the student meant, so it now
+          // declines the response rather than guess, and that decline is
+          // invisible to every downstream statistic. Ship the fix in the
+          // content, not around it: reword the option.
+          if (bare && bare !== label.toUpperCase() && labels.some((l) => l.toUpperCase() === bare)) {
+            errors.push(
+              `${it.id}: option ${label}'s text "${text.trim()}" is itself label ${bare} — a response of ` +
+                `"${bare}" cannot be disambiguated between option ${label} (by text) and option ${bare} ` +
+                `(by letter); reword option ${label}'s text so it is not a bare letter`,
+            )
+          }
+        }
       }
     } else if (!it.kind) {
       errors.push(`${it.id}: no kind — an item is either 'mcq' or an explicitly model-graded kind`)

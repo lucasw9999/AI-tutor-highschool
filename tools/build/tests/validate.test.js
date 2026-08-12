@@ -100,6 +100,64 @@ test('duplicate item ids are an error', () => {
   assert.match(validate([item(), item()], TOPICS).errors.join('|'), /duplicate item id/)
 })
 
+// --- letter-valued options that collide with an option label (N7) ---------
+
+test('an option whose text is a bare letter matching a DIFFERENT option label is an error', () => {
+  // Mirrors the shipped csa-ac-q14: option C's text is "B", which is also
+  // label B's letter. The grader cannot tell whether a response of "B" means
+  // "select B by letter" or "select C by its text" — so this must be flagged.
+  const { errors } = validate(
+    [item({ options: { A: 'A', B: 'An ArithmeticException is thrown.', C: 'B', D: 'Nothing.' }, answer: 'C' })],
+    TOPICS,
+  )
+  const hit = errors.filter((e) => e.includes('csa-ac-q1') && /disambiguat/.test(e))
+  assert.equal(hit.length, 1, `expected exactly one disambiguation error, got ${JSON.stringify(errors)}`)
+  assert.match(hit[0], /\bC\b/, 'must name the offending option letter')
+  assert.match(hit[0], /"B"/, 'must quote the offending option text')
+})
+
+test('a lowercase letter option still collides (case-insensitive)', () => {
+  // Mirrors the shipped csa-ac-q33: option A's text is "c", colliding with
+  // label C even though the case differs.
+  const { errors } = validate(
+    [item({ options: { A: 'c', B: 'bc', C: 'An empty string.', D: 'Exception thrown.' }, answer: 'D' })],
+    TOPICS,
+  )
+  assert.ok(
+    errors.some((e) => e.includes('csa-ac-q1') && /disambiguat/.test(e)),
+    `expected a disambiguation error, got ${JSON.stringify(errors)}`,
+  )
+})
+
+test('an option matching its OWN label is not ambiguous and is not an error', () => {
+  // Reading "A" as a letter and matching "A" as text both land on option A —
+  // there is nothing to disambiguate, so this must not be flagged.
+  const { errors } = validate([item({ options: { A: 'A', B: 'b text', C: 'c text', D: 'd text' } })], TOPICS)
+  assert.deepEqual(errors.filter((e) => /disambiguat/.test(e)), [])
+})
+
+test('a bare letter option that names no label at all is not an error', () => {
+  // Mirrors the shipped csa-ac-q30: option D's text is "e", but there is no
+  // label E in a 4-option item, so a response of "e" is never ambiguous.
+  const { errors } = validate(
+    [item({ options: { A: 'def', B: 'ef', C: 'cdef', D: 'e' }, answer: 'B' })],
+    TOPICS,
+  )
+  assert.deepEqual(errors.filter((e) => /disambiguat/.test(e)), [])
+})
+
+test('a model-graded item is never flagged, even carrying a colliding options field', () => {
+  const modelGraded = item({
+    kind: 'constructed_model_graded',
+    answer: null,
+    practice: null,
+    options: { A: 'A', B: 'B', C: 'A' },
+    solution: 'the worked solution',
+  })
+  const { errors } = validate([modelGraded], TOPICS)
+  assert.deepEqual(errors.filter((e) => /disambiguat/.test(e)), [])
+})
+
 // --- teaching ---
 
 const T_ITEMS = [
