@@ -739,6 +739,176 @@ withSeed('every real reason a mock sitting can go unscored is named in gpt-instr
   }
 })
 
+// --- the divisor composite_pct was actually taken over (Q4-A6) ---------------
+//
+// `expected` is the REAL section's size, and the composite is not divided by it:
+// it is divided by the questions this bank can both ask and mark, less the
+// answers that still need model grading. So a full CSA sitting reports
+// answered:42, expected:46, composite_pct:100 — and a GPT doing the obvious
+// arithmetic ("42 of 46, yet 100%?") either contradicts the server or reports a
+// correct score with a false caveat. The true divisor used to appear ONLY inside
+// the `basis` prose, so the model had to parse a sentence to recover a number it
+// should simply be handed. `scored_out_of` is that number.
+//
+// What is pinned here is the IDENTITY, not the field's presence: a divisor that
+// disagrees with composite_pct would be worse than no divisor at all. Driven
+// through the real handler over the real schema and the real seeded bank, on
+// every section shape both configs offer.
+
+/** Any real item of this subject, to hang the sitting's attempts on. */
+const anyItem = (sqlite, subject) =>
+  sqlite.prepare(`SELECT id, topic, unit, practice FROM items WHERE subject = ? LIMIT 1`).get(subject)
+
+/**
+ * Sit one proctored mock and submit it through the real handler.
+ *
+ * `ungraded` answers are filed as model-graded (no verdict), and `right` of the
+ * remaining server-graded ones are correct — which is what lets the divisor be
+ * driven away from `answered`, from `scored` and from `expected` all at once.
+ *
+ * A model-graded row stores `correct: 0`, which is what grade.js really writes
+ * for rubric-scored work: the column is NOT NULL, and the zero is inert because
+ * every reader filters on graded_by first.
+ */
+async function sitAndSubmit(env, { subject, section, config, n, right = 0, ungraded = 0, minutes = 5 }) {
+  const db = makeDb(env.DB)
+  const now = '2027-03-01T12:00:00Z'
+  const item = anyItem(env.sqlite, subject)
+  const mock = await db.startMock({ subject, section, started_at: now, proctored: 1, source: 'bank' })
+  const start = new Date(now).getTime()
+  for (let i = 0; i < n; i++) {
+    const model = i < ungraded
+    await db.recordAttempt({
+      ts: new Date(start + (minutes * 60000 * i) / Math.max(n - 1, 1)).toISOString(),
+      subject, item_id: item.id, topic: item.topic, unit: item.unit, practice: item.practice,
+      response: 'A', correct: model ? 0 : (i - ungraded < right ? 1 : 0),
+      graded_by: model ? 'model' : 'server', seconds: 5, hints_used: 0,
+      conditions: 'proctored_mock', mock_id: mock,
+    })
+  }
+  const body = await handleMockSubmit({ db, mockId: mock, config, now })
+  // `right` read back out of the database rather than trusted from the loop
+  // above, so the identity is checked against the stored evidence.
+  const scoredRight = env.sqlite
+    .prepare(`SELECT count(*) n FROM attempts WHERE mock_id = ? AND graded_by = 'server' AND correct = 1`)
+    .get(mock).n
+  return { body, right: scoredRight }
+}
+
+/** The divisor and the right-answer count the handler states in its own prose. */
+const basisArithmetic = (basis) => /Scored (\d+) right out of (\d+)/.exec(basis)
+
+/**
+ * How many of the section this bank can ask AND mark, read back out of the real
+ * basis text — so the printed table reports the handler's own number rather than
+ * a second copy of sectionScoring's arithmetic that could drift from it.
+ */
+function scorableFrom(body) {
+  const measured = /measured over the (\d+) question\(s\) of the (\d+)/.exec(body.basis)
+  if (measured) return Number(measured[1])
+  if (/cannot be scored from this question bank at all/.test(body.basis)) return 0
+  return body.expected
+}
+
+// Every section shape both configs offer, plus the mixes that pull the divisor
+// away from every other number in the response. `scored_out_of === expected`
+// would pass on some of these and fail on the CSA `full` rows; `=== answered`
+// and `=== scored` each fail on the 40-answer rows.
+const DIVISOR_SCENARIOS = [
+  { what: 'CSA I, whole section, all marked', subject: 'ap_csa', section: 'I', config: CSA, n: 42, right: 40 },
+  { what: 'CSA I, four answers need model grading', subject: 'ap_csa', section: 'I', config: CSA, n: 42, right: 36, ungraded: 4 },
+  { what: 'CSA I, under coverage', subject: 'ap_csa', section: 'I', config: CSA, n: 10, right: 10 },
+  { what: 'CSA I, past the clock', subject: 'ap_csa', section: 'I', config: CSA, n: 42, right: 42, minutes: CSA.exam.mcq_minutes * MOCK_TIME_SLACK + 20 },
+  { what: 'CSA II, bank holds no free response', subject: 'ap_csa', section: 'II', config: CSA, n: 4, right: 4 },
+  { what: 'CSA full, 42 of the 46 askable', subject: 'ap_csa', section: 'full', config: CSA, n: 42, right: 40 },
+  { what: 'CSA full, two never reached', subject: 'ap_csa', section: 'full', config: CSA, n: 40, right: 38 },
+  { what: 'CSA full, two unreached and four unmarked', subject: 'ap_csa', section: 'full', config: CSA, n: 40, right: 34, ungraded: 4 },
+  { what: 'Precalc I, no keyed item in the bank', subject: 'ap_precalc', section: 'I', config: PRECALC, n: 42, right: 0 },
+  { what: 'Precalc II, rubric-scored throughout', subject: 'ap_precalc', section: 'II', config: PRECALC, n: 4, right: 0 },
+  { what: 'Precalc full, neither half scorable', subject: 'ap_precalc', section: 'full', config: PRECALC, n: 42, right: 0 },
+]
+
+withSeed('composite_pct is exactly right over scored_out_of, on every section shape both configs offer', async () => {
+  const rows = []
+  let differsFromExpected = 0
+
+  for (const scenario of DIVISOR_SCENARIOS) {
+    const { body, right } = await sitAndSubmit(freshEnv(), scenario)
+    const arithmetic = basisArithmetic(body.basis)
+    rows.push({
+      shape: `${scenario.subject} ${scenario.section}`,
+      what: scenario.what,
+      answered: body.answered,
+      expected: body.expected,
+      scorable: scorableFrom(body),
+      denominator: arithmetic ? Number(arithmetic[2]) : null,
+      right,
+      composite_pct: body.composite_pct,
+      scored_out_of: body.scored_out_of,
+    })
+
+    const where = `${scenario.what}: ${JSON.stringify(body)}`
+
+    // Null exactly when there is no composite — never 0, which would read as
+    // "divided by nothing" and never as "there was no division".
+    assert.equal(
+      body.scored_out_of == null, body.composite_pct == null,
+      `scored_out_of and composite_pct must be null together — ${where}`,
+    )
+    if (body.composite_pct == null) {
+      assert.equal(body.scored_out_of, null, `an unscored sitting has no divisor — ${where}`)
+      continue
+    }
+
+    assert.ok(Number.isInteger(body.scored_out_of), `a question count is a whole number — ${where}`)
+    assert.ok(body.scored_out_of > 0, `a composite divided by ${body.scored_out_of} could not exist — ${where}`)
+    assert.ok(body.right === undefined, 'right is not part of the contract; it is derived from the evidence')
+
+    // THE identity. Rounded to the one decimal the response carries, and to
+    // nothing else: the divisor has to reproduce the number the GPT was given.
+    assert.equal(
+      Number(((right / body.scored_out_of) * 100).toFixed(1)), body.composite_pct,
+      `${right} right / ${body.scored_out_of} does not give composite_pct ${body.composite_pct} — ${where}`,
+    )
+
+    // The prose and the field cannot tell the student two different stories,
+    // which is the whole reason the field exists.
+    assert.ok(arithmetic, `a scored sitting states its arithmetic in basis — ${where}`)
+    assert.equal(Number(arithmetic[2]), body.scored_out_of, `basis divides by a different number — ${where}`)
+    assert.equal(Number(arithmetic[1]), right, `basis counts a different number right — ${where}`)
+
+    if (body.scored_out_of !== body.expected) differsFromExpected++
+
+    // And the schema has to describe the value the server just sent.
+    assert.deepEqual(
+      contractProblems(body, responseSchema('MockSubmit'), scenario.what), [],
+      `the GPT is told something the server does not do — ${where}`,
+    )
+  }
+
+  console.log(`\nQ4-A6 — the composite's real divisor, per section shape:`)
+  console.table(rows)
+
+  assert.ok(
+    differsFromExpected > 0,
+    'no scenario exercised a divisor that differs from `expected`, so this test cannot tell the new field from the ' +
+      'old one. The CSA `full` rows are supposed to: 46 expected, 42 askable.',
+  )
+})
+
+test('scored_out_of is declared nullable, because an unscored sitting has no divisor', () => {
+  const field = responseSchema('MockSubmit').properties.scored_out_of
+  assert.ok(field, 'handleMockSubmit returns scored_out_of, so the schema has to declare it')
+  assert.deepEqual(
+    typesOf(field).slice().sort(), ['integer', 'null'],
+    'typed as a bare integer, a null divisor is read as 0 — the same misreading composite_pct was fixed for',
+  )
+  assert.match(
+    field.description, /null/i,
+    'the description is the only place the GPT is told what an absent divisor means',
+  )
+})
+
 withSeed('every lesson field the bank can leave empty is declared nullable', () => {
   // buildLesson serves a PARTIALLY filled teaching row from whatever fields it
   // has, and the bank ships rows with no common_mistake (CSA's source names no

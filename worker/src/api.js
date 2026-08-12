@@ -930,6 +930,16 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     counted: composite != null,
     answered: attempts.length,
     expected,
+    // The number composite_pct was ACTUALLY divided by, which is neither
+    // `answered` nor `expected` and could not be recovered from either. A full
+    // CSA sitting reported answered:42, expected:46, composite_pct:100, and the
+    // only statement of the real divisor was a sentence inside `basis` — so a
+    // model doing the arithmetic a fifteen-year-old would do reached 91.3 and
+    // either contradicted the server or caveated a perfect paper. `expected`
+    // stays the real section's size, because that is the true fact about the
+    // exam; this is what the score was measured over. Null with the composite:
+    // there was no division, and a 0 here would read as one.
+    scored_out_of: composite == null ? null : denominator,
     scored: scored.length,
     ungraded,
     blanks,
