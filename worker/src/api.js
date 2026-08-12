@@ -286,15 +286,36 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     )
   }
 
-  // A half of the section that is already complete is closed to further serves.
-  // The selector filters by topic and never by kind, so without this a `full`
-  // sitting whose 42 multiple choice questions are all answered goes on being
-  // served multiple choice — the 43rd, 44th, 45th and 46th answers silently
-  // standing in for the four free-response questions it never asked.
-  const completed = new Set(paper ? paper.parts.filter((p) => p.full).map((p) => p.kind) : [])
+  // Which halves of the exam this sitting is closed to. The selector filters by
+  // topic and never by kind, so both of these have to be said here:
+  //
+  //   A half that is already COMPLETE. Without it a `full` sitting whose 42
+  //   multiple choice questions are all answered goes on being served multiple
+  //   choice — the 43rd, 44th, 45th and 46th answers silently standing in for the
+  //   four free-response questions it never asked.
+  //
+  //   A half this section does not have AT ALL. Filtering on the full halves
+  //   alone could not see this: a section I sitting has no frq part, so 'frq' was
+  //   never in that set and a MULTIPLE CHOICE sitting could be handed a
+  //   free-response question. It fills no half of the paper (sectionFill credits
+  //   an answer only to its own kind's part), it is booked graded_by 'model' so
+  //   nothing can mark it, and it comes off the composite's numerator for
+  //   nothing. Section II inverted is the same defect: an mcq is not a
+  //   free-response paper.
+  //
+  // Only the halves of THIS exam are closed off this way. A kind the exam table
+  // has no half for — every Precalc item is `constructed_model_graded` — is left
+  // servable on purpose: see handleMockStart, where practice against a bank that
+  // cannot supply the section is kept as real work that simply cannot be scored.
+  const examHalves = sectionParts('full', config?.exam).map(([kind]) => kind)
+  const sittingHalves = new Set(sitting ? sectionParts(sitting.section, config?.exam).map(([kind]) => kind) : examHalves)
+  const closed = new Set([
+    ...(paper?.parts.filter((p) => p.full).map((p) => p.kind) ?? []),
+    ...examHalves.filter((kind) => !sittingHalves.has(kind)),
+  ])
   const unservable = paper == null ? null : [
     ...inFlight,
-    ...(completed.size ? ctx.items.filter((it) => completed.has(it.kind)).map((it) => it.id) : []),
+    ...(closed.size ? ctx.items.filter((it) => closed.has(it.kind)).map((it) => it.id) : []),
   ]
 
   const choice = pickNext({
@@ -321,10 +342,16 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     // cannot work.
     const done = paper?.parts.filter((p) => p.full) ?? []
     const owed = paper?.parts.filter((p) => !p.full) ?? []
+    // Counted over the items this SECTION may draw from, not over the whole bank.
+    // A section I paper cannot be handed the bank's free-response items at all, so
+    // saying "all 286 exam-tested question(s) ... are on it already" of a 42-answer
+    // paper would be untrue twice over — it is not 286 questions, and the ones it
+    // never saw are not on it.
+    const eligible = { ...ctx, items: ctx.items.filter((it) => !closed.has(it.kind)) }
     const clauses = done.length
       ? [`its ${describeParts(done.map((p) => [p.kind, p.count]))} are all on it already`]
-      : [`all ${examTestedCount(ctx)} exam-tested question(s) this bank holds for ${subject} are on it already, and no ` +
-         `question may appear twice on one paper`]
+      : [`all ${examTestedCount(eligible)} exam-tested question(s) this bank can put on a section ${sitting?.section} ` +
+         `paper for ${subject} are on it already, and no question may appear twice on one paper`]
     if (owed.length) {
       clauses.push(`the ${describeParts(owed.map((p) => [p.kind, p.count - p.answered]))} it still owes cannot be drawn ` +
         `from this bank`)
