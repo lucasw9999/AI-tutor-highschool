@@ -92,7 +92,13 @@ export function labelled(body, aliases, { includeSuffix = false } = {}) {
       // Strip the leading em-dash/colon/whitespace punctuation the suffix was
       // introduced with, e.g. " — simplify k(x)..." -> "simplify k(x)...".
       const suffix = m[1].replace(/^[\s—–:-]+/, '').trim()
-      return includeSuffix && suffix ? `${suffix}\n${value}` : value
+      if (!includeSuffix || !suffix) return value
+      // The suffix alone is a fragment, not a sentence — "sec(π/3)" or "A (no
+      // calc)" reads as a dangling clause with no subject. Putting the
+      // matched alias back in front ("Worked example — sec(π/3)") is what
+      // makes it read as the prompt it actually is. `suffix` never carries a
+      // leading dash at this point (stripped above), so this cannot double one.
+      return `${alias} — ${suffix}\n${value}`
     }
   }
   return null

@@ -203,6 +203,29 @@ test('PC3 REGRESSION: a duplicated P number is a hard error even though the item
   )
 })
 
+test('N12: a worked example whose label carried the actual prompt does not open on a dangling fragment', () => {
+  // labelled(..., { includeSuffix: true }) keeps the label's suffix text —
+  // correct, because on these topics the suffix IS the prompt and dropping it
+  // truncates the whole solution. But it kept the bare suffix while dropping
+  // the words "Worked example" that introduced it, so the field now opens
+  // directly on a fragment: "A (no calc)\nSolve...", "exact value of
+  // cos(5π/6)\n5π/6 is in QII...", "— sec(π/3)". A reader (a student, or the
+  // model quoting this teaching row) sees a sentence with no subject.
+  const r = parseAll(read)
+  const DANGLING_BEFORE_FIX = [
+    '2.8', '2.9', '3.1', '3.2', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '4.5',
+  ]
+  for (const topicId of DANGLING_BEFORE_FIX) {
+    const t = r.teaching.find((x) => x.topic === topicId)
+    assert.ok(t?.worked_example, `topic ${topicId} lost its worked example entirely`)
+    assert.match(
+      t.worked_example,
+      /^worked examples?\b/i,
+      `topic ${topicId} opens on a dangling fragment: ${JSON.stringify(t.worked_example.split('\n')[0])}`,
+    )
+  }
+})
+
 // --- build-level guarantees -----------------------------------------------
 
 test('the build reports both subjects, and neither has zero topics', () => {

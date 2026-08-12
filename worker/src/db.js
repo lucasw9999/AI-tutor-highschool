@@ -81,7 +81,27 @@ export function makeDb(D1) {
       return one(`SELECT * FROM serves WHERE id = ?`, id)
     },
 
+    /**
+     * Deprecated alias for markServeLoggedUnsafe. Nothing in this codebase
+     * calls it under this name any more — api.js spends a serve through
+     * claimServe() below — but worker/tests/smoke.test.js still calls
+     * `db.markServeLogged(id)` directly to seed `serves.logged` against real
+     * SQLite, and that file belongs to a different fixing pass than this one.
+     * Do not add a new caller under either name; use claimServe().
+     */
     markServeLogged(id) {
+      return this.markServeLoggedUnsafe(id)
+    },
+
+    /**
+     * UNSAFE — unconditional, no guard against a second caller doing the same
+     * thing to the same id. That is exactly the double-count race claimServe()
+     * below exists to close: of two concurrent /log calls on one serve, this
+     * method flips the row for BOTH of them, so a future `/log`-style caller
+     * that reaches for this instead of claimServe() silently reinstates one
+     * answer becoming two attempt rows. See claimServe() for the safe version.
+     */
+    markServeLoggedUnsafe(id) {
       return run(`UPDATE serves SET logged = 1 WHERE id = ?`, id)
     },
 
@@ -94,9 +114,9 @@ export function makeDb(D1) {
      * The `AND logged = 0` is the whole point. A single UPDATE is atomic in D1 —
      * there is no transaction available here — so of two concurrent /log calls on
      * one serve id exactly one changes a row and the other gets 0. The
-     * unconditional markServeLogged() above cannot do this job: it changes a row
-     * for BOTH racers, so its count carries no information, and one answer became
-     * two attempt rows.
+     * unconditional markServeLoggedUnsafe() above cannot do this job: it changes a
+     * row for BOTH racers, so its count carries no information, and one answer
+     * became two attempt rows.
      *
      * The changed-row count sits in different places in the two drivers this runs
      * against: D1 exposes it as `meta.changes`, node:sqlite (which the tests drive

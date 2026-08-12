@@ -141,7 +141,14 @@ function labelReading(response) {
 function valueReading(response, index) {
   const canon = canonAnswer(response)
   if (!canon) return null
-  const hedged = canon.replace(HEDGE_HEAD, '').replace(HEDGE_TAIL, '').trim()
+  // canonAnswer's trailing-period strip already ran, looking for a period at
+  // THAT end. Stripping HEDGE_TAIL can uncover a NEW end — 'the program
+  // throws an arithmeticexception. i think' loses ' i think' here, leaving
+  // 'the program throws an arithmeticexception.' with the option's own
+  // period now trailing and never removed. Re-running the same strip catches
+  // it, so a verbatim option that ends in a period still matches once its
+  // hedge is gone.
+  const hedged = canon.replace(HEDGE_HEAD, '').replace(HEDGE_TAIL, '').replace(/\.$/, '').trim()
   const bases = hedged && hedged !== canon ? [canon, hedged] : [canon]
 
   // An option's text typed verbatim outranks every looser reading. csa-u3-q19

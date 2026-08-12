@@ -67,7 +67,11 @@ CREATE TABLE IF NOT EXISTS attempts (
   practice   TEXT,
   response   TEXT,
   correct    INTEGER NOT NULL,
-  graded_by  TEXT NOT NULL,             -- 'server' | 'model'
+  graded_by  TEXT NOT NULL,             -- 'server' (mechanical verdict) | 'model' (rubric-scored FRQ,
+                                         -- quarantined from readiness) | 'unkeyed' (item has no usable
+                                         -- answer key) | 'unparsed' (response could not be read as one
+                                         -- answer) -- see isServerGraded() in grade.js, the only place
+                                         -- that may treat one of these as a countable verdict
   seconds    INTEGER,                   -- server measured
   hints_used INTEGER NOT NULL DEFAULT 0,
   conditions TEXT NOT NULL,             -- cold | tutored | timed | proctored_mock

@@ -343,6 +343,25 @@ test('G7: real shipped items credit the answer the student actually gave', async
   }
 })
 
+test('N8: a verbatim option ending in a period keeps its period visible after a hedge tail is stripped', () => {
+  // canonAnswer strips a TRAILING period before HEDGE_TAIL ever runs. So a
+  // response that is the option text verbatim, ending in a period, plus a
+  // trailing hedge — 'The program throws an ArithmeticException. I think' —
+  // has its period sitting mid-string when canonAnswer looks for one at the
+  // end and finds 'k' instead. Only after HEDGE_TAIL peels off ' I think'
+  // does that period become the new trailing character, and nothing strips
+  // it a second time — so the hedged reading still carries a period the
+  // option's own (period-free) canonical text does not, and matches nothing.
+  const item = byId('csa-ac-q4')
+  const optionText = item.options[item.answer]
+  assert.match(optionText, /\.$/, 'fixture assumption: the correct option text ends in a period')
+  for (const raw of [`${optionText} I think`, `${optionText} i think`, `${optionText}, I think`, `${optionText} maybe`]) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'server', `${JSON.stringify(raw)} was declined (detail: ${r.detail})`)
+    assert.equal(r.correct, 1, `${JSON.stringify(raw)} was scored wrong (picked ${r.picked}, keyed ${r.keyed})`)
+  }
+})
+
 test('G7: the responses the audit reproduced are never scored as misses', () => {
   // Each of these was `correct: 0, graded_by: 'server'` before the fix. Being
   // credited is best; being left unparsed is acceptable. Being called wrong is
