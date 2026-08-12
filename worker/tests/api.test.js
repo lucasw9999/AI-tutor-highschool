@@ -137,7 +137,14 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
     async clearGap({ subject, topic, cleared_at }) {
       for (const g of state.gaps) if (g.subject === subject && g.topic === topic && !g.cleared_at) g.cleared_at = cleared_at
     },
+    /**
+     * The conditional INSERT db.js does, with the same contract: null when this
+     * subject already has a sitting that was started and never submitted. A fake
+     * cannot reproduce the race — see tests/db.test.js for that, over real SQLite —
+     * but it can hold the handler to the same return contract.
+     */
     async startMock(m) {
+      if (state.mocks.some((x) => x.subject === m.subject && !x.ended_at)) return null
       const row = { id: state.nextMock++, composite_pct: null, blanks: null, ended_at: null, ...m }
       state.mocks.push(row)
       return row.id
@@ -438,9 +445,11 @@ test('/mock/start validates its inputs and states the rules', async () => {
 })
 
 test('/mock/start states the real time budget for the section it opened', async () => {
-  const db = ctx()
+  // A FRESH database per section: a subject may not have two sittings open at
+  // once (see db.startMock), so opening three on one database is now refused —
+  // correctly, and it has nothing to do with what this test is about.
   const timing = async (section) =>
-    (await handleMockStart({ db, subject: 'ap_csa', section, source: 'bank', config: CSA, now: T0 })).timing
+    (await handleMockStart({ db: ctx(), subject: 'ap_csa', section, source: 'bank', config: CSA, now: T0 })).timing
   assert.equal(await timing('I'), '90 minutes')
   assert.equal(await timing('II'), '90 minutes')
   // Under-timing a full sitting halves it, and a half-sat mock is not scored.
@@ -2021,4 +2030,155 @@ test('days_to_exam counts calendar days in one fixed zone', async () => {
   assert.equal(await days('2027-05-11T22:00:00Z'), 1, '15:00 the day before is one day out')
   assert.equal(await days('2027-05-12T03:00:00Z'), 1, '20:00 the same evening is still one day out')
   assert.equal(await days('2027-05-12T15:00:00Z'), 0, 'exam morning is the day itself')
+})
+
+// ---------------------------------------------------------------------------
+// Pace (METH-11), staleness (GAP-5) and a sitting that was never finished (GAP-3)
+//
+// Three absences with the same shape: the server holds the evidence, computes
+// nothing from it, and says nothing about it.
+//
+//   pace_seconds_per_mcq sits in both configs and was read NOWHERE in worker/src.
+//   Per-question `seconds` fed the total-time gate and the per-item break cap —
+//   both ADMISSION tests on a mock, neither feedback — so a student could pass
+//   every gate while being consistently half a minute a question too slow, which
+//   on a timed exam is how a capable student scores badly.
+//
+//   Nothing computed days-since-last-attempt, so six weeks of silence looked
+//   exactly like a hard week: the same 0%, the same blocker, the same chips.
+//
+//   An abandoned OPEN sitting was invisible everywhere — unscoredSittings skips a
+//   mock with no ended_at, proctored_mocks counts only scored ones — while every
+//   FINISHED failure mode produces a loud advisory. Start a section, see it going
+//   badly, walk away, start another: the one gaming path the timing and coverage
+//   gates do not close.
+// ---------------------------------------------------------------------------
+
+/** The one advisory that matches, or undefined. Advisories are the student's only channel. */
+const advisory = (status, re) => status.advisories.find((a) => re.test(a))
+
+withSeed('a student who is consistently too slow is told so, in numbers he can check', async () => {
+  const { db } = realDb()
+  // Twelve multiple-choice answers, every one taking 200 seconds against the 129
+  // this config states for one real exam question. Answered correctly, so no gap
+  // interrupts and nothing here is about being wrong.
+  for (let i = 0; i < 12; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 400) })
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(i * 400 + 200) })
+  }
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(6000) })
+  const pace = advisory(s, /pace/i)
+  assert.ok(pace, `pace is measurable and was not reported: ${JSON.stringify(s.advisories)}`)
+  assert.match(pace, /200 seconds/, 'the measured pace, from the server’s own clock')
+  assert.match(pace, new RegExp(`${CSA.exam.pace_seconds_per_mcq} seconds`), 'against the config’s own target')
+  assert.match(pace, new RegExp(`${CSA.exam.mcq_minutes} minutes`), 'and what that projects to over the section')
+})
+
+withSeed('a student who is on pace is not nagged about it', async () => {
+  const { db } = realDb()
+  for (let i = 0; i < 12; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 400) })
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(i * 400 + 100) })
+  }
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(6000) })
+  assert.equal(advisory(s, /pace/i), undefined, '100 seconds against a 129-second target is not a pace problem')
+})
+
+withSeed('two slow answers are not a pace measurement', async () => {
+  const { db } = realDb()
+  for (let i = 0; i < 2; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 900) })
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(i * 900 + 600) })
+  }
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(3000) })
+  assert.equal(
+    advisory(s, /pace/i), undefined,
+    'a median over two answers is noise, and "not yet measurable" is this project’s standing rule',
+  )
+})
+
+withSeed('six weeks of silence is said out loud, not hidden behind an unchanged number', async () => {
+  const { db } = realDb()
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: T0 })
+  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(30) })
+
+  const fresh = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(3600) })
+  assert.equal(advisory(fresh, /nothing has been recorded/i), undefined, 'an hour later is not silence')
+
+  const sixWeeks = at(42 * 86400)
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: sixWeeks })
+  const stale = advisory(s, /nothing has been recorded/i)
+  assert.ok(stale, `six weeks of silence must be visible: ${JSON.stringify(s.advisories)}`)
+  assert.match(stale, /42 days/, 'the count of days, so a pause cannot be mistaken for progress')
+  assert.match(stale, /2027-03-01/, 'and the date of the last answer')
+})
+
+withSeed('a second sitting cannot be opened while one is still open', async () => {
+  const { db } = realDb()
+  const first = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  await assert.rejects(
+    () => handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(60) }),
+    (e) => {
+      assert.equal(e.status, 409)
+      assert.match(e.message, new RegExp(`${first.mock}`), 'the refusal has to name the sitting that is open')
+      assert.match(e.message, /submitMock/, 'and the way out of it')
+      return true
+    },
+    'walking away from a bad section and starting another is the one gaming path the gates do not close',
+  )
+
+  // The other subject is a different exam and a different paper.
+  assert.ok(
+    (await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: at(60) })).mock,
+  )
+
+  // Finishing it — not abandoning it — is what frees the subject.
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(70), mockId: first.mock })
+  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(100) })
+  await handleMockSubmit({ db, mockId: first.mock, config: CSA, now: at(200) })
+  const second = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(300) })
+  assert.ok(second.mock > first.mock)
+})
+
+withSeed('a sitting started and never finished is surfaced once it is past its section budget', async () => {
+  const { db } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(60), mockId: m.mock })
+  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(120) })
+
+  // Ten minutes in, this is a sitting in progress, which is not a thing to report.
+  const during = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(600) })
+  assert.equal(advisory(during, /never submitted/i), undefined)
+
+  // Past the 90 minutes the section itself gets, it is no longer in progress.
+  const after = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at((CSA.exam.mcq_minutes + 1) * 60) })
+  const abandoned = advisory(after, /never submitted/i)
+  assert.ok(abandoned, `an open sitting past its budget must be visible: ${JSON.stringify(after.advisories)}`)
+  assert.match(abandoned, new RegExp(`#${m.mock}`), 'named, so it can be submitted or explained')
+  assert.match(abandoned, new RegExp(`${CSA.exam.mcq_minutes} minutes`), 'against the budget it is past')
+  assert.match(abandoned, /1 answer|answered 1/, 'and what is on it')
+  assert.equal(after.proctored_mocks, 0, 'it still cannot count as a mock — nothing was scored')
+})
+
+withSeed('the dashboard is handed the staleness, the pace and the gap ages, not just a snapshot', async () => {
+  const { db } = realDb()
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: T0 })
+  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(200) })
+
+  const data = await handleDashboard({ db, configs: CONFIGS, now: at(9 * 86400) })
+  const csa = data.subjects.find((s) => s.config.subject === 'ap_csa')
+  assert.equal(csa.last_answer.at, at(200), 'the parent has to be able to see WHEN he last worked')
+  assert.equal(csa.last_answer.days, 9)
+  assert.ok(csa.pace, 'and the pace measurement, whether or not it is bad enough to advise on')
+  assert.ok(Array.isArray(csa.open_gaps), 'and the open gaps with their ages, which nothing rendered at all')
+  assert.ok(Array.isArray(csa.unfinished_sittings))
+
+  const empty = data.subjects.find((s) => s.config.subject === 'ap_precalc')
+  assert.equal(empty.last_answer, null, 'no answers at all is null, not a fabricated date')
 })
