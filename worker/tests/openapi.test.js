@@ -6,6 +6,14 @@
 //   "object schema missing properties"
 // Both cost a round trip through the GPT editor to discover, so they are checked
 // here instead.
+//
+// The second job of this file is the doc-vs-code contract. gpt-instructions.md is
+// the LIVE tutor's conduct, and a false sentence in it reaches a fifteen-year-old
+// with nothing in between: no runtime check can catch "a mean of 82%" written
+// about the exam whose bar is 70. So the instructions are treated as an artefact
+// under test — every field name they cite has to exist, every field the student
+// must hear about has to be cited, and the per-subject thresholds may not be
+// recited at all, because the server writes them from the config.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -14,9 +22,11 @@ import { DatabaseSync } from 'node:sqlite'
 import worker from '../src/index.js'
 import { handleMockStart } from '../src/api.js'
 import { makeDb } from '../src/db.js'
+import { grade, MODEL_GRADED } from '../src/grade.js'
 
 const SPEC = JSON.parse(readFileSync(new URL('../openapi.json', import.meta.url), 'utf8'))
 const ROUTER = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
+const INSTRUCTIONS = readFileSync(new URL('../gpt-instructions.md', import.meta.url), 'utf8')
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url), 'utf8'))
 const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', import.meta.url), 'utf8'))
 
@@ -195,6 +205,143 @@ test('the shared parameters block is gone, so no one can reintroduce a ref', () 
   assert.equal(SPEC.components.parameters, undefined)
 })
 
+// --- gpt-instructions.md against the schema ----------------------------------
+//
+// The instructions are the GPT's conduct and the schema is its only contract, so
+// a sentence about a field that does not exist is a live instruction to do
+// something impossible, and a field the student must hear about that no sentence
+// mentions is simply never surfaced. Both failed in production: `advisories` was
+// described nowhere and read out never.
+
+/** Every name the schema actually defines: fields, query parameters, enum values, operations. */
+function schemaVocabulary() {
+  // `null` and the booleans are values the instructions have to be able to name.
+  const names = new Set(['null', 'true', 'false'])
+  for (const [, node] of walk(SPEC)) {
+    if (node.properties) for (const k of Object.keys(node.properties)) names.add(k)
+    if (Array.isArray(node.enum)) for (const v of node.enum) if (typeof v === 'string') names.add(v)
+    if (typeof node.operationId === 'string') names.add(node.operationId)
+    if (node.in === 'query' && typeof node.name === 'string') names.add(node.name)
+  }
+  return names
+}
+
+/**
+ * Identifiers the instructions quote in backticks.
+ *
+ * The convention the file states about itself: backticks are for a field, a query
+ * parameter or an operation, and for nothing else. That is what makes this check
+ * possible at all — prose in backticks would have to be allow-listed one phrase
+ * at a time, and the allow-list is exactly where a stale field name would hide.
+ */
+function backtickedIdentifiers(md) {
+  const found = new Set()
+  for (const [, span] of md.matchAll(/`([^`\n]+)`/g)) {
+    for (const token of span.split(/[^A-Za-z0-9_]+/)) {
+      // Lower-camel or snake only: PASTE_STUDENT_KEY is a placeholder, not a field.
+      if (/^[a-z][a-zA-Z0-9_]*$/.test(token)) found.add(token)
+    }
+  }
+  return found
+}
+
+test('every field the instructions name in backticks exists in the schema', () => {
+  const vocabulary = schemaVocabulary()
+  const unknown = [...backtickedIdentifiers(INSTRUCTIONS)].filter((t) => !vocabulary.has(t)).sort()
+  assert.deepEqual(
+    unknown, [],
+    `gpt-instructions.md tells the GPT to read fields the schema does not define: ${unknown.join(', ')}. ` +
+      'Backticks in that file are for field, parameter and operation names only — quote anything else.',
+  )
+})
+
+/**
+ * Fields whose absence from the instructions means the student is never told.
+ *
+ * Each one carries a truth that no other field carries, so a GPT that has never
+ * been told the field exists cannot recover it: `advisories` is the only place an
+ * unscored sitting resurfaces, `basis` the only reason a mock did not count,
+ * `what_100_means` the only per-subject statement of the standard.
+ */
+const MUST_BE_IN_THE_INSTRUCTIONS = [
+  'advisories',        // an unscored proctored sitting, and the burnout guard
+  'what_100_means',    // the standard, written per subject from the config
+  'criteria',          // the full bar, and whether a check was measured at all
+  'next_thing_blocking',
+  'counted',           // whether a mock can move readiness
+  'composite_pct',     // null on an unscored sitting — never a zero
+  'basis',             // why it was, or was not, scored
+  'timing',            // the section's real time budget, read aloud
+  'rules',
+  'graded',            // false means no verdict was reached
+  'graded_by',         // which of the three no-verdict reasons applies
+  'correct',           // null is not "wrong"
+  'note',
+  'explanation',
+  'lesson_missing',    // a real gap with no written material
+  'status',
+]
+
+test('every field the student depends on is named in the instructions', () => {
+  // Matched against the BACKTICKED names, not raw text: "correctly" contains
+  // "correct" and "ungraded" contains "graded", so a substring search would pass
+  // on prose that never tells the GPT the field exists.
+  const named = backtickedIdentifiers(INSTRUCTIONS)
+  const missing = MUST_BE_IN_THE_INSTRUCTIONS.filter((f) => !named.has(f))
+  assert.deepEqual(
+    missing, [],
+    `the server sends these and gpt-instructions.md never mentions them, so the student never hears them: ${missing.join(', ')}`,
+  )
+})
+
+/**
+ * Thresholds that differ between the two exams, and so may never be recited.
+ *
+ * The instructions used to state CSA's bar — a mean of 82%, no sitting below 78%,
+ * every unit above 75% — as if it were the standard. Precalculus is judged at 70,
+ * 65 and 65, so the GPT was stating a false standard for one of the two exams
+ * every time it explained itself. handleStatus writes `what_100_means` from the
+ * subject's own config; the instructions must send the model there instead.
+ */
+const PER_SUBJECT_THRESHOLDS = [
+  'composite_mean_min', 'composite_floor_min', 'mcq_overall_min', 'per_unit_min',
+  'dominant_practice_min', 'other_practice_min', 'no_calc_min', 'calc_min', 'frq_min_pct',
+]
+
+test('the instructions recite no per-subject threshold, because the two exams do not share them', () => {
+  const recited = []
+  for (const config of [CSA, PRECALC]) {
+    for (const key of PER_SUBJECT_THRESHOLDS) {
+      const value = config.readiness[key]
+      if (value == null) continue
+      if (new RegExp(`\\b${value}\\s*%`).test(INSTRUCTIONS)) {
+        recited.push(`${value}% (${config.subject}.readiness.${key})`)
+      }
+    }
+  }
+  assert.deepEqual(
+    recited, [],
+    `gpt-instructions.md states a threshold the config owns: ${recited.join(', ')}. ` +
+      'These differ per exam, so a recited number is false for the other one — have the GPT read what_100_means and criteria.',
+  )
+})
+
+test('the summary status and the full report describe every shared field identically', () => {
+  // Two copies exist because ChatGPT is only trusted to resolve the $refs already
+  // shipped and proven in the builder; the copies are pinned to each other here
+  // so the /status report can never describe `advisories` differently from the
+  // summary attached to every other response.
+  const summary = SPEC.components.schemas.Status.properties
+  const report = SPEC.components.responses.Status.content['application/json'].schema.properties
+  for (const [field, schema] of Object.entries(summary)) {
+    assert.deepEqual(report[field], schema, `status.${field} is described differently in the two Status schemas`)
+  }
+  assert.deepEqual(
+    Object.keys(report), [...Object.keys(summary), 'criteria', 'what_100_means'],
+    'the full report is the summary plus criteria and what_100_means, in that order',
+  )
+})
+
 // --- the schema against the bodies the router actually returns --------------
 //
 // The schema is the GPT's ONLY contract. Where it disagrees with the router the
@@ -299,43 +446,45 @@ function contractProblems(value, schema, where) {
   return []
 }
 
-withSeed('every field the router returns is declared, and every null field is declared nullable', async () => {
-  const env = freshEnv()
-  const problems = []
-  /** Check one real 200 body against the response schema the operation advertises. */
-  const check = (response, res, where) => {
+/**
+ * Drive the real router through every operation and both grading paths, and
+ * return each 200 body tagged with the response schema that documents it.
+ *
+ * Shared by the tests below so the schema, the descriptions and the instructions
+ * are all judged against the SAME real bodies rather than against three
+ * hand-written fixtures that can each drift on their own.
+ */
+async function realResponses(env) {
+  const seen = []
+  /** Record one real 200 body against the response schema its operation advertises. */
+  const record = (response, op, res, where) => {
     assert.equal(res.status, 200, `${where} did not succeed: ${JSON.stringify(res.body)}`)
-    problems.push(...contractProblems(res.body, responseSchema(response), where))
+    seen.push({ response, op, where, body: res.body })
+    return res.body
   }
 
   // CSA: keyed multiple choice, graded mechanically. correct is a real boolean.
-  const q = await call(env, '/next', { s: 'ap_csa' })
-  check('Next', q, 'getNext(ap_csa)')
-  const logged = await call(env, '/log', { s: 'ap_csa', v: q.body.serve, a: 'B' })
-  check('Log', logged, 'logAnswer(ap_csa)')
-  assert.equal(logged.body.graded, true)
+  const q = record('Next', 'getNext', await call(env, '/next', { s: 'ap_csa' }), 'getNext(ap_csa)')
+  const logged = record('Log', 'logAnswer', await call(env, '/log', { s: 'ap_csa', v: q.serve, a: 'B' }), 'logAnswer(ap_csa)')
+  assert.equal(logged.graded, true)
 
   // Precalc: all 48 items are constructed_model_graded, so 100% of answers come
   // back correct:null, graded:false, keyed:null, plus a note explaining why.
-  const pq = await call(env, '/next', { s: 'ap_precalc' })
-  check('Next', pq, 'getNext(ap_precalc)')
-  const plogged = await call(env, '/log', { s: 'ap_precalc', v: pq.body.serve, a: '3' })
-  check('Log', plogged, 'logAnswer(ap_precalc)')
-  assert.equal(plogged.body.correct, null, 'the shape the schema has to survive')
-  assert.equal(plogged.body.graded, false)
-  assert.ok(plogged.body.note, 'the server explains that this was not mechanically graded')
+  const pq = record('Next', 'getNext', await call(env, '/next', { s: 'ap_precalc' }), 'getNext(ap_precalc)')
+  const plogged = record('Log', 'logAnswer', await call(env, '/log', { s: 'ap_precalc', v: pq.serve, a: '3' }), 'logAnswer(ap_precalc)')
+  assert.equal(plogged.correct, null, 'the shape the schema has to survive')
+  assert.equal(plogged.graded, false)
+  assert.ok(plogged.note, 'the server explains that this was not mechanically graded')
 
-  check('Status', await call(env, '/status', { s: 'ap_csa' }), 'getStatus')
+  record('Status', 'getStatus', await call(env, '/status', { s: 'ap_csa' }), 'getStatus')
 
   // A Precalc mock: nothing in it can be mechanically scored, so the composite
   // is computed over a subset and `scored`/`ungraded` are what explain the 0.
-  const mock = await call(env, '/mock/start', { s: 'ap_precalc', sec: 'I', src: 'bank' })
-  check('MockStart', mock, 'startMock')
-  const mq = await call(env, '/next', { s: 'ap_precalc', m: mock.body.mock })
+  const mock = record('MockStart', 'startMock', await call(env, '/mock/start', { s: 'ap_precalc', sec: 'I', src: 'bank' }), 'startMock')
+  const mq = await call(env, '/next', { s: 'ap_precalc', m: mock.mock })
   await call(env, '/log', { s: 'ap_precalc', v: mq.body.serve, a: 'some work' })
-  const submitted = await call(env, '/mock/submit', { s: 'ap_precalc', m: mock.body.mock })
-  check('MockSubmit', submitted, 'submitMock')
-  assert.equal(submitted.body.scored, 0, 'nothing in a Precalc sitting can be graded mechanically')
+  const submitted = record('MockSubmit', 'submitMock', await call(env, '/mock/submit', { s: 'ap_precalc', m: mock.mock }), 'submitMock')
+  assert.equal(submitted.scored, 0, 'nothing in a Precalc sitting can be graded mechanically')
 
   // The teaching interrupt: two distinct misses on one topic returns a lesson
   // instead of a question, which is a different shape under the same schema —
@@ -355,12 +504,135 @@ withSeed('every field the router returns is declared, and every null field is de
       seconds: 30, hints_used: 0, conditions: 'cold', mock_id: null,
     })
   }
-  const lesson = await call(env, '/next', { s: 'ap_csa' })
-  check('Next', lesson, 'getNext(lesson)')
-  assert.equal(lesson.body.type, 'lesson', 'two misses on one topic must interrupt with a lesson')
-  check('Taught', await call(env, '/taught', { s: 'ap_csa', t: topic }), 'markTaught')
+  const lesson = record('Next', 'getNext', await call(env, '/next', { s: 'ap_csa' }), 'getNext(lesson)')
+  assert.equal(lesson.type, 'lesson', 'two misses on one topic must interrupt with a lesson')
+  record('Taught', 'markTaught', await call(env, '/taught', { s: 'ap_csa', t: topic }), 'markTaught')
 
+  return seen
+}
+
+withSeed('every field the router returns is declared, and every null field is declared nullable', async () => {
+  const problems = []
+  for (const { response, where, body } of await realResponses(freshEnv())) {
+    problems.push(...contractProblems(body, responseSchema(response), where))
+  }
   assert.deepEqual(problems, [], `the GPT is told something the server does not do:\n${problems.join('\n')}`)
+})
+
+const hasText = (v) => typeof v === 'string' && v.trim() !== ''
+
+/**
+ * Every emitted field whose schema says nothing about what it means.
+ *
+ * A description is not decoration: it is the only place the GPT is told that a
+ * null composite is "not scored" rather than zero, or that an advisory has to be
+ * read aloud. `advisories` shipped as the one undescribed field in the whole
+ * schema, and the GPT duly never mentioned it — the round-2 fix that made an
+ * unscored sitting visible reached the student nowhere. So an emitted field with
+ * no description is a defect, checked against real bodies so the requirement
+ * lands on the fields that actually reach the model.
+ */
+function descriptionProblems(value, schema, where) {
+  const s = deref(schema)
+  const problems = hasText(s.description) ? [] : [where]
+  if (Array.isArray(value)) {
+    const items = deref(s.items ?? {})
+    // Scalar entries carry the array's own description; object entries need theirs.
+    for (const [i, v] of value.entries()) {
+      if (v !== null && typeof v === 'object') problems.push(...descriptionProblems(v, items, `${where}[${i}]`))
+    }
+  } else if (value !== null && typeof value === 'object') {
+    for (const [k, v] of Object.entries(value)) {
+      if (s.properties?.[k]) problems.push(...descriptionProblems(v, s.properties[k], `${where}.${k}`))
+    }
+  }
+  return problems
+}
+
+withSeed('every field the router returns carries a description the GPT can act on', async () => {
+  const problems = []
+  for (const { response, where, body } of await realResponses(freshEnv())) {
+    problems.push(...descriptionProblems(body, responseSchema(response), where))
+  }
+  assert.deepEqual(problems, [], `fields the server sends with nothing said about them:\n${problems.join('\n')}`)
+})
+
+// The claim that made this test necessary: gpt-instructions.md said "Every
+// response includes a `status` object", and handleMockStart returns none — while
+// handleStatus returns the summary at the TOP level rather than nested. Both
+// exceptions are now named in the instructions, and named exceptions rot, so the
+// paragraph naming them is compared against what the handlers really send.
+const STATUS_CLAIM = 'No nested `status`'
+
+withSeed('the responses that carry no nested status are exactly the ones the instructions except', async () => {
+  const at = INSTRUCTIONS.indexOf(STATUS_CLAIM)
+  assert.ok(at >= 0, `gpt-instructions.md no longer states which responses carry a status ("${STATUS_CLAIM}")`)
+  const paragraph = INSTRUCTIONS.slice(at).split('\n\n')[0]
+
+  const operations = Object.values(SPEC.paths).flatMap((methods) => Object.values(methods)).map((op) => op.operationId)
+  const claimed = operations.filter((op) => paragraph.includes(op)).sort()
+
+  const responses = await realResponses(freshEnv())
+  const without = [...new Set(responses.filter((r) => !('status' in r.body)).map((r) => r.op))].sort()
+
+  assert.deepEqual(
+    claimed, without,
+    'gpt-instructions.md names these operations as returning no nested status summary, but the router disagrees. ' +
+      'Whichever changed, both have to say the same thing: the GPT is told to show a status on every response.',
+  )
+})
+
+withSeed('the Precalculus warning in the instructions matches what the bank can actually be scored on', () => {
+  const env = freshEnv()
+  const claim = 'A Precalculus sitting drawn from this question bank is rubric-scored throughout'
+  const gradeable = env.sqlite
+    .prepare(`SELECT id, kind FROM items WHERE subject = 'ap_precalc'`)
+    .all()
+    .filter((r) => !MODEL_GRADED.has(r.kind))
+    .map((r) => `${r.id} (${r.kind})`)
+
+  if (gradeable.length) {
+    assert.ok(
+      !INSTRUCTIONS.includes(claim),
+      `the bank now holds mechanically gradeable Precalc items (${gradeable.join(', ')}), so the instructions ` +
+        `must stop telling him a Precalculus mock always comes back unscored`,
+    )
+  } else {
+    assert.ok(
+      INSTRUCTIONS.includes(claim),
+      'every Precalc item is rubric-scored, so a Precalc mock can never produce a composite. The instructions ' +
+        'have to warn him before he sits one, or a real 42-question effort comes back as "not scored" with no reason.',
+    )
+  }
+})
+
+
+withSeed('every lesson field the bank can leave empty is declared nullable', () => {
+  // buildLesson serves a PARTIALLY filled teaching row from whatever fields it
+  // has, and the bank ships rows with no common_mistake (CSA's source names no
+  // genuine one) and rows with no plain_idea or worked_example. Typed as a bare
+  // string, the GPT is told those always arrive — and gpt-instructions.md has it
+  // present all three, so the missing one gets filled in from memory. Unverified
+  // remediation is exactly what this system exists not to produce.
+  const env = freshEnv()
+  const lesson = SPEC.components.schemas.Lesson.properties
+  const anyContent = `(COALESCE(plain_idea, '') <> '' OR COALESCE(worked_example, '') <> '' OR COALESCE(common_mistake, '') <> '')`
+  for (const field of ['plain_idea', 'worked_example', 'common_mistake']) {
+    // Mirrors buildLesson's own rule: a row with nothing in it is not a lesson at
+    // all, so only rows that DO ship count as evidence that the field can be null.
+    const { n } = env.sqlite
+      .prepare(`SELECT count(*) n FROM teaching WHERE COALESCE(${field}, '') = '' AND ${anyContent}`)
+      .get()
+    if (!n) continue
+    assert.ok(
+      typesOf(lesson[field]).includes('null'),
+      `${n} teaching rows ship a lesson with no ${field}, so the schema must declare it nullable`,
+    )
+    assert.match(
+      lesson[field].description, /null/i,
+      `${field} can arrive null, so its description has to tell the GPT what to do then — not invent one`,
+    )
+  }
 })
 
 // --- the router's own input validation --------------------------------------
@@ -486,4 +758,77 @@ test('a full sitting reports both section budgets', async () => {
   for (const subject of Object.keys(SUBJECTS)) {
     assert.equal(await minutesFor(subject, 'full'), EXAM_MINUTES[subject].full, `${subject} full sitting timing`)
   }
+})
+
+// --- the answer form the instructions ask for, against the real grader --------
+//
+// The instructions used to tell the GPT to "ask him for a single letter" after an
+// unparsed answer. On the shipped items where one option's TEXT is a single
+// letter, a bare letter is precisely the ambiguous form the grader declines: 'B'
+// can mean the option labelled B or the option whose text reads B, and grade.js
+// refuses to guess rather than mark a right answer wrong. So the instruction
+// prescribed the one shape that cannot work, on exactly the items that need it.
+//
+// The form the instructions now teach is checked against the grader itself, on
+// every colliding item the seed actually contains.
+const MARKED_FORM = (letter) => `choice ${letter}`
+
+/** Items where a bare letter is genuinely ambiguous, drawn from the shipped bank. */
+function letterCollisions(sqlite) {
+  const out = []
+  const rows = sqlite.prepare(`SELECT id, kind, answer, options_json FROM items WHERE options_json IS NOT NULL`).all()
+  for (const row of rows) {
+    let options
+    try { options = JSON.parse(row.options_json) } catch { continue }
+    if (!options || typeof options !== 'object') continue
+    const labels = new Set(Object.keys(options).map((l) => l.toUpperCase()))
+    for (const [label, text] of Object.entries(options)) {
+      if (typeof text !== 'string') continue
+      const asLetter = text.trim().toUpperCase()
+      // A collision needs the text to name a letter that is a real label on this
+      // item, and a DIFFERENT one from the option's own label. 'e' as the text of
+      // option D on a four-option item names nothing, so it is not ambiguous.
+      if (!/^[A-E]$/.test(asLetter)) continue
+      if (!labels.has(asLetter) || asLetter === label.toUpperCase()) continue
+      out.push({ item: { kind: row.kind, answer: row.answer, options }, id: row.id, letter: asLetter })
+    }
+  }
+  return out
+}
+
+withSeed('the answer form the instructions ask for is the one the grader can actually read', () => {
+  const env = freshEnv()
+  const collisions = letterCollisions(env.sqlite)
+
+  assert.ok(
+    collisions.length,
+    'no shipped item collides a bare letter with an option label any more. The instructions warn him about this ' +
+      'case, so if the bank really has stopped containing it, revisit that paragraph rather than deleting this test.',
+  )
+
+  for (const { item, id, letter } of collisions) {
+    // The shape that fails, and why the instruction to send "just the letter" was wrong.
+    assert.equal(
+      grade(item, letter).graded_by, 'unparsed',
+      `${id}: a bare "${letter}" is ambiguous here, so the grader must decline it rather than score it`,
+    )
+    // The shape gpt-instructions.md prescribes instead.
+    const marked = grade(item, MARKED_FORM(letter))
+    assert.equal(
+      marked.graded_by, 'server',
+      `${id}: gpt-instructions.md tells him to write "${MARKED_FORM(letter)}", and the grader did not read it`,
+    )
+    assert.equal(marked.picked, letter, `${id}: "${MARKED_FORM(letter)}" must resolve to ${letter}`)
+  }
+
+  // And the instructions have to be teaching that exact form, not some other one.
+  assert.ok(
+    INSTRUCTIONS.includes(`"${MARKED_FORM('B')}"`),
+    `gpt-instructions.md must tell him the marked form verbatim, e.g. "${MARKED_FORM('B')}"`,
+  )
+  assert.ok(
+    SPEC.components.responses.Log.content['application/json'].schema.properties.graded_by.description
+      .includes(MARKED_FORM('B')),
+    'the unparsed field description must recommend the same form the instructions do',
+  )
 })

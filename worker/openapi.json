@@ -172,7 +172,7 @@
       "get": {
         "operationId": "getStatus",
         "summary": "Full readiness report",
-        "description": "Returns every readiness criterion with its evidence, plus what 100 percent would require. Use this when the student or parent asks how it is going, or how ready he is for the exam. Report the numbers as given; never round up or reassure past them.",
+        "description": "Returns every readiness criterion with its evidence, plus what 100 percent would require for this subject. Use this when the student or parent asks how it is going. Report the numbers as given; never round up, reassure past them, or quote thresholds from memory.",
         "parameters": [
           {
             "name": "s",
@@ -208,7 +208,7 @@
       "get": {
         "operationId": "startMock",
         "summary": "Begin a proctored mock exam",
-        "description": "Opens a timed mock sitting. Only answers logged inside a mock can move readiness. Read the returned rules aloud, then pass the mock id to every getNext and stop giving hints entirely until the mock is submitted.",
+        "description": "Opens a timed mock sitting. Only answers logged inside a mock can move readiness. Read the returned rules aloud, give him the timing as his budget, then pass the mock id to every getNext and stop giving hints entirely until the mock is submitted.",
         "parameters": [
           {
             "name": "sec",
@@ -271,7 +271,7 @@
       "get": {
         "operationId": "submitMock",
         "summary": "Finish and score a mock exam",
-        "description": "Closes the sitting and scores it from the answers logged against it. Call this once the student has finished or run out of time. The returned composite is multiple choice only.",
+        "description": "Closes the sitting and scores it from the answers logged against it. Call this once the student has finished or run out of time. The composite is multiple choice only, and is null when the sitting could not be scored at all.",
         "parameters": [
           {
             "name": "m",
@@ -320,32 +320,40 @@
         "description": "Where the student stands right now.",
         "properties": {
           "subject": {
-            "type": "string"
+            "type": "string",
+            "description": "Which course this summary is about, spelled out. Two exams are in progress, so always say which one a number belongs to."
           },
           "readiness_pct": {
             "type": "integer",
-            "description": "0 to 100. Only reaches 100 when every criterion holds at once."
+            "description": "0 to 100. Only reaches 100 when every criterion holds at once, and stays 0 while there is no qualifying mock evidence to measure, however much drilling has been done."
           },
           "ready": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "True only when every criterion is met. While this is false, never tell him he is ready."
           },
           "goal": {
-            "type": "string"
+            "type": "string",
+            "description": "The target grade for this course, as its config sets it."
           },
           "exam_date": {
-            "type": "string"
+            "type": "string",
+            "description": "The exam date, as yyyy-mm-dd."
           },
           "days_to_exam": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Whole calendar days from today to the exam, counted in the exam's own time zone."
           },
           "coverage": {
-            "type": "string"
+            "type": "string",
+            "description": "Exam-tested topics attempted at least once, already formatted. Having attempted a topic is not the same as being ready on it."
           },
           "questions_answered": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Every answer logged for this course, drills included. This number cannot move readiness on its own."
           },
           "proctored_mocks": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Proctored sittings that produced a score. A sitting recorded but not scored is absent from this count — advisories says so when there is one."
           },
           "next_thing_blocking": {
             "type": [
@@ -356,12 +364,14 @@
           },
           "open_gaps": {
             "type": "array",
+            "description": "Topics with a concept gap still open: two different questions missed, and not yet answered right unaided since the lesson.",
             "items": {
               "type": "string"
             }
           },
           "advisories": {
             "type": "array",
+            "description": "Things the server needs the student told: a proctored sitting recorded but not scored and why, or a score slide across the window that means fatigue rather than lost knowledge. Read every entry aloud whenever the array is not empty.",
             "items": {
               "type": "string"
             }
@@ -370,25 +380,40 @@
       },
       "Lesson": {
         "type": "object",
-        "description": "A short explanation to deliver before the next question.",
+        "description": "A short explanation to deliver before the next question. The three content fields are independent: a topic may have written material for some and not others.",
         "properties": {
           "topic": {
-            "type": "string"
+            "type": "string",
+            "description": "The topic id. Pass it to markTaught once you have delivered the lesson."
           },
           "why_now": {
-            "type": "string"
+            "type": "string",
+            "description": "The evidence that triggered this lesson. Tell him, so the interruption does not look arbitrary."
           },
           "plain_idea": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The idea in plain language. Say it briefly and in your own words. Null when the bank has none written: skip that part and say so — do NOT supply one from memory, because this material is verified and yours is not."
           },
           "worked_example": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "One worked example. Walk him through it rather than pasting it. Null when the bank has none: skip it and say so rather than inventing one."
           },
           "common_mistake": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The trap that usually catches students here. Null when the bank names no genuine one, which is common: skip it. Never invent a trap — a made-up one teaches him to watch for something that is not there."
           },
           "then": {
-            "type": "string"
+            "type": "string",
+            "description": "What happens next, already worded for him: the re-test comes with no hints."
           }
         }
       }
@@ -404,6 +429,7 @@
               "properties": {
                 "type": {
                   "type": "string",
+                  "description": "question or lesson. These are the only two shapes; there is no separate type for a missing lesson.",
                   "enum": [
                     "question",
                     "lesson"
@@ -414,7 +440,8 @@
                   "description": "Pass this back to logAnswer. Valid once."
                 },
                 "stem": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The question as written. Show it as it stands, with the options, and nothing about the answer."
                 },
                 "options": {
                   "type": [
@@ -424,24 +451,30 @@
                   "description": "Multiple choice options keyed by letter. Null on a constructed-response item, which the student answers in his own words.",
                   "properties": {
                     "A": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "The text of option A. Show it labelled A, exactly as written."
                     },
                     "B": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "The text of option B. Show it labelled B, exactly as written."
                     },
                     "C": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "The text of option C. Show it labelled C, exactly as written."
                     },
                     "D": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "The text of option D. Show it labelled D, exactly as written."
                     }
                   }
                 },
                 "kind": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "mcq means a lettered choice. A constructed or model-graded item is answered in his own words; model-graded work is scored against a rubric and cannot move readiness until that grader is calibrated."
                 },
                 "topic": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The topic id this question tests."
                 },
                 "calc_allowed": {
                   "type": [
@@ -465,7 +498,8 @@
                   }
                 },
                 "note": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Present when there is something to say beyond the question itself, such as a gap with no lesson written for it. Read it to him."
                 },
                 "status": {
                   "$ref": "#/components/schemas/Status"
@@ -495,7 +529,8 @@
                   "description": "True when the server reached a mechanical verdict. False for model-graded items, unkeyed items, and answers it could not read (graded_by unparsed), where correct is null and note explains why."
                 },
                 "blank": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "description": "True when he left it empty. On a keyed item a blank is graded wrong, exactly as an unfilled bubble is on the exam."
                 },
                 "keyed": {
                   "type": [
@@ -506,7 +541,7 @@
                 },
                 "graded_by": {
                   "type": "string",
-                  "description": "server, model, unkeyed, or unparsed. unparsed means the response could not be read as one answer (\"B or C\"): it is NOT wrong, nothing was scored, and the serve is spent — ask for a single letter on the next question.",
+                  "description": "server, model, unkeyed, or unparsed. unparsed means the response could not be read as one answer: it is NOT wrong, nothing was scored, and the serve is spent — on the next one ask for a marked letter, \"choice B\", not a bare \"B\".",
                   "enum": [
                     "server",
                     "model",
@@ -522,7 +557,8 @@
                   "type": [
                     "string",
                     "null"
-                  ]
+                  ],
+                  "description": "The item's own explanation. Show it after a wrong answer, and after anything the server could not grade."
                 },
                 "gap_closed": {
                   "type": [
@@ -533,7 +569,7 @@
                 },
                 "note": {
                   "type": "string",
-                  "description": "Present when the answer was not mechanically graded. Read it to the student instead of a verdict."
+                  "description": "Present when the answer was not mechanically graded, or when it landed outside the sitting it was served in. Read it to the student instead of a verdict."
                 },
                 "status": {
                   "$ref": "#/components/schemas/Status"
@@ -552,13 +588,16 @@
               "description": "Confirmation that the topic now awaits an unaided re-test.",
               "properties": {
                 "ok": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "description": "True when the lesson was recorded against an open gap. A topic with no open gap is refused instead, so this is never false."
                 },
                 "topic": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The topic that now awaits an unaided re-test."
                 },
                 "next": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "What happens next, already worded for him. Read it out."
                 },
                 "status": {
                   "$ref": "#/components/schemas/Status"
@@ -577,31 +616,40 @@
               "description": "Every criterion with its evidence, plus what 100 percent requires.",
               "properties": {
                 "subject": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Which course this summary is about, spelled out. Two exams are in progress, so always say which one a number belongs to."
                 },
                 "readiness_pct": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "0 to 100. Only reaches 100 when every criterion holds at once, and stays 0 while there is no qualifying mock evidence to measure, however much drilling has been done."
                 },
                 "ready": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "description": "True only when every criterion is met. While this is false, never tell him he is ready."
                 },
                 "goal": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The target grade for this course, as its config sets it."
                 },
                 "exam_date": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The exam date, as yyyy-mm-dd."
                 },
                 "days_to_exam": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "Whole calendar days from today to the exam, counted in the exam's own time zone."
                 },
                 "coverage": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "Exam-tested topics attempted at least once, already formatted. Having attempted a topic is not the same as being ready on it."
                 },
                 "questions_answered": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "Every answer logged for this course, drills included. This number cannot move readiness on its own."
                 },
                 "proctored_mocks": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "Proctored sittings that produced a score. A sitting recorded but not scored is absent from this count — advisories says so when there is one."
                 },
                 "next_thing_blocking": {
                   "type": [
@@ -612,36 +660,43 @@
                 },
                 "open_gaps": {
                   "type": "array",
+                  "description": "Topics with a concept gap still open: two different questions missed, and not yet answered right unaided since the lesson.",
                   "items": {
                     "type": "string"
                   }
                 },
                 "advisories": {
                   "type": "array",
+                  "description": "Things the server needs the student told: a proctored sitting recorded but not scored and why, or a score slide across the window that means fatigue rather than lost knowledge. Read every entry aloud whenever the array is not empty.",
                   "items": {
                     "type": "string"
                   }
                 },
                 "criteria": {
                   "type": "array",
+                  "description": "Every readiness requirement, met or not, with its evidence. Walk him through the ones not met.",
                   "items": {
                     "type": "object",
                     "description": "One readiness requirement.",
                     "properties": {
                       "requirement": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "The requirement and its threshold, as this subject's config defines it. The two courses do not share thresholds."
                       },
                       "met": {
-                        "type": "boolean"
+                        "type": "boolean",
+                        "description": "False both when a requirement is genuinely unmet and when nothing has been measured against it yet. evidence is what tells the two apart, so read it before calling anything a failure."
                       },
                       "evidence": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "The measured value, or why there is nothing to measure. Quote it rather than paraphrasing it."
                       }
                     }
                   }
                 },
                 "what_100_means": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "What 100 percent requires for THIS subject, written from its own config. Read this sentence out rather than reciting thresholds from memory: the two exams have different means, floors and per-unit bars."
                 }
               }
             }
@@ -654,22 +709,27 @@
           "application/json": {
             "schema": {
               "type": "object",
-              "description": "Mock id, timing, and the rules to read aloud.",
+              "description": "Mock id, timing, and the rules to read aloud. This is the one response with no status summary in it.",
               "properties": {
                 "mock": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "The sitting id. Pass it as m on every getNext until the mock is submitted."
                 },
                 "section": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The section being sat: I, II or full."
                 },
                 "source": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "official for College Board material, bank for this question bank. Readiness needs an official sitting inside the judged window."
                 },
                 "timing": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The real time budget for this section, in minutes. Tell him the number and hold him to it: a sitting he does not finish cannot be scored."
                 },
                 "rules": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "The conditions a mock has to be run under. Read this aloud before the first question."
                 }
               }
             }
@@ -685,7 +745,8 @@
               "description": "The composite score and what it is based on.",
               "properties": {
                 "mock": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "The sitting that was just closed."
                 },
                 "composite_pct": {
                   "type": [
@@ -718,10 +779,12 @@
                   "description": "Answers excluded from composite_pct because they need model or human grading. Say how many when reporting the score."
                 },
                 "blanks": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "Answers left empty plus questions never reached. Both read as an unfilled bubble, and both count as wrong once the sitting is scored."
                 },
                 "basis": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "How this sitting was scored, or why it was not, in plain words. Read it out when reporting the score, and always when counted is false."
                 },
                 "status": {
                   "$ref": "#/components/schemas/Status"
