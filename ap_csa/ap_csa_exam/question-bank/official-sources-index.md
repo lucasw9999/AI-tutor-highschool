@@ -73,9 +73,13 @@ The exam format changed with the redesign (Effective Fall 2025). Apply these fil
 
 **What you get with full access:** Progress Checks, Question Bank, AP Daily videos, full secure practice exams.
 
-**Access reality:** AP Classroom is not open to self-study. Logging in without a join code gives only limited AP Daily video content — no Progress Checks, no Question Bank, no full practice exams. A join code from an AP-authorized teacher is required.
+**Access reality:** AP Classroom is not open to self-study. Logging in without a join code gives only limited AP Daily video content — no Progress Checks, no Question Bank, no full practice exams. A join code from the **AP-Course-Audit-authorized teacher of a class section he is enrolled in** is required.
 
-**How to get access:** enroll with an AP-Course-Audit-approved online provider (APEX Learning, Virtual Virginia, or similar). Full details in `../reference/question-sources-and-access.md` §"AP Classroom access reality."
+⚠️ **An exam-only registration is NOT enrolment.** Verbatim from the 2026-27 AP Coordinator's Manual Part 1: *"All students—including those in exam only sections—can access AP videos and some high-level course resources … They also must be enrolled in class sections to access the available AP Classroom resources for every AP class they're taking."* So an exam-only seat gets him the **exam**, not the **Practice Exam**. Full mechanism in `../reference/question-sources-and-access.md` §"Exam-only registration gets him a seat, not the official mock."
+
+**How to get access — in this order:**
+1. **Ask Foothill HS first, because it is free and it beats everything else:** if the school **teaches** AP CSA, enrolling in that class section produces the join code and the whole problem costs the $99 exam fee. **Still unconfirmed — it is question one to the AP Coordinator.**
+2. **Only if that is no:** enrol with an online provider whose own page promises an AP Classroom join code from its teacher. The verified shortlist, the quoted prices, the two enrolment deadlines (VHS Learning **18 Sep 2026**, UC Scout **4 Nov 2026**), and the providers to avoid are all in `../reference/question-sources-and-access.md` §"AP Classroom access reality." **This index deliberately names no provider** — it used to name two that had never been checked (one sells a half-semester course, the other requires Virginia residency), and one list is easier to keep true than two.
 
 **When you have access:** use the AP Classroom Question Bank and Progress Checks as your primary MCQ source — those are the closest available items to the real exam. Use the full secure practice exams for `practice-exams.md` Option A.
 

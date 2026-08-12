@@ -109,12 +109,49 @@ All under `https://apcentral.collegeboard.org/media/pdf/`. **2023, 2024 and 2025
 
 **Do this once, early — a Bluebook test-preview run:** target the **first week of school, September 2026**, and in any case **before the first full timed mock**. **This does not wait on the join code** — the preview is student-accessible with his own College Board account (see the section above), so run it the week school starts whether or not AP Classroom has come through. On AP CSA, free-response answers are **typed** into Bluebook with **no compiler, no autocomplete, no run button** — exam day should not be the first time you type Java into that editor. (See `frq-rubric-and-penalties.md` §7.)
 
-**How to get full access:**
+**How to get full access — two steps, in this order. Step 1 dominates step 2; do not skip it.**
 
-1. **If you're enrolled in an AP CSA class:** your teacher issues the join code automatically — just ask for it at the start of the course. This is the normal path and needs nothing extra. (It does depend on the teacher actually using AP Classroom; most do, but confirm.) **Whether this is Lucas's path is still unconfirmed** — it presumes Foothill offers the course, which nobody has verified. See the registration section below.
-2. **If you're self-studying with no class:** enroll with an AP-Course-Audit-approved online provider (e.g., APEX Learning, Virtual Virginia, or a similar CB-authorized online AP program) whose AP teacher can issue a join code.
+### Step 1 — ASK THE SCHOOL FIRST. It is free, and it beats every paid option.
 
-Either way, do this **early** — AP Classroom access is tied to a specific teacher's course section.
+**If Foothill HS teaches AP Computer Science A, the entire problem collapses to the $99 base exam fee and one join code from that teacher.** No tuition, no second school, no shopping. That outcome is so much better than every paid route below that **no money should change hands until the AP Coordinator has answered the three questions in "Exam registration" below** — and the first of those questions is exactly this one. **Whether Foothill offers AP CSA is still unconfirmed by anybody.**
+
+Ask for **two different things**, because they are not the same thing and only one of them unlocks the item bank:
+
+1. **"Does Foothill teach AP Computer Science A in 2026-27, and can Lucas enrol in that class section?"** → enrolment in an audit-authorized teacher's **class section** is what produces the join code that opens Progress Checks, the Question Bank and the **full Practice Exam**. This is the whole answer if it comes back yes.
+2. **"If Foothill does not teach it, will it still let him sit the exam as an exam-only student?"** → this secures a **seat on exam day**, which he needs regardless. It does **not** produce the item bank. See "Exam-only registration gets him a seat, not the official mock" below — that distinction is the most consequential mechanism on this page.
+
+Do this **early** either way — AP Classroom access is tied to one specific teacher's course section, so it cannot be arranged retroactively in April.
+
+### Step 2 — only if step 1 comes back no: a paid online provider that issues a join code
+
+**Verified 12 August 2026.** These are the out-of-state, full-year AP CSA providers whose **own published pages** promise what this repo actually needs: an AP Classroom join code from their teacher. **Every price below is the provider's own quoted figure as of 12 August 2026 — quoted, not verified by us, and not a total cost of attendance.**
+
+| Provider | Tuition — **the provider's own quoted figure, 12 Aug 2026** | Enrolment deadline | Does its own page promise AP Classroom? | Notes |
+|---|---|---|---|---|
+| ⭐ **VHS Learning** — **the recommended paid route** | **"Full-year AP course: $980 / per 33 week course"** plus a **"$80"** course fee → **≈ $1,060** | Fall term begins **9 Sep 2026**; 🔴 **add period closes 18 Sep 2026, 12:00 PM ET** — about five weeks out | ✅ **Explicit.** Its AP CSA page: *"Students will be expected to enroll in My AP Classroom through their VHS Learning AP course … include AP Daily Videos and unit-based Personal Progress Checks"* | The **only** provider whose own AP CSA page names My AP Classroom **and** spells out the exam step: *"Students register for AP exams through their local school or testing site as 'Exam Only' students."* Full-year against a full exam. |
+| **PA Homeschoolers** | **"Tuition: $900 2026-2027"** | Rolling — but **"some will fill up as soon as May or June,"** and some 2026-27 sections **already show "This class is FULL"** | ✅ Its handbook: *"Registration step #1: Join your online class on AP Classroom."* … *"the class 'join code' … will be provided by your teacher."* | Explicit audit claim: *"All of our AP courses are approved by the College Board through the rigorous AP Audit process."* ⚠️ Its handbook also prints **stale College Board deadlines** — see the trap below. |
+| **FlexPoint** (the paid arm of FLVS) | **"Standard Courses: $475"** per course per semester → **≈ $950/yr** | Not quoted in this pass — ask | ✅ Explicit: *"Receive your access code from your FlexPoint Virtual School teacher to join their class"*, and it tells you to *"ask for an 'exam only join code'"* | It does **not** place the exam order: *"FlexPoint … does not register students for their AP Exams."* A hosting school is still required. |
+| **UC Scout** (run by the University of California) | On Demand **"$399 per enrollment"** per semester → **≈ $798** | 🔴 **Fall enrolment closes 4 Nov 2026** | ❓ **SILENT** — nothing on its pages addresses AP Classroom. Worth exactly one phone call before paying. | ⚠️ **Its "$29" Basic tier is a trap:** *"the Basic plan does not include an instructor."* **No instructor → no join code → no item bank.** Only an instructor-led enrolment could possibly help. |
+
+> ❓ **Ask every provider this one question before any money moves — it is the only check available.**
+> ***"Are you AP Course Audit authorized for AP Computer Science A for 2026-27, and will my child receive an AP Classroom join code from your teacher?"***
+> **No provider's authorization status could be machine-verified in this pass** — checking the Course Ledger for provider authorization needs a College Board *professional* login, which nobody here has. So the claims in the table above are each provider's **own** published words, and that question is how you convert them into a commitment. Get the answer **in writing** before paying, and treat "we teach the AP curriculum" as a non-answer: the words that matter are **audit authorized** and **join code**.
+
+> ⚠️ **A provider that contradicts College Board on a deadline — treat everything else it says with the same care.** PA Homeschoolers' handbook cites **"November 15th"** and **"March 15th"** as the AP deadlines. **Both are stale.** College Board's real 2026-27 dates are **13 Nov 2026** and **12 Mar 2027** (see "Exam registration" below). **Use College Board's dates, always.** A provider's own calendar is not authority over the exam order.
+
+### ❌ Providers to NOT pursue — all verified 12 August 2026
+
+| Provider / route | Why not | Status |
+|---|---|---|
+| **Apex Learning Virtual School** — *this file used to name it* | Its AP CSA is **half a course**: *"AP Computer Science - Course A," "Credits .5," "Course Length Single Semester"* — a single semester against a full exam. Its page is also **silent on AP Classroom.** | ❌ **Removed** — it was named here on no evidence and was never checked |
+| **Virtual Virginia** — *this file used to name it* | Enrolment runs through *"The enrolling school/division counselor of record"*, and its homeschool track requires **Virginia residency**, which this family does not have. Also **silent on AP Classroom.** Its space-available window **closed 7 August 2026.** | ❌ **Removed** — same: named on no evidence, and out of reach anyway |
+| **Johns Hopkins CTY** | Offers **no AP courses at all.** This is a widespread misconception worth recording so it isn't rediscovered. | ❌ Not applicable |
+| **Stanford OHS** | *"replaced all of our AP courses with custom courses"*, and its 2026-27 application is **closed**. | ❌ Not applicable |
+| **BYU Independent Study** · **Texas Tech K-12** | Both have AP catalogues with **no computer science** in them. | ❌ Not applicable |
+| **State virtual schools** — Georgia Virtual, NC Virtual, Michigan Virtual | They will take out-of-state money, but are **all silent on AP Classroom** and mostly insert a local-school gatekeeper. Georgia Virtual disclaims exams outright: *"As an online provider, GaVS cannot administer AP exams."* | ❌ Don't pay without an AP Classroom answer in writing |
+| **UC Scout "Basic" ($29) tier** | *"the Basic plan does not include an instructor."* No teacher means no join code means no item bank — a cheap tier that buys none of the thing we are buying. | ❌ Trap — instructor-led enrolment only |
+
+**Why this section was rewritten (recorded so the mistake isn't repeated):** this file previously answered the single most consequential open risk in the project — "how does he ever get an official full-length mock?" — by naming **two providers that had never been checked**, one of which sells a **half-course** and the other of which requires **Virginia residency**. Both are silent on AP Classroom. **A provider that does not deliver a join code does not solve the problem it was named to solve.** Everything above is quoted from the providers' own pages, and where nothing could be confirmed the table says **SILENT** rather than assuming.
 
 ---
 
@@ -210,7 +247,7 @@ The book market has a lag problem: many older editions still teach inheritance, 
 4. CodingBat Java (skip Map + Functional) for method-level fluency.
 5. AP Central past FRQs (Q1/Q3/Q4 any year; Q2 post-redesign only) — plus the **2025 scored samples** (`ap25-apc-*`) for grader calibration, and the 2024/2023 sets by the exact names in the back-catalogue table above.
 6. One book: Barron's 13th (ISBN 9798349700354) or Princeton Review 9th (ISBN 9780593518410).
-7. Enroll with an AP-audit-approved online provider → get AP Classroom access.
+7. **Ask Foothill whether it teaches AP CSA — free, and it beats every paid route.** Only if the answer is no, enrol with a provider whose own page promises an AP Classroom join code (VHS Learning first; add period closes **18 Sep 2026**). See "How to get full access."
 
 **With AP Classroom access:**
 Same stack, plus use the AP Classroom Question Bank and Progress Checks as your primary MCQ source — those are the closest to real exam items.
