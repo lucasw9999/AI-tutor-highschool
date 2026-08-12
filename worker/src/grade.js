@@ -138,7 +138,7 @@ function labelReading(response) {
 }
 
 /** The option whose value he stated, with whether he said so plainly. */
-function valueReading(response, index) {
+function valueReading(response, index, letter) {
   const canon = canonAnswer(response)
   if (!canon) return null
   // canonAnswer's trailing-period strip already ran, looking for a period at
@@ -149,7 +149,19 @@ function valueReading(response, index) {
   // it, so a verbatim option that ends in a period still matches once its
   // hedge is gone.
   const hedged = canon.replace(HEDGE_HEAD, '').replace(HEDGE_TAIL, '').replace(/\.$/, '').trim()
-  const bases = hedged && hedged !== canon ? [canon, hedged] : [canon]
+  const bases = [canon]
+  if (hedged && hedged !== canon) bases.push(hedged)
+  // A letter he decorated is a candidate VALUE as well as a label. LETTER_ONLY
+  // strips `"`, `'`, brackets and ',!?:;' off a letter but canonAnswer keeps
+  // them, and matchFragment ignores anything under three characters — so on the
+  // items where an option's TEXT is a bare letter the value reading silently
+  // vanished and the label won a confident verdict. On csa-u2-q7 (key A, option
+  // A's text is the printed character 'C') the response '"C"' was scored as a
+  // wrong pick of C, and '(A)' — option D's text — was credited. Bare 'C' and
+  // 'A' declined correctly, so one comma was the whole difference. Only a
+  // reading the label cannot own outright is offered here: a letter introduced
+  // by an unmistakable label marker ('choice B') is not a value.
+  if (letter && !bases.includes(letter)) bases.push(letter)
 
   // An option's text typed verbatim outranks every looser reading. csa-u3-q19
   // offers the option `return balance;`, and treating its leading 'return' as a
@@ -196,7 +208,10 @@ function readChoice(response, options) {
   let label = labelReading(response)
   // 'E' on a four-option item names nothing, so it is not a competing reading.
   if (label && index && !index.has(label.letter)) label = null
-  const value = index ? valueReading(response, index) : null
+  // A letter he did not introduce with a label marker is also a candidate value,
+  // so the two readings can collide and be reported instead of one guessing.
+  const candidate = label && !label.strong ? label.letter.toLowerCase() : null
+  const value = index ? valueReading(response, index, candidate) : null
 
   if (!label && !value) return { letter: null, reason: 'no_letter' }
   if (!value) return { letter: label.letter, reason: 'label' }
