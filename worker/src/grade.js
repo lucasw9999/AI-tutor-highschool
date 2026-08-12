@@ -129,10 +129,11 @@ function matchExact(text, index) {
  * used to resolve to it: on csa-ac-q60 (key C, option C 'A `NullPointerException`
  * is thrown.') the response 'thrown' was credited, and on csa-ac-q4 (key C)
  * 'prints' booked a miss as a pick of D. Neither response states an option.
- * Measured over the shipped bank, this frame-matching awarded credit on 264
- * (item, word) pairs and booked 570 misses. Requiring the word to be at least as
- * heavy as every other content word in the option keeps the answers that ARE a
- * single word — 'NullPointerException', 'Infinity' — and drops the frame.
+ * Feeding every word of every shipped option back in as a response, this
+ * frame-matching produced 225 credits and 517 misses; requiring the word to be
+ * at least as heavy as every other content word in its option leaves 45 and 158,
+ * and the words it keeps are the answers that really are one word —
+ * 'NullPointerException', 'ArithmeticException', 'Infinity'.
  */
 function matchFragment(text, index) {
   if (!text || isBareLetter(text) || text.length < 3) return null
