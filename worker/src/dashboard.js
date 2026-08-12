@@ -108,6 +108,8 @@ export function subjectSection(s) {
   <p class="note">
     A <span class="pend">·</span> means not yet measurable — there is no proctored mock evidence to judge it
     against, so it is not being reported as a failure.
+    Free response stays pending, not failing, until the grader is calibrated against an officially
+    scored College Board response — until then, 100% is not reachable no matter what every other row shows.
     Readiness reaches 100% only when every row shows ✓ at the same time.
     Answering practice questions correctly, however many, does not move this number.
   </p>
@@ -129,8 +131,9 @@ export function renderDashboard({ subjects, now }) {
 <p class="sub">Every number below is computed from recorded answers. Nothing here is asserted.</p>
 ${subjects.map((s) => subjectSection({ ...s, now })).join('')}
 <footer>
-  Generated ${esc(now)}. Free response scores are advisory and excluded from readiness
-  until the grader is calibrated against an officially scored College Board response.
+  Generated ${esc(now)}. Free-response evidence cannot count toward readiness until the grader is
+  calibrated against an officially scored College Board response.
+  Until then, 100% readiness is not reachable no matter how strong every other criterion is.
 </footer>
 </body></html>`
 }
