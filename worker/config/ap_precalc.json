@@ -1,0 +1,51 @@
+{
+  "subject": "ap_precalc",
+  "display_name": "AP Precalculus",
+  "goal": "4-5",
+  "exam_date": "2027-05-11",
+  "exam_session": "Session 1",
+  "note": "AP CSA is the day after, 2027-05-12. Plan the final week around both.",
+  "exam": {
+    "mcq_count": 42,
+    "mcq_no_calc_count": 29,
+    "mcq_no_calc_minutes": 65,
+    "mcq_calc_count": 13,
+    "mcq_calc_minutes": 40,
+    "mcq_weight": 0.625,
+    "frq_count": 4,
+    "frq_calc_minutes": 35,
+    "frq_no_calc_minutes": 35,
+    "frq_weight": 0.375,
+    "frq_types": ["Function Concepts", "Modeling Non-Periodic", "Modeling Periodic", "Symbolic Manipulation"],
+    "pace_seconds_no_calc": 134,
+    "pace_seconds_calc": 185
+  },
+  "units": ["1", "2", "3"],
+  "units_class_only": ["4"],
+  "unit_weights": {
+    "1": [30, 40],
+    "2": [27, 40],
+    "3": [30, 35]
+  },
+  "readiness": {
+    "composite_mean_min": 70,
+    "composite_floor_min": 65,
+    "max_decline_between_mocks": 5,
+    "mcq_overall_min": 68,
+    "per_unit_min": 65,
+    "no_calc_min": 65,
+    "calc_min": 65,
+    "frq_min_pct": 70,
+    "max_blanks": 1,
+    "consecutive_qualifying_mocks": 3,
+    "total_logged_mocks_min": 4,
+    "reduced_confidence_mocks_min": 3,
+    "window_span_days_min": 10,
+    "window_span_days_max": 42,
+    "freshness_days": 42,
+    "burnout_drop_points": 8,
+    "difficulty_gap_max": 7,
+    "require_official_mock": true
+  },
+  "historical_note": "4-5 rate: ~50% (2024) -> ~54% (2025) -> 58% (2026); 2026 was 5=29%, 4=29%, 3=24%, 2=11%, 1=7%. Floors are an INITIAL setting - revisit after the first three real mocks and raise rather than lower if in doubt. Unit 4 is class-only and excluded from readiness."
+}

@@ -1,0 +1,48 @@
+{
+  "subject": "ap_csa",
+  "display_name": "AP Computer Science A",
+  "goal": "5",
+  "exam_date": "2027-05-12",
+  "exam_session": "Session 2",
+  "note": "AP Precalculus is the day before, 2027-05-11.",
+  "exam": {
+    "mcq_count": 42,
+    "mcq_minutes": 90,
+    "mcq_weight": 0.55,
+    "frq_count": 4,
+    "frq_minutes": 90,
+    "frq_weight": 0.45,
+    "frq_points": { "Q1": 7, "Q2": 7, "Q3": 5, "Q4": 6 },
+    "pace_seconds_per_mcq": 129
+  },
+  "units": ["1", "2", "3", "4"],
+  "unit_weights": {
+    "1": [15, 25],
+    "2": [25, 35],
+    "3": [10, 18],
+    "4": [30, 40]
+  },
+  "practices": ["P1", "P2", "P3", "P4", "P5"],
+  "readiness": {
+    "composite_mean_min": 82,
+    "composite_floor_min": 78,
+    "max_decline_between_mocks": 5,
+    "mcq_overall_min": 80,
+    "per_unit_min": 75,
+    "dominant_practice": "P3",
+    "dominant_practice_min": 85,
+    "other_practice_min": 70,
+    "frq_min_pct": 85,
+    "max_blanks": 1,
+    "consecutive_qualifying_mocks": 3,
+    "total_logged_mocks_min": 6,
+    "reduced_confidence_mocks_min": 4,
+    "window_span_days_min": 10,
+    "window_span_days_max": 42,
+    "freshness_days": 42,
+    "burnout_drop_points": 8,
+    "difficulty_gap_max": 7,
+    "require_official_mock": true
+  },
+  "historical_note": "2026 redesigned exam: 5=25%, 4=26%, 3=15%, 2=11%, 1=23%. Distribution published; raw-to-composite conversion is NOT, so C5 is unknown and these floors stay conservative."
+}
