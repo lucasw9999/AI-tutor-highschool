@@ -1457,6 +1457,107 @@ withSeed('a section the bank cannot supply is still only as long as that section
 })
 
 // ---------------------------------------------------------------------------
+// A sitting may only be served the halves the section it is a sitting of has
+//
+// The kind filter used to look at the halves that were already FULL, and a half a
+// section does not have at all is never full — a section I sitting has no frq
+// part, so 'frq' was never in that set. The moment the bank held a free-response
+// item, a MULTIPLE CHOICE sitting could be handed one: it fills no half of the
+// paper, it is booked graded_by 'model' so nothing can mark it, and it comes off
+// the composite's numerator having stood in for nothing. Section II inverted is
+// the same defect — an mcq is not a free-response paper.
+//
+// Driven over a fabricated bank holding BOTH halves, deliberately: the point is
+// what the serve loop may draw from, and that must hold whatever the seeded bank
+// happens to contain today.
+// ---------------------------------------------------------------------------
+
+/** A CSA bank holding both halves of the exam, so a serve can pick the wrong one. */
+function ctxBothHalves(perKind = 6) {
+  return fakeDb({
+    items: ['t1', 't2'].flatMap((topic) => [
+      ...Array.from({ length: perKind / 2 }, (_, i) => ({
+        id: `${topic}-frq-${i + 1}`, subject: 'ap_csa', topic, unit: '1', practice: 'P3', kind: 'frq',
+        stem: `Write the ${topic} method (${i + 1})`, options: null,
+        answer: null, explanation: 'Sample solution.', calc_allowed: 0,
+      })),
+      ...Array.from({ length: perKind / 2 }, (_, i) => ({
+        id: `${topic}-mcq-${i + 1}`, subject: 'ap_csa', topic, unit: '1', practice: 'P3', kind: 'mcq',
+        stem: `Question ${topic}-${i + 1}`, options: { A: 'a', B: 'b', C: 'c', D: 'd' },
+        answer: 'B', explanation: `Because of ${topic}.`, calc_allowed: 0,
+      })),
+    ]),
+    topics: TOPICS,
+    teaching: TEACHING,
+  })
+}
+
+/**
+ * Hand out questions until the server refuses, WITHOUT answering them: a serve in
+ * flight is already excluded, so this walks the eligible bank without needing a
+ * grader for either half.
+ *
+ * @returns {Promise<{kinds: string[], refusal: Error|null}>}
+ */
+async function serveUntilRefused({ db, mock, subject = 'ap_csa', config = CSA, limit }) {
+  const kinds = []
+  let refusal = null
+  while (kinds.length < limit) {
+    let q
+    try {
+      q = await handleNext({ db, subject, config, now: at(kinds.length * 60), mockId: mock })
+    } catch (e) {
+      refusal = e
+      break
+    }
+    if (q.type !== 'question') continue
+    kinds.push((await db.item((await db.serve(q.serve)).item_id)).kind)
+  }
+  return { kinds, refusal }
+}
+
+test('a section I sitting is never handed a free-response question', async () => {
+  const db = ctxBothHalves()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+
+  // Section I is 42 multiple choice questions, and this bank holds 6 of them
+  // beside 6 free-response ones. Without the kind filter the paper takes all 12.
+  const { kinds, refusal } = await serveUntilRefused({ db, mock: m.mock, limit: 12 })
+  assert.deepEqual(
+    [...new Set(kinds)], ['mcq'],
+    `section I is multiple choice; a free-response question on it fills no half and cannot be marked: ${kinds}`,
+  )
+  assert.equal(kinds.length, 6, 'the whole multiple choice half of this bank, and nothing else')
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `then the serve is refused: ${refusal}`)
+  assert.match(
+    refusal.message, /all 6 exam-tested question\(s\) this bank can put on a section I paper/,
+    `and counted over what section I may draw from — the 6 free-response items were never on it: ${refusal.message}`,
+  )
+})
+
+test('a section II sitting is never handed a multiple choice question', async () => {
+  const db = ctxBothHalves()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'II', source: 'bank', config: CSA, now: T0 })
+
+  const { kinds, refusal } = await serveUntilRefused({ db, mock: m.mock, limit: 12 })
+  assert.deepEqual([...new Set(kinds)], ['frq'], `section II is free-response only: ${kinds}`)
+  assert.equal(kinds.length, CSA.exam.frq_count, 'and it is exactly as long as the section')
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `then the serve is refused: ${refusal}`)
+})
+
+test('a full sitting is handed both halves, and each only up to what the exam has of it', async () => {
+  // The other side of the same filter: `full` HAS both halves, so neither may be
+  // closed off before it is full. 4 free-response questions and no more, with the
+  // multiple choice half free to take the rest of the paper.
+  const db = ctxBothHalves()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'bank', config: CSA, now: T0 })
+
+  const { kinds } = await serveUntilRefused({ db, mock: m.mock, limit: 12 })
+  assert.equal(kinds.filter((k) => k === 'frq').length, CSA.exam.frq_count, `${kinds}`)
+  assert.equal(kinds.filter((k) => k === 'mcq').length, 6, `every mcq the bank holds is still servable: ${kinds}`)
+})
+
+// ---------------------------------------------------------------------------
 // The composite states ONE divisor, in the field and in the sentence
 //
 // `scored_out_of` is max(scored, scorable - ungraded), and the sentence that
