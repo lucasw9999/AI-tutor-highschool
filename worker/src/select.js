@@ -92,12 +92,39 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
   const testedTopics = new Set(
     [...topicMeta.entries()].filter(([, m]) => m.tested_on_exam !== 0).map(([id]) => id),
   )
-  const onExam = (it) => testedTopics.size === 0 || testedTopics.has(it.topic)
+  const isTested = (topic) => testedTopics.size === 0 || testedTopics.has(topic)
+  const onExam = (it) => isTested(it.topic)
 
-  // 1. A gap that has been taught but never re-tested cold.
-  const toRetest = gaps.filter((g) => g.taught_at && !g.cleared_at)
+  /**
+   * The servable items for ONE topic: never-asked ones when it still has any,
+   * otherwise ones whose reuse window has passed.
+   *
+   * Keyed on the topic itself, never on whether some OTHER topic still has
+   * unseen items — a topic whose whole pool has been consumed has to stay
+   * reachable, or the branch asking for it is silently skipped and the student
+   * is sent somewhere he did not need to go. Sorted by id so replaying the same
+   * history picks the same item however the bank was ordered.
+   */
+  const poolFor = (topic) => {
+    const own = unseen.filter((it) => it.topic === topic)
+    const pool = own.length ? own : fresh.filter((it) => it.topic === topic)
+    return pool.sort((a, b) => a.id.localeCompare(b.id))
+  }
+
+  // 1. A gap that has been taught but never re-tested cold. Oldest first, so a
+  //    long-open gap is not starved by a newer one. Deliberately not filtered by
+  //    exam weight: a gap opens on any topic he misses twice, and it only closes
+  //    on a cold correct answer on that same topic, so skipping class-only
+  //    topics here would leave those gaps open forever.
+  const openedAt = (g) => {
+    const t = new Date(g.opened_at).getTime()
+    return Number.isNaN(t) ? Infinity : t
+  }
+  const toRetest = gaps
+    .filter((g) => g.taught_at && !g.cleared_at)
+    .sort((a, b) => openedAt(a) - openedAt(b) || a.topic.localeCompare(b.topic))
   for (const g of toRetest) {
-    const pool = (unseen.length ? unseen : fresh).filter((it) => it.topic === g.topic)
+    const pool = poolFor(g.topic)
     if (pool.length) {
       return {
         item: pool[0],
@@ -126,12 +153,12 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
   //    outranks a weak footnote.
   const floor = config?.readiness?.per_unit_min ?? 70
   const weak = [...stats.entries()]
-    .filter(([topic, s]) => s.pct < floor && (testedTopics.size === 0 || testedTopics.has(topic)))
+    .filter(([topic, s]) => s.pct < floor && isTested(topic))
     .map(([topic, s]) => ({ topic, s, urgency: (floor - s.pct) * (1 + examWeight(topic, topicMeta)) }))
     .sort((a, b) => b.urgency - a.urgency || a.topic.localeCompare(b.topic))
 
   for (const w of weak) {
-    const pool = (unseen.length ? unseen : fresh).filter((it) => it.topic === w.topic)
+    const pool = poolFor(w.topic)
     if (pool.length) {
       return {
         item: pool[0],
@@ -143,12 +170,14 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
   }
 
   // 4. Spaced review: previously missed, correct since, and now due again.
+  //    Restricted to topics the exam asks about, so a session is not spent
+  //    reviewing material the readiness score deliberately ignores.
   const due = [...stats.entries()]
-    .filter(([, s]) => s.misses > 0 && s.last_ts && ageDays(s.last_ts, now) >= reviewInterval(s.streak))
+    .filter(([topic, s]) => isTested(topic) && s.misses > 0 && s.last_ts && ageDays(s.last_ts, now) >= reviewInterval(s.streak))
     .sort((a, b) => ageDays(b[1].last_ts, now) - ageDays(a[1].last_ts, now) || a[0].localeCompare(b[0]))
 
   for (const [topic, s] of due) {
-    const pool = (unseen.length ? unseen : fresh).filter((it) => it.topic === topic)
+    const pool = poolFor(topic)
     if (pool.length) {
       return {
         item: pool[0],
@@ -159,14 +188,22 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
     }
   }
 
-  // 5. Keep moving through the bank.
-  const rest = (unseen.length ? unseen : fresh).filter(onExam)
-  const pool = rest.length ? rest : unseen.length ? unseen : fresh
+  // 5. Keep moving through the bank. An on-exam question he answered long enough
+  //    ago to have forgotten beats a never-asked class-only one, or the exam
+  //    filter above evaporates the moment every on-exam item has been seen once.
+  //    `fresh` is non-empty here, checked above, so this always finds a pool.
+  const pool = [unseen.filter(onExam), fresh.filter(onExam), unseen, fresh].find((p) => p.length)
   const pick = [...pool].sort((a, b) => examWeight(b.topic, topicMeta) - examWeight(a.topic, topicMeta) || a.id.localeCompare(b.id))[0]
+  // Only claim he is at every floor when that is true. Branch 3 may have found a
+  // topic below its floor and merely been unable to serve it, and this sentence
+  // is shown to the student verbatim.
+  const stranded = weak[0]
   return {
     item: pick,
     priority: 'breadth',
     conditions: 'cold',
-    reason: `Everything is at or above its floor, so this is fresh ground on ${pick.topic}.`,
+    reason: stranded
+      ? `${stranded.topic} is at ${stranded.s.pct.toFixed(0)}%, below the ${floor}% this subject needs, but it has no questions left that you have not just answered — so this is fresh ground on ${pick.topic} in the meantime.`
+      : `Everything is at or above its floor, so this is fresh ground on ${pick.topic}.`,
   }
 }
