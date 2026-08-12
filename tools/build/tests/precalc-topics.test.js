@@ -6,6 +6,8 @@ import { parseAll as parsePrecalcItems } from '../parse-precalc.js'
 import { compile, summary } from '../build.js'
 
 const read = (f) => readFileSync(f, 'utf8')
+const U1 = 'ap_precalc/study-packs/unit-1-polynomial-rational.md'
+const U4 = 'ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md'
 
 test('all four heading conventions are recognised', () => {
   const text = [
@@ -348,22 +350,55 @@ test('an empty subject is a build ERROR, so it can never hide behind a total', (
 })
 
 test('untagged precalc items are bucketed explicitly, not given a guessed topic', () => {
+  // RETIRED ASSERTION: this used to open with `assert.ok(buckets.length > 0)` on the
+  // real content, which was only true because every one of the 48 Precalc items was
+  // untagged. It is now false, and correctly so — build.js declares a `<unit>.0`
+  // bucket ONLY for a unit that still has an item sitting in one, because an empty
+  // bucket marked tested_on_exam is a topic no item can ever reach and so a
+  // permanent cap on coverage. The bucketing behaviour itself is what this test is
+  // about, so it is now driven by removing a tag rather than by hoping one is
+  // missing: the guarantee is that an untagged item is bucketed, never guessed.
   const r = compile()
-  const buckets = r.topics.filter((t) => t.untagged_bucket)
-  assert.ok(buckets.length > 0)
+  const missing = (f) => (f.endsWith(U1) ? read(U1).replace('<!-- topic: 1.1 -->', '') : read(f))
+  const untagged = compile(missing)
+
+  const bucketed = untagged.items.filter((i) => i.subject === 'ap_precalc' && i.topic === '1.0')
+  assert.equal(bucketed.length, 1, 'the item whose tag was removed must be bucketed, not assigned a guess')
+  const buckets = untagged.topics.filter((t) => t.untagged_bucket)
+  assert.ok(buckets.length > 0, 'and the bucket it lands in must be a declared topic row')
   for (const b of buckets) {
     assert.match(b.id, /\.0$/)
     assert.match(b.ek, /Placeholder/)
   }
-  // Every precalc item points at a real topic row.
-  const ids = new Set(r.topics.filter((t) => t.subject === 'ap_precalc').map((t) => t.id))
-  for (const it of r.items.filter((i) => i.subject === 'ap_precalc')) {
-    assert.ok(ids.has(it.topic), `item ${it.id} points at unknown topic ${it.topic}`)
+  // No bucket is invented for a unit whose every item is tagged, in either compile.
+  for (const c of [r, untagged]) {
+    for (const b of c.topics.filter((t) => t.untagged_bucket)) {
+      assert.ok(
+        c.items.some((i) => i.subject === b.subject && i.topic === b.id),
+        `bucket ${b.id} is declared but nothing lands in it`,
+      )
+    }
+  }
+
+  // Every precalc item points at a real topic row — the property the bucket exists
+  // to guarantee, checked on the real content and on the untagged one.
+  for (const c of [r, untagged]) {
+    const ids = new Set(c.topics.filter((t) => t.subject === 'ap_precalc').map((t) => t.id))
+    for (const it of c.items.filter((i) => i.subject === 'ap_precalc')) {
+      assert.ok(ids.has(it.topic), `item ${it.id} points at unknown topic ${it.topic}`)
+    }
   }
 })
 
 test('the bucket for Unit 4 is excluded from exam coverage', () => {
-  const r = compile()
+  // `if (u4)` used to guard this, which now makes it vacuous: the real content has
+  // no bucket at all. So the unit-4 bucket is provoked instead of waited for — an
+  // untagged class-only item must never invent an exam-tested topic that readiness
+  // then demands coverage of.
+  const missing = (f) => (f.endsWith(U4) ? read(U4).replace(/<!-- topic: 4\.\d+ -->/, '') : read(f))
+  const r = compile(missing)
   const u4 = r.topics.find((t) => t.untagged_bucket && t.unit === '4')
-  if (u4) assert.equal(u4.tested_on_exam, false)
+  assert.ok(u4, 'precondition: removing a unit-4 tag must produce the unit-4 bucket')
+  assert.equal(u4.tested_on_exam, false)
+  assert.deepEqual(r.unreachable.filter((u) => u.id === '4.0'), [])
 })

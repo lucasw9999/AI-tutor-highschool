@@ -19,6 +19,8 @@ import { validate } from '../validate.js'
 
 const read = (f) => readFileSync(f, 'utf8')
 const U1 = 'ap_precalc/study-packs/unit-1-polynomial-rational.md'
+/** Unit 4 is class-only, so its bucket is the one that must NOT be exam-tested. */
+const U4 = 'ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md'
 
 /** A readFile that serves the real repo, with `file`'s text rewritten in memory. */
 function patched(file, patch) {
@@ -136,10 +138,9 @@ test('B3: the exam-tested Precalc topics with no items are exactly the ones the 
   // no item of the subject can reach, the tagged ones are off that list, and no CSA
   // topic is on it.
   //
-  // Note what stays on the list even with every item tagged: build.js declares a
-  // `<unit>.0` bucket for every unit that has items, whether or not any item still
-  // lands in it, and marks the units 1-3 buckets tested_on_exam. Three permanently
-  // empty placeholder topics therefore keep Precalc coverage under 100%.
+  // The `<unit>.0` placeholder buckets are no longer on this list either, and the
+  // test below is the one that holds them off it: a bucket is declared only where an
+  // item actually lands, so an empty one cannot be counted as an unreachable topic.
   const r = compile()
   const noItems = (t) => !r.items.some((i) => i.subject === t.subject && i.topic === t.id)
   const expected = r.topics
@@ -161,7 +162,66 @@ test('B3: the exam-tested Precalc topics with no items are exactly the ones the 
   )
 })
 
-// --- B4: teaching material must actually contain something ----------------
+test('B3: a <unit>.0 bucket is declared only where an item actually lands in it', () => {
+  // A PHANTOM TOPIC IS A PERMANENT CAP ON COVERAGE. precalcUnitBuckets() used to
+  // mint a `<unit>.0` topic for every unit that had any item at all, whether or not
+  // an item still LANDED in that bucket, and marked the units 1-3 buckets
+  // tested_on_exam. That was harmless only while every Precalc item was untagged.
+  // Once the packs carried real topic tags the buckets emptied out, and 1.0, 2.0 and
+  // 3.0 became three exam-tested topics that no item can ever reach — while the
+  // coverage criterion needs every exam-tested topic attempted before it will pass.
+  // Precalc coverage was therefore capped below 100% by construction, forever, and
+  // the build reported the cap as a content gap ("8 exam-tested topic(s) have NO
+  // items") when three of the eight were the build's own invention.
+  const r = compile()
+  const phantom = r.topics
+    .filter((t) => t.untagged_bucket)
+    .filter((b) => !r.items.some((i) => i.subject === b.subject && i.topic === b.id))
+    .map((b) => `${b.id} (tested_on_exam=${b.tested_on_exam})`)
+  assert.deepEqual(
+    phantom, [],
+    'a placeholder bucket no item lands in is a topic no student can ever attempt; it must not be declared at all',
+  )
+  // Said as a fact about today's content too, so this cannot pass by the buckets
+  // merely being renamed: every Precalc item carries a real CED topic id.
+  assert.deepEqual(
+    r.items.filter((i) => i.subject === 'ap_precalc' && i.topic.endsWith('.0')).map((i) => i.id), [],
+    'precondition: the packs tag every item, so no bucket should have anything in it',
+  )
+
+  // THE BUCKET'S LEGITIMATE PURPOSE IS UNCHANGED. It exists so per-unit readiness
+  // works immediately for an item that is not topic-tagged yet, so drop one tag and
+  // the bucket must come back exactly as before: declared, marked as a bucket, and
+  // exam-tested for a unit that is on the exam.
+  const u1 = compile(patched(U1, (t) => t.replace('<!-- topic: 1.1 -->', '')))
+  assert.equal(
+    u1.items.filter((i) => i.subject === 'ap_precalc' && i.topic === '1.0').length, 1,
+    'precondition: the untagged item must fall into the 1.0 bucket',
+  )
+  const b1 = u1.topics.find((t) => t.subject === 'ap_precalc' && t.id === '1.0')
+  assert.ok(b1, 'a bucket that holds an item must still be declared, or that item has no topic row at all')
+  assert.equal(b1.untagged_bucket, true)
+  assert.equal(b1.unit, '1')
+  assert.equal(b1.tested_on_exam, true, 'unit 1 is on the exam, so items parked in its bucket must count')
+  assert.equal(u1.precalcUntagged, 1, 'and the build must still report exactly how many items are waiting')
+
+  // Unit 4 is class-only: its bucket must exist when an item lands in it and must
+  // still be excluded from the exam, or an untagged unit-4 item would invent an
+  // exam-tested topic that readiness then demands coverage of.
+  const u4 = compile(patched(U4, (t) => t.replace(/<!-- topic: 4\.\d+ -->/, '')))
+  assert.equal(
+    u4.items.filter((i) => i.subject === 'ap_precalc' && i.topic === '4.0').length, 1,
+    'precondition: the untagged unit-4 item must fall into the 4.0 bucket',
+  )
+  const b4 = u4.topics.find((t) => t.subject === 'ap_precalc' && t.id === '4.0')
+  assert.ok(b4, 'the unit-4 bucket must be declared when an item lands in it')
+  assert.equal(b4.tested_on_exam, false, 'unit 4 is class-only; its bucket may never be exam-tested')
+  assert.deepEqual(
+    u4.unreachable.filter((u) => u.id === '4.0'), [],
+    'a class-only bucket must never be reported as an unreachable exam-tested topic',
+  )
+})
+
 
 test('B4: a teaching row with every content field null is a build ERROR', () => {
   // Injected: a concept section carrying none of the three labels. teaching.js only
