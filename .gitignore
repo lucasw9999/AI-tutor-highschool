@@ -1,3 +1,7 @@
 venv/
 __pycache__/
 .DS_Store
+
+# Local worker secrets — never commit
+worker/.dev.vars
+worker/.wrangler/
