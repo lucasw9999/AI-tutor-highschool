@@ -1,6 +1,82 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { lit, unitIndex, itemRows, topicRows, buildSql } from '../to-sql.js'
+
+// --- Evidence-table guard --------------------------------------------------
+//
+// Reloading content must never write to attempts/serves/mocks/gaps, and must
+// never run a DROP/ALTER/TRUNCATE. A plain substring/regex search over the
+// generated SQL text is too coarse for this: ordinary English words like
+// "attempts", or a stem that asks "What does a DROP TABLE statement do?",
+// live inside quoted string literals and would trip a text search despite
+// writing nothing. Instead we split the SQL into individual statements
+// (quote-aware, so neither a semicolon nor a keyword embedded inside a
+// string literal can fool the split) and look only at each statement's head
+// — its verb and target table — never at the values it carries.
+
+/** Split SQL into statements on a top-level `;`, treating anything inside a
+ * single-quoted literal (where `''` is an escaped quote) as opaque. */
+function splitStatements(sql) {
+  const statements = []
+  let current = ''
+  let inString = false
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i]
+    current += c
+    if (inString) {
+      if (c === "'") {
+        if (sql[i + 1] === "'") current += sql[++i] // escaped quote: stays inside the literal
+        else inString = false
+      }
+      continue
+    }
+    if (c === "'") inString = true
+    else if (c === ';') { statements.push(current); current = '' }
+  }
+  if (current.trim()) statements.push(current)
+  return statements
+}
+
+const STATEMENT_HEAD = new RegExp(
+  '(INSERT\\s+OR\\s+(?:REPLACE|IGNORE)\\s+INTO|INSERT\\s+INTO|UPDATE|DELETE\\s+FROM|' +
+  'DROP\\s+TABLE(?:\\s+IF\\s+EXISTS)?|ALTER\\s+TABLE|TRUNCATE(?:\\s+TABLE)?)\\s+["\'`]?(\\w+)',
+  'i',
+)
+
+/** Find the verb + target table of each statement, ignoring comment lines
+ * (`-- ...`) so a comment mentioning a table name is never mistaken for a
+ * write to it. Statements with no matching head (CREATE TABLE, PRAGMA, etc.)
+ * are skipped — they neither write rows nor destroy anything. */
+function statementTargets(sql) {
+  const targets = []
+  for (const statement of splitStatements(sql)) {
+    const code = statement.split('\n').filter((line) => !/^\s*--/.test(line)).join('\n').trim()
+    if (!code) continue
+    const m = code.match(STATEMENT_HEAD)
+    if (!m) continue
+    targets.push({ verb: m[1].replace(/\s+/g, ' ').toUpperCase(), table: m[2].toLowerCase() })
+  }
+  return targets
+}
+
+/** Assert `sql` only ever writes rows to `allowedTables`, and never runs a
+ * DROP/ALTER/TRUNCATE against anything. Returns the set of tables actually
+ * written to (INSERT/UPDATE/DELETE), so callers can assert it precisely. */
+function assertOnlyWrites(sql, allowedTables) {
+  const allowed = new Set(allowedTables)
+  const written = new Set()
+  for (const { verb, table } of statementTargets(sql)) {
+    if (/^(DROP|ALTER|TRUNCATE)/.test(verb)) {
+      throw new Error(`content reload must never run ${verb} (target: ${table})`)
+    }
+    written.add(table)
+    if (!allowed.has(table)) {
+      throw new Error(`content reload must not write to ${table} (via ${verb})`)
+    }
+  }
+  return written
+}
 
 test('lit escapes embedded quotes rather than breaking the statement', () => {
   assert.equal(lit("it's"), "'it''s'")
@@ -64,7 +140,22 @@ test('options and rubrics are stored as JSON strings', () => {
 
 test('generated SQL is idempotent and never touches evidence tables', () => {
   const sql = buildSql({
-    items: [{ id: 'x', subject: 's', topic: 't', kind: 'mcq', stem: 'q', answer: 'A' }],
+    items: [
+      { id: 'x', subject: 's', topic: 't', kind: 'mcq', stem: 'q', answer: 'A' },
+      // Ordinary content text that happens to contain evidence-table words and
+      // SQL keywords. None of this should trip the guard: it is quoted data,
+      // not a statement that writes to attempts/serves/mocks/gaps or drops
+      // anything. A naive substring/regex search over the whole SQL text
+      // would flag these as false positives.
+      {
+        id: 'y', subject: 's', topic: 't', kind: 'mcq', stem: 'q', answer: 'A',
+        explanation: 'Count the number of attempts the loop makes before it exits.',
+      },
+      {
+        id: 'z', subject: 's', topic: 't', kind: 'mcq',
+        stem: 'What does a DROP TABLE statement do in SQL?', answer: 'A',
+      },
+    ],
     topics: [{ id: 't', subject: 's', unit: '1' }],
     teaching: [{ topic: 't', subject: 's', plain_idea: 'i' }],
     schema: 'CREATE TABLE IF NOT EXISTS items (id TEXT PRIMARY KEY);',
@@ -72,11 +163,37 @@ test('generated SQL is idempotent and never touches evidence tables', () => {
   assert.ok(sql.includes('INSERT OR REPLACE INTO items'))
   assert.ok(sql.includes('INSERT OR REPLACE INTO topics'))
   assert.ok(sql.includes('INSERT OR REPLACE INTO teaching'))
-  for (const table of ['attempts', 'serves', 'mocks', 'gaps']) {
-    assert.ok(!new RegExp(`(INSERT|UPDATE|DELETE)[^;]*\\b${table}\\b`).test(sql),
-      `content reload must not write to ${table}`)
-  }
-  assert.ok(!/\bDROP\b/.test(sql), 'a reload must never drop anything')
+  const written = assertOnlyWrites(sql, ['topics', 'items', 'teaching'])
+  assert.deepEqual([...written].sort(), ['items', 'teaching', 'topics'])
+})
+
+test('the evidence guard still catches a real write to an evidence table', () => {
+  const bad = "INSERT OR REPLACE INTO items (id) VALUES ('x');\n" +
+    "INSERT INTO attempts (id, correct) VALUES (1, 1);"
+  assert.throws(() => assertOnlyWrites(bad, ['topics', 'items', 'teaching']), /attempts/)
+})
+
+test('the evidence guard still catches a real DROP TABLE', () => {
+  const bad = "INSERT OR REPLACE INTO items (id) VALUES ('x');\nDROP TABLE items;"
+  assert.throws(() => assertOnlyWrites(bad, ['topics', 'items', 'teaching']), /DROP TABLE/)
+})
+
+test('the evidence guard still catches an UPDATE or DELETE against an evidence table', () => {
+  assert.throws(
+    () => assertOnlyWrites("UPDATE gaps SET cleared_at = '1' WHERE id = 1;", ['topics', 'items', 'teaching']),
+    /gaps/,
+  )
+  assert.throws(
+    () => assertOnlyWrites("DELETE FROM mocks WHERE id = 1;", ['topics', 'items', 'teaching']),
+    /mocks/,
+  )
+})
+
+test('the real generated worker/seed.sql only ever writes to content tables', () => {
+  // Read-only: this reads the checked-in file, it never regenerates it.
+  const sql = readFileSync(new URL('../../../worker/seed.sql', import.meta.url), 'utf8')
+  const written = assertOnlyWrites(sql, ['topics', 'items', 'teaching'])
+  assert.deepEqual([...written].sort(), ['items', 'teaching', 'topics'])
 })
 
 test('large item sets are chunked into multiple statements', () => {
