@@ -408,6 +408,17 @@ test('G7: across the whole shipped bank, a letter answer is never misread', () =
         ` ${label} `,
         `answer: ${label}`,
         `I think ${label}`,
+        // Q4-G1: the same letter, decorated the way a student decorates one.
+        // LETTER_ONLY strips all of this; canonAnswer keeps it. Every form here
+        // has to reach the same verdict as the undecorated letter.
+        `"${label}"`,
+        `'${label}'`,
+        `${label},`,
+        `${label}!`,
+        `${label};`,
+        `${label}:`,
+        `[${label}]`,
+        `${label}?`,
       ]
       for (const form of forms) {
         const r = grade(item, form)
@@ -463,6 +474,128 @@ test('G7: across the whole shipped bank, an option value is never misread', () =
       }
     }
   }
+})
+
+// ---------------------------------------------------------------------------
+// Q4-G1 / Q4-G2 — the collision guard, and the punctuation that slipped past it
+// ---------------------------------------------------------------------------
+
+/**
+ * Every shipped (item, letter) pair where the letter names one option as a
+ * LABEL and a DIFFERENT option as a VALUE. Both readings are live, so the
+ * grader declines — and it has to go on declining however the student decorated
+ * the letter. Derived from the bank rather than listed, so a new colliding item
+ * cannot quietly appear and be graded by a coin flip.
+ */
+const LETTER_COLLISIONS = SHIPPED_MCQ.flatMap((item) =>
+  Object.keys(item.options).flatMap((label) => {
+    const owners = Object.entries(item.options)
+      .filter(([, text]) => String(text).trim().toUpperCase() === label)
+      .map(([owner]) => owner)
+    return owners.length === 1 && owners[0] !== label ? [[item.id, label, owners[0]]] : []
+  }),
+)
+
+/** The same letter, however he decorated it. LETTER_ONLY accepts all of these. */
+const decorations = (letter) => [
+  letter,
+  letter.toLowerCase(),
+  `${letter}.`,
+  ` ${letter} `,
+  `"${letter}"`,
+  `'${letter}'`,
+  `${letter},`,
+  `${letter}!`,
+  `${letter};`,
+  `${letter}:`,
+  `[${letter}]`,
+  `(${letter})`,
+  `${letter})`,
+  `${letter}?`,
+  `answer: ${letter}`,
+  `the answer is ${letter}`,
+  `I think ${letter}`,
+  `${letter} I think`,
+]
+
+test('Q4: the bank still contains the collisions these tests are about', () => {
+  assert.deepEqual(
+    LETTER_COLLISIONS.map(([id, label]) => `${id}:${label}`).sort(),
+    [...AMBIGUOUS_BY_DESIGN].sort(),
+    'the set of letter collisions in the shipped bank has changed',
+  )
+})
+
+test('Q4-G1/G2: a decorated letter never outranks the value reading it collides with', async (t) => {
+  for (const [id, letter, owner] of LETTER_COLLISIONS) {
+    await t.test(`${id} ${letter} (label ${letter} vs option ${owner})`, () => {
+      const item = byId(id)
+      for (const raw of decorations(letter)) {
+        const r = grade(item, raw)
+        assert.equal(
+          r.graded_by,
+          'unparsed',
+          `${id} ${JSON.stringify(raw)} was graded (picked ${r.picked}, key ${r.keyed}, correct ${r.correct})`,
+        )
+        assert.equal(r.detail, 'ambiguous_choice', `${id} ${JSON.stringify(raw)} declined for the wrong reason`)
+        assert.equal(isServerGraded(r), false, `${id} ${JSON.stringify(raw)} must not count`)
+      }
+    })
+  }
+})
+
+test('Q4-G1: quoting the character the program printed is not a wrong answer', () => {
+  // csa-u2-q7 prints 'C' when score is 70; option A's text IS 'C' and the key
+  // is A. Quoting a printed character is a natural thing to do, and the student
+  // who writes "C" is RIGHT. LETTER_ONLY strips the quotes and reads a label,
+  // canonAnswer keeps them so the competing value reading found nothing, and
+  // matchFragment ignores anything under three characters — so the label won a
+  // confident verdict and he was told he was wrong. One comma was enough.
+  for (const raw of ['"C"', "'C'", '(C)', 'C)', 'C,', 'C!', 'C;', 'C:', '[C]']) {
+    const r = grade(byId('csa-u2-q7'), raw)
+    assert.ok(
+      !(r.graded_by === 'server' && r.correct === 0),
+      `csa-u2-q7 ${JSON.stringify(raw)} was scored as a miss (picked ${r.picked}, key ${r.keyed})`,
+    )
+  }
+  // Same shape on csa-ac-q14: the key is C and option C's text is the printed 'B'.
+  for (const raw of ['"B"', "'B'", '(B)', 'B)', 'B,', 'B!', 'B;', 'B:', '[B]']) {
+    const r = grade(byId('csa-ac-q14'), raw)
+    assert.ok(
+      !(r.graded_by === 'server' && r.correct === 0),
+      `csa-ac-q14 ${JSON.stringify(raw)} was scored as a miss (picked ${r.picked}, key ${r.keyed})`,
+    )
+  }
+})
+
+test('Q4-G2: a decorated letter that happens to equal the key is not credit', () => {
+  // The mirror of Q4-G1, and it feeds readiness. On csa-u2-q7 the key is A and
+  // option D's text is 'A', so a student who miscomputed the output as A and
+  // typed '(A)' was told he was right and it counted toward being ready.
+  for (const raw of ['"A"', "'A'", '(A)', 'A)', 'A,', 'A!', 'A;', 'A:', '[A]', 'answer: A']) {
+    const r = grade(byId('csa-u2-q7'), raw)
+    assert.notEqual(r.correct, 1, `csa-u2-q7 ${JSON.stringify(raw)} was credited (picked ${r.picked})`)
+    assert.equal(isServerGraded(r), false, `csa-u2-q7 ${JSON.stringify(raw)} must not feed readiness`)
+  }
+})
+
+test('Q4-G1: decoration still resolves on every item that has no letter-valued option', () => {
+  // The collision guard must stay confined to the four items that collide. On
+  // the rest, a decorated letter is just a letter and still earns its verdict.
+  const colliding = new Set(LETTER_COLLISIONS.map(([id, label]) => `${id}:${label}`))
+  let resolved = 0
+  for (const item of SHIPPED_MCQ) {
+    for (const label of Object.keys(item.options)) {
+      if (colliding.has(`${item.id}:${label}`)) continue
+      for (const raw of decorations(label)) {
+        const r = grade(item, raw)
+        assert.equal(r.graded_by, 'server', `${item.id} ${JSON.stringify(raw)} => ${r.graded_by} (${r.detail})`)
+        assert.equal(r.picked, label, `${item.id} ${JSON.stringify(raw)} read as ${r.picked}`)
+        resolved++
+      }
+    }
+  }
+  assert.ok(resolved > 15000, `only ${resolved} decorated letters resolved`)
 })
 
 test('G7: no shipped mcq is keyed with something the grader cannot use', () => {
