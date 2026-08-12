@@ -122,12 +122,14 @@ You do **not** self-register with College Board. **A school's AP Coordinator pla
 
 | Date | What it is |
 |---|---|
-| **October 2, 2026** | **Preferred** deadline to submit AP exam orders |
-| **November 13, 2026, 11:59 PM ET** | **Final** deadline — orders after Oct 2 carry **an additional $40 per exam late order fee** |
+| **October 2, 2026** | ***Preferred*** deadline to submit AP exam orders. **Missing it costs nothing** — see the row below |
+| **November 13, 2026, 11:59 PM ET** | **FINAL** deadline to submit exam orders. **Ordering any time up to here carries no extra charge** — the late order fee applies only to exams ordered **between November 14, 2026 and March 12, 2027, 11:59 p.m. ET**. This is also the last day an exam can be canceled without a fee |
 | **January 22, 2027** | Deadline for the school's SSD coordinator to submit accommodations requests (only if needed) |
-| **March 12, 2027, 11:59 PM ET** | Deadline to submit spring course orders and **fall order changes** |
+| **March 12, 2027, 11:59 PM ET** | Deadline to submit spring course orders and **fall order changes** — and the last date the late-order and unused-exam fees can apply at all |
 
-**Action:** before **Oct 2, 2026**, ask the school's **AP Coordinator** to confirm that **both** exams are on the order. Missing Oct 2 is not fatal — the Nov 13 final deadline exists, at $40/exam — but schools set their own earlier local deadlines, so ask in the first week of school.
+> 💵 **Every fee figure for both exams — base, late, cancellation, fee reduction, payment — is in ONE table:** [`../README.md`](../README.md) → **MONEY AND DEADLINES**. **This file prints dates, never dollars, deliberately.** The late-order fee used to be copied into five files and **four of them attached it to the wrong date**, charging $40 for a window that is actually free. Restating a figure here is exactly how that contradiction arose, so don't paste one back in — fix it in the one table instead.
+
+**Action:** before **Oct 2, 2026**, ask the school's **AP Coordinator** to confirm that **both** exams are on the order. **Missing Oct 2 is neither fatal nor expensive** — Oct 2 is only the *preferred* date and the Nov 13 final deadline is free too — but schools set their own earlier local deadlines, so ask in the first week of school.
 
 ## What's OUT of scope — don't study these (save time)
 Verified from the CED Course-Framework notes + the Fall-2026 Clarification PDF. None of these appear on the AP exam:
