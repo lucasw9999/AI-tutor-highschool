@@ -146,6 +146,20 @@ function supplyOf({ items = [], topics = [] }) {
   return counts
 }
 
+/**
+ * How many items the bank holds that a proctored paper may actually be drawn
+ * from, i.e. exam-tested ones.
+ *
+ * Mirrors select.js's `isTested`, including its one deliberate quirk: with no
+ * topic metadata at all nothing is excluded rather than everything. Used to say
+ * WHY a sitting ran out of questions, so the number in the refusal is the same
+ * one the selector was working from.
+ */
+function examTestedCount({ items = [], topics = [] }) {
+  const tested = new Set(topics.filter((t) => t.tested_on_exam !== 0).map((t) => t.id))
+  return tested.size ? items.filter((it) => tested.has(it.topic)).length : items.length
+}
+
 /** Everything the engines need for one subject, fetched concurrently. */
 async function loadContext(db, subject, config) {
   const [items, attempts, topics, gaps, mocks, teachingRows] = await Promise.all([
@@ -182,7 +196,7 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
   if (!ctx.items.length) throw new ApiError(503, `no items loaded for ${subject}`)
 
   // Checked before anything is written, so a bad mock id leaves no serve row.
-  if (mockId != null) await requireOpenMock({ db, mockId, subject })
+  const sitting = mockId == null ? null : await requireOpenMock({ db, mockId, subject })
 
   // A gap with enough evidence but no lesson yet interrupts the drill. The
   // evidence is scoped to what has happened since the topic was last cleared:
@@ -226,8 +240,8 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
   // his overdue reviews or his open gaps. Passing gaps: [] as well is deliberate
   // belt and braces on the one number that can move readiness.
   //
-  // excludeItemIds is the sitting's own questions-in-flight. select.js decides a
-  // repeat from ATTEMPT rows, which do not exist until /log, so between /next and
+  // The sitting's own questions-in-flight, which are unservable: select.js decides
+  // a repeat from ATTEMPT rows, which do not exist until /log, so between /next and
   // /log a question is servable again as far as it can see — and two /next calls
   // inside one sitting handed out the same item, sequentially and (at 200/200)
   // concurrently. Both then logged cleanly, and two attempt rows for one question
@@ -236,13 +250,95 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
   // without adding to the denominator. db.recordServe closes the concurrent half
   // of the same hole inside the INSERT.
   const inFlight = mockId == null ? null : await db.openServeItems({ subject, mockId })
+
+  // How much of the section this paper already holds, per half. A sitting is a
+  // fixed number of questions OF A KIND and nothing used to bound it at either
+  // (see sectionFill): the paper simply kept growing, and both the coverage claim
+  // in its basis and the divisor its composite was taken over grew with it.
+  //
+  // A question that was handed out and not yet answered counts toward the bound —
+  // it is on the paper, on screen — so the last question of a section cannot be
+  // issued twice over. `inFlight` is every item this paper has been served
+  // (db.openServeItems deliberately does not filter on `logged`), so the ones still
+  // outstanding are the served items no attempt row has answered yet.
+  //
+  // This is still a read-then-write, so two simultaneous /next calls at the
+  // boundary can put one answer more on the paper than the section holds;
+  // handleMockSubmit's divisor is written to survive that rather than to assume it
+  // cannot happen.
+  const kindOf = new Map(ctx.items.map((it) => [it.id, it.kind]))
+  const paperAttempts = ctx.attempts.filter((a) => Number(a.mock_id) === Number(mockId))
+  const answeredIds = new Set(paperAttempts.map((a) => a.item_id))
+  const paper = sitting == null ? null : sectionFill({
+    section: sitting.section,
+    exam: config?.exam,
+    attempts: paperAttempts,
+    inFlightKinds: (inFlight ?? []).filter((id) => !answeredIds.has(id)).map((id) => kindOf.get(id) ?? null),
+  })
+
+  if (paper?.full) {
+    throw new ApiError(
+      409,
+      `mock ${mockId} already holds all ${paper.expected} question(s) a section ${sitting.section} sitting contains, so ` +
+        `there is no further question to hand out: a paper cannot be longer than the section it is a sitting of, and an ` +
+        `extra answer is not an extra question of evidence — it would be scored against a section that does not have it. ` +
+        `Nothing was recorded. Submit it with submitMock to score what is on it.`,
+    )
+  }
+
+  // A half of the section that is already complete is closed to further serves.
+  // The selector filters by topic and never by kind, so without this a `full`
+  // sitting whose 42 multiple choice questions are all answered goes on being
+  // served multiple choice — the 43rd, 44th, 45th and 46th answers silently
+  // standing in for the four free-response questions it never asked.
+  const completed = new Set(paper ? paper.parts.filter((p) => p.full).map((p) => p.kind) : [])
+  const unservable = paper == null ? null : [
+    ...inFlight,
+    ...(completed.size ? ctx.items.filter((it) => completed.has(it.kind)).map((it) => it.id) : []),
+  ]
+
   const choice = pickNext({
     ...ctx,
     gaps: mockId ? [] : ctx.gaps,
     now,
-    ...(mockId != null && { sampling: 'mock', mockId, excludeItemIds: inFlight }),
+    ...(mockId != null && { sampling: 'mock', mockId, excludeItemIds: unservable }),
   })
-  if (!choice) throw new ApiError(409, 'every question is inside the no-repeat window; add items or wait')
+  if (!choice) {
+    // WHAT NULL ACTUALLY MEANS, because this used to name a cause that cannot
+    // produce it and a remedy that never works. select.js returns null only when
+    // there is nothing left it MAY serve: every exam-tested item is either
+    // already on this paper, in flight, or of a kind whose half of the section is
+    // complete. It is NOT "everything is inside the no-repeat window" — when the
+    // whole bank is inside that window the selector serves a labelled repeat
+    // instead of nothing (its `repeating` branch), so that state never reaches
+    // here. And waiting is not a remedy: the this-paper exclusion is
+    // unconditional, so the identical call is refused a day, a month or a year
+    // later. Reproduced on a fresh database: the first-ever Precalc sitting
+    // served all 36 exam-tested items, and the 37th /next was told to wait.
+    //
+    // The word "wait" is deliberately absent below: the GPT relays this message
+    // to the student mid-sitting, and it must not hand him an instruction that
+    // cannot work.
+    const done = paper?.parts.filter((p) => p.full) ?? []
+    const owed = paper?.parts.filter((p) => !p.full) ?? []
+    const clauses = done.length
+      ? [`its ${describeParts(done.map((p) => [p.kind, p.count]))} are all on it already`]
+      : [`all ${examTestedCount(ctx)} exam-tested question(s) this bank holds for ${subject} are on it already, and no ` +
+         `question may appear twice on one paper`]
+    if (owed.length) {
+      clauses.push(`the ${describeParts(owed.map((p) => [p.kind, p.count - p.answered]))} it still owes cannot be drawn ` +
+        `from this bank`)
+    }
+    throw new ApiError(
+      409,
+      mockId == null
+        ? `no question can be served for ${subject}: the bank holds ${ctx.items.length} item(s) and every one of them is ` +
+          `excluded from this request.`
+        : `mock ${mockId} has already been asked every question this bank can put on a section ${sitting.section} paper: ` +
+          `${clauses.join('; and ')}. Nothing was recorded — submit it with submitMock and score what is on it. Only new ` +
+          `items in the bank can make the next paper longer.`,
+    )
+  }
 
   const serveId = await db.recordServe({ subject, item_id: choice.item.id, served_at: now, mock_id: mockId })
   // Lost the race for this item to a concurrent /next: nothing was written, and
@@ -675,6 +771,71 @@ function expectedQuestions(section, exam = {}) {
   return counted.length ? counted.reduce((total, [, n]) => total + n, 0) : null
 }
 
+/** `4 free-response question(s)`, for a refusal or a basis that has to name a half. */
+function describeParts(pairs) {
+  return pairs.map(([kind, n]) => `${n} ${PART_NAME[kind] ?? kind} question(s)`).join(' and ')
+}
+
+/**
+ * How much of each half of a section a set of answers actually fills.
+ *
+ * A section is not a number of questions, it is a number of questions OF A KIND
+ * (see sectionParts), and NOTHING used to hold a sitting to either bound. Two
+ * live defects, one root:
+ *
+ *   A `full` CSA paper is 42 multiple choice plus 4 free-response. /next drew
+ *   from all 218 mcq items with no cap at all, so the paper could be answered 46
+ *   times — every answer multiple choice — and the basis then reported "Answered
+ *   46 of the 46 questions a section full sitting is expected to contain": the
+ *   free-response half claimed as sat, and never asked. That is the sec=II
+ *   overstatement inverted, with extra mcq standing in for the frq half.
+ *
+ *   Answer it 50 times and the same sentence read "Answered 50 of the 46", while
+ *   the composite's divisor (max(scored, scorable - ungraded)) climbed past the
+ *   42 questions the sitting could actually be scored on — so `scored_out_of`
+ *   and the sentence explaining it stated two different numbers.
+ *
+ * An answer fills only the part its OWN kind belongs to, and a part cannot be
+ * filled past the number of questions the real exam has of it. Answers of a kind
+ * the section does not contain fill nothing, which is what makes the basis
+ * unable to claim a half that was never asked.
+ *
+ * @param {string[]} inFlightKinds  Kinds of the questions this paper has been
+ *        handed but not yet seen answered. Counted toward `full` so a serve
+ *        cannot be issued for a half that is already spoken for.
+ * @returns {{parts: Array<{kind: string, count: number, answered: number,
+ *          credited: number, full: boolean}>, credited: number, expected: number|null,
+ *          full: boolean}}
+ */
+function sectionFill({ section, exam = {}, attempts = [], inFlightKinds = [] }) {
+  const tally = (rows, key) => {
+    const counts = new Map()
+    for (const row of rows) counts.set(key(row), (counts.get(key(row)) ?? 0) + 1)
+    return counts
+  }
+  const answeredOf = tally(attempts, (a) => a.kind)
+  const flyingOf = tally(inFlightKinds, (k) => k)
+
+  const parts = sectionParts(section, exam).filter(([, n]) => n != null).map(([kind, count]) => {
+    const answered = answeredOf.get(kind) ?? 0
+    return {
+      kind, count, answered,
+      credited: Math.min(answered, count),
+      full: answered + (flyingOf.get(kind) ?? 0) >= count,
+    }
+  })
+  const expected = expectedQuestions(section, exam)
+  return {
+    parts,
+    credited: parts.reduce((total, p) => total + p.credited, 0),
+    expected,
+    // A paper cannot be longer than the section it is a sitting of, whatever the
+    // kinds involved: this is what stops a sec=II sitting the bank cannot supply
+    // (whose frq part therefore never fills) growing without limit.
+    full: expected != null && attempts.length + inFlightKinds.length >= expected,
+  }
+}
+
 /**
  * Why one half of a section cannot reach a composite, or null when it can.
  *
@@ -839,6 +1000,18 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   //      100 — the coverage gate cannot do its job on a count the bank has no
   //      questions behind.
   const covered = scorable == null || attempts.length >= Math.ceil(scorable * MIN_MOCK_COVERAGE)
+  // The questions this sitting was actually scored against: the section's markable
+  // questions, less the answers that came back unmarkable — and never fewer than
+  // the answers that WERE marked, because a paper cannot be scored over fewer
+  // questions than it had marked on it. handleNext bounds a paper at its section,
+  // so the second term normally wins; the max is what keeps this honest when a
+  // lost /next race puts one answer more on the paper than the section holds.
+  //
+  // Whatever it works out to, it is the ONLY divisor stated anywhere: the sentence
+  // that explains the composite is derived from it below rather than from
+  // `scorable`, which is how one string came to report a composite "measured over
+  // the 42 question(s)" and then "Scored 40 right out of 43" — 95.2 and 93.0, two
+  // divisors 2.2 points apart, about a number the student can check himself.
   const denominator = Math.max(scored.length, (scorable ?? 0) - ungraded)
 
   // The fourth guard: a sitting that was not run against a clock is not evidence
@@ -849,19 +1022,27 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
 
   const composite = supplied && covered && timed && denominator > 0 ? (right / denominator) * 100 : null
 
-  // Answers of a kind this section does not contain, which is what an unsupplied
-  // section is actually made of: reporting 4 multiple choice answers as "4 of the
-  // 4 questions section II is expected to contain" IS the overstatement.
-  const sectionKinds = new Set(sectionParts(m.section, cfg.exam).map(([kind]) => kind))
-  const ofSection = attempts.filter((a) => sectionKinds.has(a.kind)).length
+  // How much of each half of the section these answers actually fill. A section is
+  // a number of questions OF A KIND, so 46 multiple choice answers do not cover a
+  // full sitting's 42 mcq + 4 frq, and 50 of them are not "50 of the 46": see
+  // sectionFill, which does the counting for the serve path too.
+  const fill = sectionFill({ section: m.section, exam: cfg.exam, attempts })
 
   const basis = []
   if (expected != null) {
-    basis.push(ofSection === attempts.length
+    // The plain sentence only when the section has ONE half and every answer
+    // counted toward it. Otherwise the halves are stated one by one, because that
+    // is the only form that cannot claim a part which was never asked: a full CSA
+    // paper made entirely of multiple choice reported "Answered 46 of the 46
+    // questions a section full sitting is expected to contain" while zero of its
+    // four free-response questions had been sat.
+    basis.push(fill.parts.length === 1 && fill.credited === attempts.length
       ? `Answered ${attempts.length} of the ${expected} questions a section ${m.section} sitting is expected to contain.`
-      : `Answered ${attempts.length} question(s), ${ofSection} of which are the kind a section ${m.section} sitting is `
-        + `made of, against the ${expected} it is expected to contain.`)
+      : `Answered ${attempts.length} question(s) against the ${expected} a section ${m.section} sitting is expected to `
+        + `contain, which fill it as `
+        + `${fill.parts.map((p) => `${p.credited} of its ${p.count} ${PART_NAME[p.kind] ?? p.kind}`).join(' and ')}.`)
   }
+
   if (ungraded) {
     basis.push(`${ungraded} response(s) need human or model grading and are excluded from the composite.`)
   }
@@ -906,9 +1087,21 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     }
   } else {
     if (obstacles.length) {
+      // Stated over the divisor the composite was ACTUALLY taken over, never over
+      // `scorable`: the two differ whenever an answer came back unmarkable (42
+      // markable questions, 4 unmarkable answers, so 38), and printing `scorable`
+      // here put two divisors in one string. Both deductions are named, so the
+      // number can be reconstructed rather than merely believed.
+      const unmarkable = (scorable ?? denominator) - denominator
       basis.push(
-        `This composite is measured over the ${scorable} question(s) of the ${expected} a section ${m.section} sitting `
-        + `contains that can actually be scored: ${obstacles.join('; ')}.`,
+        `This composite is measured over the ${denominator} question(s) of the ${expected} a section ${m.section} sitting `
+        + `contains that this paper could be scored on: ${obstacles.join('; ')}`
+        + (unmarkable > 0 ? `; and ${unmarkable} more of them came back as answers no grader can mark` : '')
+        + (unmarkable < 0
+          ? `; and this sitting logged ${-unmarkable} markable answer(s) more than the section has questions, every one `
+            + `of which is in that divisor`
+          : '')
+        + `.`,
       )
     }
     basis.push(`Scored ${right} right out of ${denominator} — anything not answered counts as wrong, as on the exam.`)

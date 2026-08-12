@@ -1349,6 +1349,188 @@ withSeed('a sitting stranded between closing and scoring can still be scored, an
   )
 })
 
+// ---------------------------------------------------------------------------
+// A sitting is a fixed number of questions OF A KIND, and neither bound held
+//
+// Driven over REAL SQLite and the REAL seeded bank, because the whole defect is
+// a disagreement between the exam table, the content, and what the serve loop
+// will hand out. Nothing capped a sitting at its own section: /next kept drawing
+// from all 218 CSA items, so a `full` paper (42 mcq + 4 frq) could be answered
+// 46 times — every one of them multiple choice — and its basis then reported
+// "Answered 46 of the 46 questions a section full sitting is expected to
+// contain", with the free-response half claimed as sat and never asked. Answer
+// it 50 times and the same sentence read "50 of the 46".
+// ---------------------------------------------------------------------------
+
+/** The paper's own answers, as the handlers see them. */
+const paperRows = async (db, subject, mockId) =>
+  (await db.attempts(subject)).filter((a) => a.mock_id === mockId)
+
+/**
+ * Sit a mock through the real handlers until it will not serve another question,
+ * answering every one right off the real key.
+ *
+ * @returns {Promise<{answered: number, refusal: Error|null}>} how many landed,
+ *          and what stopped the loop.
+ */
+async function sitUntilRefused({ db, mock, subject = 'ap_csa', config = CSA, limit, spacing = 60 }) {
+  let answered = 0
+  let refusal = null
+  while (answered < limit) {
+    let q
+    try {
+      q = await handleNext({ db, subject, config, now: at(answered * spacing), mockId: mock })
+    } catch (e) {
+      refusal = e
+      break
+    }
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({ db, serveId: q.serve, response: item.answer ?? 'B', config, now: at(answered * spacing + 30) })
+    answered++
+  }
+  return { answered, refusal }
+}
+
+withSeed('a full sitting cannot be padded past the section it is a sitting of, and its basis says which half was sat', async () => {
+  const { db } = realDb()
+  const mcq = CSA.exam.mcq_count
+  const frq = CSA.exam.frq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: T0 })
+
+  // Answer for as long as the server will serve. The bank holds 218 mcq items
+  // and zero free-response ones, so without a bound the paper simply keeps
+  // growing past the 46 questions a full sitting contains.
+  const { answered, refusal } = await sitUntilRefused({ db, mock: m.mock, limit: mcq + frq + 4 })
+
+  assert.equal(
+    (await paperRows(db, 'ap_csa', m.mock)).filter((a) => a.kind === 'frq').length, 0,
+    'the bank holds no free-response items, so none can have been sat',
+  )
+  assert.equal(
+    answered, mcq,
+    `a full paper is ${mcq} multiple choice plus ${frq} free-response; the bank can supply the first half only, so ` +
+      `${mcq} answers is the whole of what this sitting may hold — it took ${answered}`,
+  )
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `the serve after that must be refused: ${refusal}`)
+  assert.match(refusal.message, /free.response/i, 'and say which half of the section is still owed')
+  assert.doesNotMatch(refusal.message, /wait/i, 'waiting cannot conjure a free-response item into the bank')
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(mcq * 60 + 600) })
+  assert.equal(r.answered, mcq)
+  assert.equal(r.expected, mcq + frq, 'the real section size is a true fact and he should still see it')
+  assert.doesNotMatch(
+    r.basis, new RegExp(`of the ${mcq + frq} questions a section full sitting is expected to contain`),
+    `no part of this paper was free-response, so it cannot be reported against the section's whole count: ${r.basis}`,
+  )
+  assert.match(
+    r.basis, new RegExp(`0 of its ${frq} free-response`),
+    `the basis has to say the free-response half was never asked: ${r.basis}`,
+  )
+  assert.match(r.basis, new RegExp(`${mcq} of its ${mcq} multiple choice`), `and what was: ${r.basis}`)
+  assert.equal(r.counted, true, 'every question the bank can put on a full paper, all right, is a scored sitting')
+  assert.equal(r.composite_pct, 100)
+  assert.equal(r.scored_out_of, mcq, 'the divisor is the section half that can be asked and marked, not the paper length')
+})
+
+// ---------------------------------------------------------------------------
+// The composite states ONE divisor, in the field and in the sentence
+//
+// `scored_out_of` is max(scored, scorable - ungraded), and the sentence that
+// explains the composite was printing `scorable` — two different numbers in one
+// string whenever they disagree. Reproduced both ways below: 43 markable answers
+// on a section whose markable half is 42 (the field said 43, the sentence 42,
+// 2.2 points apart), and 40 answers of which 4 could not be marked (the field
+// said 38, the sentence 42).
+//
+// Driven over REAL SQLite. The two states are filed through db.js's own writer
+// rather than through /next, deliberately: the serve path is bounded now, so a
+// paper longer than its section is only reachable through a lost /next race, and
+// the CSA bank is entirely mechanically markable, so no answer to it can come
+// back needing a grader.
+// ---------------------------------------------------------------------------
+
+/** File `rows` answers under an open sitting, through db.js, over real SQLite. */
+async function fileAnswers({ db, sqlite, subject, mockId, rows, minutes = 5 }) {
+  const item = sqlite.prepare('SELECT id, topic, unit, practice FROM items WHERE subject = ? LIMIT 1').get(subject)
+  const start = new Date(T0).getTime()
+  for (const [i, row] of rows.entries()) {
+    await db.recordAttempt({
+      ts: new Date(start + (minutes * 60000 * i) / Math.max(rows.length - 1, 1)).toISOString(),
+      subject, item_id: item.id, topic: item.topic, unit: item.unit, practice: item.practice,
+      response: 'A', correct: row.correct ?? 0, graded_by: row.graded_by ?? 'server',
+      seconds: 5, hints_used: 0, conditions: 'proctored_mock', mock_id: mockId,
+    })
+  }
+}
+
+/** The divisor and the right-answer count the handler states in its own prose. */
+const statedArithmetic = (basis) => /Scored (\d+) right out of (\d+)/.exec(basis)
+/** The divisor the explanatory sentence claims the composite was measured over. */
+const statedDivisor = (basis) => /measured over the (\d+) question\(s\) of the (\d+)/.exec(basis)
+
+withSeed('the composite is explained with the divisor it was actually taken over, not a second one', async () => {
+  const mcq = CSA.exam.mcq_count
+  const frq = CSA.exam.frq_count
+
+  for (const [what, rows, right] of [
+    [
+      // One more markable answer than the section has markable questions.
+      'a paper carrying more markable answers than its section has questions',
+      [...Array(40).fill({ correct: 1 }), ...Array(3).fill({ correct: 0 })], 40,
+    ],
+    [
+      // Four answers that no grader can mark mechanically: the section's 42
+      // markable questions, less the 4 that came back unmarkable, is 38.
+      'a paper whose answers include four that cannot be marked',
+      [...Array(4).fill({ correct: 0, graded_by: 'model' }), ...Array(34).fill({ correct: 1 }), ...Array(2).fill({ correct: 0 })], 34,
+    ],
+  ]) {
+    const { db, sqlite } = realDb()
+    const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: T0 })
+    await fileAnswers({ db, sqlite, subject: 'ap_csa', mockId: m.mock, rows })
+    const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(600) })
+    const where = `${what}: ${r.basis}`
+
+    const arithmetic = statedArithmetic(r.basis)
+    assert.ok(arithmetic, `a scored sitting states its arithmetic — ${where}`)
+    assert.equal(Number(arithmetic[1]), right, `and counts the right answers it actually had — ${where}`)
+    assert.equal(
+      Number(arithmetic[2]), r.scored_out_of,
+      `the sentence divides by a different number than the field — ${where}`,
+    )
+
+    const measured = statedDivisor(r.basis)
+    assert.ok(measured, `a composite measured over less than the section says so — ${where}`)
+    assert.equal(
+      Number(measured[1]), r.scored_out_of,
+      `one composite, two divisors in one string: ${measured[1]} against ${r.scored_out_of} — ${where}`,
+    )
+    assert.equal(Number(measured[2]), mcq + frq, `against the real section size — ${where}`)
+
+    // The identity the GPT does its own arithmetic against.
+    assert.equal(
+      Number(((right / r.scored_out_of) * 100).toFixed(1)), r.composite_pct,
+      `${right} right / ${r.scored_out_of} does not give ${r.composite_pct} — ${where}`,
+    )
+  }
+})
+
+withSeed('a divisor pulled below the markable half says what pulled it there', async () => {
+  const { db, sqlite } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: T0 })
+  await fileAnswers({
+    db, sqlite, subject: 'ap_csa', mockId: m.mock,
+    rows: [...Array(4).fill({ correct: 0, graded_by: 'model' }), ...Array(34).fill({ correct: 1 }), ...Array(2).fill({ correct: 0 })],
+  })
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(600) })
+  assert.equal(r.scored_out_of, 38, '42 markable questions, less the 4 answers that came back unmarkable')
+  assert.match(
+    r.basis, /4 (more of them|of its answers)[^.]*mark/i,
+    `the sentence names the 42-to-38 deduction rather than leaving the number unexplained: ${r.basis}`,
+  )
+})
+
 test('days_to_exam counts calendar days in one fixed zone', async () => {
   const db = ctx()
   const days = async (now) => (await handleStatus({ db, subject: 'ap_csa', config: CSA, now })).days_to_exam
