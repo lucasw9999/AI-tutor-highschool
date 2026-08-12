@@ -9,7 +9,11 @@
 // test is text-patched in memory before compile() sees it.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { compile, summary, incompleteReport } from '../build.js'
 import { validate } from '../validate.js'
 
@@ -202,5 +206,108 @@ test('B5: the INCOMPLETE list names every class of gap, not just untagged items'
   assert.match(lines, /cannot reach readiness|unreachable/, 'unreachable exam-tested topics')
   for (const u of r.unreachable) {
     assert.ok(lines.includes(u.id), `unreachable topic ${u.id} must appear in the INCOMPLETE list`)
+  }
+})
+
+// --- B6: "faithful compile" and "complete content" are separate questions ---
+//
+// The completeness gates above are correct and stay hard errors: ap_precalc has 33
+// exam-tested topics with no items, so its readiness can never exceed 8.3%. But the
+// failing build also refused to write anything, which stranded content fixes that
+// were already correct in the markdown (a wrong answer key, a false arithmetic
+// check, 92 backtick-corrupted MCQ options) in the compiler and out of the DB.
+//
+// So the CLI grows ONE explicit opt-in flag: write the artifacts anyway, still fail,
+// still print every ERROR. These tests pin both halves — the default must stay
+// byte-for-byte "nothing written", and the flag must never be reachable by accident.
+const ROOT = fileURLToPath(new URL('../../..', import.meta.url))
+const BUILD = fileURLToPath(new URL('../build.js', import.meta.url))
+const FLAG = '--write-despite-incomplete'
+const ARTIFACTS = ['items.json', 'topics.json', 'teaching.json']
+
+/**
+ * A throwaway cwd that reads the REAL content (the parsers resolve every path
+ * relative to cwd) but whose `content/` output directory is not the repo's, so a
+ * test can watch what the CLI writes without touching the checked-in artifacts.
+ */
+function sandbox(t) {
+  const dir = mkdtempSync(join(tmpdir(), 'ap-build-gate-'))
+  for (const d of ['ap_csa', 'ap_precalc']) symlinkSync(join(ROOT, d), join(dir, d))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  return dir
+}
+
+function runBuild(dir, { args = [], env = {} } = {}) {
+  const p = spawnSync(process.execPath, [BUILD, ...args], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, ...env },
+  })
+  return { ...p, output: `${p.stdout}${p.stderr}` }
+}
+
+/** Just the ERROR lines, so "did any gate go quiet?" is directly comparable. */
+const errorLines = (out) => out.split('\n').filter((l) => l.startsWith('ERROR ')).sort()
+
+const wroteFiles = (dir) => ARTIFACTS.filter((f) => existsSync(join(dir, 'content', f)))
+
+test('B6: by default a failing build still writes absolutely nothing', (t) => {
+  const dir = sandbox(t)
+  const r = runBuild(dir)
+
+  assert.equal(r.status, 1, `expected exit 1, got ${r.status}\n${r.output}`)
+  assert.match(r.stderr, /Nothing written\./)
+  assert.deepEqual(wroteFiles(dir), [], 'the default invocation must not write an artifact')
+  assert.equal(existsSync(join(dir, 'content')), false, 'not even the output directory')
+  assert.ok(errorLines(r.output).length > 0, 'the gates must still speak')
+  assert.match(r.output, /exam-tested topic\(s\) have NO items/, 'the coverage gate')
+  assert.doesNotMatch(r.output, /Build OK/)
+})
+
+test(`B6: ${FLAG} writes the artifacts and STILL fails`, (t) => {
+  const dir = sandbox(t)
+  const r = runBuild(dir, { args: [FLAG] })
+
+  assert.notEqual(r.status, 0, `incomplete content must never exit 0\n${r.output}`)
+  assert.deepEqual(wroteFiles(dir), ARTIFACTS, 'all three artifacts must be written')
+
+  const expected = compile()
+  for (const [file, key] of [['items.json', 'items'], ['topics.json', 'topics'], ['teaching.json', 'teaching']]) {
+    const written = JSON.parse(readFileSync(join(dir, 'content', file), 'utf8'))
+    assert.ok(Array.isArray(written), `${file} must be a JSON array`)
+    assert.equal(written.length, expected[key].length, `${file} must hold every compiled row`)
+  }
+
+  // The write is not permission to ship: the output has to say so, loudly.
+  assert.match(r.output, /INCOMPLETE/)
+  assert.match(r.output, /must not be deployed/i)
+  assert.doesNotMatch(r.output, /Build OK/, 'an incomplete build is never OK')
+})
+
+test(`B6: ${FLAG} downgrades no gate — the ERROR lines are identical either way`, (t) => {
+  const strict = runBuild(sandbox(t))
+  const forced = runBuild(sandbox(t), { args: [FLAG] })
+
+  assert.deepEqual(
+    errorLines(forced.output),
+    errorLines(strict.output),
+    'writing anyway must not silence, soften or reword a single gate',
+  )
+  assert.ok(errorLines(strict.output).length >= 6, 'precondition: the real content trips several gates')
+})
+
+test('B6: nothing but the explicit flag can force a write', (t) => {
+  // No env backdoor, no near-miss spelling, no bare "--force". If a CI job or a
+  // stray variable could trip this, artifacts would leak out silently.
+  for (const attempt of [
+    { env: { WRITE_DESPITE_INCOMPLETE: '1' } },
+    { env: { BUILD_WRITE_DESPITE_INCOMPLETE: 'true' } },
+    { env: { FORCE: '1', CI: 'true', BUILD_FORCE: '1' } },
+    { args: ['--force'] },
+    { args: ['--write'] },
+    { args: ['-w'] },
+  ]) {
+    const dir = sandbox(t)
+    const r = runBuild(dir, attempt)
+    assert.equal(r.status, 1, `${JSON.stringify(attempt)} must still fail\n${r.output}`)
+    assert.deepEqual(wroteFiles(dir), [], `${JSON.stringify(attempt)} must not write anything`)
   }
 })
