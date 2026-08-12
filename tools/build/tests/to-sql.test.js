@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { DatabaseSync } from 'node:sqlite'
 import { lit, unitIndex, itemRows, topicRows, buildSql } from '../to-sql.js'
 
 // --- Evidence-table guard --------------------------------------------------
@@ -201,4 +202,70 @@ test('large item sets are chunked into multiple statements', () => {
   const sql = buildSql({ items, topics: [{ id: 't', subject: 's', unit: '1' }], teaching: [], schema: '' })
   const inserts = (sql.match(/INSERT OR REPLACE INTO items/g) ?? []).length
   assert.equal(inserts, 3, '95 rows at 40 per statement')
+})
+
+// --- the deployment path: one statement at a time --------------------------
+//
+// `sqlite.exec()` swallows the whole file at once, which is NOT how the seed
+// reaches D1. The deploy splits it into statements and sends them in batches
+// (worker/DEPLOY.md), and that split is where the file can be corrupted without
+// looking corrupted: CSA stems contain Java, so
+// `String csv = "red,green,blue,yellow";` ends a line with a semicolon INSIDE a
+// SQL string literal. A naive line-ending-in-`;` split cuts there, and the halves
+// are two statements that are each individually invalid — or, worse, silently
+// short a row. Verified the hard way earlier in this project.
+//
+// So the real file is split with the quote-aware splitter and each statement is
+// executed on its own, and the row counts are read back out of the database
+// rather than inferred from the text.
+
+test('the real worker/seed.sql loads statement-by-statement and every row round-trips', () => {
+  const sql = readFileSync(new URL('../../../worker/seed.sql', import.meta.url), 'utf8')
+  const items = JSON.parse(readFileSync(new URL('../../../content/items.json', import.meta.url), 'utf8'))
+  const topics = JSON.parse(readFileSync(new URL('../../../content/topics.json', import.meta.url), 'utf8'))
+  const teaching = JSON.parse(readFileSync(new URL('../../../content/teaching.json', import.meta.url), 'utf8'))
+
+  const db = new DatabaseSync(':memory:')
+  const statements = splitStatements(sql).map((s) => s.trim()).filter(Boolean)
+  for (const [i, statement] of statements.entries()) {
+    try {
+      db.exec(`${statement};`)
+    } catch (err) {
+      throw new Error(`statement ${i + 1} of ${statements.length} would not load on its own: ${err.message}\n${statement.slice(0, 200)}`)
+    }
+  }
+
+  const count = (table) => db.prepare(`SELECT count(*) n FROM ${table}`).get().n
+  assert.equal(count('items'), items.length, 'every compiled item must survive the split and the load')
+  assert.equal(count('topics'), topics.length)
+  assert.equal(count('teaching'), teaching.length)
+
+  // The exact hazard, asserted on the row it lives in rather than on a total: the
+  // Java line whose semicolon sits inside the literal must arrive whole.
+  const java = db.prepare(`SELECT id, stem FROM items WHERE stem LIKE '%red,green,blue,yellow%'`).all()
+  assert.ok(java.length, 'the Java stem containing a semicolon inside a string literal must still be in the bank')
+  for (const row of java) {
+    assert.match(row.stem, /String csv = "red,green,blue,yellow";/, `${row.id}: the Java line was truncated`)
+  }
+
+  // And every key and topic, as the DATABASE holds them, against the artifact they
+  // came from. A key mangled by SQL escaping would mark a right answer WRONG.
+  const stored = new Map(
+    db.prepare(`SELECT id, topic, unit, kind, answer, answer_variants_json FROM items`).all().map((r) => [r.id, r]),
+  )
+  const drift = []
+  for (const it of items) {
+    const row = stored.get(it.id)
+    if (!row) { drift.push(`${it.id} is missing from the database entirely`); continue }
+    if (row.topic !== it.topic) drift.push(`${it.id} topic: ${JSON.stringify(row.topic)} != ${JSON.stringify(it.topic)}`)
+    if (row.kind !== it.kind) drift.push(`${it.id} kind: ${row.kind} != ${it.kind}`)
+    if ((row.answer ?? null) !== (it.answer ?? null)) {
+      drift.push(`${it.id} answer: ${JSON.stringify(row.answer)} != ${JSON.stringify(it.answer)}`)
+    }
+    const variants = row.answer_variants_json ? JSON.parse(row.answer_variants_json) : []
+    if (JSON.stringify(variants) !== JSON.stringify(it.answer_variants ?? [])) {
+      drift.push(`${it.id} answer_variants differ between content/items.json and the seed`)
+    }
+  }
+  assert.deepEqual(drift, [], `the seed does not hold what the artifacts do:\n  ${drift.slice(0, 15).join('\n  ')}`)
 })

@@ -214,9 +214,17 @@ Only mocks move readiness. When he wants one:
    supply that section at all. The same fact will come back in `advisories` on
    later responses; that repetition is deliberate, not a bug.
 
-A Precalculus sitting drawn from this question bank is rubric-scored throughout,
-so expect `counted` to be false on it. That is a gap in the bank, not a failure
-of his — the practice is still worth doing, and say so.
+The Precalculus bank holds no multiple-choice and no free-response questions —
+every item in it is short-answer or worked-solution practice — so a Precalculus
+sitting cannot supply either half of the paper, and `counted` comes back false on
+it. Read `basis` for the reason, as always. That is a gap in the bank, not a
+failure of his — the practice is still worth doing, and say so.
+
+Individual Precalculus questions are a different matter. Many of them now carry
+an answer key and come back genuinely graded, so read `graded` on every answer
+and never assume a Precalculus answer went unmarked. When it did go unmarked, it
+is because that particular question is worked-solution practice, not because
+Precalculus is ungradeable.
 
 ## Free response
 

@@ -516,3 +516,64 @@ test('B7: the MCQ bank is unchanged by the FRQ wiring', () => {
   const r = compile()
   assert.equal(r.items.filter((i) => i.subject === 'ap_csa' && i.kind === 'mcq').length, 221)
 })
+
+// --- B8: the artifacts must not lag the markdown ---------------------------
+//
+// THE DEFECT THIS CLOSES: work that is correct in the markdown reaching no
+// student. content/*.json and worker/seed.sql are what the Worker actually
+// serves, and nothing checked them against the compiler. They sat two rounds
+// behind it — 48 unkeyed Precalc items and 3 missing CSA questions — while every
+// other test in the repo compiled the markdown fresh and passed. So the markdown
+// said "keyed and topic-tagged", the compiler agreed, the build gates agreed, the
+// parser tests agreed, and the database served the old items anyway.
+//
+// A compile is cheap and deterministic, so the artifacts are simply required to
+// BE the compile. Anyone who edits content and forgets to re-run
+// `node tools/build/build.js --write-despite-incomplete && npm run seed:sql`
+// finds out here rather than in front of him.
+
+test('B8: content/*.json is exactly what the markdown compiles to today', () => {
+  const r = compile()
+  const stale = []
+  for (const [file, key] of [['items.json', 'items'], ['topics.json', 'topics'], ['teaching.json', 'teaching']]) {
+    const onDisk = JSON.parse(readFileSync(join(ROOT, 'content', file), 'utf8'))
+    if (onDisk.length !== r[key].length) {
+      stale.push(`${file} holds ${onDisk.length} row(s); the markdown compiles to ${r[key].length}`)
+      continue
+    }
+    const differing = onDisk
+      .map((row, i) => [row, r[key][i]])
+      .filter(([a, b]) => JSON.stringify(a) !== JSON.stringify(b))
+      .map(([a]) => a.id ?? `${a.subject}:${a.topic}`)
+    if (differing.length) {
+      stale.push(`${file}: ${differing.length} row(s) differ from the compile, starting at ${differing.slice(0, 5).join(', ')}`)
+    }
+  }
+  assert.deepEqual(
+    stale, [],
+    'the checked-in artifacts are not what the markdown compiles to, so content fixes are not reaching the Worker. ' +
+      `Re-run: node tools/build/build.js ${FLAG} && npm run seed:sql\n  ${stale.join('\n  ')}`,
+  )
+})
+
+test('B8: worker/seed.sql was generated from the artifacts on disk, not an older set', () => {
+  // The seed is a second artifact derived from the first, and it lagged
+  // independently: content/items.json can be regenerated while seed.sql is not,
+  // and then the JSON is right and the database is still wrong.
+  const sql = readFileSync(join(ROOT, 'worker', 'seed.sql'), 'utf8')
+  const items = JSON.parse(readFileSync(join(ROOT, 'content', 'items.json'), 'utf8'))
+  const rows = (sql.match(/^ {2}\('/gm) ?? []).length
+  const topics = JSON.parse(readFileSync(join(ROOT, 'content', 'topics.json'), 'utf8'))
+  const teaching = JSON.parse(readFileSync(join(ROOT, 'content', 'teaching.json'), 'utf8'))
+  assert.equal(
+    rows, items.length + topics.length + teaching.length,
+    `worker/seed.sql carries ${rows} row(s) against ${items.length + topics.length + teaching.length} in ` +
+      'content/*.json — run `npm run seed:sql`',
+  )
+  // The schema it embeds must be the current one, or a reload rebuilds a database
+  // missing whatever schema.sql has grown since.
+  assert.ok(
+    sql.includes(readFileSync(join(ROOT, 'worker', 'schema.sql'), 'utf8')),
+    'seed.sql must embed worker/schema.sql verbatim; it does not, so it is older than the schema',
+  )
+})

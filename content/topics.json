@@ -1162,49 +1162,5 @@
     "tested_on_exam": false,
     "source_label": "K",
     "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md"
-  },
-  {
-    "id": "1.0",
-    "subject": "ap_precalc",
-    "unit": "1",
-    "name": "Unit 1 — practice items not yet topic-tagged",
-    "ek": "Placeholder bucket. Items here count toward per-unit readiness but cannot drive topic-level teaching.",
-    "exam_weight_low": 0,
-    "exam_weight_high": 0,
-    "tested_on_exam": true,
-    "untagged_bucket": true
-  },
-  {
-    "id": "2.0",
-    "subject": "ap_precalc",
-    "unit": "2",
-    "name": "Unit 2 — practice items not yet topic-tagged",
-    "ek": "Placeholder bucket. Items here count toward per-unit readiness but cannot drive topic-level teaching.",
-    "exam_weight_low": 0,
-    "exam_weight_high": 0,
-    "tested_on_exam": true,
-    "untagged_bucket": true
-  },
-  {
-    "id": "3.0",
-    "subject": "ap_precalc",
-    "unit": "3",
-    "name": "Unit 3 — practice items not yet topic-tagged",
-    "ek": "Placeholder bucket. Items here count toward per-unit readiness but cannot drive topic-level teaching.",
-    "exam_weight_low": 0,
-    "exam_weight_high": 0,
-    "tested_on_exam": true,
-    "untagged_bucket": true
-  },
-  {
-    "id": "4.0",
-    "subject": "ap_precalc",
-    "unit": "4",
-    "name": "Unit 4 — practice items not yet topic-tagged",
-    "ek": "Placeholder bucket. Items here count toward per-unit readiness but cannot drive topic-level teaching.",
-    "exam_weight_low": 0,
-    "exam_weight_high": 0,
-    "tested_on_exam": false,
-    "untagged_bucket": true
   }
 ]
