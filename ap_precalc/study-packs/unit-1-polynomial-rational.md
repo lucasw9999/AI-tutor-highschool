@@ -168,6 +168,7 @@ $\frac{f(6)-f(2)}{6-2}=\frac{11-(-1)}{4}=\frac{12}{4}=3.$ (For a line, AROC = sl
 </details>
 <!-- key: 3 -->
 <!-- accept: AROC = 3 -->
+<!-- accept: slope 3 -->
 <!-- topic: 1.1 -->
 
 **P2 (easy, no-calc).** State the end behavior of $f(x)=4x^4-x+2$ in limit notation.
@@ -200,6 +201,7 @@ $g(-x)=2(-x)^4-(-x)^2=2x^4-x^2=g(x)$ → **even** (all even powers, y-axis symme
 <!-- key: even -->
 <!-- accept: even function -->
 <!-- accept: g is even -->
+<!-- accept: it is even -->
 <!-- topic: 1.5 -->
 
 **P5 (medium, no-calc).** For $f(x)=\dfrac{x^2-x-6}{x^2-9}$: find holes, vertical asymptotes, and the horizontal asymptote. Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7 — your own numbers, and give the hole by its x-value only.
@@ -208,11 +210,13 @@ $g(-x)=2(-x)^4-(-x)^2=2x^4-x^2=g(x)$ → **even** (all even powers, y-axis symme
 Factor: $\dfrac{(x-3)(x+2)}{(x-3)(x+3)}$. $(x-3)$ cancels → **hole at $x=3$** (y-value: $\frac{3+2}{3+3}=\frac{5}{6}$, hole at $(3,\frac56)$). Remaining denominator factor $(x+3)$ → **VA at $x=-3$**. Equal degrees (2 and 2) → **HA: y = 1** (ratio of leading coeffs 1/1).
 </details>
 <!-- part 1: hole at x=3 -->
-<!-- part 1: hole x=3 -->
+<!-- part 1: hole: x=3 -->
 <!-- part 2: VA at x=-3 -->
 <!-- part 2: VA x=-3 -->
+<!-- part 2: VA: x=-3 -->
 <!-- part 2: vertical asymptote at x=-3 -->
 <!-- part 3: HA y=1 -->
+<!-- part 3: HA: y=1 -->
 <!-- part 3: HA at y=1 -->
 <!-- part 3: horizontal asymptote y=1 -->
 <!-- format: Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7 — your own numbers, and give the hole by its x-value only. -->
@@ -224,6 +228,8 @@ Factor: $\dfrac{(x-3)(x+2)}{(x-3)(x+3)}$. $(x-3)$ cancels → **hole at $x=3$** 
 Long division: $2x^2+3x-1 \div (x+2)$. $2x^2\div x=2x$; $2x(x+2)=2x^2+4x$; subtract → $-x-1$. $-x\div x=-1$; $-1(x+2)=-x-2$; subtract → remainder 1. Quotient $2x-1$. **Slant asymptote: y = 2x − 1.**
 </details>
 <!-- key: y = 2x - 1 -->
+<!-- accept: slant asymptote y = 2x - 1 -->
+<!-- accept: slant asymptote: y = 2x - 1 -->
 <!-- topic: 1.7 -->
 
 **P7 (medium, no-calc).** $f$ is decreasing and concave up on [0, 8]. You estimate $f(4)$ using the secant from $x=0$ to $x=8$. Over- or under-estimate? And is $f$'s rate of change increasing or decreasing? Answer as two comma-separated words: overestimate or underestimate, then increasing or decreasing.
@@ -236,6 +242,8 @@ Concave up → secant lies **above** the curve → estimate is **too high (overe
 <!-- part 1: too high -->
 <!-- part 2: increasing -->
 <!-- part 2: increases -->
+<!-- part 2: rate increasing -->
+<!-- part 2: rate of change increasing -->
 <!-- format: Answer as two comma-separated words: overestimate or underestimate, then increasing or decreasing. -->
 <!-- topic: 1.2 -->
 

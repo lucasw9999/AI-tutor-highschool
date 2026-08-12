@@ -204,6 +204,7 @@ For 2×2:
 <details><summary>Solution</summary>`(5)(4) − (2)(3) = 20 − 6 = 14`.</details>
 <!-- key: 14 -->
 <!-- accept: det = 14 -->
+<!-- accept: det(A) = 14 -->
 <!-- topic: 4.9 -->
 
 **P3 (easy).** Eliminate the parameter: `x = 2t`, `y = t − 3`.
@@ -212,6 +213,7 @@ For 2×2:
 <!-- accept: y = 0.5x - 3 -->
 <!-- accept: y = (1/2)x - 3 -->
 <!-- accept: y = (x/2) - 3 -->
+<!-- accept: y = 1/2x - 3 -->
 <!-- accept: y = x/2 - 3, slope 1/2, y-intercept -3 -->
 <!-- topic: 4.1 -->
 

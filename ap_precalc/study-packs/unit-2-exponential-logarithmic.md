@@ -220,7 +220,8 @@ Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 
 <!-- part 2: 50(0.8)^x -->
 <!-- part 2: y=50*0.8^x -->
 <!-- part 2: 50*0.8^x -->
-<!-- part 2: y=50(4/5)^x -->
+<!-- part 2: y=50*(0.8)^x -->
+<!-- part 2: 50*(0.8)^x -->
 <!-- format: Answer as two comma-separated entries: the model type, then the model — e.g. quadratic, y=2x^2+1. -->
 <!-- topic: 2.2 -->
 
