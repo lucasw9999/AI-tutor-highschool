@@ -209,12 +209,20 @@ This is **linear in** $x$: $Y = mx + B$ where $Y=\log y$, slope $m=\log b$, inte
 
 ---
 
-**P1 [NC] — Easy — Linear vs. exponential.** A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.
+**P1 [NC] — Easy — Linear vs. exponential.** A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model. Answer as two comma-separated entries: the model type, then the model — e.g. quadratic, y=2x^2+1.
 
 <details><summary>Solution</summary>
 
 Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 = 0.8, 32/40 = 0.8, 25.6/32 = 0.8 → constant → **exponential**. Initial value 50, base 0.8: $y = 50(0.8)^x$.
 </details>
+<!-- part 1: exponential -->
+<!-- part 2: y=50(0.8)^x -->
+<!-- part 2: 50(0.8)^x -->
+<!-- part 2: y=50*0.8^x -->
+<!-- part 2: 50*0.8^x -->
+<!-- part 2: y=50(4/5)^x -->
+<!-- format: Answer as two comma-separated entries: the model type, then the model — e.g. quadratic, y=2x^2+1. -->
+<!-- topic: 2.2 -->
 
 ---
 
@@ -224,6 +232,8 @@ Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 
 
 $g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.
 </details>
+<!-- topic: 2.1 -->
+<!-- note: deliberately NOT keyed. 7*2^(n-1) has correct forms a string match cannot reconcile — 3.5*2^n is the same sequence, and a required shape stated in the stem would hand over the a_1-vs-a_0 indexing that IS the skill (see 2.1's #1 mistake). g_5 alone is not the whole answer the stem asks for. -->
 
 ---
 
@@ -233,6 +243,8 @@ $g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.
 
 (a) $3^4 = 81 \Rightarrow 4$. (b) $5^{-2} = \frac{1}{25} \Rightarrow -2$. (c) $7$.
 </details>
+<!-- topic: 2.6 -->
+<!-- note: not keyable — three lettered sub-parts. -->
 
 ---
 
@@ -242,6 +254,8 @@ $g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.
 
 $x = 2^5 = 32$.
 </details>
+<!-- topic: 2.6 -->
+<!-- note: deliberately NOT keyed. "x = 2^5 = 32" is one natural chain and "2^5 = x, 32" is another, and no required shape can be stated in the stem without giving away the b^c = x equivalence the item exists to test. -->
 
 ---
 
@@ -251,6 +265,10 @@ $x = 2^5 = 32$.
 
 $16 = 2^4$, so $3x = 4 \Rightarrow x = \dfrac{4}{3}$.
 </details>
+<!-- key: 4/3 -->
+<!-- accept: \dfrac{4}{3} -->
+<!-- accept: \frac{4}{3} -->
+<!-- topic: 2.8 -->
 
 ---
 
@@ -261,6 +279,8 @@ $16 = 2^4$, so $3x = 4 \Rightarrow x = \dfrac{4}{3}$.
 $P(t)=12000(1.03)^t$. $P(8)=12000(1.03)^8 \approx 12000(1.26677) \approx \mathbf{15{,}201}$.
 Reach 18,000: $1.03^t = 1.5 \Rightarrow t = \dfrac{\ln 1.5}{\ln 1.03} \approx \dfrac{0.405465}{0.029559} \approx \mathbf{13.717}$ years.
 </details>
+<!-- topic: 2.3 -->
+<!-- note: deliberately NOT keyed. The population is five figures, so a correct answer is as likely to be typed "15,201" as "15201" — and a comma cannot appear inside one part of a compound key, because it is also how the parts are separated. Marking a right answer wrong over a thousands separator is exactly the defect this bank must not ship. -->
 
 ---
 
@@ -270,6 +290,8 @@ Reach 18,000: $1.03^t = 1.5 \Rightarrow t = \dfrac{\ln 1.5}{\ln 1.03} \approx \d
 
 $\log x^{1/2} + \log y^2 - \log z = \log\!\left(\dfrac{\sqrt{x}\,y^2}{z}\right)$.
 </details>
+<!-- topic: 2.7 -->
+<!-- note: deliberately NOT keyed. log(sqrt(x)y^2/z) is equally correct as log(x^(1/2)y^2/z), log((x^0.5)(y^2)/z) and half a dozen other typeable spellings, none of them enumerable with confidence. -->
 
 ---
 
@@ -280,6 +302,9 @@ $\log x^{1/2} + \log y^2 - \log z = \log\!\left(\dfrac{\sqrt{x}\,y^2}{z}\right)$
 Combine: $\log_2[x(x-2)] = 3 \Rightarrow x(x-2) = 2^3 = 8 \Rightarrow x^2 - 2x - 8 = 0 \Rightarrow (x-4)(x+2)=0$.
 $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**
 </details>
+<!-- key: 4 -->
+<!-- accept: 4 only -->
+<!-- topic: 2.8 -->
 
 ---
 
@@ -290,6 +315,8 @@ $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**
 (a) $g(0)=e^0+1=2$; $f(2)=\ln 2 \approx 0.693$ (or leave exact $\ln 2$).
 (b) $y=e^x+1 \Rightarrow$ swap: $x=e^y+1 \Rightarrow x-1=e^y \Rightarrow y=\ln(x-1)$. So $g^{-1}(x)=\ln(x-1)$.
 </details>
+<!-- topic: 2.5 -->
+<!-- note: not keyable — two lettered sub-parts. (Its other half, composition, is topic 2.4, which no practice item in this pack covers.) -->
 
 ---
 
@@ -301,6 +328,12 @@ Slope $=\dfrac{1.505-0.301}{4-0}=\dfrac{1.204}{4}=0.301=\log_{10}b \Rightarrow b
 Intercept $=0.301=\log_{10}a \Rightarrow a=10^{0.301}\approx 2$.
 Model: $y = 2\cdot 2^{x}$.
 </details>
+<!-- key: y = 2(2)^x -->
+<!-- accept: y = 2*2^x -->
+<!-- accept: y = 2(2^x) -->
+<!-- accept: y = 2^(x+1) -->
+<!-- accept: a=2, b=2 -->
+<!-- topic: 2.10 -->
 
 ---
 
@@ -313,6 +346,8 @@ Model: $y = 2\cdot 2^{x}$.
 (c) Let $u=e^x$: $u^2-5u+6=0 \Rightarrow (u-2)(u-3)=0 \Rightarrow e^x=2$ or $e^x=3 \Rightarrow x=\ln 2$ or $x=\ln 3$.
 *(Show every step — answers without work earn 0 on Q4.)*
 </details>
+<!-- topic: 2.7 -->
+<!-- note: not keyable — three lettered sub-parts, and Q4 is scored on the work, not the final line. -->
 
 ---
 
@@ -327,6 +362,8 @@ Model: $y = 2\cdot 2^{x}$.
 (b) AROC $=\dfrac{D(30)-D(0)}{30-0}=\dfrac{58-10}{30}=\dfrac{48}{30}=\mathbf{1.6}$ thousand/day.
 (c) $D$ is a logarithmic function with $b>0$, so it is **increasing and concave down**. A concave-down curve lies **above** its secant line between the two endpoints. The average-rate line is that secant from $t=0$ to $t=30$, so at the interior point $t=15$ the actual curve value is **greater than** the linear estimate. *(This explanation is the part most students lose — say "concave down → curve above secant.")*
 </details>
+<!-- topic: 2.9 -->
+<!-- note: not keyable — three lettered sub-parts, and (c) asks for an explanation. -->
 
 ---
 
