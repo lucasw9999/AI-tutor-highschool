@@ -7,7 +7,11 @@ const SLUGS = {
 }
 
 function stripTicks(s) {
-  return s.trim().replace(/^`+/, '').replace(/`+$/, '').trim()
+  const t = s.trim()
+  if (t.startsWith('`') && t.endsWith('`') && t.length > 1 && !t.slice(1, -1).includes('`')) {
+    return t.slice(1, -1).trim()
+  }
+  return t
 }
 
 /** Split an "A) x   B) y   C) z   D) w" line into {A,B,C,D}, or null if malformed. */

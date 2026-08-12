@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { parseOptions, parseBlock, parseMcqFile } from '../parse-mcq.js'
+import { readFileSync } from 'node:fs'
+import { parseOptions, parseBlock, parseMcqFile, MCQ_FILES } from '../parse-mcq.js'
 
 const BLOCK = [
   '**Q7. (Analyze Code · 1.5 cast truncates)**',
@@ -30,6 +31,21 @@ test('parseOptions handles prose options containing periods', () => {
 
 test('parseOptions returns null when an option is missing', () => {
   assert.equal(parseOptions('A) one   B) two   C) three'), null)
+})
+
+test('parseOptions preserves a code span that only opens at the start of an option', () => {
+  const o = parseOptions('A) `1` / `12`   B) x   C) y   D) z')
+  assert.equal(o.A, '`1` / `12`')
+})
+
+test('parseOptions preserves a code span that only closes at the end of an option', () => {
+  const o = parseOptions('A) x   B) y   C) z   D) merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}`')
+  assert.equal(o.D, 'merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}`')
+})
+
+test('parseOptions still strips ticks when the whole option is exactly one code span', () => {
+  const o = parseOptions('A) `int`   B) `double`   C) `long`   D) `float`')
+  assert.deepEqual(o, { A: 'int', B: 'double', C: 'long', D: 'float' })
 })
 
 test('parseBlock extracts every field', () => {
@@ -74,4 +90,26 @@ test('parseMcqFile splits on --- and skips prose', () => {
 
 test('parseMcqFile rejects an unknown filename', () => {
   assert.throws(() => parseMcqFile('', 'mcq-unit-9.md'), /unknown MCQ file/)
+})
+
+test('CORPUS INVARIANT: no parsed option, across every real shipped MCQ item, has an odd number of backticks', () => {
+  const offenders = []
+  for (const filename of MCQ_FILES) {
+    const path = new URL(`../../../ap_csa/ap_csa_exam/question-bank/${filename}`, import.meta.url)
+    const text = readFileSync(path, 'utf8')
+    for (const item of parseMcqFile(text, filename)) {
+      for (const [letter, value] of Object.entries(item.options ?? {})) {
+        const ticks = (value.match(/`/g) ?? []).length
+        if (ticks % 2 !== 0) {
+          offenders.push(`${item.id} option ${letter}: ${JSON.stringify(value)}`)
+        }
+      }
+    }
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    `${offenders.length} option(s) have an odd backtick count (a stray tick opened a code ` +
+      `span that swallowed downstream text):\n${offenders.join('\n')}`,
+  )
 })
