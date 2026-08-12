@@ -10,6 +10,8 @@
 //   2. Model-graded work (FRQs) cannot move readiness until the grader has been
 //      calibrated against an officially scored response.
 
+import { isServerGraded } from './grade.js'
+
 const DAY_MS = 86400000
 
 export function daysBetween(a, b) {
@@ -125,7 +127,14 @@ export function plannedChecks(config) {
 function evaluateChecks({ config, window, attempts, calibrated }) {
   const r = config.readiness
   const ids = new Set(window.map((m) => m.id))
-  const mockAttempts = attempts.filter((a) => ids.has(a.mock_id))
+  const inWindow = attempts.filter((a) => ids.has(a.mock_id))
+
+  // Only mechanically graded evidence can move a mechanical floor. Model-graded
+  // work is quarantined until calibration, and an attempt on an item with no
+  // answer key was never graded at all — counting either as a miss would blame
+  // the student for a gap in the bank.
+  const mockAttempts = inWindow.filter(isServerGraded)
+
   const composites = window.map((m) => m.composite_pct)
   const out = new Map()
 
@@ -195,7 +204,9 @@ function evaluateChecks({ config, window, attempts, calibrated }) {
       detail: 'grader not yet calibrated against an officially scored response — FRQ evidence excluded',
     })
   } else {
-    const frqPct = pct(mockAttempts.filter((a) => a.kind === 'frq'))
+    // Once calibrated, model-graded work is trusted, so this reads from the full
+    // window rather than the server-graded subset.
+    const frqPct = pct(inWindow.filter((a) => a.kind === 'frq'))
     out.set('frq', {
       met: frqPct != null && frqPct >= r.frq_min_pct,
       detail: frqPct == null ? 'no FRQ attempts in window' : `${frqPct.toFixed(0)}%`,

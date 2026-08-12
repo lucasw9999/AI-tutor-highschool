@@ -158,20 +158,46 @@ maybe('a proctored mock scores itself and is the only thing that moves the needl
   assert.match(r.status.next_thing_blocking, /mock|topic/i)
 })
 
-maybe('a Precalc question can be served, graded, and reported', async () => {
+maybe('a Precalc question is served and never marked wrong for lacking a key', async () => {
   const { db } = freshDb()
   const q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: T0 })
   assert.ok(['question', 'lesson', 'lesson_missing'].includes(q.type))
+
   if (q.type === 'question') {
     const r = await handleLog({ db, serveId: q.serve, response: '3', config: PRECALC, now: at(50) })
-    assert.equal(r.graded_by, 'server')
+    // These items are worked-solution practice with no canonical short answer,
+    // so they are model-graded. The original bug asserted only graded_by ===
+    // 'server' here, which passed while every answer was being scored WRONG.
+    assert.equal(r.graded_by, 'model')
+    assert.equal(r.correct, null, 'the server must not claim a verdict it did not reach')
+    assert.equal(r.graded, false)
+    assert.ok(r.explanation, 'the student must get the worked solution as feedback')
+    assert.match(r.note, /does not count toward readiness/)
     assert.equal(r.seconds, 50)
+
+    // And the recorded attempt must not poison any percentage.
+    const rows = await db.attempts('ap_precalc')
+    assert.equal(rows[0].graded_by, 'model')
   }
+
   const s = await handleStatus({ db, subject: 'ap_precalc', config: PRECALC, now: at(60) })
   assert.equal(s.subject, PRECALC.display_name)
   assert.equal(s.readiness_pct, 0)
-  // Unit 4 is class-only and must not appear as an exam readiness criterion.
   assert.ok(!s.criteria.some((c) => /Unit 4/.test(c.requirement)), 'Unit 4 must be excluded')
+})
+
+maybe('a Precalc mock composite is not dragged to zero by ungraded answers', async () => {
+  const { db } = freshDb()
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: T0 })
+  for (let i = 0; i < 5; i++) {
+    const q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(i * 100), mockId: m.mock })
+    if (q.type !== 'question') continue
+    await handleLog({ db, serveId: q.serve, response: 'anything', config: PRECALC, now: at(i * 100 + 60) })
+  }
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(2000) })
+  assert.equal(r.scored, 0, 'no mechanically graded answers in this sitting')
+  assert.ok(r.ungraded > 0)
+  assert.match(r.basis, /need human or model grading/)
 })
 
 maybe('reloading the seed does not disturb recorded evidence', async () => {

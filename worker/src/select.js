@@ -12,6 +12,8 @@
 //   4. Spaced review of something previously missed and now due.
 //   5. Anything unseen, so the bank keeps moving.
 
+import { isServerGraded } from './grade.js'
+
 const DAY_MS = 86400000
 
 /** Days from `then` to `now`, positive when `then` is in the past. */
@@ -32,7 +34,9 @@ export function reviewInterval(streak) {
  */
 export function topicStats(attempts) {
   const stats = new Map()
-  const ordered = [...attempts].sort((a, b) => new Date(a.ts) - new Date(b.ts))
+  // Only graded attempts carry a percentage or a streak; an ungraded one has no
+  // verdict to record.
+  const ordered = [...attempts].filter(isServerGraded).sort((a, b) => new Date(a.ts) - new Date(b.ts))
   for (const a of ordered) {
     if (a.topic == null) continue
     if (!stats.has(a.topic)) stats.set(a.topic, { n: 0, correct: 0, streak: 0, last_ts: null, misses: 0 })
@@ -69,6 +73,8 @@ function examWeight(topic, topicMeta) {
  */
 export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(), config, now, reuseDays = 56 }) {
   const stats = topicStats(attempts)
+  // Coverage asks "has he tried this?", which an ungraded attempt still answers.
+  const attempted = new Set(attempts.map((a) => a.topic))
 
   // An item answered recently is not evidence — he may just remember it.
   const lastSeen = new Map()
@@ -103,7 +109,7 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
   }
 
   // 2. A topic he has never attempted.
-  const untouched = unseen.filter((it) => onExam(it) && !stats.has(it.topic))
+  const untouched = unseen.filter((it) => onExam(it) && !attempted.has(it.topic))
   if (untouched.length) {
     untouched.sort((a, b) => examWeight(b.topic, topicMeta) - examWeight(a.topic, topicMeta) || a.id.localeCompare(b.id))
     const pick = untouched[0]

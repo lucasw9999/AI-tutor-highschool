@@ -141,14 +141,25 @@ export async function handleLog({ db, serveId, response, hints = 0, config, now 
   }
 
   const ctx = await loadContext(db, serve.subject, config)
+  const graded = verdict.graded_by === 'server'
   return {
-    correct: verdict.correct === 1,
+    // `correct` is only a claim when the server actually graded it. For
+    // model-graded and unkeyed items it is null, so nothing downstream can read
+    // a missing verdict as a wrong answer.
+    correct: graded ? verdict.correct === 1 : null,
+    graded,
     blank: verdict.blank,
     keyed: verdict.keyed,
     graded_by: verdict.graded_by,
     seconds,
     explanation: item.explanation,
     gap_closed: gapClosed,
+    ...(verdict.graded_by === 'unkeyed' && {
+      note: 'This item has no answer key yet, so your answer was recorded but not graded. That is a gap in the question bank, not a mistake by you.',
+    }),
+    ...(verdict.graded_by === 'model' && {
+      note: 'Compare your work against the worked solution below. This is practice feedback and does not count toward readiness.',
+    }),
     status: summarize({ ctx, now }),
   }
 }
@@ -189,10 +200,12 @@ export async function handleMockSubmit({ db, mockId, config, now }) {
   const attempts = (await db.attempts(m.subject)).filter((a) => a.mock_id === Number(mockId))
   if (!attempts.length) throw new ApiError(409, `mock ${mockId} has no logged answers`)
 
-  // Composite is MCQ-only until the FRQ grader is calibrated, and says so.
-  const mcq = attempts.filter((a) => a.kind !== 'frq')
-  const composite = mcq.length ? (mcq.filter((a) => a.correct).length / mcq.length) * 100 : 0
+  // Composite counts only mechanically graded answers. Including model-graded or
+  // unkeyed items would fold an ungraded zero into the score and understate it.
+  const scored = attempts.filter((a) => a.graded_by === 'server')
+  const composite = scored.length ? (scored.filter((a) => a.correct).length / scored.length) * 100 : 0
   const blanks = attempts.filter((a) => (a.response ?? '') === '').length
+  const ungraded = attempts.length - scored.length
 
   await db.endMock({ id: mockId, ended_at: now, composite_pct: composite, blanks })
   const ctx = await loadContext(db, m.subject, config)
@@ -200,8 +213,12 @@ export async function handleMockSubmit({ db, mockId, config, now }) {
     mock: Number(mockId),
     composite_pct: Number(composite.toFixed(1)),
     answered: attempts.length,
+    scored: scored.length,
+    ungraded,
     blanks,
-    basis: 'Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.',
+    basis: ungraded
+      ? `Scored on the ${scored.length} mechanically graded answers. ${ungraded} response(s) need human or model grading and are excluded.`
+      : 'Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.',
     status: summarize({ ctx, now }),
   }
 }

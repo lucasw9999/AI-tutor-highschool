@@ -77,6 +77,25 @@ export function compile(readFile = (f) => readFileSync(f, 'utf8')) {
     if (!topics.some((t) => t.subject === s)) errors.push(`subject ${s} has no topics — parser returned nothing`)
   }
 
+  // Cross-subject gate. validate() only ever ran over the CSA items, which is
+  // how 48 keyless Precalc items reached the database: grade() treated a null
+  // key as a mismatch, so every answer would have been marked WRONG. An item is
+  // either mechanically gradeable (and must carry a key) or explicitly declared
+  // model-graded. There is no third state.
+  const MODEL_GRADED_KINDS = new Set(['frq', 'constructed_model_graded'])
+  for (const it of items) {
+    const keyed = it.answer != null && String(it.answer).trim() !== ''
+    if (!MODEL_GRADED_KINDS.has(it.kind) && !keyed) {
+      errors.push(
+        `${it.id} (${it.subject}, kind=${it.kind}): no answer key. Add one, or declare kind as ` +
+        `'constructed_model_graded' so it is routed to the model instead of being marked wrong.`,
+      )
+    }
+    if (MODEL_GRADED_KINDS.has(it.kind) && !it.explanation && !it.solution) {
+      errors.push(`${it.id}: model-graded items need a worked solution for the student to compare against`)
+    }
+  }
+
   return {
     topics, items, teaching, errors, warnings,
     csaTeachingGaps: csaTeaching.gaps,
