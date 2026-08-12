@@ -85,8 +85,75 @@ end in `;` corrupts the payload: the CSA stems contain Java, so
 `String csv = "red,green,blue,yellow";` ends a line with a semicolon *inside* a
 SQL string literal. Track single-quote state and treat `''` as an escaped quote.
 Group into ~40 KiB requests to keep the call count low — recompute how many
-that is for whatever `seed.sql` weighs today (currently ~205 KiB; it changes
+that is for whatever `seed.sql` weighs today (currently ~359 KiB; it changes
 every time content is regenerated, so do not assume a fixed call count).
+Measured, not guessed: a naive line-ending-in-`;` split of the current file
+loads **9 of 289 items** and fails 618 of its 639 chunks.
+`tools/build/tests/to-sql.test.js` loads the real file one statement at a time
+through the quote-aware splitter and counts every row back out of the database.
+
+### What a reload CANNOT do, and the migration the live database needs
+
+Two things `seed.sql` will never do to a database that already exists, because
+every `CREATE TABLE` in it is `IF NOT EXISTS` and every write is an upsert:
+
+1. **Add a column.** An existing table does not gain one.
+2. **Retire a row.** A `topics`, `items` or `teaching` row that the content no
+   longer declares is not deleted, because the file only ever inserts. So a
+   retired topic survives in D1 forever unless it is deleted by hand — and a
+   retired *exam-tested* topic keeps counting toward `topics_total` in
+   `coverageOf` (api.js), which pins readiness at 0 through the coverage
+   criterion and inflates the dashboard's "N/M topics attempted" chip.
+
+Both apply right now. Run these against the deployed D1, **in this order**:
+
+```sql
+-- 1. attempts.picked, added to schema.sql after the table shipped. Check first:
+--    SELECT picked FROM attempts LIMIT 0;   -- the same probe db.js uses
+--    Skip this statement if it succeeds; SQLite has no ADD COLUMN IF NOT EXISTS,
+--    so re-running it on a migrated database errors with "duplicate column name".
+ALTER TABLE attempts ADD COLUMN picked TEXT;
+
+-- 2. Reload the regenerated seed.sql (quote-aware split, ~40 KiB batches). This
+--    repoints every Precalc item from its <unit>.0 placeholder onto its real CED
+--    topic, so nothing references the placeholders after this step.
+--    ... seed.sql ...
+
+-- 3. Delete the four placeholder topic rows the reload leaves behind. 1.0, 2.0
+--    and 3.0 are tested_on_exam = 1, so leaving them caps Precalc coverage below
+--    100% forever — which is the exact defect the build fix removed, undone by
+--    stale rows. Do this AFTER step 2, never before: until the reload lands, the
+--    Precalc items still point at these topics, and deleting them first would
+--    orphan every one of them.
+DELETE FROM topics WHERE subject = 'ap_precalc' AND id IN ('1.0', '2.0', '3.0', '4.0');
+```
+
+Then verify against the artifacts: `items` = 289, `topics` = 97, `teaching` =
+97, `SELECT count(*) FROM items i LEFT JOIN topics t ON t.id = i.topic AND
+t.subject = i.subject WHERE t.id IS NULL` = 0, and
+`SELECT count(*) FROM items WHERE subject='ap_precalc' AND kind='constructed'`
+= 19. The whole sequence has been rehearsed against a copy of the deployed seed
+in `node:sqlite`: it lands exactly on the artifacts and disturbs no row of
+`attempts` or `serves`.
+
+**One honest consequence.** Any Precalc attempt logged before this migration was
+recorded against a `<unit>.0` placeholder, and `attempts.topic` is stored as it
+was at answer time. After step 3 that topic no longer exists, so the attempt
+still sits in `attempts` — evidence is never rewritten — but it credits coverage
+of nothing. Those answers were booked `graded_by: 'unkeyed'`, so they were
+already excluded from every percentage; the only thing lost is the "topic
+attempted" tick, and the question has to be answered again to earn it. Check
+what is affected with:
+
+```sql
+SELECT a.item_id, a.topic, a.graded_by, count(*) FROM attempts a
+  LEFT JOIN topics t ON t.id = a.topic AND t.subject = a.subject
+ WHERE t.id IS NULL GROUP BY a.item_id, a.topic, a.graded_by;
+```
+
+Do **not** rewrite `attempts.topic` to match the item's new topic. That is
+editing evidence to make a number look better, which is the thing this whole
+system exists to prevent.
 
 ## Verified live
 
