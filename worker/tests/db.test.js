@@ -22,7 +22,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { makeDb } from '../src/db.js'
-import { handleLog, handleNext, handleMockStart, handleMockSubmit, MIN_MOCK_COVERAGE, ApiError } from '../src/api.js'
+import {
+  handleLog, handleNext, handleTaught, handleStatus, handleMockStart, handleMockSubmit,
+  MIN_MOCK_COVERAGE, ApiError,
+} from '../src/api.js'
 
 const SCHEMA = new URL('../schema.sql', import.meta.url)
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
@@ -285,7 +288,133 @@ test('a first-time /log racing /mock/submit cannot be counted against a frozen c
 })
 
 // ---------------------------------------------------------------------------
-// One question cannot be handed out twice inside one sitting
+// The gap table's two read-then-writes
+//
+// /taught and /next both read the gaps table and then write it, and D1 offers no
+// transaction, so both had the shape claimServe and closeMock were written to
+// close. Driven over real SQLite, with the racing statement SCHEDULED rather than
+// hoped for, because the whole point is which statement decides.
+// ---------------------------------------------------------------------------
+
+/** One topic with `n` keyed items and a teaching row: enough to open, teach and close a gap. */
+function seedTaughtTopic(sqlite, { topic = '1.3', n = 4 } = {}) {
+  sqlite.prepare(
+    `INSERT INTO topics (id, subject, name, unit, exam_weight_low, exam_weight_high, tested_on_exam)
+     VALUES (?, 'ap_csa', 'Expressions', '1', 20, 30, 1)`,
+  ).run(topic)
+  sqlite.prepare(
+    `INSERT INTO teaching (subject, topic, plain_idea, worked_example, common_mistake)
+     VALUES ('ap_csa', ?, 'The idea.', 'The example.', 'The trap.')`,
+  ).run(topic)
+  for (let i = 1; i <= n; i++) {
+    sqlite.prepare(
+      `INSERT INTO items (id, subject, topic, unit, practice, kind, stem, options_json, answer, explanation, calc_allowed)
+       VALUES (?, 'ap_csa', ?, '1', 'P3', 'mcq', ?, '{"A":"one","B":"two","C":"three","D":"four"}', 'B', 'Because.', 0)`,
+    ).run(`csa-g${i}`, topic, `Question ${i}?`)
+  }
+}
+
+/** Miss two distinct questions on the one topic, which is what evidences a gap. */
+async function missTwice(db) {
+  for (const i of [1, 2]) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 100) })
+    assert.equal(q.type, 'question')
+    await handleLog({ db, serveId: q.serve, response: 'A', config: CSA, now: at(i * 100 + 30) })
+  }
+}
+
+/** A promise pair for parking one statement mid-flight and letting another overtake it. */
+function scheduled(pattern) {
+  let armed = false
+  let arrived
+  let release
+  const reached = new Promise((r) => { arrived = r })
+  const open = new Promise((r) => { release = r })
+  return {
+    arm: () => { armed = true },
+    reached,
+    release,
+    hold: (sql) => {
+      if (!armed || !pattern.test(sql)) return null
+      armed = false // park the racing statement only, not the ones that precede it
+      arrived()
+      return open
+    },
+  }
+}
+
+test('/taught refuses to promise a re-test of a gap that closed while it was writing', async () => {
+  // Every endpoint is a GET that ChatGPT may retry, so a second /taught arriving
+  // beside the /log that closes the gap needs no unusual circumstances. handleTaught
+  // reads the open gaps and THEN writes, and it threw away markTaught's changed-row
+  // count — so the retry matched nothing, returned ok:true, and promised that the
+  // topic "will come back with no hints" about a gap already closed by an unaided
+  // correct answer. That is the same false success the 404 in this handler exists
+  // to prevent, arriving through a narrower door.
+  const race = scheduled(/UPDATE gaps SET taught_at/i)
+  const { db, sqlite } = freshDb({ hold: race.hold })
+  seedTaughtTopic(sqlite)
+
+  await missTwice(db)
+  const lesson = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(400) })
+  assert.equal(lesson.type, 'lesson')
+  assert.equal((await handleTaught({ db, subject: 'ap_csa', topic: '1.3', config: CSA, now: at(500) })).ok, true)
+
+  // The cold re-test is on screen. He answers it right, unaided — which closes the
+  // gap — at the same moment a retried /taught is writing.
+  const retest = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(600) })
+  assert.equal(retest.type, 'question')
+
+  race.arm()
+  const retried = handleTaught({ db, subject: 'ap_csa', topic: '1.3', config: CSA, now: at(650) })
+  await race.reached // parked with its UPDATE in flight, having already read the gap as open
+  const closed = await handleLog({ db, serveId: retest.serve, response: 'B', config: CSA, now: at(660) })
+  assert.equal(closed.gap_closed, '1.3', 'the unaided correct answer is what closes the gap')
+  race.release()
+
+  await assert.rejects(
+    () => retried,
+    (e) => e instanceof ApiError && e.status === 404,
+    'a /taught that changed no row must be refused, not answered with a promise about a closed gap',
+  )
+  const row = sqlite.prepare('SELECT taught_at, cleared_at FROM gaps WHERE topic = ?').get('1.3')
+  assert.ok(row.cleared_at, 'the gap stays closed')
+  assert.equal(row.taught_at, at(500), 'and the retry may not stamp a lesson onto it either')
+})
+
+test('two concurrent /next calls cannot open one gap twice', async () => {
+  // openGap is INSERT OR IGNORE against PRIMARY KEY (subject, topic, opened_at),
+  // and every request carries its own millisecond clock — so the PK does NOT
+  // dedupe two opens of the same gap, and handleNext's read of the gaps table is a
+  // read-then-write with no transaction. Two concurrent /next on one evidenced gap
+  // wrote two rows, and open_gaps then listed the topic twice in EVERY response
+  // the model reads to the student. api.test.js's fake could not see it: it deduped
+  // on (subject, topic, uncleared), which is stricter than the schema.
+  const race = scheduled(/INSERT OR IGNORE INTO gaps|INSERT INTO gaps/i)
+  const { db, sqlite } = freshDb({ hold: race.hold })
+  seedTaughtTopic(sqlite)
+
+  await missTwice(db)
+
+  race.arm()
+  const first = handleNext({ db, subject: 'ap_csa', config: CSA, now: at(400) })
+  await race.reached // parked with its INSERT in flight, having read no gap rows
+  const second = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(401) })
+  race.release()
+  await first
+
+  assert.equal(second.type, 'lesson', 'the second call still gets the lesson the evidence calls for')
+  assert.equal(
+    sqlite.prepare('SELECT COUNT(*) n FROM gaps WHERE subject = ? AND topic = ?').get('ap_csa', '1.3').n, 1,
+    'one gap on one topic is one row, whatever the interleaving — the millisecond clocks differ, so the PK will not do it',
+  )
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(500) })
+  assert.deepEqual(
+    s.open_gaps, ['1.3'],
+    'and the list the model reads aloud must name the topic once',
+  )
+})
+
 //
 // A serve is invisible to the sitting's own no-repeat list until it is LOGGED:
 // select.js can only see attempt rows, so between /next and /log the question in

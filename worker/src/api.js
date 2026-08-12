@@ -427,7 +427,19 @@ export async function handleTaught({ db, subject, topic, config, now }) {
         `Pass the topic id exactly as /next returned it in lesson.topic.`,
     )
   }
-  await db.markTaught({ subject, topic, taught_at: now })
+  // The read above is a read-then-write, and D1 offers no transaction: a /taught
+  // racing the /log that closes the gap — every endpoint is a GET ChatGPT may
+  // retry — read it as open and then matched no row. Discarding the changed-row
+  // count reported ok:true and promised a cold re-test of a gap an unaided correct
+  // answer had already closed, which is the same false success the 404 above
+  // exists to prevent.
+  if (!(await db.markTaught({ subject, topic, taught_at: now }))) {
+    throw new ApiError(
+      404,
+      `the open gap on "${topic}" for ${subject} closed before this lesson could be marked as delivered — an ` +
+        `unaided correct answer got there first, so there is nothing left to re-test. Nothing was recorded.`,
+    )
+  }
   const ctx = await loadContext(db, subject, config)
   return {
     ok: true,
