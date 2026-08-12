@@ -474,6 +474,51 @@ function sitPaper({ bank, attempts, mockId, questions, startMs, accuracy = null 
   return { paper, refusedAt }
 }
 
+/**
+ * Drill `answers` ordinary practice questions, `perDay` a day, THROUGH THE
+ * SELECTOR'S OWN PATH, and return the history that produces.
+ *
+ * A history has to be built this way rather than hand-written, because what makes
+ * a bank partially worn is precisely which items the selector itself chose and in
+ * what order: it works the heavy units first, so their items pass into the reuse
+ * window well before the light ones. Seeding a synthetic history cannot reproduce
+ * that skew, and the skew is the whole defect.
+ */
+function drillDays({ bank, answers, perDay = 20, startMs }) {
+  const { items, topicMeta, config } = bank
+  const attempts = []
+  for (let i = 0; i < answers; i++) {
+    const now = new Date(startMs + Math.floor(i / perDay) * DAY_MS + (i % perDay) * 60000).toISOString()
+    const r = pickNext({ items, attempts, gaps: [], topicMeta, config, now })
+    assert.notEqual(r, null, `ordinary drilling refused after ${attempts.length} answers`)
+    attempts.push({
+      item_id: r.item.id, topic: r.item.topic, unit: r.item.unit, response: 'A',
+      correct: i % 5 !== 0, ts: now, hints_used: 0, conditions: 'cold',
+      graded_by: 'server', kind: r.item.kind,
+    })
+  }
+  return { attempts, endedMs: startMs + Math.ceil(answers / perDay) * DAY_MS }
+}
+
+/** How many of a unit's on-exam items are inside / outside the reuse window. */
+function windowCensus({ bank, attempts, atMs }) {
+  const { items, topicMeta, config } = bank
+  const lastSeen = new Map()
+  for (const a of attempts) {
+    const prev = lastSeen.get(a.item_id)
+    if (!prev || new Date(a.ts) > new Date(prev)) lastSeen.set(a.item_id, a.ts)
+  }
+  const census = new Map()
+  for (const it of onExamItems({ items, topicMeta })) {
+    const seen = lastSeen.get(it.id)
+    const outside = !seen || (atMs - new Date(seen).getTime()) / DAY_MS >= config.readiness.reuse_days
+    const c = census.get(it.unit) ?? { outside: 0, inside: 0 }
+    c[outside ? 'outside' : 'inside']++
+    census.set(it.unit, c)
+  }
+  return census
+}
+
 /** Realized unit shares of one paper, as percentages. */
 function unitShares(paper) {
   const counts = new Map()
@@ -921,6 +966,154 @@ test('a full sitting samples the exam rather than a corner of it', async (t) => 
       new Set(papers.map(([, p]) => p)).size, 1,
       `order-dependent paper: ${papers.map(([l, p]) => `${l}=${p.slice(0, 60)}...`).join(' | ')}`,
     )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A PARTIALLY WORN bank, sat as a paper.
+//
+// Every sitting above starts from a virgin history or a wholly exhausted one, and
+// those are the two states in which the reuse window CANNOT distort a paper: in
+// the first nothing is inside the window, in the second everything is, so either
+// way every unit is equally available. The state the student is actually in after
+// a week is neither. He has worked the heavy units hardest — the selector sent him
+// there — so their items cross into the reuse window FIRST, while the light units
+// still hold never-asked ones.
+//
+// In that state a global "serve nothing inside the window while anything outside
+// it exists" rule stops being a freshness preference and becomes a filter on which
+// UNITS may appear on the paper at all. handleMockSubmit scores the whole paper
+// into composite_pct with no unit filter, so a unit absent from the paper is a
+// unit absent from the only number that moves readiness — and the number comes out
+// HIGH, because the unit he cannot do was never asked. That is an overstatement of
+// readiness produced by the composition rule, which is the one failure this
+// module's header promises it does not have.
+// ---------------------------------------------------------------------------
+
+test('a sitting on a partially worn bank is still a sample of the whole exam', async (t) => {
+  const START = new Date('2026-09-01T12:00:00Z').getTime()
+  /** ceil(mcq_count * 0.9) — what api.js actually requires before it will score. */
+  const scoredLength = (config) => Math.ceil(config.exam.mcq_count * MIN_MOCK_COVERAGE)
+
+  // 140 and 180 answers at 20 a day are 7 and 9 days of ordinary drilling against
+  // CSA's 28-day reuse window — the first fortnight of use, at well under the ~50
+  // answers a day db.js sizes itself for. At 140 one unit has no item outside the
+  // window; at 180, two do.
+  for (const answers of [140, 180]) {
+    await t.test(`${answers} answers of drilling later, unit shares still track the exam's weights`, () => {
+      const bank = bankOf('ap_csa')
+      const owed = entitlements(bank)
+      const { attempts, endedMs } = drillDays({ bank, answers, startMs: START })
+      const census = windowCensus({ bank, attempts, atMs: endedMs })
+      const stale = [...census].filter(([, c]) => c.outside === 0).map(([u]) => u)
+      const fresh = [...census].filter(([, c]) => c.outside > 0).map(([u]) => u)
+      assert.ok(
+        stale.length > 0 && fresh.length > 0,
+        `precondition: after ${answers} answers some unit must be wholly inside the reuse window while another is ` +
+          `not, or this test proves nothing — ${[...census].map(([u, c]) => `u${u} out=${c.outside} in=${c.inside}`).join(', ')}`,
+      )
+
+      const questions = scoredLength(bank.config)
+      const { paper, refusedAt } = sitPaper({
+        bank, attempts, mockId: 1, questions, startMs: endedMs,
+      })
+      assert.equal(paper.length, questions, `the sitting served ${paper.length} of ${questions}${refusedAt ? ` (refused at ${refusedAt})` : ''}`)
+      const shares = unitShares(paper)
+      const table = [...owed.keys()].map((u) => `u${u} ${(shares.get(u) ?? 0).toFixed(1)}%`).join(' / ')
+      for (const [unit, want] of owed) {
+        const got = shares.get(unit) ?? 0
+        assert.ok(
+          Math.abs(got - want) <= 5,
+          `unit ${unit}: served ${got.toFixed(1)}% of the paper, entitled to ${want.toFixed(1)}% — ${table}. ` +
+            `Units wholly inside the reuse window: ${stale.length ? stale.map((u) => `u${u}`).join(', ') : 'none'}. ` +
+            'A unit missing from the paper is missing from composite_pct, and the score comes out high.',
+        )
+      }
+    })
+  }
+
+  await t.test('a fixed knowledge profile scores what it is worth, not what the paper happened to ask', () => {
+    // He is good at units 1-3 and cannot do unit 4 — which is 35.4% of the exam,
+    // the heaviest unit there is. On the real weighting that profile is worth about
+    // 72, comfortably under composite_floor_min 78. A paper that omits unit 4
+    // scores him around 90 and qualifies him for an exam he would fail.
+    const bank = bankOf('ap_csa')
+    const accuracy = { 1: 0.9, 2: 0.9, 3: 0.9, 4: 0.4 }
+    const owed = entitlements(bank)
+    const worth = [...owed].reduce((s, [unit, pct]) => s + (pct / 100) * accuracy[unit] * 100, 0)
+    const { attempts, endedMs } = drillDays({ bank, answers: 140, startMs: START })
+    const { paper } = sitPaper({
+      bank, attempts, mockId: 1, questions: scoredLength(bank.config), startMs: endedMs, accuracy,
+    })
+    const mine = attempts.filter((a) => a.mock_id === 1)
+    const composite = (mine.filter((a) => a.correct).length / paper.length) * 100
+    assert.ok(
+      Math.abs(composite - worth) <= 5,
+      `composite ${composite.toFixed(1)} against the ${worth.toFixed(1)} this profile is worth on the real ` +
+        `weighting; unit shares ${[...unitShares(paper)].sort().map(([u, s]) => `u${u} ${s.toFixed(1)}%`).join(' / ')}. ` +
+        `composite_floor_min is ${bank.config.readiness.composite_floor_min}.`,
+    )
+  })
+
+  await t.test('a question the worn unit has already answered recently is served as a labelled repeat', () => {
+    // The other half of the same fix. Letting a unit whose own items are all inside
+    // the reuse window back onto the paper is only honest if the questions it
+    // contributes are labelled for what they are: a remembered answer is practice,
+    // not evidence about an unseen question. Selling one as fresh would replace one
+    // overstatement with another.
+    const bank = bankOf('ap_csa')
+    const { attempts, endedMs } = drillDays({ bank, answers: 140, startMs: START })
+    const census = windowCensus({ bank, attempts, atMs: endedMs })
+    const stale = new Set([...census].filter(([, c]) => c.outside === 0).map(([u]) => u))
+    assert.ok(stale.size > 0, 'precondition: some unit is wholly inside the reuse window')
+    const { paper } = sitPaper({
+      bank, attempts, mockId: 1, questions: scoredLength(bank.config), startMs: endedMs,
+    })
+    const fromStale = paper.filter((it) => stale.has(it.unit))
+    assert.ok(fromStale.length > 0, `precondition: the paper drew on unit(s) ${[...stale].join(', ')}`)
+    for (const it of fromStale) {
+      assert.equal(it.repeat, true, `${it.id} is inside the reuse window but was not flagged as a repeat`)
+      assert.match(it.reason, /answered this exact question before/i, `${it.id}: ${it.reason}`)
+      assert.match(it.reason, /memory check|not fresh evidence/i, `${it.id}: ${it.reason}`)
+    }
+    // And the other direction: a unit that still has never-asked items must supply
+    // one, not a repeat, so freshness stays a real preference inside the pool.
+    const freshUnits = new Set([...census].filter(([, c]) => c.outside > 0).map(([u]) => u))
+    const fromFresh = paper.filter((it) => freshUnits.has(it.unit))
+    assert.ok(fromFresh.length > 0, 'precondition: the paper also drew on a unit with items outside the window')
+    assert.ok(
+      fromFresh.some((it) => !it.repeat),
+      'every question from a unit with fresh items left was a repeat — a repeat displaced a fresh question',
+    )
+  })
+  await t.test('a never-asked question wins an otherwise arbitrary tie between two units', () => {
+    // Two units, identical exam weight, one item each, and the paper has asked
+    // neither — so they are owed exactly the same share and the tie used to fall
+    // through to the unit NAME. Unit A sorts first alphabetically but its only
+    // question was answered an hour ago; unit B's has never been asked. Preferring
+    // B costs the sample nothing, because A is owed just as much and takes the very
+    // next question — and it means the paper does not open with a remembered
+    // question when a fresh one was there for nothing.
+    const meta = (unit) => ({ unit, exam_weight_low: 25, exam_weight_high: 25, tested_on_exam: 1 })
+    const topicMeta = new Map([['at', meta('A')], ['bt', meta('B')]])
+    const items = [
+      { id: 'a1', topic: 'at', unit: 'A', kind: 'mcq', answer: 'A' },
+      { id: 'b1', topic: 'bt', unit: 'B', kind: 'mcq', answer: 'A' },
+    ]
+    const args = {
+      items, attempts: [attempt('a1', 'at', 1, 1 / 24)], topicMeta, config: CFG, now: NOW,
+      sampling: 'mock', mockId: 7, reuseDays: 28,
+    }
+    const first = pickNext(args)
+    assert.equal(first.item.id, 'b1', 'unit A sorts first by name, but its question is an hour old')
+    assert.notEqual(first.repeat, true)
+    // And the loser is not dropped: it takes the next question, as a labelled repeat.
+    const second = pickNext({
+      ...args,
+      attempts: [...args.attempts, attempt('b1', 'bt', 1, 0, { mock_id: 7, conditions: 'proctored_mock' })],
+    })
+    assert.equal(second.item.id, 'a1', 'unit A is owed just as much and takes the next question')
+    assert.equal(second.repeat, true, 'and it is labelled, because he answered it an hour ago')
   })
 })
 
