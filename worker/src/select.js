@@ -1,9 +1,11 @@
 // What to ask next, and why.
 //
 // The selector is deterministic on purpose. Given the same history it makes the
-// same choice, so a disputed question can be replayed and explained. Every
-// return value carries a `reason`, which the status view shows verbatim — the
-// student should never wonder why he is being asked something.
+// same choice — including when the bank arrives in a different order — so a
+// disputed question can be replayed and explained. Every return value carries a
+// `reason`, which the status view shows verbatim — the student should never
+// wonder why he is being asked something, and the reason must never claim more
+// than the evidence supports.
 //
 // Priority order, highest first:
 //   1. Re-test a taught gap cold. A gap closes only on an unaided correct answer.
@@ -11,6 +13,11 @@
 //   3. Shore up the weakest topic, weighted by how much the exam cares.
 //   4. Spaced review of something previously missed and now due.
 //   5. Anything unseen, so the bank keeps moving.
+//
+// Each of those branches asks for a specific topic, and each draws from that
+// topic's OWN pool: its never-asked items first, then its items whose reuse
+// window has passed. A topic that has been used up must not fall through to a
+// lower priority just because some other topic still has unseen items.
 
 import { isServerGraded } from './grade.js'
 
