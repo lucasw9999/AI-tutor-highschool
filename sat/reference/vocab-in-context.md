@@ -104,59 +104,61 @@ These appear repeatedly on the digital SAT. Learn them as **flexible meanings**,
 
 *Cover the choices, predict, then match. Answers + reasoning below.*
 
+> **On the real SAT the correct letter is random** — there is no "when in doubt pick B." The answers below are deliberately spread across all four letters, so the only way through is the method.
+
 **1.** While most critics praised the film's bold visuals, they were ______ about its thin plot, noting it left key questions unanswered.
-(A) enthusiastic (B) skeptical (C) silent (D) confused
+(A) enthusiastic (B) indifferent (C) silent (D) skeptical
 
 **2.** The researcher's conclusions were widely respected because her methods were ______: every step was documented and could be repeated by others.
-(A) arbitrary (B) rigorous (C) tentative (D) controversial
+(A) arbitrary (B) innovative (C) rigorous (D) controversial
 
 **3.** Far from being ______, the senator's apology was carefully worded to avoid admitting any actual wrongdoing.
 (A) candid (B) lengthy (C) public (D) emotional
 
 **4.** Although the new evidence did not completely overturn the old theory, it did ______ several of its central claims.
-(A) reinforce (B) undermine (C) restate (D) ignore
+(A) undermine (B) reinforce (C) restate (D) clarify
 
 **5.** The essay's argument is ______; rather than offering one simple cause, it weighs several interacting factors.
 (A) flawed (B) nuanced (C) brief (D) biased
 
 **6.** The author uses the anecdote to ______ her main point, giving readers a concrete example of an otherwise abstract idea.
-(A) contradict (B) illustrate (C) question (D) conceal
+(A) contradict (B) complicate (C) question (D) illustrate
 
 **7.** Critics called the sequel ______, complaining it merely recycled ideas from the original without adding anything new.
-(A) innovative (B) derivative (C) ambitious (D) obscure
+(A) derivative (B) innovative (C) polarizing (D) obscure
 
 **8.** Engineers added the backup system not because failure was likely but because, over decades of use, some breakdown was effectively ______.
-(A) preventable (B) inevitable (C) trivial (D) intentional
+(A) preventable (B) catastrophic (C) trivial (D) inevitable
 
 **9.** Her support for the proposal was ______; she agreed to vote yes but reserved the right to withdraw if costs rose.
 (A) wholehearted (B) tentative (C) hostile (D) immediate
 
 **10.** The committee adopted a ______ approach, focusing on what would actually work rather than on lofty ideals.
-(A) theoretical (B) pragmatic (C) reckless (D) reluctant
+(A) theoretical (B) visionary (C) pragmatic (D) reluctant
 
 ---
 
 ## Answers (worked)
 
-**1. (B) skeptical.** Contrast signal "While...praised" sets up an opposite; "thin plot...questions unanswered" is doubt. (A) reverses it; (C) "silent" contradicts "noting." *Trap beaten: reversal.*
+**1. (D) skeptical.** Contrast signal "While…praised" sets up an opposite; "thin plot…questions unanswered" is doubt. (A) enthusiastic reverses it; (B) indifferent fails because they cared enough to *note* the flaw; (C) silent flatly contradicts "noting." *Trap beaten: reversal.*
 
-**2. (B) rigorous.** The colon restates the meaning — "every step documented and repeatable" = thorough/careful. (A) arbitrary and (C) tentative are the opposite charge. *Clue: restatement after the colon.*
+**2. (C) rigorous.** The colon restates the meaning — "every step documented and repeatable" = thorough, careful. (A) arbitrary is the opposite charge; (B) innovative is praise, but the sentence praises *carefulness*, not originality; (D) controversial contradicts "widely respected." *Clue: restatement after the colon.*
 
-**3. (A) candid.** "Far from being ___" + "avoid admitting wrongdoing" → the blank is the opposite of evasive = honest/frank. (B)/(C)/(D) are true-sounding but ignore the logic. *Trap beaten: off-topic but plausible.*
+**3. (A) candid.** "Far from being ___" + "avoid admitting wrongdoing" → the blank is the opposite of evasive = honest, frank. (B)/(C)/(D) are true-sounding but ignore the logic. *Trap beaten: off-topic but plausible.*
 
-**4. (B) undermine.** "Although...did not completely overturn...it did ___" → contrast means it still weakened the claims. (A) reinforce reverses; (C)/(D) ignore "did." *Academic verb you must know.*
+**4. (A) undermine.** "Although…did not completely overturn…it did ___" → the contrast promises the evidence still did *damage*. (B) reinforce reverses it; (C) restate and (D) clarify are both harmless, so they waste the "did." *Academic verb you must know.*
 
 **5. (B) nuanced.** "rather than one simple cause, it weighs several interacting factors" defines the word: subtle, multi-sided. *Definition handed to you in the sentence.*
 
-**6. (B) illustrate.** "giving readers a concrete example of an abstract idea" = to show/demonstrate. (A)/(C) carry the wrong (negative) function. *Core academic verb.*
+**6. (D) illustrate.** "giving readers a concrete example of an abstract idea" = to show, to demonstrate. (A) contradict and (C) question carry the wrong (negative) function; (B) complicate is the opposite of what a clarifying example does. *Core academic verb.*
 
-**7. (B) derivative.** "merely recycled ideas...without adding anything new" defines it: unoriginal. (A) innovative is the exact opposite. *Trap beaten: familiar positive word (A) feels like praise, but tone is negative.*
+**7. (A) derivative.** "merely recycled ideas…without adding anything new" defines it: unoriginal. (B) innovative is the exact opposite; (C) polarizing and (D) obscure describe how people *reacted* or how *visible* it was, not whether it was original. *Trap beaten: (B) feels like praise, but the tone here is a complaint.*
 
-**8. (B) inevitable.** "not because failure was likely but because...some breakdown was effectively ___" → over decades, unavoidable. *Contrast + tone.*
+**8. (D) inevitable.** "not because failure was likely but because…over decades of use" → given enough time, unavoidable. (A) preventable reverses it; (B) catastrophic is about *how bad* a breakdown is, but the sentence is about *how certain* it is; (C) trivial misses why you'd bother with a backup. *Contrast + tone.*
 
-**9. (B) tentative.** "agreed...but reserved the right to withdraw" → conditional, not firm. (A) wholehearted reverses it. *Clue: "but...reserved the right."*
+**9. (B) tentative.** "agreed…but reserved the right to withdraw" → conditional, not firm. (A) wholehearted reverses it. *Clue: "but…reserved the right."*
 
-**10. (B) pragmatic.** "what would actually work rather than lofty ideals" defines practical. (A) theoretical is the contrasted opposite. *Definition + contrast.*
+**10. (C) pragmatic.** "what would actually work rather than lofty ideals" defines practical. (A) theoretical and (B) visionary both side with the "lofty ideals" the sentence explicitly rejects. *Definition + contrast.*
 
 ---
 
