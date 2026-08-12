@@ -22,7 +22,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { makeDb } from '../src/db.js'
-import { handleLog, handleNext, handleMockStart, handleMockSubmit, ApiError } from '../src/api.js'
+import { handleLog, handleNext, handleMockStart, handleMockSubmit, MIN_MOCK_COVERAGE, ApiError } from '../src/api.js'
 
 const SCHEMA = new URL('../schema.sql', import.meta.url)
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
@@ -284,3 +284,140 @@ test('a first-time /log racing /mock/submit cannot be counted against a frozen c
   }
 })
 
+// ---------------------------------------------------------------------------
+// One question cannot be handed out twice inside one sitting
+//
+// A serve is invisible to the sitting's own no-repeat list until it is LOGGED:
+// select.js can only see attempt rows, so between /next and /log the question in
+// flight does not exist as far as the selector is concerned. Two /next calls
+// inside one sitting therefore handed out the SAME item — with two plain
+// sequential calls and no /log between them, and at 200/200 trials concurrently.
+// Both serves then logged cleanly, giving two attempt rows for one question under
+// one mock.
+//
+// What that buys: MIN_MOCK_COVERAGE is ceil(0.9 * 42) = 38, so an honest 37-of-42
+// sitting is counted:false with composite null, while the SAME 37 distinct
+// questions with one of them served twice reads as 38 answers, clears the gate and
+// is scored. And because the denominator is max(scored, expected - ungraded) = 42,
+// a duplicated CORRECT answer adds to `right` without adding to the denominator:
+// about 2.4 points of composite per duplicate. It also falsifies api.js's own
+// header claim that a retried Action cannot double-count.
+//
+// Driven over real SQLite and the real schema, because this is entirely about
+// serve state and the rows a projection returns.
+// ---------------------------------------------------------------------------
+
+/** Every attempt filed under one sitting, and the distinct items behind them. */
+async function paperOf(db, subject, mockId) {
+  const rows = (await db.attempts(subject)).filter((a) => a.mock_id === mockId)
+  return { rows, items: rows.map((a) => a.item_id), distinct: new Set(rows.map((a) => a.item_id)) }
+}
+
+test('two /next calls inside one sitting cannot hand out the same question', async () => {
+  const { db, sqlite } = freshDb()
+  seedSection(sqlite)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+
+  // No /log in between: the first question is still on screen when the second is
+  // asked for, which is all it took.
+  const first = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(0), mockId: m.mock })
+  const second = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(30), mockId: m.mock })
+  assert.equal(first.type, 'question')
+  assert.equal(second.type, 'question')
+
+  const firstItem = (await db.serve(first.serve)).item_id
+  const secondItem = (await db.serve(second.serve)).item_id
+  assert.notEqual(
+    secondItem, firstItem,
+    'a question already handed out and not yet answered is not available to hand out again',
+  )
+
+  // And both answers land as two attempt rows on two different questions.
+  await handleLog({ db, serveId: first.serve, response: 'B', config: CSA, now: at(60) })
+  await handleLog({ db, serveId: second.serve, response: 'B', config: CSA, now: at(90) })
+  const paper = await paperOf(db, 'ap_csa', m.mock)
+  assert.equal(paper.rows.length, 2)
+  assert.equal(
+    paper.distinct.size, paper.rows.length,
+    `one sitting must never hold two answers to one question: ${paper.items.join(', ')}`,
+  )
+})
+
+test('a duplicated question cannot buy a short sitting past the coverage gate', async () => {
+  const floor = Math.ceil(CSA.exam.mcq_count * MIN_MOCK_COVERAGE)
+
+  // The control: the honest sitting one question short of the gate is recorded and
+  // NOT scored. This is the number the duplicate was worth buying past.
+  const honest = freshDb()
+  seedSection(honest.sqlite)
+  const hm = await handleMockStart({
+    db: honest.db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0,
+  })
+  await sitSection(honest.db, hm.mock, floor - 1)
+  const short = await handleMockSubmit({ db: honest.db, mockId: hm.mock, config: CSA, now: at(floor * 60) })
+  assert.equal(short.answered, floor - 1)
+  assert.equal(short.counted, false, `${floor - 1} of ${CSA.exam.mcq_count} is short of the gate`)
+  assert.equal(short.composite_pct, null)
+
+  // The buy: the same student, two questions short of the gate, with TWO questions
+  // on screen at once at the end — served back to back with no answer in between.
+  const { db, sqlite } = freshDb()
+  seedSection(sqlite)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  await sitSection(db, m.mock, floor - 2)
+
+  const a = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at((floor - 2) * 60), mockId: m.mock })
+  const b = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at((floor - 2) * 60 + 5), mockId: m.mock })
+  await handleLog({ db, serveId: a.serve, response: 'B', config: CSA, now: at((floor - 2) * 60 + 30) })
+  await handleLog({ db, serveId: b.serve, response: 'B', config: CSA, now: at((floor - 1) * 60 + 30) })
+
+  const paper = await paperOf(db, 'ap_csa', m.mock)
+  assert.equal(paper.rows.length, floor, 'both answers are kept — the fix is not to drop one')
+  assert.equal(
+    paper.distinct.size, floor,
+    `the sitting reached the gate on ${paper.distinct.size} distinct questions, not ${floor}: a repeat of one ` +
+    `question is not a second question of evidence, and here it is the one that made the sitting scorable`,
+  )
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(floor * 60 + 120) })
+  assert.equal(r.answered, floor)
+  assert.equal(r.counted, true, 'and having genuinely reached the gate, it is scored')
+  assert.equal(
+    r.composite_pct, Number(((floor / CSA.exam.mcq_count) * 100).toFixed(1)),
+    'every answer came off the key, over the section the sitting is measured against',
+  )
+})
+
+test('two concurrent /next calls in one sitting cannot hand out the same question', async () => {
+  // Every endpoint is a GET that ChatGPT may fire twice. Measured at 200/200
+  // duplicates before the fix, so three rounds is enough to notice a regression.
+  for (let round = 0; round < 3; round++) {
+    const { db, sqlite } = freshDb()
+    seedSection(sqlite)
+    const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+
+    const results = await Promise.allSettled([
+      handleNext({ db, subject: 'ap_csa', config: CSA, now: at(0), mockId: m.mock }),
+      handleNext({ db, subject: 'ap_csa', config: CSA, now: at(1), mockId: m.mock }),
+    ])
+    const served = results.filter((r) => r.status === 'fulfilled').map((r) => r.value)
+    for (const r of results.filter((r) => r.status === 'rejected')) {
+      assert.ok(r.reason instanceof ApiError, `round ${round}: a refused serve must be an ApiError, got ${r.reason}`)
+      assert.equal(r.reason.status, 409, `round ${round}: and a retryable one`)
+    }
+    assert.ok(served.length >= 1, `round ${round}: at least one of two concurrent calls must be answered`)
+
+    const items = []
+    for (const q of served) items.push((await db.serve(q.serve)).item_id)
+    assert.equal(
+      new Set(items).size, items.length,
+      `round ${round}: two concurrent serves handed out the same question (${items.join(', ')}), and both would ` +
+      `log into the sitting as two questions of evidence`,
+    )
+
+    // Whatever was served can still be answered, and the sitting holds one row per question.
+    for (const q of served) await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(60) })
+    const paper = await paperOf(db, 'ap_csa', m.mock)
+    assert.equal(paper.distinct.size, paper.rows.length, `round ${round}: ${paper.items.join(', ')}`)
+  }
+})

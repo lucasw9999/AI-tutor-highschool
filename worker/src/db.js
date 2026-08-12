@@ -67,18 +67,89 @@ export function makeDb(D1) {
 
     // --- writes ------------------------------------------------------------
 
-    /** Record that an item was handed out, and return the server-issued id. */
+    /**
+     * Record that an item was handed out, and return the server-issued id.
+     *
+     * Inside a sitting the INSERT is CONDITIONAL: it refuses to hand out an item
+     * that already has an unlogged serve on this paper, and reports that by
+     * returning null.
+     *
+     * @returns {Promise<number|null>} the serve id, or null when this sitting
+     *          already has that same item outstanding.
+     *
+     * WHY THE GUARD IS IN THE STATEMENT. A serve is invisible to the paper's own
+     * no-repeat list until it is LOGGED — select.js can only see attempt rows —
+     * so handleNext feeds it the sitting's open serves through `excludeItemIds`.
+     * That read is a read-then-write, and there is no transaction here: two
+     * concurrent /next calls both read no open serves, both pick the same item,
+     * and both insert. Measured at 200/200 duplicates. This is claimServe's
+     * argument applied to the serve table: because the check and the insert are
+     * ONE statement, a second serve of an outstanding item cannot land, whatever
+     * the interleaving, and the loser gets a 409 it can simply retry.
+     *
+     * Two attempt rows for one question under one mock are not two questions of
+     * evidence: a duplicate buys a 37-of-42 sitting past MIN_MOCK_COVERAGE
+     * (ceil(0.9 * 42) = 38), and since the denominator is
+     * max(scored, expected - ungraded) a duplicated CORRECT answer adds to the
+     * numerator without adding to the denominator.
+     *
+     * OUTSIDE a sitting the insert is deliberately unconditional. There is no
+     * paper for a duplicate to inflate, and a serve abandoned mid-question is
+     * never cleaned up: guarding here would make that item permanently
+     * unservable, and with the selector still free to pick it, every later /next
+     * would refuse. Ordinary practice would degrade one abandoned question at a
+     * time, with no way back.
+     */
     async recordServe({ subject, item_id, served_at, mock_id = null }) {
+      if (mock_id == null) {
+        const r = await one(
+          `INSERT INTO serves (subject, item_id, served_at, mock_id, logged)
+           VALUES (?, ?, ?, NULL, 0) RETURNING id`,
+          subject, item_id, served_at,
+        )
+        return r.id
+      }
+      const mock = Number(mock_id)
       const r = await one(
         `INSERT INTO serves (subject, item_id, served_at, mock_id, logged)
-         VALUES (?, ?, ?, ?, 0) RETURNING id`,
-        subject, item_id, served_at, mock_id,
+         SELECT ?, ?, ?, ?, 0
+          WHERE NOT EXISTS (
+            SELECT 1 FROM serves
+             WHERE subject = ? AND logged = 0 AND mock_id = ? AND item_id = ?
+          )
+         RETURNING id`,
+        subject, item_id, served_at, mock, subject, mock, item_id,
       )
-      return r.id
+      return r?.id ?? null
     },
 
     serve(id) {
       return one(`SELECT * FROM serves WHERE id = ?`, id)
+    },
+
+    /**
+     * The items this sitting has handed out and not yet seen answered.
+     *
+     * The questions in flight. select.js judges a repeat from attempt rows, which
+     * do not exist until /log, so between /next and /log a question is servable
+     * again as far as the selector can see — and two /next calls inside one
+     * sitting handed out the same one. handleNext passes these back as
+     * `excludeItemIds` so they are removed from every pool.
+     *
+     * Scoped to ONE sitting on purpose. Serves outside a sitting are never
+     * cleaned up, so excluding them subject-wide would shrink the drillable bank
+     * by one item for every question ever abandoned mid-answer, permanently.
+     * Inside a sitting the set dies with the paper.
+     *
+     * Reads on the (subject, logged, id) prefix of idx_serves_open.
+     */
+    async openServeItems({ subject, mockId }) {
+      const rows = await all(
+        `SELECT DISTINCT item_id FROM serves
+          WHERE subject = ? AND logged = 0 AND mock_id = ?`,
+        subject, Number(mockId),
+      )
+      return rows.map((r) => r.item_id)
     },
 
     /**

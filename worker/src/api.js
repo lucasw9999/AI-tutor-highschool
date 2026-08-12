@@ -225,15 +225,36 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
   // sitting stands in for the real exam, which is not aimed at his weakest topic,
   // his overdue reviews or his open gaps. Passing gaps: [] as well is deliberate
   // belt and braces on the one number that can move readiness.
+  //
+  // excludeItemIds is the sitting's own questions-in-flight. select.js decides a
+  // repeat from ATTEMPT rows, which do not exist until /log, so between /next and
+  // /log a question is servable again as far as it can see — and two /next calls
+  // inside one sitting handed out the same item, sequentially and (at 200/200)
+  // concurrently. Both then logged cleanly, and two attempt rows for one question
+  // are not two questions of evidence: a duplicate buys a 37-of-42 sitting past
+  // MIN_MOCK_COVERAGE, and a duplicated CORRECT answer adds to the numerator
+  // without adding to the denominator. db.recordServe closes the concurrent half
+  // of the same hole inside the INSERT.
+  const inFlight = mockId == null ? null : await db.openServeItems({ subject, mockId })
   const choice = pickNext({
     ...ctx,
     gaps: mockId ? [] : ctx.gaps,
     now,
-    ...(mockId != null && { sampling: 'mock', mockId }),
+    ...(mockId != null && { sampling: 'mock', mockId, excludeItemIds: inFlight }),
   })
   if (!choice) throw new ApiError(409, 'every question is inside the no-repeat window; add items or wait')
 
   const serveId = await db.recordServe({ subject, item_id: choice.item.id, served_at: now, mock_id: mockId })
+  // Lost the race for this item to a concurrent /next: nothing was written, and
+  // asking again picks a different one, because by then the winner's serve row is
+  // there to be excluded.
+  if (serveId == null) {
+    throw new ApiError(
+      409,
+      `another request was handed this question inside mock ${mockId} a moment ago and it is still unanswered. ` +
+        `Nothing was recorded — ask for the next question again.`,
+    )
+  }
   return {
     type: 'question',
     serve: serveId,
