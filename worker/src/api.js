@@ -309,17 +309,31 @@ export async function handleTaught({ db, subject, topic, config, now }) {
   }
 }
 
+/**
+ * The real time budget for a section, in minutes, from the subject's own table.
+ *
+ * `full` used to fall through to the MCQ branch and tell him a whole CSA sitting
+ * was 90 minutes rather than 180 — half the exam, which under-times the sitting
+ * and then leaves it short of the coverage a scored mock requires.
+ */
+function sectionMinutes(section, e = {}) {
+  const mcq = e.mcq_minutes ?? (e.mcq_no_calc_minutes ?? 0) + (e.mcq_calc_minutes ?? 0)
+  const frq = e.frq_minutes ?? (e.frq_calc_minutes ?? 0) + (e.frq_no_calc_minutes ?? 0)
+  if (section === 'II') return frq
+  if (section === 'full') return mcq + frq
+  return mcq
+}
+
 /** GET /mock/start — open a proctored sitting. Only these can move readiness. */
 export async function handleMockStart({ db, subject, section, source, config, now }) {
   if (!['I', 'II', 'full'].includes(section)) throw new ApiError(400, `section must be I, II or full`)
   if (!['bank', 'official'].includes(source)) throw new ApiError(400, `source must be bank or official`)
   const id = await db.startMock({ subject, section, started_at: now, proctored: 1, source })
-  const e = config.exam
   return {
     mock: id,
     section,
     source,
-    timing: section === 'II' ? `${e.frq_minutes ?? e.frq_calc_minutes + e.frq_no_calc_minutes} minutes` : `${e.mcq_minutes ?? e.mcq_no_calc_minutes + e.mcq_calc_minutes} minutes`,
+    timing: `${sectionMinutes(section, config.exam)} minutes`,
     rules: 'No hints, no notes, no going back to check answers. A mock only counts if it is run like the real thing.',
   }
 }
