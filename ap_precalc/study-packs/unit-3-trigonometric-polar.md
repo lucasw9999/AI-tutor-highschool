@@ -206,22 +206,38 @@ Work each before opening the solution. **[NC]** = no calculator, **[C]** = calcu
 
 ---
 
-**P1 [NC] — Easy.** Convert 135° to radians and find cos(135°) exactly.
+**P1 [NC] — Easy.** Convert 135° to radians and find cos(135°) exactly. Answer as two comma-separated entries in that order, writing pi as pi and any square root as sqrt (e.g. 5pi/6, sqrt(3)/2).
 
 <details><summary>Solution</summary>
 
 135° · π/180 = **3π/4.** QII, reference angle π/4, cos negative → cos(3π/4) = **−√2/2.**
 </details>
+<!-- part 1: 3pi/4 -->
+<!-- part 1: 3π/4 -->
+<!-- part 2: -sqrt(2)/2 -->
+<!-- part 2: -sqrt2/2 -->
+<!-- part 2: -√2/2 -->
+<!-- part 2: -(sqrt(2))/2 -->
+<!-- part 2: -1/sqrt(2) -->
+<!-- format: Answer as two comma-separated entries in that order, writing pi as pi and any square root as sqrt (e.g. 5pi/6, sqrt(3)/2). -->
+<!-- topic: 3.1 -->
 
 ---
 
-**P2 [NC] — Easy.** State amplitude, midline, and period of f(x) = 4 sin(3x) − 2.
+**P2 [NC] — Easy.** State amplitude, midline, and period of f(x) = 4 sin(3x) − 2. Answer as three comma-separated values in the order amplitude, midline, period — values only, writing pi as pi (e.g. 5, 1, pi/2).
 
 <details><summary>Solution</summary>
 
 Amplitude = |4| = **4.** Midline = **−2** (so y = −2). Period = 2π/3.
 Max = −2 + 4 = 2; min = −2 − 4 = −6.
 </details>
+<!-- part 1: 4 -->
+<!-- part 2: -2 -->
+<!-- part 2: y=-2 -->
+<!-- part 3: 2pi/3 -->
+<!-- part 3: 2π/3 -->
+<!-- format: Answer as three comma-separated values in the order amplitude, midline, period — values only, writing pi as pi (e.g. 5, 1, pi/2). -->
+<!-- topic: 3.2 -->
 
 ---
 
@@ -233,6 +249,8 @@ cos negative in QII and QIII. Reference angle π/3.
 x = π − π/3 = **2π/3** and x = π + π/3 = **4π/3** in [0, 2π).
 All: **x = 2π/3 + 2πk** and **x = 4π/3 + 2πk.**
 </details>
+<!-- topic: 3.7 -->
+<!-- note: deliberately NOT keyed. The answer is a general solution, and "+2pik", "+2kpi", "+2(pi)k", "+2npi", "for any integer k" are all the same correct answer typed differently — the generality is the point (see trap 3) and no enumeration of it is safe. -->
 
 ---
 
@@ -243,16 +261,24 @@ All: **x = 2π/3 + 2πk** and **x = 4π/3 + 2πk.**
 b = 1 → period = π/1 = **π.** Asymptotes where the inside hits π/2 + πk:
 x − π/4 = π/2 + πk → **x = 3π/4 + πk.**
 </details>
+<!-- topic: 3.5 -->
+<!-- note: deliberately NOT keyed. Half the answer is an asymptote FAMILY (3pi/4 + pik), which has the same unenumerable "+pik" problem as P3. -->
 
 ---
 
-**P5 [NC] — Med.** Evaluate arccos(−√3/2) and arctan(−1) exactly.
+**P5 [NC] — Med.** Evaluate arccos(−√3/2) and arctan(−1) exactly. Answer as two comma-separated exact values in that order, writing pi as pi (for example pi/3, or -pi/3).
 
 <details><summary>Solution</summary>
 
 arccos range [0, π]; need cos = −√3/2 → **5π/6.**
 arctan range (−π/2, π/2); need tan = −1 → **−π/4.**
 </details>
+<!-- part 1: 5pi/6 -->
+<!-- part 1: 5π/6 -->
+<!-- part 2: -pi/4 -->
+<!-- part 2: -π/4 -->
+<!-- format: Answer as two comma-separated exact values in that order, writing pi as pi (for example pi/3, or -pi/3). -->
+<!-- topic: 3.6 -->
 
 ---
 
@@ -263,6 +289,8 @@ arctan range (−π/2, π/2); need tan = −1 → **−π/4.**
 sin x · csc x = sin x · (1/sin x) = 1. tan x · cot x = tan x · (1/tan x) = 1.
 Sum = **2.**
 </details>
+<!-- key: 2 -->
+<!-- topic: 3.8 -->
 
 ---
 
@@ -274,10 +302,12 @@ min = 2, max = 40 → midline d = (2+40)/2 = **21**; amplitude a = (40−2)/2 = 
 **h(t) = −19 cos((π/30) t) + 21.**
 Check: h(0) = −19 + 21 = 2 ✓; half-cycle (t=30) gives 40 ✓.
 </details>
+<!-- topic: 3.2 -->
+<!-- note: deliberately NOT keyed. -19cos((pi/30)t)+21 is also correctly written 21-19cos(pi t/30), 19sin((pi/30)(t-15))+21 and several more — every one of them a right answer a string match would call wrong. -->
 
 ---
 
-**P8 [NC] — Med/Hard.** Solve 2 sin²x − sin x − 1 = 0 on [0, 2π).
+**P8 [NC] — Med/Hard.** Solve 2 sin²x − sin x − 1 = 0 on [0, 2π). Answer as a comma-separated list of the exact solutions, writing pi as pi (e.g. pi/4, 3pi/4).
 
 <details><summary>Solution</summary>
 
@@ -286,6 +316,17 @@ sin x = 1 → x = **π/2.**
 sin x = −1/2 → QIII/QIV → x = **7π/6, 11π/6.**
 Solutions: **π/2, 7π/6, 11π/6.**
 </details>
+<!-- part 1: pi/2 -->
+<!-- part 1: π/2 -->
+<!-- part 1: x=pi/2 -->
+<!-- part 2: 7pi/6 -->
+<!-- part 2: 7π/6 -->
+<!-- part 2: x=7pi/6 -->
+<!-- part 3: 11pi/6 -->
+<!-- part 3: 11π/6 -->
+<!-- part 3: x=11pi/6 -->
+<!-- format: Answer as a comma-separated list of the exact solutions, writing pi as pi (e.g. pi/4, 3pi/4). -->
+<!-- topic: 3.7 -->
 
 ---
 
@@ -297,6 +338,8 @@ r = √((−3)² + 3²) = √18 = **3√2.** Point is in QII (x<0, y>0).
 arctan(3/−3) = arctan(−1) = −π/4, but adjust to QII → θ = π − π/4 = **3π/4.**
 Polar: **(3√2, 3π/4).**
 </details>
+<!-- topic: 3.10 -->
+<!-- note: deliberately NOT keyed. The natural way to write a polar point is the parenthesised pair "(3sqrt2, 3pi/4)" — and a compound key cannot hold a bracket that opens in one part and closes in another, while an atomic key would have to enumerate parenthesised x unparenthesised x three spellings of 3sqrt2 x exact-vs-decimal by hand. -->
 
 ---
 
@@ -308,6 +351,13 @@ r(0) = 4 sin 0 = 0; r(π/2) = 4 sin(π/2) = 4.
 Avg rate = (4 − 0)/(π/2 − 0) = 4/(π/2) = **8/π ≈ 2.546.**
 Positive → distance from origin is increasing on this interval.
 </details>
+<!-- key: 8/pi -->
+<!-- accept: 8/π -->
+<!-- accept: \dfrac{8}{\pi} -->
+<!-- accept: 2.546 -->
+<!-- accept: 2.5465 -->
+<!-- accept: 2.55 -->
+<!-- topic: 3.11 -->
 
 ---
 
@@ -323,6 +373,8 @@ Positive → distance from origin is increasing on this interval.
 **(c)** cos x = √3/2 → QI/QIV → x = **π/6 + 2πk** and **x = 11π/6 + 2πk** (equivalently −π/6 + 2πk).
 *Q4 rule: SHOW EVERY STEP — exact values, no decimals, or you earn nothing.*
 </details>
+<!-- topic: 3.9 -->
+<!-- note: not keyable — three lettered sub-parts, and (c) is a general solution besides. -->
 
 ---
 
@@ -340,6 +392,8 @@ A pendulum's horizontal displacement from center is +6 cm at t = 0, swings to �
 
 *Grader note: state BOTH the sign behavior AND the concavity/rate-of-change behavior — they are separate points, and "concave up ⇒ rate of change increasing" must be said explicitly.*
 </details>
+<!-- topic: 3.4 -->
+<!-- note: not keyable — three lettered sub-parts, and (a) is a sinusoid with several correct forms. -->
 
 ---
 
