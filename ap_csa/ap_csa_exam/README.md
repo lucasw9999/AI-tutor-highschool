@@ -8,8 +8,11 @@ A drill-first, exam-condition system layered on top of `ap_csa/`. Its one job: c
 
 ### For the parent — the 3 things only an adult can do
 
-1. **AP Classroom access** — by ~September 2026, get the join code from Lucas's AP CSA teacher (or enroll him with an AP-Course-Audit-approved online provider if self-studying). This unlocks the official item bank that can't be accessed any other way.
-2. **Exam registration** — by ~mid-November 2026, confirm the school administers AP CSA and have the AP Coordinator place the order; if the school doesn't offer it, find a seat via the AP Course Ledger. There is no late path.
+1. **AP Classroom access** — the platform opened **July 1, 2026** and is live now. If Lucas is enrolled in an AP CSA course, get the **join code from his teacher in the first week of school**; students join class sections in My AP then. If his school does **not** offer AP CSA, see item 2 — an exam-only section gives only *select* AP Classroom resources, **not** teacher-assigned materials, so the full official item bank may not be available. In that case plan readiness around the official-anchor fallback in `exam-skill-tracker.md`.
+2. **Exam registration** — **final ordering deadline: Nov 13, 2026, 11:59 PM ET** (preferred deadline Oct 2, 2026; +$40/exam after Nov 13). **Parents and students cannot order directly** — only an AP coordinator at a school that agrees to host can order and issue a join code. Confirm Foothill HS administers AP CSA; if not, search the **AP Course Ledger** (`apcourseaudit.epiconline.org/ledger/`) and ask coordinators about an **exam-only section**. Individual schools set their own earlier local deadlines, so start early.
+   - **There IS a late path** (this doc previously said otherwise): a student whose school does not administer the exam can be added **after Nov 13 without the $40 late fee**, if the coordinator contacts AP Services and the student is in the order **by Mar 12, 2027**. Don't rely on it — but it is not a cliff.
+   - Accommodations, if ever needed: request by **Jan 22, 2027**.
+   - ⚠️ **AP Precalculus is Tue May 11, 2027 and AP CSA is Wed May 12, 2027 — back to back.** Register for both and plan the final week around both.
 3. **Proctor a mock or two** — sit nearby, hold the timer, enforce no-notes for at least one official-anchor mock. This is the closest thing to real exam conditions available before May.
 
 ---

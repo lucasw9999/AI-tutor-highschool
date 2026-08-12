@@ -109,7 +109,7 @@ The readiness bar has a mock-window requirement that needs several qualifying mo
 
 | Deadline | Window | Why it's hard |
 |---|---|---|
-| **Secure AP Classroom access** | Start of AP CSA course, ~September 2026 | Teacher-gated; no workaround for the real official item bank. Self-studying? Enroll with an AP-Course-Audit-approved online provider. |
-| **Register to sit the exam** | ~mid-November 2026 (through school AP Coordinator) | No registration = no May 2027 seat. Confirm the school administers AP CSA; if not, find an authorized school via the AP Course Ledger. |
+| **Secure AP Classroom access** | Platform opened **July 1, 2026**; get the join code in the **first week of school** | Teacher-gated. Enrolled in the course → the teacher's join code gives full access. **Exam-only section → only *select* resources, NOT teacher-assigned materials**, so the full official item bank may be unavailable; plan readiness around the official-anchor fallback. |
+| **Register to sit the exam** | **Nov 13, 2026, 11:59 PM ET** final (preferred Oct 2; +$40/exam after) | **You cannot order directly** — only an AP coordinator at a hosting school can. Confirm the school administers AP CSA; if not, use the **AP Course Ledger** and ask about an exam-only section. Schools set earlier local deadlines. **Late path exists** for students whose school doesn't offer the exam: added without the late fee if the coordinator contacts AP Services and the student is in the order by **Mar 12, 2027**. |
 
 Missing either of these is not fixable by studying harder — it requires coordinating with a teacher, school, or provider immediately.
