@@ -786,6 +786,134 @@ withSeed('an answer given after the sitting closed cannot be added to it', async
 })
 
 // ---------------------------------------------------------------------------
+// A sitting has to have been sat against a clock
+//
+// Driven over REAL SQLite, the real schema and the real seeded bank. The server
+// holds every timestamp involved — the mock's started_at, each serve's
+// served_at, each attempt's ts and its server-measured `seconds` — and it holds
+// the section's real budget in config.exam. Nothing used to compare them: a
+// section that takes four hours was scored exactly like one that took ninety
+// minutes, and six such afternoons read as "ready".
+// ---------------------------------------------------------------------------
+
+/** Sit `n` questions of a mock, right off the real key, at a fixed pace. */
+async function sitMock({ db, mock, n, spacing, seconds = 60, longest = null }) {
+  let answered = 0
+  for (let i = 0; answered < n; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(answered * spacing), mockId: mock })
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    // `longest` lets one single question absorb an implausible amount of time
+    // while the sitting as a whole stays inside its budget.
+    const took = longest != null && answered === n - 1 ? longest : seconds
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(answered * spacing + took) })
+    answered++
+  }
+}
+
+withSeed('a four-hour sitting of a ninety-minute section is not exam-condition evidence', async () => {
+  const { db, sqlite } = realDb()
+  const expected = CSA.exam.mcq_count
+  const budget = CSA.exam.mcq_minutes
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  // The whole section, every answer correct off the real key, at one question
+  // every 5.7 minutes: 42 questions across four hours with his notes open.
+  const spacing = Math.round((4 * 3600) / expected)
+  await sitMock({ db, mock: m.mock, n: expected, spacing })
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(4 * 3600 + 600) })
+
+  // Coverage is NOT the reason: he answered every question the section has, so
+  // the only thing wrong with this sitting is the clock.
+  assert.equal(r.answered, expected, 'the fixture must cover the whole section, so timing is the only defect')
+  assert.equal(r.composite_pct, null, 'a four-hour ninety-minute section must not be given a composite')
+  assert.equal(r.counted, false, 'and it must not count toward readiness')
+  assert.equal(
+    sqlite.prepare('SELECT composite_pct FROM mocks WHERE id = ?').get(m.mock).composite_pct, null,
+    'the STORED composite is what a later readiness read sees; it must be null too',
+  )
+  assert.equal(
+    sqlite.prepare('SELECT COUNT(*) n FROM mocks WHERE proctored = 1 AND composite_pct IS NOT NULL').get().n, 0,
+    'nothing in the database may present this as a scored proctored mock',
+  )
+
+  // He must be able to SEE that it did not count, and why, in numbers.
+  assert.match(r.basis, /NOT scored/, 'the basis must say it was not scored')
+  assert.match(r.basis, new RegExp(String(budget)), `the basis must name the ${budget}-minute budget`)
+  assert.match(r.basis, /2[0-9]{2} minutes/, 'and how long it actually took')
+  assert.doesNotMatch(r.basis, /Scored \d+ right/, 'an unscored sitting must not also report a score')
+
+  // Nothing is discarded: the 42 answers are still on the record as practice.
+  assert.equal(r.status.questions_answered, expected, 'the work he did must not be thrown away')
+
+  // And it must not move readiness, now or by accumulation.
+  assert.equal(r.status.proctored_mocks, 0, 'an untimed sitting is not a scored proctored mock')
+  assert.equal(r.status.readiness_pct, 0)
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(4 * 3600 + 900) })
+  const window = s.criteria.find((c) => /consecutive qualifying proctored mocks/i.test(c.requirement))
+  assert.ok(window, `the mock-window criterion must be reported: ${JSON.stringify(s.criteria.map((c) => c.requirement))}`)
+  assert.equal(window.met, false)
+  assert.match(
+    window.evidence, new RegExp(`only 0 of ${CSA.readiness.total_logged_mocks_min}`),
+    `an untimed sitting must be worth zero qualifying mocks, not one: ${window.evidence}`,
+  )
+
+  // The advisory has to resurface, exactly as an under-covered sitting's does —
+  // shown once at submit time and then forgotten is how a real sitting vanishes.
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `an untimed sitting must stay visible in the summary: ${JSON.stringify(s.advisories)}`)
+  assert.match(adv, /minutes/, 'and the advisory must name the timing, not just say "not scored"')
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(4 * 3600 + 1000) })
+  assert.ok(q.status.advisories.some((a) => /not scored/i.test(a)), 'every response carries it')
+  const dash = await handleDashboard({ db, configs: { ap_csa: CSA }, now: at(4 * 3600 + 1100) })
+  assert.ok(
+    dash.subjects[0].readiness.advisories.some((a) => /not scored/i.test(a)),
+    'and the parent sees it too',
+  )
+})
+
+withSeed('one question that absorbs half the section is not exam-condition evidence either', async () => {
+  const { db } = realDb()
+  const expected = CSA.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  // 41 questions at a brisk one a minute, then one question left open for 50
+  // minutes. The sitting as a WHOLE lands at 91 minutes against a 90-minute
+  // budget — inside any humane slack — so only the per-question evidence shows
+  // that one answer was not produced under exam conditions.
+  await sitMock({ db, mock: m.mock, n: expected, spacing: 60, seconds: 30, longest: 50 * 60 })
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(expected * 60 + 50 * 60 + 120) })
+  assert.equal(r.answered, expected, 'coverage is not the defect here')
+  assert.equal(r.composite_pct, null, 'a question that ate half the section cannot be scored as exam evidence')
+  assert.equal(r.counted, false)
+  assert.match(r.basis, /NOT scored/)
+  assert.match(r.basis, /50 minutes|one question|single question/i, 'the basis must name the outlier')
+  assert.equal(r.status.proctored_mocks, 0)
+})
+
+withSeed('a sitting that overruns by a few minutes is still a real mock', async () => {
+  const { db } = realDb()
+  const expected = CSA.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+
+  // 42 questions ending 130 minutes after the first was handed out: over the
+  // 90-minute budget, because a mock run at home overruns and a human needs the
+  // bathroom, but nowhere near a four-hour open-book afternoon. This is the
+  // floor under the fix — a timing gate that refuses this one would be throwing
+  // away genuine evidence, which is its own way of lying about where he stands.
+  const spacing = Math.round((130 * 60) / expected)
+  await sitMock({ db, mock: m.mock, n: expected, spacing, seconds: 60 })
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(130 * 60 + 300) })
+  assert.equal(r.answered, expected)
+  assert.equal(r.counted, true, 'a slightly overrunning sitting is still exam-condition evidence')
+  assert.equal(r.composite_pct, 100, 'every answer came off the real key')
+  assert.equal(r.status.proctored_mocks, 1, 'and it counts as a scored proctored mock')
+})
+
+// ---------------------------------------------------------------------------
 // blanks and the composite must tell the same story
 // ---------------------------------------------------------------------------
 

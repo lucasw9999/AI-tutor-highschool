@@ -391,6 +391,119 @@ function sectionMinutes(section, e = {}) {
   return mcq
 }
 
+/**
+ * How far a sitting may run over its real time budget and still read as
+ * exam-condition evidence, and how much of that budget one question may absorb.
+ *
+ * DELIBERATE DECISION, written out because this pair of numbers decides whether
+ * an afternoon of genuine work counts as a mock:
+ *
+ * The server holds every timestamp involved — the mock's started_at, the
+ * served_at behind each serve, each attempt's ts and its server-measured
+ * `seconds` — and it holds the section's real budget in config.exam. Until this,
+ * nothing compared them: 42 CSA questions "sat" across four hours with his notes
+ * open scored exactly like 42 sat in ninety minutes, and six such afternoons
+ * read as ready for an exam he would fail. Running the clock is the one part of
+ * a mock the model was being trusted to police, and it is precisely the part the
+ * server can verify.
+ *
+ * WHAT IS MEASURED, and why not simply ended_at - started_at: the interval that
+ * matters is the one during which questions were in front of him, from the first
+ * question handed out to the last answer recorded. /mock/submit is an
+ * administrative call — the model may make it minutes or hours after the last
+ * answer, and no advantage is available in that gap because nothing is
+ * outstanding. Charging a late submit against the sitting would discard real
+ * evidence, which is its own way of misreporting where he stands. Both ends come
+ * from attempt rows the server timestamped itself (`ts`, and `ts - seconds` for
+ * the serve), so this cannot be inflated or deflated by anything the model says.
+ * It is also a lower bound on the true wall-clock sitting, i.e. it errs toward
+ * counting his work rather than throwing it away.
+ *
+ * WHY 1.5x AND NOT LESS: a mock run at home through a chat window is not a
+ * proctored room. Reading a question in a transcript, typing an answer, and the
+ * model's own turn latency all cost time the real exam does not, and a human
+ * needs the bathroom. 1.5x is 45 minutes of slack on a 90-minute section — about
+ * 64 extra seconds on every one of 42 questions, generously more than that
+ * overhead — so a sitting refused at this bar was not merely slow. WHY NOT MORE:
+ * at 2x a 90-minute section becomes three hours, which is a different activity
+ * with a different result, and calling it exam evidence is the overstatement this
+ * whole system exists to prevent.
+ *
+ * WHY A PER-QUESTION CAP TOO: the total can stay inside the budget while one
+ * question absorbs an hour — 41 answers at speed, then the last one looked up.
+ * Half the section's entire budget on a single question is not thinking under
+ * time pressure at any section shape (45 minutes of a 90-minute MCQ section, 45
+ * of one Precalc FRQ set, 90 of a full sitting), and on the real exam it is not
+ * survivable, so nothing legitimate is caught by it.
+ *
+ * WHAT HAPPENS THEN — disclosed, never discarded. The answers stay on the
+ * record and still count as practice; the sitting is stored with no composite,
+ * which is the existing mechanism for a sitting that cannot count (see
+ * MIN_MOCK_COVERAGE): counted:false, a `basis` that says so in numbers, and an
+ * advisory that resurfaces on every later response so it cannot quietly vanish.
+ * Readiness reads `proctored && composite_pct != null`, so it does not move.
+ */
+export const MOCK_TIME_SLACK = 1.5
+export const MAX_ITEM_SHARE_OF_BUDGET = 0.5
+
+/**
+ * What the clock says about one sitting, from the server's own timestamps.
+ *
+ * @returns {null|object} null when there is nothing to judge — no budget for the
+ *          section, or no usable attempt timestamps — because inventing a
+ *          verdict from missing evidence is the same failure in the other
+ *          direction. Otherwise the measured interval, the longest single
+ *          answer, and whether either is past its bar.
+ */
+function sittingTiming({ section, exam = {}, attempts = [] }) {
+  const budget_minutes = sectionMinutes(section, exam)
+  if (!budget_minutes) return null
+
+  let firstServed = null
+  let lastAnswer = null
+  let longest_item_seconds = 0
+  for (const a of attempts) {
+    const ts = Date.parse(a.ts)
+    if (!Number.isFinite(ts)) continue
+    const took = Number.isFinite(Number(a.seconds)) ? Math.max(0, Number(a.seconds)) : 0
+    const served = ts - took * 1000
+    if (firstServed == null || served < firstServed) firstServed = served
+    if (lastAnswer == null || ts > lastAnswer) lastAnswer = ts
+    if (took > longest_item_seconds) longest_item_seconds = took
+  }
+  if (firstServed == null) return null
+
+  const allowed_minutes = budget_minutes * MOCK_TIME_SLACK
+  const item_cap_seconds = budget_minutes * 60 * MAX_ITEM_SHARE_OF_BUDGET
+  const elapsed_minutes = (lastAnswer - firstServed) / 60000
+  const over_total = elapsed_minutes > allowed_minutes
+  const over_item = longest_item_seconds > item_cap_seconds
+  return {
+    budget_minutes, allowed_minutes, elapsed_minutes,
+    longest_item_seconds, item_cap_seconds,
+    over_total, over_item, untimed: over_total || over_item,
+  }
+}
+
+/** The measured facts behind an untimed verdict, in the student's words. */
+function timingFindings(t) {
+  const out = []
+  if (t.over_total) {
+    out.push(
+      `Its answers span ${Math.round(t.elapsed_minutes)} minutes from the first question being handed out to the ` +
+      `last answer recorded, against the ${t.budget_minutes} minutes this section gets on the real exam — past the ` +
+      `${Math.round(t.allowed_minutes)} minutes allowed for the ordinary overrun of sitting one at home.`,
+    )
+  }
+  if (t.over_item) {
+    out.push(
+      `One question alone absorbed ${Math.round(t.longest_item_seconds / 60)} minutes, more than half the ` +
+      `${t.budget_minutes} minutes the whole section gets.`,
+    )
+  }
+  return out
+}
+
 /** GET /mock/start — open a proctored sitting. Only these can move readiness. */
 export async function handleMockStart({ db, subject, section, source, config, now }) {
   if (!['I', 'II', 'full'].includes(section)) throw new ApiError(400, `section must be I, II or full`)
@@ -464,7 +577,14 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   //      would quietly delete the ones he skipped.
   const covered = expected == null || attempts.length >= Math.ceil(expected * MIN_MOCK_COVERAGE)
   const denominator = Math.max(scored.length, (expected ?? 0) - ungraded)
-  const composite = covered && denominator > 0 ? (right / denominator) * 100 : null
+
+  // The third guard: a sitting that was not run against a clock is not evidence
+  // about how he performs under exam conditions, whatever it scores. See
+  // MOCK_TIME_SLACK for the measurement and the reasoning behind the bar.
+  const timing = sittingTiming({ section: m.section, exam: cfg.exam, attempts })
+  const timed = !timing?.untimed
+
+  const composite = covered && timed && denominator > 0 ? (right / denominator) * 100 : null
 
   const basis = []
   if (expected != null) {
@@ -483,11 +603,28 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
       : `${unreached} question(s) were never reached. Those count as blank AND as wrong, exactly as the real `
         + `answer sheet would read them, so the blank count is ${blanks}${split}.`)
   }
+  // Every reason a sitting could not be scored is stated, because two of them can
+  // be true at once: a short sitting that also took four hours is both, and
+  // naming only one of them tells him to fix the wrong thing.
   if (composite == null) {
-    basis.push(covered
-      ? 'Nothing in this sitting could be graded mechanically, so it has no composite and cannot count toward readiness.'
-      : `That is short of the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a sitting has to cover, so this one is `
-        + `recorded but NOT scored, and cannot count toward readiness. Practice sets are useful; they are not mocks.`)
+    if (!covered) {
+      basis.push(
+        `That is short of the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a sitting has to cover, so this one is `
+        + `recorded but NOT scored, and cannot count toward readiness. Practice sets are useful; they are not mocks.`,
+      )
+    }
+    if (!timed) {
+      basis.push(
+        ...timingFindings(timing),
+        `Work at that pace is untimed practice, not evidence about performance under exam conditions, so this `
+        + `sitting is recorded but NOT scored and cannot count toward readiness. Nothing is thrown away — the answers `
+        + `stand as ordinary practice, and pace is exactly what a mock is for — but a sitting has to be run against a `
+        + `clock before it can move readiness. Re-sit one timed to turn this into a score.`,
+      )
+    }
+    if (covered && timed) {
+      basis.push('Nothing in this sitting could be graded mechanically, so it has no composite and cannot count toward readiness.')
+    }
   } else {
     basis.push(`Scored ${right} right out of ${denominator} — anything not answered counts as wrong, as on the exam.`)
     basis.push('Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.')
@@ -512,27 +649,34 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
 /**
  * Proctored sittings that were recorded and then not scored, with the reason.
  *
- * A sitting below MIN_MOCK_COVERAGE gets no composite, which keeps it out of
- * `proctored_mocks`, out of the qualifying window and out of every criterion —
- * so a genuine sitting where he reached 37 of 42 left no trace at all beyond
- * questions_answered. Running out of time is the single failure a mock exists to
- * expose, so it has to be reported rather than dropped. It still cannot be
- * scored: lowering the gate is what let three answers read as 100%.
+ * A sitting below MIN_MOCK_COVERAGE, or one that was not run against a clock,
+ * gets no composite, which keeps it out of `proctored_mocks`, out of the
+ * qualifying window and out of every criterion — so a genuine sitting where he
+ * reached 37 of 42 left no trace at all beyond questions_answered. Running out
+ * of time is the single failure a mock exists to expose, so it has to be
+ * reported rather than dropped. It still cannot be scored: lowering the gate is
+ * what let three answers read as 100%.
  */
 function unscoredSittings(ctx) {
   const out = []
   for (const m of ctx.mocks) {
     if (!m.proctored || !m.ended_at || m.composite_pct != null) continue
-    const answered = ctx.attempts.filter((a) => a.mock_id === m.id).length
+    const rows = ctx.attempts.filter((a) => a.mock_id === m.id)
     const expected = expectedQuestions(m.section, ctx.config.exam)
+    const timing = sittingTiming({ section: m.section, exam: ctx.config.exam, attempts: rows })
     out.push({
       id: m.id,
-      answered,
+      answered: rows.length,
       expected,
-      // Two different reasons produce a null composite, and saying "you ran out
-      // of time" about a fully-sat paper that simply had nothing mechanically
-      // gradeable would be a false statement in its own right.
-      short: expected != null && answered < Math.ceil(expected * MIN_MOCK_COVERAGE),
+      // Three different reasons produce a null composite, and each has its own
+      // thing to fix. Reported as one reason apiece, most fundamental first: a
+      // sitting that was not run against a clock has no pace problem to work on
+      // and no shortage of gradeable items to report — it was not a mock at all
+      // — so saying "you ran out of time" or "nothing could be graded" about it
+      // would be a false statement in its own right, exactly as saying either
+      // about a fully-sat, fully-gradeable paper would be.
+      untimed: timing?.untimed ? timing : null,
+      short: !timing?.untimed && expected != null && rows.length < Math.ceil(expected * MIN_MOCK_COVERAGE),
     })
   }
   return out
@@ -545,6 +689,17 @@ function unscoredAdvisory(unscored) {
     `${n} proctored sitting${n === 1 ? ' was' : 's were'} recorded but NOT scored, so ${n === 1 ? 'it is' : 'they are'} ` +
     `absent from the proctored mock count and from every readiness criterion.`,
   ]
+  const untimed = unscored.filter((u) => u.untimed)
+  if (untimed.length) {
+    parts.push(
+      `${untimed.map((u) => `#${u.id} answered ${u.answered}${u.expected == null ? '' : ` of ${u.expected}`} but ran ` +
+        `${Math.round(u.untimed.elapsed_minutes)} minutes against a ${u.untimed.budget_minutes}-minute section` +
+        `${u.untimed.over_item ? `, with one question alone taking ${Math.round(u.untimed.longest_item_seconds / 60)} minutes` : ''}`,
+      ).join('; ')} — past the ${Math.round(MOCK_TIME_SLACK * 100) / 100}x of the budget a sitting may overrun and still ` +
+      `count. Those answers stand as practice and nothing was deleted, but untimed work cannot be evidence about ` +
+      `performance under exam conditions: re-sit one against a clock to turn it into a score.`,
+    )
+  }
   const short = unscored.filter((u) => u.short)
   if (short.length) {
     parts.push(
@@ -554,7 +709,7 @@ function unscoredAdvisory(unscored) {
       `the section can produce a composite, so re-sit a full one to turn this into a score.`,
     )
   }
-  const other = unscored.filter((u) => !u.short)
+  const other = unscored.filter((u) => !u.short && !u.untimed)
   if (other.length) {
     parts.push(
       `${other.map((u) => `#${u.id} (${u.answered} answered)`).join(', ')} had nothing that could be graded ` +
