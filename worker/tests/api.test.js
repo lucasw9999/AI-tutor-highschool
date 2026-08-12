@@ -999,6 +999,99 @@ test('a sitting recorded but not scored stays visible, with the pace implication
   )
 })
 
+// ---------------------------------------------------------------------------
+// A section whose questions the bank cannot supply must not produce a composite
+//
+// Driven over REAL SQLite and the REAL seeded bank, because the entire defect is
+// a disagreement between the exam table and the content. `frq_count` says a
+// section II sitting is 4 questions; the bank holds ZERO free-response items —
+// every one of its 218 CSA items is kind 'mcq' — and the selector filters by
+// topic, never by kind or section. So a section II sitting was handed 4 multiple
+// choice questions, and 4 answers against "the 4 questions a section II sitting
+// is expected to contain" cleared MIN_MOCK_COVERAGE outright: composite 100,
+// counted true, one more proctored mock on the record. Six such afternoons over
+// 11 days with one src=official are a COMPLETE qualifying window built on 24
+// questions — the exact overstatement the coverage gate was written to stop,
+// whose own docstring says "three answers cannot stand in for a 42-question
+// section".
+//
+// The same disagreement runs the other way on a 'full' sitting: expected was
+// mcq_count + frq_count = 46 while only the 42 multiple choice questions can be
+// asked or graded, so answering all 42 correctly scored 91.3 with 4 "blanks"
+// against max_blanks 1 — three such sittings made that criterion UNMEETABLE and
+// `ready` unreachable through sec=full, while the basis claimed 4 questions
+// "were never reached" that were never offered.
+// ---------------------------------------------------------------------------
+
+withSeed('a section II sitting is recorded but NOT scored, because the bank holds no free-response questions', async () => {
+  const { db, sqlite } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'II', source: 'official', config: CSA, now: T0 })
+
+  // Every question the exam table claims section II contains, answered right off
+  // the real key, at a brisk minute apiece: coverage and the clock are both
+  // satisfied, so the ONLY thing wrong with this sitting is that section II
+  // cannot be drawn from this bank at all.
+  await sitMock({ db, mock: m.mock, n: CSA.exam.frq_count, spacing: 60 })
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(600) })
+  assert.equal(r.answered, CSA.exam.frq_count, 'the fixture answers the whole of what the table calls section II')
+  assert.equal(r.composite_pct, null, '4 multiple choice questions are not a section II paper, whatever the count says')
+  assert.equal(r.counted, false, 'and a sitting with no composite cannot count toward readiness')
+  assert.equal(
+    sqlite.prepare('SELECT composite_pct FROM mocks WHERE id = ?').get(m.mock).composite_pct, null,
+    'the STORED composite is what a later readiness read sees; it must be null too',
+  )
+  assert.equal(
+    sqlite.prepare('SELECT COUNT(*) n FROM mocks WHERE proctored = 1 AND composite_pct IS NOT NULL').get().n, 0,
+    'nothing in the database may present this as a scored proctored mock',
+  )
+  assert.equal(r.status.proctored_mocks, 0, 'six of these must never become six qualifying mocks')
+
+  // He is told why, in the numbers, and told nothing that is untrue.
+  assert.match(r.basis, /NOT scored/, 'the basis must say plainly that it was not scored')
+  assert.match(r.basis, /free.response/i, 'and name what section II is made of')
+  assert.doesNotMatch(r.basis, /Scored \d+ right/, 'an unscored sitting must not also report a score')
+  assert.doesNotMatch(r.basis, /never reached/, 'nothing can be "never reached" that was never offered')
+
+  // The answers he gave are kept as evidence of work, and the sitting stays visible.
+  assert.equal(r.status.questions_answered, CSA.exam.frq_count, 'the work he did must not be thrown away')
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(900) })
+  const window = s.criteria.find((c) => /consecutive qualifying proctored mocks/i.test(c.requirement))
+  assert.ok(window, `the mock-window criterion must be reported: ${JSON.stringify(s.criteria.map((c) => c.requirement))}`)
+  assert.match(
+    window.evidence, new RegExp(`only 0 of ${CSA.readiness.total_logged_mocks_min}`),
+    `a section II sitting must be worth zero qualifying mocks, not one: ${window.evidence}`,
+  )
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `the sitting must not vanish from the summary either: ${JSON.stringify(s.advisories)}`)
+  assert.doesNotMatch(
+    adv, /graded mechanically/,
+    `its 4 answers WERE graded mechanically, so that cannot be the reason given: ${adv}`,
+  )
+})
+
+withSeed('a full sitting is scored over the questions it can be scored on, not marked down for the ones the bank cannot ask', async () => {
+  const { db } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: T0 })
+
+  // Every multiple choice question a full sitting contains, all 42 right off the
+  // real key, well inside the 180-minute budget. There is nothing else the bank
+  // can put in front of him: it holds no free-response items.
+  await sitMock({ db, mock: m.mock, n: CSA.exam.mcq_count, spacing: 60 })
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(4000) })
+  assert.equal(r.answered, CSA.exam.mcq_count)
+  assert.equal(
+    r.expected, CSA.exam.mcq_count + CSA.exam.frq_count,
+    'the response still reports what a real full sitting contains — that number is true and he should see it',
+  )
+  assert.equal(r.counted, true, '42 of the 42 questions this sitting could ask, every one right, is a scored sitting')
+  assert.equal(r.composite_pct, 100, 'a perfect paper is 100, not 91.3 marked down for 4 questions never offered')
+  assert.equal(r.blanks, 0, 'the free-response questions the bank cannot ask are not bubbles he left empty')
+  assert.match(r.basis, /Multiple choice only/, 'and the basis must say what the composite covers')
+  assert.doesNotMatch(r.basis, /never reached/, 'nothing can be "never reached" that was never offered')
+})
+
 test('days_to_exam counts calendar days in one fixed zone', async () => {
   const db = ctx()
   const days = async (now) => (await handleStatus({ db, subject: 'ap_csa', config: CSA, now })).days_to_exam
