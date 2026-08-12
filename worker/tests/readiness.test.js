@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { computeReadiness, qualifyingWindow, pct, breakdown, daysBetween } from '../src/readiness.js'
+import { MODEL_GRADED } from '../src/grade.js'
 
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
 const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', import.meta.url)))
@@ -12,6 +13,40 @@ const NOW = '2027-04-01T12:00:00Z'
 function mock(id, daysAgo, composite, extra = {}) {
   const started = new Date(new Date(NOW).getTime() - daysAgo * 86400000).toISOString()
   return { id, subject: 'ap_csa', started_at: started, proctored: 1, source: 'bank', composite_pct: composite, blanks: 0, ...extra }
+}
+
+/**
+ * Proctored mocks at the given ages in days, oldest first, ids 1..n.
+ *
+ * `official` is the INDEX of the sitting drawn from College Board material.
+ * It defaults to the last one because the anchor has to sit inside the judged
+ * window, and the window is the most recent run of mocks.
+ */
+function record(daysAgo, { composites, official = daysAgo.length - 1, blanks = 0 } = {}) {
+  return daysAgo.map((d, i) =>
+    mock(i + 1, d, composites?.[i] ?? 90, { blanks, ...(i === official ? { source: 'official' } : {}) }),
+  )
+}
+
+/** `right` correct out of `total` attempts of one kind, all in one slice. */
+function run({ mock_id, total, right, kind = 'mcq', unit = '1', practice = 'P1', calc_allowed = 0, graded_by }) {
+  return Array.from({ length: total }, (_, i) => ({
+    mock_id,
+    kind,
+    unit,
+    practice,
+    calc_allowed,
+    correct: i < right ? 1 : 0,
+    ...(graded_by ? { graded_by } : {}),
+  }))
+}
+
+/**
+ * Free-response rows in the shape a calibrated grader would actually write:
+ * a model-graded kind the bank really contains, marked `graded_by: 'model'`.
+ */
+function frqRun({ mock_id, total = 4, right = total, kind = 'constructed_model_graded' }) {
+  return run({ mock_id, total, right, kind, unit: '2', practice: 'P3', graded_by: 'model' })
 }
 
 /**
@@ -120,7 +155,7 @@ test('mock window qualification', async (t) => {
   })
 
   await t.test('accepts a properly spaced record and returns the LAST three', () => {
-    const mocks = [mock(1, 40, 80, { source: 'official' }), mock(2, 34, 82), mock(3, 28, 84), mock(4, 22, 86), mock(5, 14, 88), mock(6, 4, 90)]
+    const mocks = [mock(1, 40, 80), mock(2, 34, 82), mock(3, 28, 84), mock(4, 22, 86), mock(5, 14, 88, { source: 'official' }), mock(6, 4, 90)]
     const { window } = qualifyingWindow({ config: CSA, mocks, now: NOW })
     assert.deepEqual(window.map((m) => m.id), [4, 5, 6])
   })
@@ -130,9 +165,9 @@ test('mock window qualification', async (t) => {
 // Each performance floor blocks on its own
 // ---------------------------------------------------------------------------
 
-/** Six well-spaced mocks at a given composite, one of them official. */
+/** Six well-spaced mocks at a given composite, with an official one inside the judged window. */
 function sixMocks(composites) {
-  return composites.map((c, i) => mock(i + 1, 40 - i * 7, c, i === 0 ? { source: 'official' } : {}))
+  return composites.map((c, i) => mock(i + 1, 40 - i * 7, c, i === 4 ? { source: 'official' } : {}))
 }
 
 function assess({ composites, attempts, config = CSA, calibrated = true, blanks }) {
@@ -211,7 +246,7 @@ test('performance floors', async (t) => {
   await t.test('stale evidence blocks readiness: a valid window can still be too old', () => {
     // The last three sittings span 24 days, so they form a legitimate window —
     // but the newest is 70 days old, so it says nothing about today.
-    const mocks = [90, 90, 90, 91, 92, 93].map((c, i) => mock(i + 1, 130 - i * 12, c, i === 0 ? { source: 'official' } : {}))
+    const mocks = [90, 90, 90, 91, 92, 93].map((c, i) => mock(i + 1, 130 - i * 12, c, i === 4 ? { source: 'official' } : {}))
     const { window } = qualifyingWindow({ config: CSA, mocks, now: NOW })
     assert.notEqual(window, null, 'a 24-day span is a valid window')
     const r = computeReadiness({ config: CSA, mocks, attempts: passingAttempts([4, 5, 6]), coverage: FULL_COVERAGE, calibrated: true, now: NOW })
@@ -249,12 +284,10 @@ test('an uncalibrated FRQ grader blocks 100% and says why', () => {
 
 test('100% requires every criterion at once, and reports ready', () => {
   const mocks = sixMocks([90, 90, 90, 92, 93, 94])
-  const attempts = [
-    ...passingAttempts([4, 5, 6]),
-    ...[4, 5, 6].flatMap((mock_id) =>
-      Array.from({ length: 4 }, () => ({ mock_id, kind: 'frq', unit: '2', practice: 'P3', correct: 1 })),
-    ),
-  ]
+  // The free-response rows are the shape grade.js actually produces for
+  // rubric-scored work: a model-graded kind, marked graded_by 'model'. The old
+  // fixture used {kind: 'frq'} with no graded_by, which no code path can write.
+  const attempts = [...passingAttempts([4, 5, 6]), ...[4, 5, 6].flatMap((mock_id) => frqRun({ mock_id }))]
   const r = computeReadiness({ config: CSA, mocks, attempts, coverage: FULL_COVERAGE, calibrated: true, now: NOW })
 
   assert.equal(r.first_unmet, null, `unmet: ${JSON.stringify(r.criteria.filter((c) => !c.met), null, 1)}`)
@@ -275,7 +308,7 @@ test('readiness never reports 100 while any criterion is unmet', () => {
 
 test('Precalc uses calculator/no-calculator halves instead of practices', () => {
   const mocks = [70, 72, 74, 76, 78, 80].map((c, i) => ({
-    ...mock(i + 1, 40 - i * 7, c, i === 0 ? { source: 'official' } : {}),
+    ...mock(i + 1, 40 - i * 7, c, i === 4 ? { source: 'official' } : {}),
     subject: 'ap_precalc',
   }))
   const attempts = passingAttempts([4, 5, 6], PRECALC)
@@ -289,7 +322,7 @@ test('Precalc uses calculator/no-calculator halves instead of practices', () => 
 
 test('a weak no-calculator half blocks Precalc readiness', () => {
   const mocks = [70, 72, 74, 76, 78, 80].map((c, i) => ({
-    ...mock(i + 1, 40 - i * 7, c, i === 0 ? { source: 'official' } : {}),
+    ...mock(i + 1, 40 - i * 7, c, i === 4 ? { source: 'official' } : {}),
     subject: 'ap_precalc',
   }))
   // Everything right on the calculator half, everything wrong without one.
@@ -317,4 +350,376 @@ test('both subject configs set a floor for every dimension they score', () => {
     assert.ok(r.composite_floor_min <= r.composite_mean_min, `${name}: floor cannot exceed the mean requirement`)
     assert.ok(r.require_official_mock, `${name} must require an official mock`)
   }
+})
+
+// ---------------------------------------------------------------------------
+// The official anchor has to be INSIDE the window that gets judged
+// ---------------------------------------------------------------------------
+
+test('official anchoring is a property of the judged window, not of the logbook', async (t) => {
+  await t.test('a bank-only window is rejected even though an official mock was logged once', () => {
+    // One official sitting 300 days ago, then a clean, well-spaced run of bank
+    // mocks. The window is 100% bank-sourced, so nothing anchors its difficulty.
+    const mocks = record([300, 60, 50, 45, 22, 14, 4], { official: 0 })
+    const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.equal(window, null, 'a window of three bank mocks is not anchored')
+    assert.match(reason, /official/)
+
+    const r = computeReadiness({
+      config: CSA, mocks, attempts: passingAttempts([5, 6, 7]),
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+    assert.equal(r.readiness_pct, 0, 'this reported 100% ready before the window was checked')
+    assert.equal(r.ready, false)
+    assert.equal(r.first_unmet, 'mock_window')
+  })
+
+  await t.test('even a recent official mock does not anchor a window it is not part of', () => {
+    const mocks = record([60, 50, 40, 30, 20, 10], { official: 2 })
+    const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.equal(window, null)
+    assert.match(reason, /official/)
+  })
+
+  await t.test('an official mock anywhere inside the window anchors it', () => {
+    for (const official of [3, 4, 5]) {
+      const mocks = record([60, 50, 40, 30, 20, 10], { official })
+      const { window } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+      assert.deepEqual(window?.map((m) => m.id), [4, 5, 6], `official at index ${official}`)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The window search: don't give up on the first candidate, don't skip fresh
+// evidence either
+// ---------------------------------------------------------------------------
+
+test('window search', async (t) => {
+  await t.test('a lone recent sitting does not erase a judgeable block behind it', () => {
+    // The last three (62, 55 and 50 days ago plus one at 2 days) span 60 days,
+    // so they are not one coherent block. 62/55/50 is. Judging it gives real
+    // measured numbers plus an honest freshness failure, rather than reporting
+    // that nothing about this student is measurable.
+    const mocks = record([200, 150, 100, 62, 55, 50, 2], { official: 4 })
+    const { window } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.deepEqual(window?.map((m) => m.id), [4, 5, 6])
+
+    const r = computeReadiness({
+      config: CSA, mocks, attempts: passingAttempts([4, 5, 6]),
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+    const mean = r.criteria.find((c) => c.id === 'composite_mean')
+    assert.equal(mean.pending, undefined, 'the window is measurable, so nothing is pending')
+    assert.equal(mean.met, true)
+    assert.equal(r.first_unmet, 'freshness', 'the honest failure is freshness, not "no window"')
+    assert.ok(r.readiness_pct > 0 && r.readiness_pct <= 99, `got ${r.readiness_pct}`)
+  })
+
+  await t.test('a bunched-up recent block is never stepped over for older, better scores', () => {
+    // Three sittings at 95 a month ago, then three at 50 in the last two days.
+    // Falling back to the older block would report ready while ignoring every
+    // fresh piece of evidence — the overstatement this module exists to prevent.
+    const mocks = record([40, 30, 20, 2, 1, 0], { official: 2, composites: [95, 95, 95, 50, 50, 50] })
+    const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.equal(window, null)
+    assert.match(reason, /cram/)
+    const r = computeReadiness({
+      config: CSA, mocks, attempts: passingAttempts([1, 2, 3]),
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+    assert.equal(r.ready, false)
+    assert.equal(r.readiness_pct, 0)
+  })
+
+  await t.test('an earlier block can never be reported as ready', () => {
+    // The only sittings a window may skip are ones separated from it by more
+    // than window_span_days_max, which is why freshness_days must not exceed
+    // that: the fallback window is then always too old to claim today.
+    for (const [name, cfg] of [['ap_csa', CSA], ['ap_precalc', PRECALC]]) {
+      assert.ok(
+        cfg.readiness.freshness_days <= cfg.readiness.window_span_days_max,
+        `${name}: freshness_days must not exceed window_span_days_max`,
+      )
+    }
+    const mocks = record([120, 100, 62, 55, 50, 2], { official: 3 })
+    const r = computeReadiness({
+      config: CSA, mocks, attempts: [...passingAttempts([3, 4, 5]), ...[3, 4, 5].flatMap((mock_id) => frqRun({ mock_id }))],
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+    assert.deepEqual(qualifyingWindow({ config: CSA, mocks, now: NOW }).window?.map((m) => m.id), [3, 4, 5])
+    assert.equal(r.criteria.find((c) => c.id === 'freshness').met, false)
+    assert.equal(r.ready, false)
+  })
+
+  await t.test('a properly spaced run of 4 is still short of the 6 logged mocks required', () => {
+    const four = record([40, 30, 20, 10])
+    const { window, reason } = qualifyingWindow({ config: CSA, mocks: four, now: NOW })
+    assert.equal(window, null, '4 is enough for a 3-mock window but not enough evidence overall')
+    assert.match(reason, /only 4 of 6/)
+
+    const five = record([50, 40, 30, 20, 10])
+    assert.match(qualifyingWindow({ config: CSA, mocks: five, now: NOW }).reason, /only 5 of 6/)
+
+    const six = record([60, 50, 40, 30, 20, 10])
+    assert.notEqual(qualifyingWindow({ config: CSA, mocks: six, now: NOW }).window, null, 'exactly 6 qualifies')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Every threshold, pinned at its exact boundary
+// ---------------------------------------------------------------------------
+
+const criterion = (r, id) => r.criteria.find((c) => c.id === id)
+
+test('threshold boundaries', async (t) => {
+  await t.test('composite mean: exactly 82 is met, 81.97 is not', () => {
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 83, 82, 81] }), 'composite_mean').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 83, 82, 80.9] }), 'composite_mean').met, false)
+  })
+
+  await t.test('composite floor: exactly 78 is met, 77.9 is not', () => {
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 78, 86, 85] }), 'composite_floor').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 77.9, 86, 85] }), 'composite_floor').met, false)
+  })
+
+  await t.test('decline: a drop of exactly 5 is tolerated, 5.1 is not', () => {
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 85, 88] }), 'non_declining').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 84.9, 88] }), 'non_declining').met, false)
+  })
+
+  await t.test('blanks: exactly one blank is tolerated, two are not', () => {
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], blanks: 1 }), 'blanks').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], blanks: 2 }), 'blanks').met, false)
+  })
+
+  await t.test('overall MCQ: exactly 80% is met, 79% is not', () => {
+    const at = (right) => [4, 5, 6].flatMap((mock_id) => run({ mock_id, total: 100, right }))
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts: at(80) }), 'mcq_overall').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts: at(79) }), 'mcq_overall').met, false)
+  })
+
+  await t.test('per unit: exactly 75% is met, 74.5% is not', () => {
+    const at = (right) => [
+      ...passingAttempts([4, 5, 6]).filter((a) => a.unit !== '3'),
+      ...run({ mock_id: 4, total: 200, right, unit: '3' }),
+    ]
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts: at(150) }), 'unit_3').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts: at(149) }), 'unit_3').met, false)
+  })
+
+  await t.test('the dominant practice: exactly 85% is met, 84.5% is not', () => {
+    const at = (right) => [
+      ...passingAttempts([4, 5, 6]).filter((a) => a.practice !== 'P3'),
+      ...run({ mock_id: 4, total: 200, right, practice: 'P3' }),
+    ]
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts: at(170) }), 'practice_P3').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts: at(169) }), 'practice_P3').met, false)
+  })
+
+  await t.test('the no-calculator half: exactly 65% is met, 64.5% is not', () => {
+    const mocks = [70, 72, 74, 76, 78, 80].map((c, i) => ({
+      ...mock(i + 1, 40 - i * 7, c, i === 4 ? { source: 'official' } : {}),
+      subject: 'ap_precalc',
+    }))
+    const judge = (right) =>
+      computeReadiness({
+        config: PRECALC,
+        mocks,
+        attempts: [
+          ...passingAttempts([4, 5, 6], PRECALC).filter((a) => a.calc_allowed !== 0),
+          ...run({ mock_id: 4, total: 200, right, calc_allowed: 0 }),
+        ],
+        coverage: { topics_total: 10, topics_drilled: 10 },
+        calibrated: true,
+        now: NOW,
+      })
+    assert.equal(criterion(judge(130), 'calc_0').met, true)
+    assert.equal(criterion(judge(129), 'calc_0').met, false)
+  })
+
+  await t.test('free response: exactly 85% is met, 84.5% is not', () => {
+    const at = (right) => [...passingAttempts([4, 5, 6]), ...frqRun({ mock_id: 4, total: 200, right })]
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts: at(170) }), 'frq').met, true)
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts: at(169) }), 'frq').met, false)
+  })
+
+  await t.test('freshness: exactly 42 days old is met, 42.1 is not', () => {
+    const judge = (age) =>
+      computeReadiness({
+        config: CSA,
+        mocks: record([120, 100, 80, 70, 60, age], { official: 4 }),
+        attempts: passingAttempts([4, 5, 6]),
+        coverage: FULL_COVERAGE,
+        calibrated: true,
+        now: NOW,
+      })
+    assert.equal(criterion(judge(42), 'freshness').met, true)
+    assert.equal(criterion(judge(42.1), 'freshness').met, false)
+  })
+
+  await t.test('window span: exactly 10 days qualifies, 9.96 does not', () => {
+    const at = (newest) => record([60, 50, 40, 20, 15, newest], { official: 4 })
+    assert.notEqual(qualifyingWindow({ config: CSA, mocks: at(10), now: NOW }).window, null, '10 days is not a cram')
+    assert.equal(qualifyingWindow({ config: CSA, mocks: at(10.04), now: NOW }).window, null)
+  })
+
+  await t.test('window span: exactly 42 days qualifies, 42.04 does not', () => {
+    const at = (oldest) => record([120, 100, 80, oldest, 30, 2], { official: 3 })
+    assert.notEqual(qualifyingWindow({ config: CSA, mocks: at(44), now: NOW }).window, null, '42 days is not yet stale')
+    assert.equal(qualifyingWindow({ config: CSA, mocks: at(44.04), now: NOW }).window, null)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A displayed number may never contradict the verdict printed beside it
+// ---------------------------------------------------------------------------
+
+test('displayed numbers agree with the verdict', async (t) => {
+  await t.test('a mean of 81.96 is not printed as 82.0 next to a failure', () => {
+    const c = criterion(assess({ composites: [90, 90, 90, 82.4, 82.4, 81.08] }), 'composite_mean')
+    assert.equal(c.met, false, '81.96 does not meet an 82 bar')
+    assert.equal(c.detail, '81.9%')
+  })
+
+  await t.test('a floor of 77.96 is not printed as 78.0 next to a failure', () => {
+    const c = criterion(assess({ composites: [90, 90, 90, 77.96, 86, 85] }), 'composite_floor')
+    assert.equal(c.met, false)
+    assert.equal(c.detail, '77.9%')
+  })
+
+  await t.test('a drop of 5.04 is not printed as 5.0 next to a failure', () => {
+    const c = criterion(assess({ composites: [90, 90, 90, 90, 84.96, 88] }), 'non_declining')
+    assert.equal(c.met, false)
+    assert.equal(c.detail, 'worst drop 5.1 pts')
+  })
+
+  await t.test('an MCQ score of 79.96 is not printed as 80.0 next to a failure', () => {
+    const attempts = run({ mock_id: 4, total: 2500, right: 1999 })
+    const c = criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts }), 'mcq_overall')
+    assert.equal(c.met, false)
+    assert.equal(c.detail, '79.9% of 2500')
+  })
+
+  await t.test('a unit at 74.5 is not printed as 75 next to a failure', () => {
+    const attempts = [
+      ...passingAttempts([4, 5, 6]).filter((a) => a.unit !== '3'),
+      ...run({ mock_id: 4, total: 200, right: 149, unit: '3' }),
+    ]
+    const c = criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts }), 'unit_3')
+    assert.equal(c.met, false)
+    assert.equal(c.detail, '74% of 200')
+  })
+
+  await t.test('free response at 84.5 is not printed as 85 next to a failure', () => {
+    const attempts = [...passingAttempts([4, 5, 6]), ...frqRun({ mock_id: 4, total: 200, right: 169 })]
+    const c = criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts }), 'frq')
+    assert.equal(c.met, false)
+    assert.equal(c.detail, '84%')
+  })
+
+  await t.test('a mock 42.4 days old is not printed as 42 days next to a failure', () => {
+    const r = computeReadiness({
+      config: CSA,
+      mocks: record([120, 100, 80, 70, 60, 42.4], { official: 4 }),
+      attempts: passingAttempts([4, 5, 6]),
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+    const c = criterion(r, 'freshness')
+    assert.equal(c.met, false)
+    assert.equal(c.detail, '43 days ago')
+  })
+
+  await t.test('a span rejection message cannot assert its own threshold is met', () => {
+    const { reason } = qualifyingWindow({ config: CSA, mocks: record([60, 50, 40, 20, 15, 10.04], { official: 4 }), now: NOW })
+    assert.match(reason, /9\.9 days/)
+    assert.ok(!reason.includes('10.0'), reason)
+  })
+
+  await t.test('a staleness message cannot round itself back under the threshold', () => {
+    const { reason } = qualifyingWindow({ config: CSA, mocks: record([120, 100, 80, 44.04, 30, 2], { official: 3 }), now: NOW })
+    assert.match(reason, /42\.1 days/)
+    assert.match(reason, /stale beyond 42/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Free response: the kinds the bank actually contains
+// ---------------------------------------------------------------------------
+
+test('calibrated free-response evidence counts the kinds the bank really stores', async (t) => {
+  await t.test('every model-graded kind can satisfy the criterion', () => {
+    for (const kind of MODEL_GRADED) {
+      const attempts = [...passingAttempts([4, 5, 6]), ...[4, 5, 6].flatMap((mock_id) => frqRun({ mock_id, kind }))]
+      const r = assess({ composites: [90, 90, 90, 92, 93, 94], attempts })
+      assert.equal(criterion(r, 'frq').met, true, `${kind}: ${criterion(r, 'frq').detail}`)
+      assert.equal(r.ready, true, `${kind} should be able to complete the record`)
+    }
+  })
+
+  await t.test("the bank's own free-response kind is one of them", () => {
+    // Every free-response item in the bank is 'constructed_model_graded'; the
+    // literal 'frq' appears nowhere in the content, so filtering on it alone
+    // means real free-response work could never satisfy the criterion.
+    assert.ok(MODEL_GRADED.has('constructed_model_graded'))
+    const attempts = [...passingAttempts([4, 5, 6]), ...[4, 5, 6].flatMap((mock_id) => frqRun({ mock_id }))]
+    assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts }), 'frq').detail, '100%')
+  })
+
+  await t.test('an uncalibrated grader leaves the criterion pending, not failed', () => {
+    const c = criterion(assess({ composites: [90, 90, 90, 92, 93, 94], calibrated: false }), 'frq')
+    assert.equal(c.met, false)
+    assert.equal(c.pending, true, 'unmeasurable is not the same as fallen short')
+    assert.match(c.detail, /not yet calibrated/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// One criteria list, one definition of readiness_pct
+// ---------------------------------------------------------------------------
+
+test('the pending report and the evaluated report describe the same bar', () => {
+  const evaluated = assess({ composites: [90, 90, 90, 92, 93, 94] })
+  const pending = computeReadiness({ config: CSA, mocks: [], attempts: [], coverage: FULL_COVERAGE, now: NOW })
+  assert.deepEqual(
+    pending.criteria.map((c) => c.id),
+    evaluated.criteria.map((c) => c.id),
+    'a student with no window must see every requirement, in the same order',
+  )
+  const freshness = pending.criteria.find((c) => c.id === 'freshness')
+  assert.ok(freshness, 'the 42-day mock-expiry requirement must be visible before there is a window')
+  assert.match(freshness.label, /42 days/)
+  assert.equal(freshness.pending, true)
+})
+
+test('readiness_pct is the share of that one list which is met', () => {
+  const r = assess({ composites: [90, 90, 90, 92, 93, 94], calibrated: false })
+  const met = r.criteria.filter((c) => c.met).length
+  assert.equal(r.readiness_pct, Math.round((met / r.criteria.length) * 100))
+  assert.ok(r.readiness_pct < 100, 'the pending FRQ criterion counts as unmet')
+})
+
+test('one day past the span limit changes the verdict but not what the number means', () => {
+  // R4: 44 days of span reported 100 over 18 criteria; 45 days reported 0 over
+  // 17, so the same field described two different quantities.
+  const judge = (oldest) => {
+    const mocks = record([120, 100, 80, oldest, 30, 2], { official: 3 })
+    return computeReadiness({
+      config: CSA,
+      mocks,
+      attempts: [...passingAttempts([4, 5, 6]), ...[4, 5, 6].flatMap((mock_id) => frqRun({ mock_id }))],
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+  }
+  const inside = judge(44)
+  const outside = judge(45)
+  assert.equal(inside.readiness_pct, 100)
+  assert.equal(inside.ready, true)
+  assert.equal(outside.readiness_pct, 0, 'no qualifying window means nothing has been measured')
+  assert.equal(outside.first_unmet, 'mock_window')
+  assert.deepEqual(outside.criteria.map((c) => c.id), inside.criteria.map((c) => c.id))
+  assert.ok(
+    outside.criteria.filter((c) => c.pending).length === outside.criteria.length - 2,
+    'every performance check is reported as not yet measurable, none as failed',
+  )
 })
