@@ -33,6 +33,92 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The config that governs a piece of evidence, derived from the DATA rather than
+ * from what the caller said the subject was.
+ *
+ * `s` is model-supplied; the subject on a serve row or a mock row is not. When
+ * they disagree the request is refused, because judging Precalc evidence against
+ * CSA floors reports the wrong exam date, the wrong goal and the wrong per-unit
+ * bar — a readiness claim about an exam the student is not sitting.
+ *
+ * Works with or without a `configs` map, so it does not depend on the router
+ * being fixed too: with the map it derives the config, without it, it at least
+ * refuses a config that belongs to another subject.
+ */
+function configFor({ subject, config = null, configs = null }) {
+  const derived = configs ? configs[subject] : null
+  if (configs && !derived) {
+    throw new ApiError(400, `no readiness config for subject ${subject}`)
+  }
+  if (config && config.subject !== subject) {
+    throw new ApiError(
+      400,
+      `this record belongs to ${subject} but the config supplied is for ${config.subject ?? 'an unnamed subject'}; ` +
+        `pass s=${subject} — ${subject} evidence cannot be judged against another subject's standards`,
+    )
+  }
+  const chosen = derived ?? config
+  if (!chosen) throw new ApiError(400, `no readiness config supplied for subject ${subject}`)
+  return chosen
+}
+
+/**
+ * The zone the exams are actually sat in.
+ *
+ * days_to_exam is a count of calendar days, so it has to be computed in one fixed
+ * zone. Subtracting UTC instants instead reports 22:00 and 03:00 on the same
+ * Pacific evening as 1 day and 0 days out, and makes the night before the exam
+ * indistinguishable from exam morning.
+ */
+const EXAM_ZONE = 'America/Los_Angeles'
+const EXAM_ZONE_CALENDAR = new Intl.DateTimeFormat('en-CA', {
+  timeZone: EXAM_ZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+})
+
+/** Whole calendar days from `now` to the exam date, in the exam's own zone. */
+export function daysToExam(examDate, now) {
+  const today = EXAM_ZONE_CALENDAR.format(new Date(now))
+  const exam = String(examDate).slice(0, 10)
+  return Math.round((Date.parse(`${exam}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000)
+}
+
+/** Newest resolution per topic, so spent evidence cannot re-open a closed gap. */
+function resolvedSince(gaps) {
+  const since = new Map()
+  for (const g of gaps) {
+    if (!g.cleared_at) continue
+    const prev = since.get(g.topic)
+    if (!prev || new Date(g.cleared_at) > new Date(prev)) since.set(g.topic, g.cleared_at)
+  }
+  return since
+}
+
+/**
+ * Load the sitting a caller claims to be answering inside, and refuse it unless
+ * it is real, this subject's, and still open.
+ *
+ * The mock id is one of the few things the model passes that it could invent, and
+ * an unchecked one is the cheapest possible route to a false readiness number:
+ * answers logged hours later against a submitted mock feed every per-unit floor
+ * while the stored composite stays frozen at what was actually sat.
+ */
+async function requireOpenMock({ db, mockId, subject }) {
+  const m = await db.mock(mockId)
+  if (!m) throw new ApiError(404, `unknown mock ${mockId}`)
+  if (m.subject !== subject) {
+    throw new ApiError(409, `mock ${mockId} is an ${m.subject} sitting, not ${subject}`)
+  }
+  if (m.ended_at) {
+    throw new ApiError(
+      409,
+      `mock ${mockId} was submitted at ${m.ended_at}. Answers logged after a sitting closes were not given under ` +
+        `mock conditions, so they cannot be added to it — run /mock/start for a new sitting.`,
+    )
+  }
+  return m
+}
+
 /** Everything the engines need for one subject, fetched concurrently. */
 async function loadContext(db, subject, config) {
   const [items, attempts, topics, gaps, mocks, teachingRows] = await Promise.all([
@@ -67,28 +153,49 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
   const ctx = await loadContext(db, subject, config)
   if (!ctx.items.length) throw new ApiError(503, `no items loaded for ${subject}`)
 
-  // A gap with enough evidence but no lesson yet interrupts the drill.
-  const detected = detectGaps(ctx.attempts)
-  const { to_open, to_teach } = reconcileGaps({ detected, gaps: ctx.gaps })
-  for (const g of to_open) await db.openGap({ subject, topic: g.topic, opened_at: now })
+  // Checked before anything is written, so a bad mock id leaves no serve row.
+  if (mockId != null) await requireOpenMock({ db, mockId, subject })
 
-  const pendingLesson = to_teach[0] ?? to_open[0]
-  if (pendingLesson && !mockId) {
-    const evidence = detected.find((d) => d.topic === pendingLesson.topic)
-    const lesson = buildLesson({ topic: pendingLesson.topic, teaching: ctx.teaching, gap: evidence })
-    if (lesson) {
-      return { type: 'lesson', lesson, status: summarize({ ctx, now }) }
-    }
-    // No material for this topic: say so rather than skipping the gap silently.
-    return {
-      type: 'lesson_missing',
-      topic: pendingLesson.topic,
-      note: `Evidence says ${pendingLesson.topic} is a real gap, but no teaching material exists for it yet. Flagging rather than drilling it blind.`,
-      status: summarize({ ctx, now }),
+  // A gap with enough evidence but no lesson yet interrupts the drill. The
+  // evidence is scoped to what has happened since the topic was last cleared:
+  // misses that were already taught and re-tested cold are spent.
+  const detected = detectGaps(ctx.attempts, { since: resolvedSince(ctx.gaps) })
+  const { to_open, to_teach } = reconcileGaps({ detected, gaps: ctx.gaps })
+  for (const g of to_open) {
+    await db.openGap({ subject, topic: g.topic, opened_at: now })
+    // The context was loaded before this write, and summarize() reads it. Without
+    // this, the response that delivers a lesson for a gap reports no open gaps.
+    ctx.gaps.push({ subject, topic: g.topic, opened_at: now, taught_at: null, cleared_at: null })
+  }
+
+  // A gap on a topic with no teaching material is flagged and then drilled
+  // anyway. Returning the flag on its own used to stop the entire subject dead:
+  // that topic stayed the pending lesson forever, so no question was served
+  // again, for any topic, and nothing in the loop could clear it.
+  const contentGaps = []
+  const missingNote = (topics) =>
+    `Evidence says ${topics.join(', ')} is a real gap, but no teaching material exists for it yet. ` +
+    `Flagging that rather than explaining it blind — tell him the system owes him this one, and carry on below.`
+
+  if (!mockId) {
+    for (const pending of [...to_teach, ...to_open]) {
+      const evidence = detected.find((d) => d.topic === pending.topic)
+      const lesson = buildLesson({ topic: pending.topic, teaching: ctx.teaching, gap: evidence })
+      if (lesson) {
+        return {
+          type: 'lesson',
+          lesson,
+          ...(contentGaps.length && { lesson_missing: contentGaps, note: missingNote(contentGaps) }),
+          status: summarize({ ctx, now }),
+        }
+      }
+      if (!contentGaps.includes(pending.topic)) contentGaps.push(pending.topic)
     }
   }
 
-  const choice = pickNext({ ...ctx, now })
+  // Inside a mock the selector must not chase remediation: a proctored sitting
+  // stands in for the real exam, which is not aimed at his weakest topic.
+  const choice = pickNext({ ...ctx, gaps: mockId ? [] : ctx.gaps, now })
   if (!choice) throw new ApiError(409, 'every question is inside the no-repeat window; add items or wait')
 
   const serveId = await db.recordServe({ subject, item_id: choice.item.id, served_at: now, mock_id: mockId })
@@ -101,6 +208,7 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     topic: choice.item.topic,
     calc_allowed: choice.item.calc_allowed,
     why: choice.reason,
+    ...(contentGaps.length && { lesson_missing: contentGaps, note: missingNote(contentGaps) }),
     status: summarize({ ctx, now }),
   }
 }
@@ -111,10 +219,14 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
  * The serve id is the only handle the model has, and it can be spent once.
  * Timing is derived here; hints are counted here; the verdict is computed here.
  */
-export async function handleLog({ db, serveId, response, hints = 0, config, now }) {
+export async function handleLog({ db, serveId, response, hints = 0, config, configs = null, now }) {
   const serve = await db.serve(serveId)
   if (!serve) throw new ApiError(404, `unknown serve id ${serveId}`)
   if (serve.logged) throw new ApiError(409, `serve ${serveId} was already logged`)
+
+  // The subject comes from the serve row; the standards must follow it, not the
+  // caller's `s`. Refused before anything is written, so the serve is not spent.
+  const cfg = configFor({ subject: serve.subject, config, configs })
 
   const item = await db.item(serve.item_id)
   if (!item) throw new ApiError(500, `serve ${serveId} points at a missing item`)
@@ -149,7 +261,7 @@ export async function handleLog({ db, serveId, response, hints = 0, config, now 
     gapClosed = item.topic
   }
 
-  const ctx = await loadContext(db, serve.subject, config)
+  const ctx = await loadContext(db, serve.subject, cfg)
   const graded = verdict.graded_by === 'server'
   return {
     // `correct` is only a claim when the server actually graded it. For
@@ -175,6 +287,18 @@ export async function handleLog({ db, serveId, response, hints = 0, config, now 
 
 /** GET /taught — the lesson was delivered; the gap now awaits a cold re-test. */
 export async function handleTaught({ db, subject, topic, config, now }) {
+  // The UPDATE behind markTaught matches on (subject, topic, cleared_at IS NULL),
+  // so a topic name where an id belongs, or a topic with no open gap, silently
+  // matches nothing. Reporting ok:true for that told the student his lesson was
+  // registered while /next went on serving him the same lesson forever.
+  const open = (await db.gaps(subject)).filter((g) => g.topic === topic && !g.cleared_at)
+  if (!open.length) {
+    throw new ApiError(
+      404,
+      `no open gap on "${topic}" for ${subject}, so there is no lesson to mark as delivered. ` +
+        `Pass the topic id exactly as /next returned it in lesson.topic.`,
+    )
+  }
   await db.markTaught({ subject, topic, taught_at: now })
   const ctx = await loadContext(db, subject, config)
   return {
@@ -200,11 +324,35 @@ export async function handleMockStart({ db, subject, section, source, config, no
   }
 }
 
+/**
+ * The share of a section a sitting has to actually cover before it is scored.
+ *
+ * Below this it is stored with no composite, which keeps it out of the qualifying
+ * window entirely: three answers cannot stand in for a 42-question section, and
+ * counting them as a logged proctored mock inflates the evidence trail.
+ */
+export const MIN_MOCK_COVERAGE = 0.9
+
+/** How many questions a section of this exam is expected to contain. */
+function expectedQuestions(section, exam = {}) {
+  const mcq = exam.mcq_count ?? (exam.mcq_no_calc_count != null || exam.mcq_calc_count != null
+    ? (exam.mcq_no_calc_count ?? 0) + (exam.mcq_calc_count ?? 0)
+    : null)
+  const frq = exam.frq_count ?? null
+  if (section === 'I') return mcq
+  if (section === 'II') return frq
+  if (section === 'full') return mcq == null && frq == null ? null : (mcq ?? 0) + (frq ?? 0)
+  return null
+}
+
 /** GET /mock/submit — close the sitting and score it from its own attempts. */
-export async function handleMockSubmit({ db, mockId, config, now }) {
+export async function handleMockSubmit({ db, mockId, config, configs = null, now }) {
   const m = await db.mock(mockId)
   if (!m) throw new ApiError(404, `unknown mock ${mockId}`)
   if (m.ended_at) throw new ApiError(409, `mock ${mockId} is already submitted`)
+
+  // The sitting's own subject decides which standards apply, not the caller's `s`.
+  const cfg = configFor({ subject: m.subject, config, configs })
 
   const attempts = (await db.attempts(m.subject)).filter((a) => a.mock_id === Number(mockId))
   if (!attempts.length) throw new ApiError(409, `mock ${mockId} has no logged answers`)
@@ -212,22 +360,51 @@ export async function handleMockSubmit({ db, mockId, config, now }) {
   // Composite counts only mechanically graded answers. Including model-graded or
   // unkeyed items would fold an ungraded zero into the score and understate it.
   const scored = attempts.filter((a) => a.graded_by === 'server')
-  const composite = scored.length ? (scored.filter((a) => a.correct).length / scored.length) * 100 : 0
+  const right = scored.filter((a) => a.correct).length
   const blanks = attempts.filter((a) => (a.response ?? '') === '').length
   const ungraded = attempts.length - scored.length
+  const expected = expectedQuestions(m.section, cfg.exam)
+
+  // Two guards against two different false claims:
+  //   1. `correct / answered` reads 100% on three questions out of 42, and six
+  //      such sittings satisfy every composite criterion there is. A sitting that
+  //      does not cover the section gets NO composite at all.
+  //   2. Inside a sitting that does cover it, a question left unanswered is wrong,
+  //      exactly as on the real exam. Dividing by what he happened to answer
+  //      would quietly delete the ones he skipped.
+  const covered = expected == null || attempts.length >= Math.ceil(expected * MIN_MOCK_COVERAGE)
+  const denominator = Math.max(scored.length, (expected ?? 0) - ungraded)
+  const composite = covered && denominator > 0 ? (right / denominator) * 100 : null
+
+  const basis = []
+  if (expected != null) {
+    basis.push(`Answered ${attempts.length} of the ${expected} questions a section ${m.section} sitting is expected to contain.`)
+  }
+  if (ungraded) {
+    basis.push(`${ungraded} response(s) need human or model grading and are excluded from the composite.`)
+  }
+  if (composite == null) {
+    basis.push(covered
+      ? 'Nothing in this sitting could be graded mechanically, so it has no composite and cannot count toward readiness.'
+      : `That is short of the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a sitting has to cover, so this one is `
+        + `recorded but NOT scored, and cannot count toward readiness. Practice sets are useful; they are not mocks.`)
+  } else {
+    basis.push(`Scored ${right} right out of ${denominator} — anything not answered counts as wrong, as on the exam.`)
+    basis.push('Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.')
+  }
 
   await db.endMock({ id: mockId, ended_at: now, composite_pct: composite, blanks })
-  const ctx = await loadContext(db, m.subject, config)
+  const ctx = await loadContext(db, m.subject, cfg)
   return {
     mock: Number(mockId),
-    composite_pct: Number(composite.toFixed(1)),
+    composite_pct: composite == null ? null : Number(composite.toFixed(1)),
+    counted: composite != null,
     answered: attempts.length,
+    expected,
     scored: scored.length,
     ungraded,
     blanks,
-    basis: ungraded
-      ? `Scored on the ${scored.length} mechanically graded answers. ${ungraded} response(s) need human or model grading and are excluded.`
-      : 'Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.',
+    basis: basis.join(' '),
     status: summarize({ ctx, now }),
   }
 }
@@ -250,7 +427,7 @@ export function summarize({ ctx, now }) {
   })
   const openGaps = ctx.gaps.filter((g) => !g.cleared_at).map((g) => g.topic)
   const blocker = r.criteria.find((c) => !c.met)
-  const daysToExam = Math.ceil((new Date(ctx.config.exam_date) - new Date(now)) / 86400000)
+  const daysLeft = daysToExam(ctx.config.exam_date, now)
 
   return {
     subject: ctx.config.display_name,
@@ -258,7 +435,7 @@ export function summarize({ ctx, now }) {
     ready: r.ready,
     goal: ctx.config.goal,
     exam_date: ctx.config.exam_date,
-    days_to_exam: daysToExam,
+    days_to_exam: daysLeft,
     coverage: `${coverage.topics_drilled}/${coverage.topics_total} topics attempted`,
     questions_answered: ctx.attempts.length,
     proctored_mocks: ctx.mocks.filter((m) => m.proctored && m.composite_pct != null).length,
