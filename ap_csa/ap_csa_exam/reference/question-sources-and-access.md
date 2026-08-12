@@ -11,6 +11,7 @@
 | **CED sample MCQ + FRQ** (pp. 149–180 of the CED PDF) | Free | 20 sample MCQ (one per core skill) + 4 sample FRQ (MessageBuilder, CupcakeMachine, ItemInventory, Schedule) with official answers and scoring criteria | Download the CED PDF from AP Central → "AP Computer Science A" → Course & Exam Description |
 | **2026 Released FRQ PDF** | Free | 4 official FRQs from the May 2026 sitting (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4) — the only fully public redesigned-exam artifact today | [ap26-frq-computer-science-a.pdf](https://apcentral.collegeboard.org/media/pdf/ap26-frq-computer-science-a.pdf) |
 | **AP Central — Past FRQs** | Free | Several years of prior FRQs + scoring guidelines + Chief Reader Reports | apcentral.collegeboard.org → AP Computer Science A → Exam Questions |
+| **Bluebook practice** | Free — **student-accessible, NOT gated** | A **test preview** for the digital AP Exams: a short question set that lets you experience digital testing and try every tool. No score, no timer — **interface rehearsal, not a mock** | [bluebook.collegeboard.org/students/practice](https://bluebook.collegeboard.org/students/practice) — log in with **your own College Board account**; no join code |
 | **AP Classroom** (the real item bank) | Free — **teacher-gated** | The authoritative secure bank: Progress Checks, Question Bank, **Bluebook-Style Assessments**, full **Practice Exams**, and **AP Videos** (the current name for what used to be "AP Daily") | See access section below — **requires a join code from an AP-authorized teacher** |
 
 ### Important: how to use past FRQs from AP Central
@@ -54,9 +55,20 @@ Confirmed still unposted as of 12 August 2026 (the 2026 SG URL returns 404). **N
 
 **AP Classroom is teacher-gated.** A self-studying student cannot open it directly. Logging in brings you to a screen that asks for a join code; without one, you see only limited **AP Videos** content (formerly "AP Daily") — **not** the Progress Checks, Question Bank, Bluebook-Style Assessments, or full Practice Exams.
 
+### Bluebook practice — the one official channel that is NOT gated
+
+**[bluebook.collegeboard.org/students/practice](https://bluebook.collegeboard.org/students/practice)** (verified 12 August 2026). Linked from both AP Students assessment pages. You **log in with your own College Board account information** — **no join code, no teacher, no enrolled section** — then open **"Practice and Prepare" → test preview**: a short set of questions that lets you *"experience digital testing and try out all the tools,"* with no score, no answer feedback, and no timer. Test previews are offered **for the digital AP Exams** as well as the SAT Suite.
+
+**Why this is the piece the access plan was missing:** every other official channel in this file needs an adult to act first — a teacher's join code (AP Classroom) or an AP Coordinator confirming the school even **offers** AP CSA (still unconfirmed for Lucas). Bluebook practice needs **only his own account**, so it happens in week one no matter how the school questions resolve. It is the **fallback that survives the worst case**: school doesn't offer CSA, no teacher, no join code — he still gets inside the real exam application.
+
+⚠️ **Scope it honestly, both ways.**
+- What it does **not** do: it is **interface rehearsal, not a full-length mock.** The page itself directs students to AP Classroom to practice for AP Exams. So it does **not** satisfy criterion C's "≥1 mock from official material" in `../exam-skill-tracker.md` §(f) — use the official-anchor fallback there for that.
+- What it **does** do: it satisfies the Bluebook-realism requirement in `frq-rubric-and-penalties.md` §7 — CSA free-response answers are **typed** into Bluebook with **no compiler, no autocomplete, no run button**, and this is the way to make sure exam day isn't the first time he types Java into that editor.
+
+
 **Why the join code matters for readiness (verified 12 August 2026):** AP Classroom now carries **Bluebook-Style Assessments** and full **Practice Exams**. **That Practice Exam is the official full-length mock the readiness bar asks for** (`../exam-skill-tracker.md` §(f) criterion C, "≥1 mock from official material") — and it arrives with the teacher's join code. Getting the code is therefore not a nice-to-have; it is the cheapest way to satisfy the official-material requirement. Without it, fall back to the official-anchor path in the tracker.
 
-**Do this once, early — a Bluebook test-preview run:** open Bluebook and run its **test preview** in the same week you get the join code (target: **first week of school, September 2026**), and in any case **before the first full timed mock**. On AP CSA, free-response answers are **typed** into Bluebook with **no compiler, no autocomplete, no run button** — exam day should not be the first time you type Java into that editor. (See `frq-rubric-and-penalties.md` §7.)
+**Do this once, early — a Bluebook test-preview run:** target the **first week of school, September 2026**, and in any case **before the first full timed mock**. **This does not wait on the join code** — the preview is student-accessible with his own College Board account (see the section above), so run it the week school starts whether or not AP Classroom has come through. On AP CSA, free-response answers are **typed** into Bluebook with **no compiler, no autocomplete, no run button** — exam day should not be the first time you type Java into that editor. (See `frq-rubric-and-penalties.md` §7.)
 
 **How to get full access:**
 
@@ -140,11 +152,12 @@ The book market has a lag problem: many older editions still teach inheritance, 
 
 **If self-studying (limited AP Classroom access):**
 1. CED samples (pp. 149–180) + 2026 released FRQ PDF — do these first, every one.
-2. CSAwesome2 Units 0–4 for daily interactive practice.
-3. CodingBat Java (skip Map + Functional) for method-level fluency.
-4. AP Central past FRQs (Q1/Q3/Q4 any year; Q2 post-redesign only) — plus the **2025 scored samples** (`ap25-apc-*`) for grader calibration.
-5. One book: Barron's 13th (ISBN 9798349700354) or Princeton Review 9th (ISBN 9780593518410).
-6. Enroll with an AP-audit-approved online provider → get AP Classroom access.
+2. **Bluebook test preview** — week one, no join code needed, so nothing blocks it.
+3. CSAwesome2 Units 0–4 for daily interactive practice.
+4. CodingBat Java (skip Map + Functional) for method-level fluency.
+5. AP Central past FRQs (Q1/Q3/Q4 any year; Q2 post-redesign only) — plus the **2025 scored samples** (`ap25-apc-*`) for grader calibration.
+6. One book: Barron's 13th (ISBN 9798349700354) or Princeton Review 9th (ISBN 9780593518410).
+7. Enroll with an AP-audit-approved online provider → get AP Classroom access.
 
 **With AP Classroom access:**
 Same stack, plus use the AP Classroom Question Bank and Progress Checks as your primary MCQ source — those are the closest to real exam items.
