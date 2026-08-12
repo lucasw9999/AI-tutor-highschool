@@ -1,0 +1,174 @@
+// Parse AP Precalculus topics and teaching material out of the study packs.
+//
+// The packs are the right source: each concept section already carries a plain
+// language idea, a worked example, and the #1 mistake — exactly the three fields
+// the teaching table needs. Nothing has to be invented.
+//
+// Two traps this parser exists to survive:
+//
+// 1. FOUR CONVENTIONS. The packs were written by hand over time, so headings are
+//    `### 2.1 Title` in units 1-3 but `### A. Title` in unit 4, and the idea
+//    label is `**Plain language:**` in units 1, 2 and 4 but `**Plain idea:**` in
+//    unit 3. Labels also carry suffixes: `**#1 mistake (HUGE on the exam):**`.
+//    A parser matching one spelling silently returns almost nothing.
+//
+// 2. COLLIDING SECTION NUMBERS. Every pack numbers its concepts from 2.1, so
+//    unit 1's "2.1 Average Rate of Change" and unit 3's "2.1 Radians & the unit
+//    circle" are both "2.1". Topic ids are therefore namespaced by unit.
+
+/** Which unit each pack describes, and whether the exam tests it. */
+export const PACKS = [
+  { file: 'unit-1-polynomial-rational.md', unit: '1', tested: true },
+  { file: 'unit-2-exponential-logarithmic.md', unit: '2', tested: true },
+  { file: 'unit-3-trigonometric-polar.md', unit: '3', tested: true },
+  // Required for the class, never on the exam. Excluded from readiness.
+  { file: 'unit-4-parametric-vectors-matrices.md', unit: '4', tested: false },
+]
+
+/** Exam MCQ weight per unit, from the verified coverage map. */
+export const UNIT_WEIGHTS = {
+  1: [30, 40],
+  2: [27, 40],
+  3: [30, 35],
+  4: [0, 0],
+}
+
+// `### 2.1 Title`, `### 2.2b Title`, `### A. Title`.
+const HEADING = /^###\s+((?:\d+\.\d+[a-z]?)|(?:[A-Z]))\.?\s+(.+?)\s*$/
+
+/** Split a pack into concept sections, keyed by its own heading label. */
+export function sections(text) {
+  const lines = text.split('\n')
+  const out = []
+  let current = null
+  for (const line of lines) {
+    const m = line.match(HEADING)
+    if (m) {
+      if (current) out.push(current)
+      current = { label: m[1], title: m[2], body: [] }
+      continue
+    }
+    // A new `## ` section ends the concept list.
+    if (/^##\s+\d+\./.test(line) && current) {
+      out.push(current)
+      current = null
+      continue
+    }
+    if (current) current.body.push(line)
+  }
+  if (current) out.push(current)
+  return out.map((s) => ({ ...s, body: s.body.join('\n').trim() }))
+}
+
+/**
+ * Pull the text following a bold label, tolerating a suffix before the colon and
+ * stopping at the next bold label, heading, or rule.
+ *
+ * The end-of-input alternative is `(?![\s\S])`, NOT `$`. The `m` flag is needed
+ * to anchor `^**Label` to a line start, but under `m` a `$` in the lookahead
+ * matches every line ending too — which truncated every field to its first line
+ * and silently dropped the solution from every worked example.
+ */
+export function labelled(body, aliases) {
+  for (const alias of aliases) {
+    const esc = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    // Matches `**Plain language:**`, `**#1 mistake (HUGE):**`, `**Worked example — sec:**`
+    const re = new RegExp(
+      `^\\*\\*${esc}[^*]{0,60}?:?\\*\\*\\s*([\\s\\S]*?)(?=\\n\\*\\*|\\n###|\\n---|(?![\\s\\S]))`,
+      'm',
+    )
+    const m = body.match(re)
+    if (m && m[1].trim()) return m[1].trim()
+  }
+  return null
+}
+
+const IDEA = ['Plain language', 'Plain idea', 'Plain-language']
+const EXAMPLE = ['Worked example', 'Worked examples']
+const MISTAKE = ['#1 mistake', '#1 Mistake', 'Common mistake']
+
+/**
+ * Parse one pack into topic + teaching rows.
+ *
+ * Topic ids are `<unit>.<sequence>` so they cannot collide across packs, and the
+ * pack's own heading label is preserved in `source_label` for traceability back
+ * to the markdown.
+ */
+export function parsePack({ text, unit, tested, file }) {
+  const found = sections(text)
+  const topics = []
+  const teaching = []
+  const incomplete = []
+
+  found.forEach((s, i) => {
+    const id = `${unit}.${i + 1}`
+    const [lo, hi] = UNIT_WEIGHTS[unit] ?? [0, 0]
+    topics.push({
+      id,
+      subject: 'ap_precalc',
+      unit,
+      name: s.title,
+      ek: labelled(s.body, IDEA) ?? s.title,
+      exam_weight_low: lo,
+      exam_weight_high: hi,
+      tested_on_exam: tested,
+      source_label: s.label,
+      source_file: `ap_precalc/study-packs/${file}`,
+    })
+
+    const plain_idea = labelled(s.body, IDEA)
+    const worked_example = labelled(s.body, EXAMPLE)
+    const common_mistake = labelled(s.body, MISTAKE)
+    teaching.push({
+      topic: id,
+      subject: 'ap_precalc',
+      plain_idea,
+      worked_example,
+      common_mistake,
+      source_file: `ap_precalc/study-packs/${file}`,
+      complete: Boolean(plain_idea && worked_example && common_mistake),
+    })
+    if (!(plain_idea && worked_example && common_mistake)) {
+      incomplete.push({
+        topic: id,
+        label: s.label,
+        title: s.title,
+        missing: [
+          !plain_idea && 'plain_idea',
+          !worked_example && 'worked_example',
+          !common_mistake && 'common_mistake',
+        ].filter(Boolean),
+      })
+    }
+  })
+
+  return { topics, teaching, incomplete, sectionCount: found.length }
+}
+
+/**
+ * Parse all four packs.
+ *
+ * Refuses to report success if a pack yields no sections at all — the failure
+ * mode that let an earlier parser return a third of the items and call it done.
+ */
+export function parseAll(readFile) {
+  const topics = []
+  const teaching = []
+  const incomplete = []
+  const errors = []
+  const perUnit = {}
+
+  for (const pack of PACKS) {
+    const text = readFile(`ap_precalc/study-packs/${pack.file}`)
+    const r = parsePack({ ...pack, text })
+    if (r.sectionCount === 0) {
+      errors.push(`${pack.file}: no concept sections matched — heading convention changed?`)
+    }
+    perUnit[pack.unit] = r.sectionCount
+    topics.push(...r.topics)
+    teaching.push(...r.teaching)
+    incomplete.push(...r.incomplete)
+  }
+
+  return { topics, teaching, incomplete, errors, perUnit }
+}
