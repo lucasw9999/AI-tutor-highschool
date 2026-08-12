@@ -3,9 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Compiles the Markdown question banks into validated JSON for the tutor Worker.",
+  "description": "Compiles the Markdown question banks into validated JSON, and serves them from a Cloudflare Worker.",
   "scripts": {
     "build": "node tools/build/build.js",
-    "test": "node --test tools/build/tests/*.test.js"
+    "test": "node --test tools/build/tests/*.test.js worker/tests/*.test.js",
+    "test:content": "node --test tools/build/tests/*.test.js",
+    "test:worker": "node --test worker/tests/*.test.js",
+    "verify:keys": "node tools/verify/verify-keys.js",
+    "seed:sql": "node tools/build/to-sql.js",
+    "worker:check": "cd worker && npx --yes wrangler@4 deploy --dry-run --outdir=/tmp/ap-tutor-build",
+    "worker:dev": "cd worker && npx --yes wrangler@4 dev"
   }
 }
