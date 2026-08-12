@@ -373,8 +373,23 @@ export function validate(items, topics, configs = readinessConfigs()) {
           }
         }
       }
+    } else if (it.kind === 'constructed') {
+      // A short constructed answer, marked mechanically by grade.js against
+      // `answer` plus `answer_variants`. schema.sql has named this kind since the
+      // items table shipped ("mcq | constructed | frq | constructed_model_graded")
+      // and worker/tests/grade.test.js has always graded it — but validate.js had
+      // never met one, because every Precalc item was emitted
+      // constructed_model_graded, so the first item to carry an answer key was
+      // rejected as an unknown kind. It has no options to check; the key is the
+      // whole contract.
+      if (!it.answer || !String(it.answer).trim()) {
+        errors.push(
+          `${it.id}: kind 'constructed' with no answer key — grade.js reports every answer 'unkeyed', so the item ` +
+            `can never move readiness. Add a key, or declare it 'constructed_model_graded'`,
+        )
+      }
     } else if (!it.kind) {
-      errors.push(`${it.id}: no kind — an item is either 'mcq' or an explicitly model-graded kind`)
+      errors.push(`${it.id}: no kind — an item is 'mcq', 'constructed', or an explicitly model-graded kind`)
     } else if (!MODEL_GRADED_KINDS.has(it.kind)) {
       errors.push(`${it.id}: unknown kind '${it.kind}' — cannot tell how this item would be graded`)
     }
