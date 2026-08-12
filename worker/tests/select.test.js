@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { DatabaseSync } from 'node:sqlite'
 import { pickNext, topicStats, reviewInterval } from '../src/select.js'
 import { detectGaps, reconcileGaps, clearsGap, buildLesson } from '../src/teaching.js'
 
@@ -383,14 +384,19 @@ test('an exhausted bank degrades to a labelled repeat instead of refusing to wor
 // ---------------------------------------------------------------------------
 // The whole real bank, served the way the student will actually serve it.
 //
-// These two run over content/items.json rather than a fixture, because the
-// defect they pin is a property of the SIZE of the shipped bank against the
-// shipped standards, and a three-item fixture cannot express it.
+// These run over the real bank rather than a fixture, because the defects they
+// pin are properties of the SIZE and SHAPE of the shipped bank against the
+// shipped standards, and a three-item fixture cannot express them.
+//
+// The bank is reconstructed from worker/seed.sql — the exact statements D1 is
+// loaded with — and NOT from content/topics.json. The JSON carries
+// `tested_on_exam: false` where the database carries the integer 0, and the
+// selector's test is `m.tested_on_exam !== 0`, under which `false` reads as
+// TESTED. A JSON-backed fixture therefore reports every class-only topic as
+// exam-tested and is structurally blind to the off-syllabus defect below.
 // ---------------------------------------------------------------------------
 
 const ROOT = new URL('../../', import.meta.url)
-const ALL_ITEMS = JSON.parse(readFileSync(new URL('content/items.json', ROOT), 'utf8'))
-const ALL_TOPICS = JSON.parse(readFileSync(new URL('content/topics.json', ROOT), 'utf8'))
 const CONFIG = {
   ap_csa: JSON.parse(readFileSync(new URL('worker/config/ap_csa.json', ROOT), 'utf8')),
   ap_precalc: JSON.parse(readFileSync(new URL('worker/config/ap_precalc.json', ROOT), 'utf8')),
@@ -398,15 +404,84 @@ const CONFIG = {
 /** The share of a section a sitting has to cover before api.js will score it. */
 const MIN_MOCK_COVERAGE = 0.9
 
+const SEEDED = new DatabaseSync(':memory:')
+SEEDED.exec(readFileSync(new URL('worker/seed.sql', ROOT), 'utf8'))
+
 function bankOf(subject) {
-  return {
-    items: ALL_ITEMS.filter((i) => i.subject === subject),
-    topicMeta: new Map(ALL_TOPICS.filter((t) => t.subject === subject).map((t) => [t.id, t])),
-    config: CONFIG[subject],
+  const items = SEEDED.prepare(
+    'SELECT id, subject, topic, unit, practice, kind, answer, calc_allowed FROM items WHERE subject = ? ORDER BY id',
+  ).all(subject)
+  const topics = SEEDED.prepare('SELECT * FROM topics WHERE subject = ? ORDER BY id').all(subject)
+  return { items, topics, topicMeta: new Map(topics.map((t) => [t.id, t])), config: CONFIG[subject] }
+}
+
+/** Items the exam actually tests — the only material a sitting may be built from. */
+function onExamItems({ items, topicMeta }) {
+  return items.filter((it) => topicMeta.get(it.topic)?.tested_on_exam !== 0)
+}
+
+/**
+ * The unit shares a sitting is entitled to, as percentages, from the same
+ * per-topic weights the selector reads. `tested_on_exam = 0` units are entitled
+ * to nothing: the exam does not ask about them.
+ */
+function entitlements({ topics }) {
+  const byUnit = new Map()
+  for (const t of topics) {
+    if (t.tested_on_exam === 0) continue
+    const w = ((t.exam_weight_low ?? 0) + (t.exam_weight_high ?? t.exam_weight_low ?? 0)) / 2
+    byUnit.set(t.unit, Math.max(byUnit.get(t.unit) ?? 0, w))
   }
+  const total = [...byUnit.values()].reduce((n, w) => n + w, 0)
+  const out = new Map()
+  for (const [unit, w] of byUnit) out.set(unit, total > 0 ? (w / total) * 100 : (1 / byUnit.size) * 100)
+  return out
 }
 
 const DAY_MS = 86400000
+
+/**
+ * Sit one whole paper, recording each answer exactly as api.js would, and return
+ * the items served in order. Stops early — and says where — if the selector
+ * refuses.
+ */
+function sitPaper({ bank, attempts, mockId, questions, startMs, accuracy = null }) {
+  const { items, topicMeta, config } = bank
+  const paper = []
+  const perUnit = new Map()
+  let refusedAt = null
+  for (let q = 0; q < questions; q++) {
+    const now = new Date(startMs + q * 120000).toISOString()
+    const r = pickNext({ items, attempts, gaps: [], topicMeta, config, now, sampling: 'mock', mockId })
+    if (!r) { refusedAt = q + 1; break }
+    paper.push({ ...r.item, priority: r.priority, reason: r.reason, repeat: r.repeat === true })
+    // Correctness is a pure function of the unit and of how many of that unit's
+    // questions have already been asked, so the ONLY thing that can move the
+    // score across sittings is which units the paper drew from. A knowledge
+    // profile that never changes must not produce a moving composite. The
+    // distribution is Bresenham's: over k questions of a unit known to `p`,
+    // exactly round(k * p) come out right, wherever on the paper they land.
+    const seen = perUnit.get(r.item.unit) ?? 0
+    perUnit.set(r.item.unit, seen + 1)
+    const p = accuracy?.[r.item.unit] ?? 0
+    const correct = accuracy == null ? q % 5 !== 0 : Math.round((seen + 1) * p) > Math.round(seen * p)
+    attempts.push({
+      item_id: r.item.id, topic: r.item.topic, unit: r.item.unit, response: 'A',
+      correct, ts: now, hints_used: 0, conditions: 'proctored_mock',
+      graded_by: 'server', kind: r.item.kind, mock_id: mockId,
+    })
+  }
+  return { paper, refusedAt }
+}
+
+/** Realized unit shares of one paper, as percentages. */
+function unitShares(paper) {
+  const counts = new Map()
+  for (const it of paper) counts.set(it.unit, (counts.get(it.unit) ?? 0) + 1)
+  const out = new Map()
+  for (const [unit, n] of counts) out.set(unit, (n / paper.length) * 100)
+  return out
+}
 
 test('the real bank keeps serving after it has been worked through', async (t) => {
   for (const subject of ['ap_csa', 'ap_precalc']) {
@@ -446,31 +521,51 @@ test('every mock the readiness config requires can actually be sat', async (t) =
   // before api.js will score it, one a week. CSA demanded 6 x 38 = 228 distinct
   // servings from a 218-item bank, so the sixth sitting used to die at question
   // 29 — no composite, and total_logged_mocks_min unreachable forever.
+  //
+  // The length a sitting can honestly reach is capped by the ON-EXAM bank, not
+  // by the whole bank: a paper may not be padded with material readiness
+  // deliberately excludes, and a paper may not ask the same question twice, so
+  // one sitting can be at most as long as the count of exam-tested items.
+  // Precalc ships 36 of them against a 38-question Section I sitting — a
+  // content shortfall the build already reports as an error (33 exam-tested
+  // Precalc topics have no items at all). The selector's job there is to refuse
+  // at 36, not to invent two questions out of unit 4.
   for (const subject of ['ap_csa', 'ap_precalc']) {
-    await t.test(`${subject}: all ${CONFIG[subject].readiness.total_logged_mocks_min} sittings reach a scorable length`, () => {
-      const { items, topicMeta, config } = bankOf(subject)
+    await t.test(`${subject}: all ${CONFIG[subject].readiness.total_logged_mocks_min} sittings reach the length the bank allows`, () => {
+      const bank = bankOf(subject)
+      const { config, topicMeta } = bank
       const needed = Math.ceil(config.exam.mcq_count * MIN_MOCK_COVERAGE)
+      const supply = onExamItems(bank).length
+      const reachable = Math.min(needed, supply)
       const start = new Date('2026-09-01T12:00:00Z').getTime()
       const attempts = []
       for (let mock = 1; mock <= config.readiness.total_logged_mocks_min; mock++) {
-        const paper = []
-        for (let q = 0; q < needed; q++) {
-          const now = new Date(start + mock * 7 * DAY_MS + q * 120000).toISOString()
-          const r = pickNext({
-            items, attempts, gaps: [], topicMeta, config, now, sampling: 'mock', mockId: mock,
-          })
-          assert.notEqual(r, null, `${subject} sitting ${mock} died at question ${q + 1} of ${needed}`)
-          paper.push(r.item.id)
-          attempts.push({
-            item_id: r.item.id, topic: r.item.topic, unit: r.item.unit, response: 'A',
-            correct: q % 5 !== 0, ts: now, hints_used: 0, conditions: 'proctored_mock',
-            graded_by: 'server', kind: r.item.kind, mock_id: mock,
-          })
-        }
+        const { paper, refusedAt } = sitPaper({
+          bank, attempts, mockId: mock, questions: needed, startMs: start + mock * 7 * DAY_MS,
+        })
         assert.equal(
-          new Set(paper).size, needed,
+          paper.length, reachable,
+          `${subject} sitting ${mock} served ${paper.length} of the ${reachable} its on-exam bank can supply` +
+            (refusedAt ? ` (refused at question ${refusedAt})` : ''),
+        )
+        assert.equal(
+          new Set(paper.map((it) => it.id)).size, reachable,
           `sitting ${mock} asked a question twice — the same item twice is not two questions of evidence`,
         )
+        for (const it of paper) {
+          assert.notEqual(
+            topicMeta.get(it.topic)?.tested_on_exam, 0,
+            `sitting ${mock} served ${it.id} on class-only topic ${it.topic}; handleMockSubmit scores every ` +
+              'server-graded answer in the sitting, so this lands in composite_pct',
+          )
+        }
+        if (reachable < needed) {
+          assert.equal(
+            refusedAt, reachable + 1,
+            `${subject} can only supply ${reachable} on-exam questions, so the sitting must refuse at ${reachable + 1} ` +
+              'rather than pad the paper with untested material',
+          )
+        }
       }
     })
   }
@@ -560,6 +655,406 @@ test('sampling: mock skips the remediation priorities', async (t) => {
       (order) => pickNext({ items: order, attempts, topicMeta: META, config: CFG, now: NOW, sampling: 'mock', mockId: 7 }).item.id,
     )
     assert.equal(new Set(picks).size, 1, `order-dependent: ${picks.join(', ')}`)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// What a WHOLE paper looks like.
+//
+// Every test above serves a sitting one question at a time and asks whether that
+// one question was reasonable. None of them asks the question the module header
+// actually claims to answer — "is the finished paper a sample of the exam?" — and
+// that is where the damage is, because handleMockSubmit scores the whole paper
+// into composite_pct, and composite_pct is the only number that moves readiness.
+// A sitting that shuts a unit out, or over-serves a unit because it happens to
+// carry more topic rows, produces a score about a different exam.
+//
+// The papers below are 42 questions, which is what api.js requires of a section
+// 'full' sitting: ceil((mcq_count + frq_count) * 0.9) = ceil(46 * 0.9).
+// ---------------------------------------------------------------------------
+
+/** ceil((mcq_count + frq_count) * 0.9) — a full-paper sitting, per api.js. */
+function fullPaperLength(config) {
+  return Math.ceil((config.exam.mcq_count + config.exam.frq_count) * MIN_MOCK_COVERAGE)
+}
+
+test('a full sitting samples the exam rather than a corner of it', async (t) => {
+  await t.test('CSA: no exam-tested unit is shut out of the first mock he ever sits', () => {
+    // The paper the coverage branch used to compose on its own: ordered by exam
+    // weight descending, it walked unit 4 then 2 then 1 and never reached unit 3
+    // — 14% of the exam, 9 topics, 29 items — so the first mock of his life
+    // scored him on three quarters of the syllabus and called it a composite.
+    const bank = bankOf('ap_csa')
+    const { paper } = sitPaper({
+      bank, attempts: [], mockId: 1, questions: fullPaperLength(bank.config),
+      startMs: new Date('2026-09-01T12:00:00Z').getTime(),
+    })
+    assert.equal(paper.length, 42, 'a full sitting is 42 questions')
+    const shares = unitShares(paper)
+    for (const unit of entitlements(bank).keys()) {
+      assert.ok(
+        (shares.get(unit) ?? 0) > 0,
+        `unit ${unit} got none of the 42 questions: ${[...shares].map(([u, s]) => `u${u} ${s.toFixed(1)}%`).join(', ')}`,
+      )
+    }
+  })
+
+  for (const subject of ['ap_csa', 'ap_precalc']) {
+    await t.test(`${subject}: realized unit shares track the exam's unit weights`, () => {
+      // Tolerance: 5 percentage points. A 42-question paper cannot land on an
+      // arbitrary share exactly — one question is 2.4 points — and the readiness
+      // engine's own max_decline_between_mocks is 5, so a composition error
+      // larger than that can manufacture a "decline" on its own.
+      const bank = bankOf(subject)
+      const owed = entitlements(bank)
+      const attempts = []
+      const start = new Date('2026-09-01T12:00:00Z').getTime()
+      for (let mock = 1; mock <= 3; mock++) {
+        const { paper } = sitPaper({
+          bank, attempts, mockId: mock, questions: fullPaperLength(bank.config),
+          startMs: start + mock * 7 * DAY_MS,
+        })
+        const shares = unitShares(paper)
+        for (const [unit, want] of owed) {
+          const got = shares.get(unit) ?? 0
+          assert.ok(
+            Math.abs(got - want) <= 5,
+            `sitting ${mock} unit ${unit}: served ${got.toFixed(1)}%, entitled ${want.toFixed(1)}% — ` +
+              `${[...shares].map(([u, s]) => `u${u} ${s.toFixed(1)}%`).join(', ')}`,
+          )
+        }
+      }
+    })
+  }
+
+  await t.test('CSA: a knowledge profile that never changes produces a composite that never moves', () => {
+    // The whole point of the composition rules. He knows exactly as much on the
+    // day of sitting 3 as on the day of sitting 1; the readiness engine reads a
+    // drop of more than max_decline_between_mocks as evidence he is getting
+    // worse, and a single sitting below composite_floor_min as a hard fail. Both
+    // of those must be caused by HIM, never by which units the paper drew from.
+    const bank = bankOf('ap_csa')
+    const accuracy = { 1: 0.9, 2: 0.7, 3: 0.4, 4: 0.7 }
+    const attempts = []
+    const start = new Date('2026-09-01T12:00:00Z').getTime()
+    const composites = []
+    for (let mock = 1; mock <= 3; mock++) {
+      const { paper } = sitPaper({
+        bank, attempts, mockId: mock, questions: fullPaperLength(bank.config),
+        startMs: start + mock * 7 * DAY_MS, accuracy,
+      })
+      const ofThis = attempts.filter((a) => a.mock_id === mock)
+      composites.push((ofThis.filter((a) => a.correct).length / paper.length) * 100)
+    }
+    // What the exam's own weights say this profile is worth.
+    const owed = entitlements(bank)
+    const expected = [...owed].reduce((s, [unit, pct]) => s + (pct / 100) * accuracy[unit] * 100, 0)
+    const worstDrop = Math.max(...composites.slice(1).map((c, i) => composites[i] - c))
+    const tolerance = bank.config.readiness.max_decline_between_mocks
+    assert.ok(
+      worstDrop <= tolerance,
+      `composites ${composites.map((c) => c.toFixed(1)).join(' / ')} — worst drop ${worstDrop.toFixed(1)} pts against ` +
+        `a ${tolerance}-point tolerance, with ZERO change in what the student knows`,
+    )
+    for (const c of composites) {
+      assert.ok(
+        Math.abs(c - expected) <= 5,
+        `composite ${c.toFixed(1)} against the ${expected.toFixed(1)} this profile is worth on the real weighting; ` +
+          `all three: ${composites.map((x) => x.toFixed(1)).join(' / ')}`,
+      )
+    }
+  })
+
+  await t.test('a unit does not get a bigger share of the paper for having more topic rows', () => {
+    // exam_weight_low/high is a UNIT weight, replicated onto every topic in that
+    // unit. Normalizing it across TOPICS therefore hands a unit a share
+    // proportional to weight x topicCount: the heavy unit below is worth 60% of
+    // the exam and carries one topic, the light unit 40% across three, so
+    // topic-granular arithmetic serves the heavy unit 1/(1+3)... of nothing like
+    // 60%. Every fixture above has one topic per unit, which is exactly why none
+    // of them can see this.
+    const heavy = { unit: 'H', exam_weight_low: 60, exam_weight_high: 60, tested_on_exam: 1 }
+    const light = { unit: 'L', exam_weight_low: 40, exam_weight_high: 40, tested_on_exam: 1 }
+    const topicMeta = new Map([['h1', heavy], ['l1', light], ['l2', light], ['l3', light]])
+    const items = [...topicMeta].flatMap(([topic, meta]) =>
+      Array.from({ length: 40 }, (_, i) => ({ id: `${topic}-${String(i + 1).padStart(2, '0')}`, topic, unit: meta.unit, kind: 'mcq', answer: 'A' })),
+    )
+    // Coverage pre-satisfied and long past the reuse window, so the paper is
+    // composed entirely by the breadth rule.
+    const attempts = [...topicMeta.keys()].map((topic) => attempt(`${topic}-01`, topic, 1, 100))
+    const paper = []
+    for (let q = 0; q < 40; q++) {
+      const r = pickNext({ items, attempts, topicMeta, config: CFG, now: NOW, sampling: 'mock', mockId: 7 })
+      assert.equal(r.priority, 'mock_breadth')
+      paper.push(r.item)
+      attempts.push(attempt(r.item.id, r.item.topic, 1, 0, { mock_id: 7, conditions: 'proctored_mock' }))
+    }
+    const served = (unit) => paper.filter((it) => it.unit === unit).length
+    assert.ok(
+      Math.abs(served('H') - 24) <= 2,
+      `the 60% unit was served ${served('H')} of 40 questions, not ~24 — the 40% unit took ${served('L')}`,
+    )
+  })
+
+  await t.test('a proctored sitting is never padded with material the exam does not test', () => {
+    // Precalc: 48 items on 4 topics, and topic 4.0 (unit 4, tested_on_exam 0)
+    // holds 12 of them. A full paper wants 42 and the on-exam bank has 36, so
+    // the lower fallback tiers used to make up the difference out of unit 4 —
+    // with the sitting's "the way the exam weights it" reason attached, on every
+    // single sitting. handleMockSubmit scores every server-graded answer in a
+    // sitting with no unit filter, so that lands straight in composite_pct.
+    const bank = bankOf('ap_precalc')
+    const supply = onExamItems(bank).length
+    assert.equal(supply, 36, 'precondition: the on-exam Precalc bank is shorter than one full paper')
+    const { paper, refusedAt } = sitPaper({
+      bank, attempts: [], mockId: 1, questions: fullPaperLength(bank.config),
+      startMs: new Date('2026-09-01T12:00:00Z').getTime(),
+    })
+    for (const it of paper) {
+      assert.notEqual(
+        bank.topicMeta.get(it.topic)?.tested_on_exam, 0,
+        `${it.id} is on class-only topic ${it.topic}, and it was served inside a proctored sitting`,
+      )
+    }
+    assert.equal(paper.length, supply, 'the paper is as long as the on-exam bank allows and no longer')
+    assert.equal(refusedAt, supply + 1, 'and then it refuses, rather than reaching for untested material')
+  })
+
+  await t.test('an exhausted bank still never asks the same question twice on one paper', () => {
+    // A heavy unit with a thin bank is the case where the no-repeat-on-one-paper
+    // rule is the ONLY thing standing between the student and a duplicate: unit
+    // H is worth 80% of the exam and holds four questions, so the breadth rule
+    // wants to serve it nine times out of twelve. Everything has been answered
+    // inside the reuse window, so every serve is a degraded repeat and the pool
+    // sort alone will happily hand back an item already on this paper.
+    const heavy = { unit: 'H', exam_weight_low: 80, exam_weight_high: 80, tested_on_exam: 1 }
+    const light = { unit: 'L', exam_weight_low: 20, exam_weight_high: 20, tested_on_exam: 1 }
+    const topicMeta = new Map([['h1', heavy], ['l1', light]])
+    const items = [
+      ...Array.from({ length: 4 }, (_, i) => ({ id: `h1-${i + 1}`, topic: 'h1', unit: 'H', kind: 'mcq', answer: 'A' })),
+      ...Array.from({ length: 20 }, (_, i) => ({ id: `l1-${String(i + 1).padStart(2, '0')}`, topic: 'l1', unit: 'L', kind: 'mcq', answer: 'A' })),
+    ]
+    let attempts = items.map((it) => attempt(it.id, it.topic, 1, 3))
+    const paper = []
+    for (let q = 0; q < 12; q++) {
+      const r = pickNext({ items, attempts, topicMeta, config: CFG, now: NOW, sampling: 'mock', mockId: 7, reuseDays: 56 })
+      assert.notEqual(r, null, `refused at question ${q + 1} with 24 items in the bank`)
+      assert.equal(r.repeat, true, 'precondition: the whole bank is inside the reuse window')
+      paper.push(r.item.id)
+      attempts = [...attempts, attempt(r.item.id, r.item.topic, 1, 0, { mock_id: 7, conditions: 'proctored_mock' })]
+    }
+    assert.equal(new Set(paper).size, 12, `a question was asked twice on one paper: ${paper.join(', ')}`)
+  })
+
+  await t.test('precalc: an exhausted bank yields a whole paper of distinct questions', () => {
+    const bank = bankOf('ap_precalc')
+    const supply = onExamItems(bank).length
+    const seed = bank.items.map((it) => ({
+      item_id: it.id, topic: it.topic, unit: it.unit, response: 'A', correct: true,
+      ts: new Date(new Date('2026-09-01T12:00:00Z').getTime() - 3 * DAY_MS).toISOString(),
+      hints_used: 0, conditions: 'cold', graded_by: 'server', kind: it.kind,
+    }))
+    const { paper } = sitPaper({
+      bank, attempts: seed, mockId: 1, questions: supply,
+      startMs: new Date('2026-09-01T12:00:00Z').getTime(),
+    })
+    assert.equal(paper.length, supply)
+    assert.ok(paper.every((it) => it.repeat), 'precondition: every serve here is a degraded repeat')
+    assert.equal(new Set(paper.map((it) => it.id)).size, supply, 'a question was asked twice on one paper')
+  })
+
+  await t.test("exam weight breaks a tie between two units owed the same share", () => {
+    // Unit `z` is worth half the exam, `b` and `c` a quarter each. After 7
+    // questions filed under this sitting — 3 in z, 1 in b, 3 in c — z and b are
+    // owed exactly 1.0 of the eighth question each, and the heavier unit must take
+    // it. The unit names are chosen so that the alphabet DISAGREES with the
+    // weighting: without the exam-weight comparison the tie falls through to the
+    // name and 'b' wins.
+    const meta = (unit, w) => ({ unit, exam_weight_low: w, exam_weight_high: w, tested_on_exam: 1 })
+    const topicMeta = new Map([['zt', meta('z', 50)], ['bt', meta('b', 25)], ['ct', meta('c', 25)]])
+    const items = [...topicMeta].flatMap(([topic, m]) =>
+      Array.from({ length: 8 }, (_, i) => ({ id: `${topic}${i + 1}`, topic, unit: m.unit, kind: 'mcq', answer: 'A' })),
+    )
+    const mine = { mock_id: 7, conditions: 'proctored_mock' }
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`zt${i}`, 'zt', 1, 0, mine)),
+      attempt('bt1', 'bt', 1, 0, mine),
+      ...[1, 2, 3].map((i) => attempt(`ct${i}`, 'ct', 1, 0, mine)),
+    ]
+    const r = pickNext({ items, attempts, topicMeta, config: CFG, now: NOW, sampling: 'mock', mockId: 7 })
+    assert.equal(r.item.topic, 'zt', 'units z and b are both owed 1.0; z carries twice the exam weight')
+  })
+
+  await t.test('a sitting replays identically however the real bank is ordered', () => {
+    const bank = bankOf('ap_csa')
+    const shuffled = [...bank.items]
+    // A fixed, reproducible shuffle — a seeded walk, not Math.random, so a
+    // failure can be replayed.
+    for (let i = shuffled.length - 1, k = 7; i > 0; i--) {
+      k = (k * 48271) % 2147483647
+      const j = k % (i + 1)
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    const orders = {
+      given: bank.items,
+      reversed: [...bank.items].reverse(),
+      rotated: [...bank.items.slice(37), ...bank.items.slice(0, 37)],
+      shuffled,
+    }
+    const papers = Object.entries(orders).map(([label, items]) => {
+      const { paper } = sitPaper({
+        bank: { ...bank, items }, attempts: [], mockId: 1, questions: fullPaperLength(bank.config),
+        startMs: new Date('2026-09-01T12:00:00Z').getTime(),
+      })
+      return [label, paper.map((it) => it.id).join(',')]
+    })
+    assert.equal(
+      new Set(papers.map(([, p]) => p)).size, 1,
+      `order-dependent paper: ${papers.map(([l, p]) => `${l}=${p.slice(0, 60)}...`).join(' | ')}`,
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The reason the student reads, and the flag the caller acts on
+// ---------------------------------------------------------------------------
+
+test('a degraded repeat is reported in words AND in a shape a caller can persist', async (t) => {
+  await t.test('the flag carries which answer made it a repeat, not just a boolean', () => {
+    // `repeat: true` on its own has no consumer: handleNext does not forward it,
+    // recordAttempt stores no marker, and the mock composite counts a remembered
+    // answer identically to a first-time one. The value below is what api.js
+    // needs in order to persist that distinction — see the module header.
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 3))
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
+    assert.equal(r.repeat, true)
+    assert.equal(r.repeat_of.item_id, r.item.id, 'the flag names the item it is a repeat of')
+    assert.equal(r.repeat_of.last_answered_at, ago(3), 'and when he last answered it')
+    assert.equal(r.repeat_of.days_since, 3)
+  })
+
+  await t.test('a fresh serve carries neither the flag nor the marker', () => {
+    const r = pickNext({ items: ITEMS, attempts: [], topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.repeat, undefined)
+    assert.equal(r.repeat_of, undefined, 'a caller keying on presence must not see one on fresh evidence')
+  })
+
+  await t.test('an answer from yesterday evening is not described as answered today', () => {
+    // NOW is noon UTC. Sixteen hours earlier is 20:00 the previous calendar day,
+    // which is 0.67 days — and "you answered it today" about yesterday evening
+    // is a statement the student can check and find false.
+    const items = [
+      { id: 'x1', topic: 'a', unit: '1', kind: 'mcq', answer: 'A' },
+      { id: 'x2', topic: 'a', unit: '1', kind: 'mcq', answer: 'A' },
+    ]
+    const attempts = [attempt('x1', 'a', 1, 16 / 24), attempt('x2', 'a', 1, 2 / 24)]
+    const r = pickNext({ items, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
+    assert.equal(r.item.id, 'x1', 'the 16-hour-old question is the more forgotten one')
+    assert.equal(r.repeat, true)
+    assert.doesNotMatch(r.reason, /answered it today/, 'it was answered at 20:00 the day before')
+    assert.match(r.reason, /yesterday/)
+  })
+
+  await t.test('an answer from earlier the same day IS described as today', () => {
+    const items = [{ id: 'x1', topic: 'a', unit: '1', kind: 'mcq', answer: 'A' }]
+    const r = pickNext({
+      items, attempts: [attempt('x1', 'a', 1, 2 / 24)], topicMeta: META, config: CFG, now: NOW, reuseDays: 56,
+    })
+    assert.equal(r.repeat, true)
+    assert.match(r.reason, /today/)
+    assert.doesNotMatch(r.reason, /yesterday/)
+  })
+
+  await t.test('breadth calls fresh ground fresh, and a repeat another go', () => {
+    // One sentence, two states, and the wrong one contradicts the repeat
+    // sentence appended right after it — "fresh ground on a ... you have
+    // answered this exact question before".
+    const fresh = pickNext({
+      items: ITEMS,
+      attempts: ['a', 'b', 'c'].map((tp) => attempt(`${tp}1`, tp, 1, 3)),
+      topicMeta: META, config: CFG, now: NOW, reuseDays: 56,
+    })
+    assert.equal(fresh.priority, 'breadth')
+    assert.notEqual(fresh.repeat, true)
+    assert.match(fresh.reason, /fresh ground on/)
+
+    const worn = pickNext({
+      items: ITEMS, attempts: ITEMS.map((it) => attempt(it.id, it.topic, 1, 3)),
+      topicMeta: META, config: CFG, now: NOW, reuseDays: 56,
+    })
+    assert.equal(worn.priority, 'breadth')
+    assert.equal(worn.repeat, true)
+    assert.match(worn.reason, /another go at/)
+    assert.doesNotMatch(worn.reason, /fresh ground/, 'a question he answered three days ago is not fresh ground')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// excludeItemIds — the caller's window on serves that have not been logged yet.
+//
+// A serve is invisible to the selector until an attempt row exists for it, so
+// two /next calls inside one sitting can hand out the same item. api.js closes
+// that by passing the ids it has already served and not yet seen logged; the
+// selector's part of the contract is to drop them from EVERY pool.
+// ---------------------------------------------------------------------------
+
+test('excludeItemIds removes an item from every pool', async (t) => {
+  const base = { topicMeta: META, config: CFG, now: NOW }
+
+  await t.test('a coverage pick skips an excluded item', () => {
+    const r = pickNext({ ...base, items: ITEMS, attempts: [], excludeItemIds: ['a1'] })
+    assert.equal(r.priority, 'coverage')
+    assert.equal(r.item.id, 'a2', 'still topic a, but not the excluded question')
+  })
+
+  await t.test('a Set and an array are both accepted', () => {
+    const asArray = pickNext({ ...base, items: ITEMS, attempts: [], excludeItemIds: ['a1', 'a2'] })
+    const asSet = pickNext({ ...base, items: ITEMS, attempts: [], excludeItemIds: new Set(['a1', 'a2']) })
+    assert.equal(asArray.item.id, 'a3')
+    assert.equal(asSet.item.id, 'a3')
+  })
+
+  await t.test('the default excludes nothing', () => {
+    assert.equal(pickNext({ ...base, items: ITEMS, attempts: [] }).item.id, 'a1')
+    assert.equal(pickNext({ ...base, items: ITEMS, attempts: [], excludeItemIds: [] }).item.id, 'a1')
+  })
+
+  await t.test('a gap re-test skips an excluded item', () => {
+    const gaps = [{ topic: 'b', opened_at: ago(9), taught_at: ago(8), cleared_at: null }]
+    const r = pickNext({ ...base, items: ITEMS, attempts: [], gaps, excludeItemIds: ['b1'] })
+    assert.equal(r.priority, 'gap_retest')
+    assert.equal(r.item.id, 'b2')
+  })
+
+  await t.test('the weakest topic skips an excluded item', () => {
+    const attempts = [
+      attempt('b1', 'b', 0, 60), attempt('b2', 'b', 0, 59),
+      attempt('a1', 'a', 1, 58), attempt('c1', 'c', 1, 57),
+    ]
+    const r = pickNext({ ...base, items: ITEMS, attempts, excludeItemIds: ['b3'] })
+    assert.equal(r.priority, 'weakest')
+    assert.equal(r.item.topic, 'b')
+    assert.notEqual(r.item.id, 'b3')
+  })
+
+  await t.test('a mock pick skips an excluded item', () => {
+    const r = pickNext({ ...base, items: ITEMS, attempts: [], sampling: 'mock', mockId: 7, excludeItemIds: ['a1', 'a2'] })
+    assert.equal(r.item.id, 'a3')
+  })
+
+  await t.test('an excluded item is not served even when the whole bank is inside the reuse window', () => {
+    // The degraded-repeat path is the one that reaches for anything at all, so
+    // it is the one where a double-serve would otherwise slip through.
+    const ages = { a1: 1, a2: 2, a3: 3, b1: 10, b2: 40, b3: 20, c1: 5, c2: 6, c3: 7 }
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, ages[it.id]))
+    const args = { ...base, items: ITEMS, attempts, reuseDays: 56 }
+    assert.equal(pickNext(args).item.id, 'b2', 'precondition: b2 is the most forgotten')
+    assert.equal(pickNext({ ...args, excludeItemIds: ['b2'] }).item.id, 'b3')
+  })
+
+  await t.test('excluding the whole bank returns null rather than a question already in flight', () => {
+    const r = pickNext({ ...base, items: ITEMS, attempts: [], excludeItemIds: ITEMS.map((it) => it.id) })
+    assert.equal(r, null)
   })
 })
 
