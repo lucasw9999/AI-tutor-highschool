@@ -216,3 +216,113 @@ test('at 0% the bar is genuinely empty, not a misleading sliver', () => {
   const html = renderDashboard({ subjects: [subject()], now: NOW })
   assert.match(html, /style="width:0%"/, 'a 1% sliver would read as some progress')
 })
+
+// ---------------------------------------------------------------------------
+// The page has to say WHEN, not just how much (GAP-5, METH-11, GAP-3)
+//
+// Every number on this page used to be a snapshot with no date on it except the
+// mock chips. Six weeks of silence therefore looked exactly like a hard week: the
+// same 0%, the same blocker, the same chips. Open gaps were passed in and not
+// rendered at all, so a gap open since September looked like one opened today,
+// and pace — the one thing that decides a timed exam and is invisible in a
+// percentage — was nowhere.
+// ---------------------------------------------------------------------------
+
+test('the parent is told when he last worked, and for how long he has not', () => {
+  const html = subjectSection({
+    ...subject(),
+    last_answer: { at: '2027-02-18T12:00:00Z', days: 42, on: '2027-02-18' },
+    now: NOW,
+  })
+  assert.match(html, /2027-02-18/, 'the date of the last answer')
+  assert.match(html, /42 days ago/, 'and how long ago that was, or the page is a snapshot again')
+})
+
+test('a subject with no answers at all says so, rather than showing nothing', () => {
+  const html = subjectSection({ ...subject(), last_answer: null, now: NOW })
+  assert.match(html, /No answers recorded/i)
+  assert.ok(!html.includes('days ago'), 'and must not invent an age for evidence that does not exist')
+})
+
+test('an answer from today is not reported as an age', () => {
+  const html = subjectSection({
+    ...subject(),
+    last_answer: { at: NOW, days: 0, on: '2027-04-01' },
+    now: NOW,
+  })
+  assert.match(html, /today/i)
+})
+
+test('open gaps are rendered with their ages, oldest first', () => {
+  const html = subjectSection({
+    ...subject(),
+    open_gaps: [
+      { topic: '4.2', opened_at: '2027-01-05T00:00:00Z', days_open: 86, taught: true },
+      { topic: '2.7', opened_at: '2027-03-28T00:00:00Z', days_open: 4, taught: false },
+    ],
+    now: NOW,
+  })
+  assert.match(html, /4\.2/)
+  assert.match(html, /86 days/, 'a gap open since January is not the same as one opened this week')
+  assert.match(html, /2\.7/)
+  assert.match(html, /4 days/)
+  assert.ok(html.indexOf('4.2') < html.indexOf('2.7'), 'oldest first, as it is handed over')
+  assert.match(html, /awaiting a cold re-test|taught/i, 'and whether the lesson has been given')
+})
+
+test('with no open gaps the section is absent rather than empty', () => {
+  const html = subjectSection({ ...subject(), open_gaps: [], now: NOW })
+  assert.ok(!/Open gaps/i.test(html))
+})
+
+test('pace is shown whether or not it is bad enough to advise on', () => {
+  const ok = subjectSection({
+    ...subject(),
+    pace: {
+      n: 30, seconds: 110, target_seconds: 129, over_by_seconds: -19, projected_minutes: 77,
+      section_questions: 42, budget_minutes: 90, measured: true, over: false,
+    },
+    now: NOW,
+  })
+  assert.match(ok, /110s/, 'the measured pace')
+  assert.match(ok, /129s/, 'against the exam’s own target')
+  assert.match(ok, /77 minutes/, 'and what it projects to over a real section')
+
+  const slow = subjectSection({
+    ...subject(),
+    pace: {
+      n: 30, seconds: 200, target_seconds: 129, over_by_seconds: 71, projected_minutes: 140,
+      section_questions: 42, budget_minutes: 90, measured: true, over: true,
+    },
+    now: NOW,
+  })
+  assert.match(slow, /140 minutes/)
+  assert.match(slow, /90/, 'against the budget the section gets')
+})
+
+test('a pace measured over too few answers is labelled, not presented as a finding', () => {
+  const html = subjectSection({
+    ...subject(),
+    pace: {
+      n: 3, seconds: 300, target_seconds: 129, over_by_seconds: 171, projected_minutes: 210,
+      section_questions: 42, budget_minutes: 90, measured: false, over: false,
+    },
+    now: NOW,
+  })
+  assert.match(html, /3 answer/, 'the sample size has to be visible')
+  assert.match(html, /not yet|too few/i, 'this project reports "not yet measurable" rather than guessing')
+})
+
+test('a sitting started and never submitted is visible on the parent page', () => {
+  const html = subjectSection({
+    ...subject(),
+    unfinished_sittings: [
+      { id: 7, section: 'I', started_at: '2027-03-30T09:00:00Z', answered: 12, open_minutes: 2880, budget_minutes: 90 },
+    ],
+    now: NOW,
+  })
+  assert.match(html, /#7/)
+  assert.match(html, /never submitted/i)
+  assert.match(html, /12 answer/, 'with what is on it, so it can be judged rather than guessed at')
+  assert.match(html, /90 minutes/, 'against the budget it is past')
+})
