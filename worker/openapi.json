@@ -348,7 +348,10 @@
             "type": "integer"
           },
           "next_thing_blocking": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "The single requirement standing in the way. Null when ready."
           },
           "open_gaps": {
@@ -415,8 +418,11 @@
                   "type": "string"
                 },
                 "options": {
-                  "type": "object",
-                  "description": "Multiple choice options keyed by letter.",
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "Multiple choice options keyed by letter. Null on a constructed-response item, which the student answers in his own words.",
                   "properties": {
                     "A": {
                       "type": "string"
@@ -439,7 +445,11 @@
                   "type": "string"
                 },
                 "calc_allowed": {
-                  "type": "integer"
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "1 if a calculator is allowed, 0 if not, null when the item does not say."
                 },
                 "why": {
                   "type": "string",
@@ -468,27 +478,50 @@
               "description": "The server's verdict on the answer.",
               "properties": {
                 "correct": {
-                  "type": "boolean"
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "True or false only when the server graded it mechanically. Null means it was NOT graded, so it is not a wrong answer: say so, read note aloud, and show explanation. Never report null as incorrect."
+                },
+                "graded": {
+                  "type": "boolean",
+                  "description": "True when the server reached a mechanical verdict. False for model-graded and unkeyed items, where correct is null and note explains why."
                 },
                 "blank": {
                   "type": "boolean"
                 },
                 "keyed": {
-                  "type": "string",
-                  "description": "The correct answer. Only reveal it after the student has answered."
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The correct answer. Only reveal it after the student has answered. Null when the item has no key, which is a gap in the bank rather than a mistake by the student."
                 },
                 "graded_by": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "server, model, or unkeyed."
                 },
                 "seconds": {
                   "type": "integer",
                   "description": "Server-measured time taken."
                 },
                 "explanation": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "gap_closed": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The topic this answer closed. Null on nearly every answer, which is normal."
+                },
+                "note": {
+                  "type": "string",
+                  "description": "Present when the answer was not mechanically graded. Read it to the student instead of a verdict."
                 },
                 "status": {
                   "$ref": "#/components/schemas/Status"
@@ -559,7 +592,11 @@
                   "type": "integer"
                 },
                 "next_thing_blocking": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The single requirement standing in the way. Null when ready."
                 },
                 "open_gaps": {
                   "type": "array",
@@ -639,10 +676,34 @@
                   "type": "integer"
                 },
                 "composite_pct": {
-                  "type": "number"
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Percent correct over the questions this sitting is scored against, not over answered. Null when the sitting could not be scored at all — report that as \"not scored\", never as 0 percent."
+                },
+                "counted": {
+                  "type": "boolean",
+                  "description": "True when this sitting produced a composite that can move readiness. False means it was recorded as practice only: say so plainly and read basis aloud."
                 },
                 "answered": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "How many answers were logged in this sitting."
+                },
+                "expected": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "How many questions a real sitting of this section contains. Answering far fewer makes it a practice set rather than a mock."
+                },
+                "scored": {
+                  "type": "integer",
+                  "description": "How many answers were graded mechanically. Unanswered questions still count as wrong, so this is not always the denominator."
+                },
+                "ungraded": {
+                  "type": "integer",
+                  "description": "Answers excluded from composite_pct because they need model or human grading. Say how many when reporting the score."
                 },
                 "blanks": {
                   "type": "integer"
