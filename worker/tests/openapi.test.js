@@ -57,11 +57,11 @@ test('every operation has an operationId, and they are unique', () => {
   assert.equal(new Set(ids).size, ids.length, `duplicate operationIds: ${ids.join(', ')}`)
 })
 
-test('every operation is a GET, so ChatGPT raises no consent prompt', () => {
+test('every operation is a GET, keeping the consent prompt to one Always-allow click', () => {
   for (const [route, methods] of Object.entries(SPEC.paths)) {
     assert.deepEqual(
       Object.keys(methods), ['get'],
-      `${route} declares a non-GET method; a request body triggers the Allow prompt`,
+      `${route} declares a non-GET method; only GET is verified against the consent flow`,
     )
   }
 })
@@ -69,7 +69,7 @@ test('every operation is a GET, so ChatGPT raises no consent prompt', () => {
 test('no operation declares a request body', () => {
   for (const [route, methods] of Object.entries(SPEC.paths)) {
     for (const op of Object.values(methods)) {
-      assert.ok(!op.requestBody, `${route} declares a requestBody, which triggers the Allow prompt`)
+      assert.ok(!op.requestBody, `${route} declares a requestBody; the no-body design is deliberate`)
     }
   }
 })
@@ -159,4 +159,24 @@ test('every $ref resolves', () => {
 test('the answer key is documented as post-answer only', () => {
   const log = SPEC.components.responses.Log.content['application/json'].schema
   assert.match(log.properties.keyed.description, /after the student has answered/i)
+})
+
+test('no parameter uses $ref — ChatGPT does not resolve them', () => {
+  // Found live in the GPT builder, and undocumented: a $ref inside a parameters
+  // array produces "parameter has missing or non-string name; skipping",
+  // followed by "skipping function due to errors" — silently disabling every
+  // operation. Parameters must be written inline even though the $ref is valid
+  // OpenAPI and resolves correctly within the document.
+  for (const [route, methods] of Object.entries(SPEC.paths)) {
+    for (const [method, op] of Object.entries(methods)) {
+      for (const p of op.parameters ?? []) {
+        assert.ok(!p.$ref, `${method.toUpperCase()} ${route} uses a parameter $ref; inline it`)
+        assert.equal(typeof p.name, 'string', `${route} has a parameter with no string name`)
+      }
+    }
+  }
+})
+
+test('the shared parameters block is gone, so no one can reintroduce a ref', () => {
+  assert.equal(SPEC.components.parameters, undefined)
 })

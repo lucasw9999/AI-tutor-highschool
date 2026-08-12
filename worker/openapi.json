@@ -18,10 +18,26 @@
         "description": "Returns either a question or a short lesson, chosen by the server from answer history. Always call this instead of inventing a question. Never reveal the answer before the student responds. Show the status summary that comes back.",
         "parameters": [
           {
-            "$ref": "#/components/parameters/subject"
+            "name": "s",
+            "in": "query",
+            "required": true,
+            "description": "Which course: ap_csa or ap_precalc.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ap_csa",
+                "ap_precalc"
+              ]
+            }
           },
           {
-            "$ref": "#/components/parameters/key"
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Access key. Use the value given in your instructions.",
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "m",
@@ -78,10 +94,26 @@
             }
           },
           {
-            "$ref": "#/components/parameters/subject"
+            "name": "s",
+            "in": "query",
+            "required": true,
+            "description": "Which course: ap_csa or ap_precalc.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ap_csa",
+                "ap_precalc"
+              ]
+            }
           },
           {
-            "$ref": "#/components/parameters/key"
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Access key. Use the value given in your instructions.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -107,10 +139,26 @@
             }
           },
           {
-            "$ref": "#/components/parameters/subject"
+            "name": "s",
+            "in": "query",
+            "required": true,
+            "description": "Which course: ap_csa or ap_precalc.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ap_csa",
+                "ap_precalc"
+              ]
+            }
           },
           {
-            "$ref": "#/components/parameters/key"
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Access key. Use the value given in your instructions.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -127,10 +175,26 @@
         "description": "Returns every readiness criterion with its evidence, plus what 100 percent would require. Use this when the student or parent asks how it is going, or how ready he is for the exam. Report the numbers as given; never round up or reassure past them.",
         "parameters": [
           {
-            "$ref": "#/components/parameters/subject"
+            "name": "s",
+            "in": "query",
+            "required": true,
+            "description": "Which course: ap_csa or ap_precalc.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ap_csa",
+                "ap_precalc"
+              ]
+            }
           },
           {
-            "$ref": "#/components/parameters/key"
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Access key. Use the value given in your instructions.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -174,10 +238,26 @@
             }
           },
           {
-            "$ref": "#/components/parameters/subject"
+            "name": "s",
+            "in": "query",
+            "required": true,
+            "description": "Which course: ap_csa or ap_precalc.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ap_csa",
+                "ap_precalc"
+              ]
+            }
           },
           {
-            "$ref": "#/components/parameters/key"
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Access key. Use the value given in your instructions.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -203,10 +283,26 @@
             }
           },
           {
-            "$ref": "#/components/parameters/subject"
+            "name": "s",
+            "in": "query",
+            "required": true,
+            "description": "Which course: ap_csa or ap_precalc.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ap_csa",
+                "ap_precalc"
+              ]
+            }
           },
           {
-            "$ref": "#/components/parameters/key"
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Access key. Use the value given in your instructions.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -218,30 +314,6 @@
     }
   },
   "components": {
-    "parameters": {
-      "subject": {
-        "name": "s",
-        "in": "query",
-        "required": true,
-        "description": "Which course: ap_csa or ap_precalc.",
-        "schema": {
-          "type": "string",
-          "enum": [
-            "ap_csa",
-            "ap_precalc"
-          ]
-        }
-      },
-      "key": {
-        "name": "k",
-        "in": "query",
-        "required": true,
-        "description": "Access key. Use the value given in your instructions.",
-        "schema": {
-          "type": "string"
-        }
-      }
-    },
     "schemas": {
       "Status": {
         "type": "object",

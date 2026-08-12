@@ -88,11 +88,43 @@ interprets backslash escapes, turning the `\n` inside a JSON string into a real
 newline and producing "Invalid control character". This looked exactly like a
 Worker bug. Pipe `curl` straight into the parser, or use `printf '%s'`.
 
-## Still not done
+## The Custom GPT
 
-- The Custom GPT is not built. Paste `openapi.json` into its Actions schema and
-  `gpt-instructions.md` into Instructions, replacing `PASTE_STUDENT_KEY` with the
-  value from `.secrets/keys.txt`.
+Built and live: **AP Tutor — Lucas**, `g-6a7c19f67c948191946881afd37043d0`,
+visibility **Only me**. Instructions and Actions schema are loaded, and the full
+loop was exercised in the published GPT, not just the builder preview.
+
+### Three undocumented ChatGPT limits, all found the hard way
+
+1. **Descriptions are capped at 300 characters.** Exceeding it fails the whole
+   schema with `description has length 321 exceeding limit of 300`.
+2. **Every `type: object` must declare `properties`.** A bare object is rejected.
+3. **`$ref` is NOT resolved for parameters.** A `$ref` inside a `parameters`
+   array yields `parameter has missing or non-string name; skipping`, then
+   `skipping function due to errors` — silently disabling all six operations
+   while the schema still looks valid. Parameters must be written inline even
+   though the `$ref` is legal OpenAPI and resolves fine within the document.
+   Response `$ref`s are followed correctly; only parameters are affected.
+
+All three are enforced by `worker/tests/openapi.test.js`.
+
+### The consent prompt: what actually happens
+
+The original assumption was that a GET with query parameters raises no prompt.
+**That was wrong.** ChatGPT prompts once on the first call to a new domain,
+showing the outgoing parameters and offering **Always allow**. After that one
+click it never prompts again — verified across `getStatus`, `getNext` and
+`logAnswer`, in both the builder preview and the published GPT.
+
+So the requirement is met, but by "Always allow", not by the choice of method.
+Whether a request body would re-prompt every time is untested; the no-body design
+stays as the conservative choice rather than a proven necessity.
+
+Note that the prompt **displays the outgoing query parameters, including the
+access key**. Treat any screenshot or transcript of that prompt as exposing the
+key. The first student key was rotated for exactly this reason.
+
+## Still not done
 - 48 Precalc items are model-graded and bucketed at `<unit>.0`; they need topic
   tags and, where an unambiguous answer exists, real keys.
 - FRQ grading stays quarantined until calibrated against an officially scored

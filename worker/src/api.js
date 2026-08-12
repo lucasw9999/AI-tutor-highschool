@@ -1,12 +1,21 @@
 // The API surface, as pure handlers over a db object.
 //
-// EVERY ENDPOINT IS A GET WITH QUERY PARAMETERS. That is not a REST opinion —
-// it is the fix for the blocking complaint that killed the first prototype:
-// "If every single time people have to keep clicking allow, allow, allow, that's
-// not working." ChatGPT raises a consent prompt for an Action that sends a
-// request BODY, and does not for a GET with query parameters. So writes are
-// GETs. Anything that changes state is idempotent per serve id, which is what
-// makes that safe.
+// EVERY ENDPOINT IS A GET WITH QUERY PARAMETERS, and no endpoint takes a request
+// body. This addresses the complaint that killed the first prototype: "If every
+// single time people have to keep clicking allow, allow, allow, that's not
+// working."
+//
+// MEASURED BEHAVIOUR, not theory: ChatGPT prompts ONCE on the first call to a new
+// domain, offering "Always allow". After that click it never prompts again -
+// verified across getStatus, getNext and logAnswer in both the builder preview
+// and the published GPT. An earlier version of this comment claimed a GET raises
+// no prompt at all; that was wrong. Whether a request body would re-prompt on
+// every call is untested, so the no-body design is kept as the conservative
+// choice rather than a proven requirement.
+//
+// The design does rely on GETs being safe to repeat: every state change is
+// idempotent per serve id, so a retried Action cannot double-count.
+//
 //
 // The other governing rule: the model carries only what it cannot fake. It
 // never supplies an item id, a timestamp, an elapsed time, or a verdict. It
