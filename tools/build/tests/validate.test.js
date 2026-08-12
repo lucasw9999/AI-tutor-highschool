@@ -376,7 +376,47 @@ test('feasibility runs from validate() over every configured subject', () => {
   const items = [{ id: 'x1', subject: 'ap_test', kind: 'mcq', answer: 'A', topic: '1.3', stem: 's', practice: 'P1', options: { A: 'a', B: 'b', C: 'c', D: 'd' } }]
   const topics = [{ id: '1.3', subject: 'ap_test', ek: 'idea' }]
   const { errors } = validate(items, topics, [standards()])
-  assert.match(errors.join('|'), /a scored sitting needs/, 'the gate must be wired into validate(), not just exported')
+  // The demand is stated PER KIND now (a sitting is a number of questions of a
+  // kind), so the sentence the gate produces names the half it is short of.
+  assert.match(
+    errors.join('|'),
+    /multiple choice question\(s\) it takes to cover/,
+    'the gate must be wired into validate(), not just exported',
+  )
+})
+
+// --- CSA-C4: the demand is per KIND, not per total -------------------------
+//
+// This gate used to add a paper's halves together — CSA's 42 multiple choice plus
+// 4 free-response — take 90% of the total and count the WHOLE bank against it.
+// 218 mcq items cleared a 42-question demand comfortably, so it passed a bank with
+// ZERO free-response questions in it, while free response is 45% of the exam score
+// and all 25 of its free-response points. Every mock that bank can assemble is
+// structurally 0% free response; api.js drops the unsupplied half from `scorable`
+// and scores the paper over the other half alone, so nothing at runtime says which
+// part of the exam the composite is a percentage of.
+
+test('feasibility: a half the bank cannot supply is an ERROR even when the total is ample', () => {
+  // 100 mcq items is nearly three times the 36 a 40-question mcq half needs, and
+  // the frq half needs 4. Counting 100 against a 40-question total passes; counting
+  // it per kind says exactly what is missing.
+  const ample = [...bank(100), ...[]]
+  const { errors } = feasibility(ample, standards({ exam: { mcq_count: 40, frq_count: 4 } }))
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /0 of the 4 free-response question\(s\)/, 'must name the half and its arithmetic')
+  assert.match(errors[0], /exam\.frq_count 4/, 'and the config key that sets the demand')
+  assert.match(errors[0], /structurally 0% free-response/, 'and what that means for every paper assembled')
+  assert.doesNotMatch(errors[0], /multiple choice/, 'the half that IS supplied must not be blamed')
+})
+
+test('feasibility: an frq half is judged on supply, never on answer keys', () => {
+  // Free-response items are rubric-scored by design (grade.js MODEL_GRADED), so
+  // demanding keys of them would demand the wrong content. Supplying them is what
+  // matters.
+  const mixed = [...bank(100), ...bank(4, { id: 'f', kind: 'frq', answer: null })
+    .map((it, i) => ({ ...it, id: `f${i}` }))]
+  const { errors } = feasibility(mixed, standards({ exam: { mcq_count: 40, frq_count: 4 } }))
+  assert.deepEqual(errors, [], JSON.stringify(errors))
 })
 
 test('the shipped configs and the shipped bank are judged against each other', () => {
@@ -387,16 +427,41 @@ test('the shipped configs and the shipped bank are judged against each other', (
   const configs = readinessConfigs()
   assert.deepEqual(configs.map((c) => c.subject).sort(), ['ap_csa', 'ap_precalc'])
 
-  const csa = feasibility(items.filter((i) => i.subject === 'ap_csa'), configs.find((c) => c.subject === 'ap_csa'))
-  assert.deepEqual(csa.errors, [], 'CSA can assemble and score every sitting its config asks for')
+  const csaItems = items.filter((i) => i.subject === 'ap_csa')
+  const csa = feasibility(csaItems, configs.find((c) => c.subject === 'ap_csa'))
+  // Stated as a function of the bank that is actually compiled, not as a fixed
+  // expectation: 20 free-response items exist in the markdown
+  // (ap_csa/ap_csa_exam/question-bank/frq-q*.md, read by tools/build/parse-frq.js),
+  // and this assertion must be the same true statement before and after they are
+  // wired into the compiled artifacts.
+  const frqSupply = csaItems.filter((i) => i.kind === 'frq').length
+  if (frqSupply >= Math.ceil(4 * MIN_MOCK_COVERAGE)) {
+    assert.deepEqual(csa.errors, [], 'with free response in the bank, CSA can assemble both halves of a sitting')
+  } else {
+    assert.equal(csa.errors.length, 1, JSON.stringify(csa.errors))
+    assert.match(csa.errors[0], /ap_csa/)
+    assert.match(
+      csa.errors[0], /free-response/,
+      `the compiled CSA bank holds ${frqSupply} free-response item(s), so the free-response half of every sitting ` +
+      'cannot be supplied — the gate must say so instead of clearing the bank on its multiple-choice total',
+    )
+    assert.match(csa.errors[0], /structurally 0% free-response/)
+  }
   assert.equal(csa.warnings.length, 1, JSON.stringify(csa.warnings))
   assert.match(csa.warnings[0], /ap_csa/)
-  assert.match(csa.warnings[0], /total_logged_mocks_min/, '6 sittings x 42 questions is 252 servings from 218 items')
+  assert.match(
+    csa.warnings[0], /total_logged_mocks_min/,
+    '6 sittings x the 38 multiple choice a scored sitting needs is 228 servings from 218 mcq items',
+  )
 
   const pc = feasibility(items.filter((i) => i.subject === 'ap_precalc'), configs.find((c) => c.subject === 'ap_precalc'))
   assert.equal(pc.errors.length, 1, JSON.stringify(pc.errors))
   assert.match(pc.errors[0], /ap_precalc/)
   assert.match(pc.errors[0], /composite/, 'all 48 Precalc items are model-graded, so no sitting can be scored')
+  assert.match(
+    pc.errors[0], /0 of the 38 multiple choice/,
+    'and its items are kind constructed_model_graded, so neither half of its paper can be supplied either',
+  )
 })
 
 test('the gate cannot drift from the thresholds it is judging against', () => {
