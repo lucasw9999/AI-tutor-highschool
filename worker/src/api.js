@@ -258,3 +258,27 @@ export async function handleStatus({ db, subject, config, now }) {
       `${config.readiness.composite_floor_min}%, and every unit above ${config.readiness.per_unit_min}%.`,
   }
 }
+
+/**
+ * Everything the parent dashboard needs, for every configured subject.
+ *
+ * Returns data only; rendering lives in dashboard.js so it can be tested without
+ * a database.
+ */
+export async function handleDashboard({ db, configs, now }) {
+  const subjects = []
+  for (const [subject, config] of Object.entries(configs)) {
+    const ctx = await loadContext(db, subject, config)
+    const coverage = coverageOf(ctx)
+    subjects.push({
+      config,
+      coverage,
+      attempts: ctx.attempts,
+      mocks: ctx.mocks,
+      readiness: computeReadiness({
+        config, mocks: ctx.mocks, attempts: ctx.attempts, coverage, calibrated: false, now,
+      }),
+    })
+  }
+  return { subjects, now }
+}
