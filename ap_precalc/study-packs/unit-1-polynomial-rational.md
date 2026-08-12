@@ -212,7 +212,7 @@ $c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Right
 **P9 (exam-level, calculator).** Population model $P(t)=a+b\ln(t+1)$ thousand, with $P(0)=12$ and $P(40)=58$. Find $a$ and $b$ (3 decimals), then find $P(20)$.
 <details><summary>Solution</summary>
 
-$P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b=\frac{46}{\ln 41}=\frac{46}{3.7136}\approx\mathbf{12.387}$. Then $P(20)=12+12.387\ln(21)=12+12.387(3.0445)\approx12+37.713=\mathbf{49.713}$.
+$P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b=\frac{46}{\ln 41}=\frac{46}{3.7136}\approx\mathbf{12.387}$. Then $P(20)=12+12.387\ln(21)=12+12.387(3.0445)\approx12+37.712=\mathbf{49.712}$.
 
 *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)
 </details>
@@ -236,7 +236,7 @@ $P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b
 **P12 (exam-level, calculator).** For $f(x)=0.5x^3-2x^2-x+3$, use a graphing calculator to find all real zeros to 3 decimals, and state the end behavior in limit notation.
 <details><summary>Solution</summary>
 
-Graph/solve: zeros ≈ **$x\approx-1.273,\ 1.140,\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\frac{b}{a}=-\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)=-6.000$, which must equal $-\frac{d}{a}=-\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\displaystyle\lim_{x\to\infty}f(x)=\infty,\ \displaystyle\lim_{x\to-\infty}f(x)=-\infty$.
+Graph/solve: zeros ≈ **$x\approx-1.273,\ 1.140,\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\frac{b}{a}=-\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)\approx-5.998\approx-6$, which must equal $-\frac{d}{a}=-\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\displaystyle\lim_{x\to\infty}f(x)=\infty,\ \displaystyle\lim_{x\to-\infty}f(x)=-\infty$.
 </details>
 
 ---
