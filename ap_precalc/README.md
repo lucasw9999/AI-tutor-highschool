@@ -3,7 +3,14 @@
 A **condensed, exam-driven, question-first** catch-up system for AP Precalculus. **Goal: be confident for the class (A) and the AP exam (4–5, May 2027)** — fast, without reading a textbook cover to cover. Same architecture as `../ap_csa/` and `../10th_english/`, tuned for math: **do a problem → learn the piece you're missing → repeat.**
 
 ## What's here
-> ⚠️ **For the parent — the deadline (College Board timeline, verified 12 August 2026):** only a school's **AP Coordinator** can order the exam. **Preferred deadline Oct 2, 2026; final deadline Nov 13, 2026, 11:59 PM ET.** The **$40 per exam late order fee applies only after Nov 13** — the Oct 2 → Nov 13 window costs nothing extra. One order covers **both** AP Precalculus and AP CSA — confirm both are on it. Accommodations, if ever needed: **Jan 22, 2027**. Details in `reference/practice-resources-and-exam-day.md`.
+> 🔴 **For the parent — DO THIS IN THE FIRST WEEK OF SCHOOL (late Aug / early Sept 2026).** It is the earliest deadline in this repo and it is one email. Write to the **Foothill HS AP Coordinator** and get three answers **in writing**:
+> 1. **Does Foothill administer the AP Computer Science A exam in May 2027?**
+> 2. **Will Lucas be on the school's exam order for BOTH AP Computer Science A and AP Precalculus?**
+> 3. **What is the school's own internal ordering deadline?** (Schools set their own, earlier than College Board's.)
+>
+> **If the answer to (1) is no, the search for a school that will host him has to start in September, not November.** The Nov 13 order deadline belongs to a coordinator at a school that has *already agreed* to host him; finding that person takes weeks. Only an **AP Coordinator** can order an exam — a parent or a student cannot, ever. **Every fee and every date is in one table: "MONEY AND DEADLINES" immediately below.**
+>
+> ⚠️ **For the parent — the deadline (College Board timeline, verified 12 August 2026):** **preferred deadline Oct 2, 2026; final deadline Nov 13, 2026, 11:59 PM ET.** The **$40 per exam late order fee applies only after Nov 13** — the Oct 2 → Nov 13 window costs nothing extra. One order covers **both** AP Precalculus and AP CSA — confirm both are on it. Accommodations, if ever needed: **Jan 22, 2027**.
 >
 > ⚠️ **For the parent — the content blocker, and it has a date.** The Precalc question bank is **not built**: `npm run build` fails with *"the bank holds 0 of the 38 multiple choice question(s) it takes to cover the 42 a full paper contains"* and *"33 of 36 exam-tested topic(s) have NO items."* Until that work lands, **no Precalc mock can be assembled and readiness is unmeasurable at any level of effort** — the number will correctly read 0 however much he studies. **Hard fail-by: Mon 15 Mar 2027** (derived from the readiness engine's own rules). **Recommended target: Sun 31 Jan 2027** (judgement, not derived). Arithmetic and consequences: **`study-plan.md`**.
 >
@@ -11,7 +18,46 @@ A **condensed, exam-driven, question-first** catch-up system for AP Precalculus.
 
 ---
 
+## 💵 For the parent — MONEY AND DEADLINES (one table, both exams)
+
+**This is the only place in the repo that prints fee figures, on purpose.** Every other file cross-references it. The $40 late fee used to be copied into five separate places, and **four of the five attached it to the wrong date** — charging $40 for a window that is actually free. So if something here is wrong, fix it **here**, and don't paste the figures elsewhere.
+
+**Fees are paid to the school, not to College Board.** The school places the order, College Board invoices the school, and the **AP Coordinator** tells you what to pay and when. **Verified 12 August 2026** against College Board's AP exam-fees page and its AP school-year timeline — except rows marked **UNVERIFIED**, which say exactly what is and isn't known.
+
+### The money
+
+| Item | Amount | When it applies |
+|---|---|---|
+| **Base exam fee** | **$99 per exam** at schools in the U.S., U.S. territories, Canada and all DoDEA schools (**$129** elsewhere) | Always. **Two exams ≈ $198** — that is the actual number behind "register for both". |
+| **Late order fee** | **+$40 per exam**, in addition to the base exam fee | **Only** on exams ordered **14 Nov 2026 – 12 Mar 2027, 11:59 p.m. ET**. Ordering any time up to **13 Nov 2026** carries no extra charge. |
+| **Unused / canceled exam fee** | **$40 per exam** | If an exam is canceled in AP Registration and Ordering **after 13 Nov 2026 and by 12 Mar 2027, 11:59 p.m. ET**. The original exam fee is removed from the invoice, so a late cancellation costs $40 — not $99, but not nothing. **See the callout below.** |
+| **Fee reduction** | **$37 per exam** for eligible students (plus a **$9 per exam** rebate to the school) | The **school** flags eligibility and must finalize it by **30 Apr 2027**. **UNVERIFIED — the eligibility criteria.** College Board's fees page defers to a page that did not resolve on 12 Aug 2026, so this repo does not state who qualifies: **that is a question for the AP Coordinator.** "Some states also provide funding for AP Exams" — the coordinator knows whether California does. |
+| **Late payment fee** | **$225** | **15 Jun 2027** is the postmark deadline for exam payments, and the fees page attaches a **$225 late fee** to it. **UNVERIFIED — who bears it.** Payment flows school → College Board, so ask the coordinator whether a family can be exposed to it at all. |
+
+### The dates
+
+| Date | What happens | Who has to act |
+|---|---|---|
+| **First week of school — late Aug / early Sept 2026** | **The three questions to the AP Coordinator, in writing** (top of this file). Earliest deadline in the repo. | **you** |
+| **Fri 2 Oct 2026** | ***Preferred*** deadline to submit AP exam orders. **Missing it costs nothing.** | school |
+| **Fri 13 Nov 2026, 11:59 p.m. ET** | **FINAL** deadline to submit exam orders — **and the last day an exam can be canceled for free.** | school |
+| **Fri 22 Jan 2027** | Deadline for the school's SSD coordinator to submit accommodations requests. Only if ever needed. | school |
+| **Fri 12 Mar 2027, 11:59 p.m. ET** | Spring course orders and **fall order changes**. Last day the $40 late-order and $40 unused-exam fees apply at all. | school |
+| **Fri 30 Apr 2027, 11:59 p.m. ET** | School **finalizes student fee reduction status**. After this the $37 rate can't be applied for this cycle. | school |
+| **Tue 11 May 2027**, Session 1 (8 a.m. local) · **Wed 12 May 2027**, Session 2 (12 p.m. local) | **AP Precalculus**, then **AP CSA** about 30 hours later. | Lucas |
+| **Tue 1 Jun 2027** | "Schools are billed twice the fee for each exam." School-side, and the reason coordinators chase payment in May. | school |
+| **Tue 15 Jun 2027** | Postmark deadline for exam payments; the **$225 late fee** attaches after it. | school |
+| **Sun 20 Jun 2027** | **Lucas finalizes his free score-send recipient.** See the callout below — the ordering is the point. | **Lucas** |
+| **July 2027** — month only; the day is not published (2026's was Mon 6 July) | **AP scores released.** If they haven't arrived by **15 Aug 2027**, contact **AP Services for Students**. | Lucas |
+
+> ⚠️ **Putting both exams on the order early creates a $40 exposure. Take it anyway.** This repo pushes hard, and correctly, to get both exams onto the school's order well before Nov 13 — but it has never said what that costs if plans change. Here it is: **13 Nov 2026 is also the last day an exam can be canceled for free.** Cancel after that (through 12 Mar 2027) and the **$40 unused-exam fee** applies, with the $99 base fee coming off the invoice. So the real arithmetic on "confirm both are on the order in October" is **worst case $40 if he later drops one, against a lost seat if the order is missed.** Order both.
+
+> 📤 **The free score send is chosen BEFORE he sees the score — that is the whole point of 20 June.** Scores release in **July 2027**; the free score report recipient has to be named or changed by **Sun 20 Jun 2027**. Nobody gets to see a 3 and then decide where it goes. Pick the recipient deliberately in June, or the free send is simply wasted.
+
+---
+
 ## 📥 For the parent — THE DOWNLOAD LIST (both subjects, in priority order)
+
 
 **Everything here is free, official, and public — no login, no join code.** All PDFs live under one base URL: **`https://apcentral.collegeboard.org/media/pdf/`** — paste the base plus the filename into a browser. Save them into one folder per subject per year; that folder *is* the free-response practice supply for the next two years.
 
@@ -55,7 +101,7 @@ AP Central keeps only the **3 most recent years** of free-response material. **W
 
 **Have Lucas sign in at [bluebook.collegeboard.org/students/practice](https://bluebook.collegeboard.org/students/practice) and run the AP test preview — first week of school.** Verified 12 August 2026: this needs **only his own College Board account** — no join code, no teacher, no confirmation that the school offers the course. It is the **only official practice channel reachable without an adult acting first**, which is why it belongs on a parent's list at all: it is the thing that cannot be blocked. It is a short unscored tour of the real testing app (**not** a full-length mock), and it is how he avoids meeting the exam software for the first time on exam day.
 
-**The one thing on this page a download cannot replace:** ask the **AP Coordinator**, in the first week of school, to confirm both exams are on the school's order (see the deadline note above) — and ask each teacher for the **AP Classroom join code**, which is the only route to the official full-length practice exams.
+**The one thing on this page a download cannot replace:** send the **AP Coordinator** the three questions at the top of this file in the first week of school — including whether both exams are on the school's order — and ask each teacher for the **AP Classroom join code**, which is the only route to the official full-length practice exams.
 
 ---
 
@@ -64,7 +110,7 @@ AP Central keeps only the **3 most recent years** of free-response material. **W
 | **`study-plan.md`** | **The calendar.** Every date from now to Tue 11 May 2027: phased plan, mock schedule, the bad-mock recovery branch, the final fortnight worked out around the CSA exam the next afternoon, and the hard deadlines. Each date labelled *derived* or *judgement*. |
 | **`coverage-map.md`** | The 4 units, exam format/weights, what's tested, and the express crunch order. The backbone. |
 | **`study-packs/`** | One condensed pack per unit (Polynomial/Rational, Exponential/Log, Trig/Polar, Parameters/Vectors/Matrices): must-know concepts + worked examples + graduated practice *with solutions* + exam traps. |
-| **`reference/`** | `formula-and-identity-sheet.md` (must-memorize), `graphing-calculator-skills.md`, `exam-strategy-and-scoring.md`, `practice-resources-and-exam-day.md` (official practice PDFs, exam-day mechanics, **registration deadlines**). |
+| **`reference/`** | `formula-and-identity-sheet.md` (must-memorize), `graphing-calculator-skills.md`, `exam-strategy-and-scoring.md`, `practice-resources-and-exam-day.md` (official practice PDFs and exam-day mechanics — for fees and deadlines use the **MONEY AND DEADLINES** table above, which is the single source). |
 | **`tutor-prompt.md`** | The AI tutor's instructions (paste into a ChatGPT Custom GPT or Claude Project). |
 | **`mastery-tracker.md`** | Persistent progress memory. |
 | **`how-to-use.md`** / **`chatgpt-setup.md`** / **`diagnostic.md`** | Day-to-day instructions, setup steps, and the **Phase 0 placement check (sit it by Sat 15 Aug 2026)**. |

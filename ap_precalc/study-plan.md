@@ -54,9 +54,10 @@ in this repo), or **judgement** (my choice — a reasonable one, but move it if 
 | Date | Milestone | Derived / fact / judgement |
 |---|---|---|
 | **Sat 15 Aug 2026** | **Phase 0 — sit `diagnostic.md`.** ~30 min. Sets your starting unit in `mastery-tracker.md`. | judgement |
+| First week of school, **late Aug / early Sept 2026** | **Ask the AP Coordinator, in writing:** does Foothill administer **AP CSA** in May 2027; will Lucas be on the order for **both** exams; what is the school's own internal ordering deadline? **Earliest deadline in the repo** — if AP CSA is a no, the hunt for a hosting school starts now, not in November. Questions and full fee table: `README.md` → **MONEY AND DEADLINES**. | judgement (the deadlines it protects are fact) |
 | **Fri 2 Oct 2026** | Registration **preferred** deadline. **Missing it costs nothing** — the $40/exam late fee starts only after 13 Nov. | fact (verified 12 Aug 2026) |
 | First week of school, **Sept 2026** | **Get the AP Classroom join code** from the Precalc teacher. Non-compressible — see the hard-deadline table. | derived + fact |
-| **Fri 13 Nov 2026** | Registration **final** deadline, 11:59 PM ET. One order must cover **both** Precalc and CSA. | fact (verified 12 Aug 2026) |
+| **Fri 13 Nov 2026** | Registration **final** deadline, 11:59 PM ET. One order must cover **both** Precalc and CSA. Also the **last day an exam can be canceled for free** — after this, dropping one costs $40. | fact (verified 12 Aug 2026) |
 | **Fri 22 Jan 2027** | Accommodations deadline, if ever needed. | fact (verified 12 Aug 2026) |
 | **Sun 31 Jan 2027** | **Recommended target: Precalc item bank complete.** | **judgement — not derived** |
 | **Fri 19 Feb 2027** | SAT registration closes for the 6 March sitting. | fact (`../sat/README.md`) |
@@ -199,7 +200,8 @@ item bank. Paste the results into `mastery-tracker.md`. Start the formula/identi
   exam gives you almost no formulas.
 - Work **Unit 1 (Polynomial & Rational)** through `study-packs/unit-1-polynomial-rational.md`. It is 30–40%
   of the MCQ.
-- **Hard task, first week of school: get the AP Classroom join code.** See the hard-deadline table.
+- **Two hard tasks, first week of school: get the AP Classroom join code, and email the AP Coordinator the
+  three registration questions.** Both are in the hard-deadline table; neither is fixable later by studying.
 - Practice both calculator and no-calculator from day one. No-calc is 29 of the 42 MCQ.
 
 ### Phase 2 — Oct to Nov 2026: Units 2 and 3, and the registration wall
@@ -207,7 +209,9 @@ item bank. Paste the results into `mastery-tracker.md`. Start the formula/identi
 - **Unit 2 (Exponential & Logarithmic)**, then **Unit 3 (Trigonometric & Polar)**. Roughly six weeks each is
   the shape; the tutor sets the pace off `mastery-tracker.md`.
 - **Registration: preferred Fri 2 Oct 2026, final Fri 13 Nov 2026.** Only an AP Coordinator can order.
-  **Confirm the single order covers Precalc *and* CSA.**
+  **Confirm the single order covers Precalc *and* CSA.** Missing 2 Oct costs nothing; the $40/exam late fee
+  starts after 13 Nov, which is also the last day an exam can be dropped for free. Fees: `README.md` →
+  **MONEY AND DEADLINES**.
 - First untimed reps of each of the four FRQ types. Q4 (Symbolic Manipulation) is the lowest-scoring FRQ
   nationally two years running — start it early, not last.
 
@@ -353,8 +357,24 @@ Missing any of these is not fixable by studying. Each one needs an adult, a scho
 
 | Deadline | Date | Why it's hard |
 |---|---|---|
+| **Ask the AP Coordinator the three questions** | First week of school, **late Aug / early Sept 2026** | Does Foothill administer **AP CSA**? Will Lucas be on the order for **both** exams? What is the school's **own internal deadline**? **The earliest deadline here, and the one that gates the rest** — if AP CSA is a no, finding a school that will host him takes weeks, so that search starts in September. The Nov 13 deadline belongs to a coordinator who has already agreed to host. Verbatim questions: `README.md` → **MONEY AND DEADLINES**. |
 | **AP Classroom join code** | First week of school, **Sept 2026** | `require_official_mock: true`, and the only **full-length** official Precalc paper is the AP Classroom Practice Exam, which is gated to authorized educators. The released 2024/2025/2026 materials are **Section II only** — real, useful, and unable to produce a composite. **No join code → no official mock → no qualifying window → readiness pinned at 0 regardless of every score.** Get the code from the AP Precalc teacher or the AP Coordinator. |
-| **Register to sit the exam** | Preferred **Fri 2 Oct 2026**; final **Fri 13 Nov 2026, 11:59 PM ET** (+$40/exam only *after 13 Nov*, not after 2 Oct) | Only a school's AP Coordinator can order. **One order must cover both AP Precalculus and AP CSA — confirm both are on it.** Schools set earlier local deadlines. |
+| **Register to sit the exam** | Preferred **Fri 2 Oct 2026**; final **Fri 13 Nov 2026, 11:59 PM ET** (+$40/exam only *after 13 Nov*, not after 2 Oct) | Only a school's AP Coordinator can order. **One order must cover both AP Precalculus and AP CSA — confirm both are on it.** 13 Nov is also the last day an exam can be canceled for free, so getting both on the order early risks the **$40** unused-exam fee, not the whole base exam fee, if one is later dropped — take that trade. Schools set earlier local deadlines. All fees: `README.md` → **MONEY AND DEADLINES**. |
 | **Precalc item bank complete** | Target **Sun 31 Jan 2027** (judgement) · **hard Mon 15 Mar 2027** (derived) | See the top of this file. Past 15 March, coverage of 36 topics plus a fourth logged sitting no longer fits before the 26 April window start. |
 | **Accommodations request** | **Fri 22 Jan 2027** | Only if ever needed. |
 | **SAT registration** | **Fri 19 Feb 2027** for the Sat 6 Mar 2027 sitting | Not a Precalc deadline, but it sits in the same calendar and the May SAT is unusable — it lands 10 days before Precalc. |
+
+---
+
+## After the exam — the one date Lucas has to keep himself
+
+The calendar above stops on 12 May 2027. One date after it is his own, not the school's, and it is easy to
+miss because it falls in the summer:
+
+| Date | What | Why the ordering matters |
+|---|---|---|
+| **Sun 20 Jun 2027** | **Finalize the free score-send recipient.** | **This is decided *before* he sees the score.** Scores release in **July 2027** (month only — the day isn't published; 2026's was Mon 6 July). So nobody gets to see a 3 and then decide where it goes. Pick deliberately in June, or the free send is wasted. If scores haven't arrived by **15 Aug 2027**, contact **AP Services for Students**. |
+
+Verified 12 August 2026 (College Board school-year timeline; corroborated in the AP Coordinator's Manual
+Part 1). Payment and fee-reduction dates in the same window are the school's, not his — they are in
+`README.md` → **MONEY AND DEADLINES**.

@@ -111,7 +111,7 @@ All under `https://apcentral.collegeboard.org/media/pdf/`. **2023, 2024 and 2025
 
 **How to get full access:**
 
-1. **If you're enrolled in an AP CSA class (Lucas's case):** your teacher issues the join code automatically — just ask for it at the start of the course. This is the normal path and needs nothing extra. (It does depend on the teacher actually using AP Classroom; most do, but confirm.)
+1. **If you're enrolled in an AP CSA class:** your teacher issues the join code automatically — just ask for it at the start of the course. This is the normal path and needs nothing extra. (It does depend on the teacher actually using AP Classroom; most do, but confirm.) **Whether this is Lucas's path is still unconfirmed** — it presumes Foothill offers the course, which nobody has verified. See the registration section below.
 2. **If you're self-studying with no class:** enroll with an AP-Course-Audit-approved online provider (e.g., APEX Learning, Virtual Virginia, or a similar CB-authorized online AP program) whose AP teacher can issue a join code.
 
 Either way, do this **early** — AP Classroom access is tied to a specific teacher's course section.
@@ -122,19 +122,33 @@ Either way, do this **early** — AP Classroom access is tied to a specific teac
 
 Sitting the AP exam requires being registered through an AP-administering school. You do **not** self-register through College Board.
 
-**If you attend a school that administers the AP CSA exam (Lucas's case):** register through your school's **AP Coordinator** in the fall — the school places your exam order. Because a **small or private school does not always administer every AP exam**, confirm two things early:
-1. That your school is set up to give the **AP CSA** exam this cycle (ask the AP Coordinator directly — don't assume).
+> 🔴 **Week one of school (~late Aug / early Sept 2026): email the AP Coordinator these three questions, in writing.** This is the earliest deadline in the project and everything else in this section depends on the answers.
+> 1. **Does Foothill administer the AP Computer Science A exam in May 2027?**
+> 2. **Will Lucas be on the school's exam order for BOTH AP Computer Science A and AP Precalculus?**
+> 3. **What is the school's own internal ordering deadline?**
+>
+> **If (1) is no, the search for a hosting school starts in September, not November** — the Nov 13 deadline belongs to a coordinator at a school that has *already agreed* to host, and finding that person takes weeks.
+>
+> 💵 **All fees for both exams — base, late, cancellation, fee reduction, payment and score-send deadlines — are in one table:** [`../../../ap_precalc/README.md`](../../../ap_precalc/README.md) → **MONEY AND DEADLINES**. This file prints deadlines, not dollar figures, so the two can't drift apart again.
+
+**If you attend a school that administers the AP CSA exam:** register through your school's **AP Coordinator** in the fall — the school places your exam order. Because a **small or private school does not always administer every AP exam**, confirm two things early:
+1. That your school is set up to give the **AP CSA** exam this cycle (ask the AP Coordinator directly — **don't assume, and note that for Lucas this is still unconfirmed**).
 2. That your exam order is placed by the **~mid-November** deadline.
 
-**If your school does NOT administer AP CSA:** use the **AP Course Ledger** (apcourseledger.collegeboard.org) → search AP Computer Science A → find a nearby authorized school that accepts outside test-takers → contact its AP Coordinator. Same ~mid-November deadline.
+**If your school does NOT administer AP CSA:** use the **AP Course Ledger** at **`https://apcourseaudit.inflexion.org/ledger/`** (verified 12 August 2026 — searchable by school, subject, city, state and country) → search AP Computer Science A → find a nearby authorized school that accepts outside test-takers → contact its AP Coordinator. Same ~mid-November deadline.
+
+⚠️ **The ledger cannot answer the Foothill question in time, so don't wait on it.** College Board **refreshes the ledger each November** — essentially at the Nov 13 order deadline — so a lookup in **August or September 2026 returns 2025-26 offerings**, not the 2026-27 year Lucas will sit. Use it to shortlist *other* schools that have offered AP CSA before; but the only instrument that answers "does Foothill administer AP CSA in May 2027" **before** Nov 13 is the **direct question to the AP Coordinator** above.
 
 > **The real May 2027 deadline structure** (College Board AP school-year timeline, verified 12 August 2026):
 > - **October 2, 2026** — *preferred* deadline to submit AP exam orders.
 > - **November 13, 2026, 11:59 PM ET** — **final** deadline. Ordering any time up to here carries **no extra charge**. The **$40 per exam late order fee** (on top of the base fee) applies only to exams ordered **between November 14, 2026 and March 12, 2027, 11:59 p.m. ET**.
 > - **January 22, 2027** — deadline for the school's SSD coordinator to submit accommodations requests (only if accommodations are ever needed).
-> - **March 12, 2027, 11:59 PM ET** — deadline to submit spring course orders and *fall order changes*.
+> - **March 12, 2027, 11:59 PM ET** — deadline to submit spring course orders and *fall order changes*. Last date the $40 late-order fee (and the $40 unused-exam fee) can apply at all.
+> - **June 20, 2027** — **Lucas finalizes his free score-send recipient.** Scores release in **July 2027**, so the free send is designated **before he sees the score** — that ordering is the point of the date. *(Corroborated in the AP Coordinator's Manual Part 1: "Remind students that June 20 is the deadline to indicate or change their free score report recipient.")* If scores haven't arrived by **August 15, 2027**, contact **AP Services for Students**.
 >
 > **So missing October 2 costs nothing — the entire Oct 2 → Nov 13 window is free.** (Two earlier versions of this line were wrong in opposite directions: the first said there was no late path at all; the second priced the free window at $40 per exam. Both were wrong. The late fee begins November 14.) The one thing to do: **before Oct 2, 2026, confirm with your school's AP Coordinator that BOTH exams — AP Computer Science A *and* AP Precalculus — are on the school's order.** Schools set their own earlier local deadlines, so ask in the first week of school. See `../README.md` for the exam-only-section path if the school does not administer AP CSA.
+>
+> ⚠️ **And know the small price of doing that early: November 13 is also the last day an exam can be canceled for free.** Cancel after it (through Mar 12, 2027) and a **$40 unused-exam fee** applies, with the base exam fee coming off the invoice. So "get both on the order in October" risks **$40 if he later drops one**, against a lost seat if the order is missed. Order both — but say the $40 out loud rather than discovering it. Figures: [`../../../ap_precalc/README.md`](../../../ap_precalc/README.md) → **MONEY AND DEADLINES**.
 >
 > **Exam dates and sessions** (verified 12 August 2026): College Board now labels sittings **Session 1 / Session 2**, "replacing the former morning and afternoon designations," "to prevent the disclosure of secure exam content across time zones." In the lower 48 the start times are unchanged: **Session 1 = 8 a.m. local, Session 2 = 12 p.m. local.** AP Precalculus is **Session 1, Tuesday 11 May 2027**; AP CSA is **Session 2, Wednesday 12 May 2027** — about **30 hours apart, not the ~24 a "back-to-back" reading implies.** Confirm the exact per-school start time with the AP Coordinator (College Board says a per-school start-time lookup tool is "coming this fall").
 
