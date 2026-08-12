@@ -213,18 +213,24 @@ maybe('a full 42-question mock scores an exact composite and blank count, and it
     const response = outcome === 'right' ? item.answer : outcome === 'wrong' ? (item.answer === 'A' ? 'B' : 'A') : ''
 
     await handleLog({ db, serveId: q.serve, response, config: CSA, now: at(i * 100 + 30) })
-    seen.push({ unit: item.unit, correct: outcome === 'right' })
+    seen.push({ unit: item.unit, kind: item.kind, correct: outcome === 'right' })
   }
 
   const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(20000) })
 
-  // 42 answers against a 42-question section clears the coverage floor, so
-  // this gets a real composite. Every CSA item in the seed is mcq, so all 42
-  // answers -- including the blank, which grade.js scores as a mechanically
-  // graded miss -- are scored. 21 of 42 right is exactly 50%, not merely a
-  // value inside [0, 100].
+  // 42 answers against a 42-question section clears the coverage floor, so this
+  // gets a real composite. Every answer on it is multiple choice — not because
+  // the seed holds nothing else (it holds 20 free-response items, 45% of the real
+  // exam) but because this is a section I sitting, and api.js will not serve a
+  // sitting a half its own section does not have. So all 42 answers — including
+  // the blank, which grade.js scores as a mechanically graded miss — are scored.
+  // 21 of 42 right is exactly 50%, not merely a value inside [0, 100].
+  assert.deepEqual(
+    [...new Set(seen.map((x) => x.kind))], ['mcq'],
+    'section I is the multiple choice half; a rubric-scored item on it could not be marked at all',
+  )
   assert.equal(r.answered, 42)
-  assert.equal(r.scored, 42, 'every CSA item in the seed is mcq, so all 42 must be mechanically graded')
+  assert.equal(r.scored, 42, 'every answer on a section I paper is mechanically graded, so all 42 must be scored')
   assert.equal(r.counted, true, 'full coverage of the section must produce a real composite')
   assert.equal(r.composite_pct, 50, 'a known 21-of-42 must produce the exact composite, not just a plausible one')
   // This is the exact shape of the regression a missing a.response projection

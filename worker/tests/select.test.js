@@ -322,7 +322,7 @@ test('selection on a partially consumed bank', async (t) => {
 // ---------------------------------------------------------------------------
 // An EXHAUSTED bank. The bank is finite and the no-repeat window is long, so
 // this state is reached in the first week of ordinary use, not in some corner
-// case: 218 CSA items at 50 answers a day is four days of unique questions.
+// case: 238 CSA items at 50 answers a day is five days of unique questions.
 // Refusing to serve anything is the one response the student cannot use, so the
 // selector degrades to the least-recently-seen item and SAYS it is a repeat.
 // ---------------------------------------------------------------------------
@@ -564,8 +564,8 @@ test('the real bank keeps serving after it has been worked through', async (t) =
 test('every mock the readiness config requires can actually be sat', async (t) => {
   // total_logged_mocks_min sittings, each needing ceil(mcq_count * 0.9) answers
   // before api.js will score it, one a week. CSA demanded 6 x 38 = 228 distinct
-  // servings from a 218-item bank, so the sixth sitting used to die at question
-  // 29 — no composite, and total_logged_mocks_min unreachable forever.
+  // servings from what was then a 218-item bank, so the sixth sitting used to die
+  // at question 29 — no composite, and total_logged_mocks_min unreachable forever.
   //
   // The length a sitting can honestly reach is capped by the ON-EXAM bank, not
   // by the whole bank: a paper may not be padded with material readiness
@@ -1038,22 +1038,54 @@ test('a sitting on a partially worn bank is still a sample of the whole exam', a
   /** ceil(mcq_count * 0.9) — what api.js actually requires before it will score. */
   const scoredLength = (config) => Math.ceil(config.exam.mcq_count * MIN_MOCK_COVERAGE)
 
-  // 140 and 180 answers at 20 a day are 7 and 9 days of ordinary drilling against
-  // CSA's 28-day reuse window — the first fortnight of use, at well under the ~50
-  // answers a day db.js sizes itself for. At 140 one unit has no item outside the
-  // window; at 180, two do.
-  for (const answers of [140, 180]) {
-    await t.test(`${answers} answers of drilling later, unit shares still track the exam's weights`, () => {
-      const bank = bankOf('ap_csa')
-      const owed = entitlements(bank)
-      const { attempts, endedMs } = drillDays({ bank, answers, startMs: START })
+  /**
+   * Drill ordinary practice until the bank is PARTIALLY worn: `staleUnits` unit(s)
+   * with no item left outside the reuse window, while at least one other unit
+   * still has one. That state is the whole point of this section, and it is a fact
+   * about the bank's SHAPE, not a number a test can know in advance.
+   *
+   * It used to be hard-coded — 140 answers for one worn unit, 180 for two — and
+   * both numbers rotted the moment the bank changed shape: 20 free-response items
+   * landed in units 1 and 4, every unit still held a fresh item at 140 answers,
+   * and the sittings below would have gone on passing while exercising nothing.
+   * Searching for the state instead means the fixture follows the bank, and the
+   * precondition below can only fail if the state is unreachable at all.
+   *
+   * @returns {{answers: number, attempts: object[], endedMs: number,
+   *          census: Map<string, {inside: number, outside: number}>,
+   *          stale: string[], fresh: string[]}}
+   */
+  const drillUntilWorn = ({ bank, staleUnits = 1, perDay = 20, max = 600 }) => {
+    let last = null
+    for (let answers = perDay; answers <= max; answers += perDay) {
+      const { attempts, endedMs } = drillDays({ bank, answers, perDay, startMs: START })
       const census = windowCensus({ bank, attempts, atMs: endedMs })
       const stale = [...census].filter(([, c]) => c.outside === 0).map(([u]) => u)
       const fresh = [...census].filter(([, c]) => c.outside > 0).map(([u]) => u)
+      last = { answers, attempts, endedMs, census, stale, fresh }
+      if (stale.length >= staleUnits && fresh.length > 0) return last
+    }
+    assert.fail(
+      `no amount of drilling up to ${max} answers leaves ${staleUnits} unit(s) wholly inside the ` +
+        `${bank.config.readiness.reuse_days}-day reuse window beside a unit that is not, so the state these ` +
+        `sittings are about is unreachable and they would prove nothing — at ${last?.answers} answers: ` +
+        `${[...(last?.census ?? [])].map(([u, c]) => `u${u} out=${c.outside} in=${c.inside}`).join(', ')}`,
+    )
+  }
+
+  // One worn unit, then two — the first fortnight or so of use at 20 answers a day
+  // against CSA's 28-day reuse window, so nothing has left the window yet. How many
+  // answers that takes is read off the bank rather than asserted.
+  for (const staleUnits of [1, 2]) {
+    const worn = drillUntilWorn({ bank: bankOf('ap_csa'), staleUnits })
+    await t.test(`${worn.answers} answers of drilling later, unit shares still track the exam's weights`, () => {
+      const bank = bankOf('ap_csa')
+      const owed = entitlements(bank)
+      const { attempts, endedMs, census, stale, fresh } = worn
       assert.ok(
-        stale.length > 0 && fresh.length > 0,
-        `precondition: after ${answers} answers some unit must be wholly inside the reuse window while another is ` +
-          `not, or this test proves nothing — ${[...census].map(([u, c]) => `u${u} out=${c.outside} in=${c.inside}`).join(', ')}`,
+        stale.length >= staleUnits && fresh.length > 0,
+        `precondition: ${staleUnits} unit(s) wholly inside the reuse window beside a unit that is not, or this ` +
+          `test proves nothing — ${[...census].map(([u, c]) => `u${u} out=${c.outside} in=${c.inside}`).join(', ')}`,
       )
 
       const questions = scoredLength(bank.config)
@@ -1105,10 +1137,9 @@ test('a sitting on a partially worn bank is still a sample of the whole exam', a
     // not evidence about an unseen question. Selling one as fresh would replace one
     // overstatement with another.
     const bank = bankOf('ap_csa')
-    const { attempts, endedMs } = drillDays({ bank, answers: 140, startMs: START })
-    const census = windowCensus({ bank, attempts, atMs: endedMs })
+    const { attempts, endedMs, census, answers } = drillUntilWorn({ bank })
     const stale = new Set([...census].filter(([, c]) => c.outside === 0).map(([u]) => u))
-    assert.ok(stale.size > 0, 'precondition: some unit is wholly inside the reuse window')
+    assert.ok(stale.size > 0, `precondition: some unit is wholly inside the reuse window after ${answers} answers`)
     const { paper } = sitPaper({
       bank, attempts, mockId: 1, questions: scoredLength(bank.config), startMs: endedMs,
     })

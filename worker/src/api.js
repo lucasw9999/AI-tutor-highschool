@@ -348,6 +348,24 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     // paper would be untrue twice over — it is not 286 questions, and the ones it
     // never saw are not on it.
     const eligible = { ...ctx, items: ctx.items.filter((it) => !closed.has(it.kind)) }
+
+    // NOTHING has been asked, so nothing can have been "asked already": this bank
+    // cannot put a single question on this section. Its own sentence, because the
+    // remedy is different in kind — not submit what is on the paper (there is no
+    // paper), and not sit it differently, but content of that kind, which does not
+    // exist yet. Reachable since a sitting may only draw from the halves its own
+    // section has: a section II sitting on a bank with no free-response item used to
+    // be quietly handed multiple choice instead.
+    if (mockId != null && paper.parts.length && !paperAttempts.length && !inFlight.length) {
+      throw new ApiError(
+        409,
+        `mock ${mockId} cannot be given a single question: a section ${sitting.section} sitting is ` +
+          `${describeParts(paper.parts.map((p) => [p.kind, p.count]))}, and this bank holds ` +
+          `${examTestedCount(eligible)} exam-tested question(s) it may put on that section. Nothing was recorded, and ` +
+          `nothing is on the paper to submit. Only items of the kind(s) that section is made of can make it sittable; ` +
+          `no other kind may stand in for them.`,
+      )
+    }
     const clauses = done.length
       ? [`its ${describeParts(done.map((p) => [p.kind, p.count]))} are all on it already`]
       : [`all ${examTestedCount(eligible)} exam-tested question(s) this bank can put on a section ${sitting?.section} ` +
@@ -927,7 +945,7 @@ function partObstacle([kind, count], supply) {
  * supply and grade. Nothing checked that before, and both directions were
  * live defects:
  *
- *   sec=II claimed 4 (frq_count) while the bank holds ZERO free-response items.
+ *   sec=II claimed 4 (frq_count) while the bank held ZERO free-response items.
  *   The selector filters by topic, not kind, so it served 4 multiple choice
  *   questions — 4 of 4, past MIN_MOCK_COVERAGE, composite 100, counted. Six
  *   such afternoons formed a COMPLETE qualifying window on 24 questions, which
@@ -936,6 +954,12 @@ function partObstacle([kind, count], supply) {
  *   sec=full claimed 46 while only 42 questions can be asked or marked, so a
  *   perfect paper scored 91.3 with 4 "blanks" it was never offered — three of
  *   them put max_blanks (1) out of reach and made `ready` unreachable that way.
+ *
+ * The bank now holds the free-response half (20 items), so section II can be
+ * ASKED; it still cannot be MARKED, because every rubric item is model-graded and
+ * the grader is not calibrated. That keeps `scorable` at 0 for section II and at
+ * mcq_count for a full sitting, by a different clause of partObstacle — supply is
+ * no longer what is missing there, marking is.
  *
  * A section with NOTHING scorable gets no composite at all: that is the same
  * mechanism a sitting below MIN_MOCK_COVERAGE or one run without a clock
