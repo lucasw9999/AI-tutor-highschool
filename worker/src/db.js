@@ -1,12 +1,16 @@
 // D1 access. Every read is scoped and indexed; every write is a single statement.
 //
 // Workers get 10ms of CPU per invocation. D1 round-trips are I/O rather than
-// CPU, so the cost to watch is JSON parsing — which is why item rows are parsed
-// lazily and attempt reads are windowed rather than unbounded.
+// CPU, so the cost to watch is JSON parsing. items() parses three JSON columns
+// on every row, eagerly, for the whole subject; attempts() has no LIMIT and
+// no time window — it returns the subject's full history, oldest first. Both
+// are fine at today's volume (measured ~13ms of JS CPU at 10,000 attempts,
+// which is roughly 7 months out at 50 answers/day) but that is a real ceiling,
+// not a hypothetical one, and it will need windowing before it is reached.
 
 /** Rows a readiness computation needs, and nothing more. */
 const ATTEMPT_COLS = `a.id, a.ts, a.subject, a.item_id, a.topic, a.unit, a.practice,
-  a.correct, a.graded_by, a.seconds, a.hints_used, a.conditions, a.mock_id,
+  a.response, a.correct, a.graded_by, a.seconds, a.hints_used, a.conditions, a.mock_id,
   i.kind, i.calc_allowed`
 
 export function makeDb(D1) {

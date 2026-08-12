@@ -2,7 +2,7 @@
 --
 -- The governing rule: nothing is stored that can be derived. Every number the
 -- student or parent sees is a query over `attempts`, joined to `topics` for
--- weights. `rollups` is a cache only, rebuildable from `attempts` alone.
+-- weights.
 
 CREATE TABLE IF NOT EXISTS items (
   id            TEXT PRIMARY KEY,
@@ -100,14 +100,4 @@ CREATE TABLE IF NOT EXISTS gaps (
   taught_at  TEXT,
   cleared_at TEXT,
   PRIMARY KEY (subject, topic, opened_at)
-);
-
--- Cache only. Never an authority: `npm run verify` rebuilds these from attempts
--- and asserts they match.
-CREATE TABLE IF NOT EXISTS rollups (
-  subject    TEXT NOT NULL,
-  key        TEXT NOT NULL,
-  value_json TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  PRIMARY KEY (subject, key)
 );
