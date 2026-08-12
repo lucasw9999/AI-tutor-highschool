@@ -5,6 +5,8 @@
 > **📅 Target sitting: Sat 6 Mar 2027 · register by Fri 19 Feb 2027 · retake slot Aug or Oct 2027.**
 > Two sittings to avoid, and why: **Sat 1 May 2027** falls 10 days before AP Precalculus (Tue 11 May 2027) and 11 before AP CSA (Wed 12 May 2027) — it burns the last revision weekend before both. **Sat 5 Jun 2027** is usable, but its registration closes **Fri 21 May 2027**, nine days after the AP CSA exam, so the deadline is easy to sleep through. If a device has to be borrowed from College Board, the request goes in **30+ days before test day** (by 4 Feb 2027 for a 6 Mar sitting).
 > *Dates verified 12 August 2026 against satsuite.collegeboard.org/sat/dates-deadlines. Full table in `README.md`.*
+>
+> **🎓 And before any of that: the PSAT window is 1–30 October 2026, and the *school* signs him up — there is no student deadline to hit, so it's easy to miss entirely.** As a sophomore that sitting is a **free official dress rehearsal** for 6 Mar 2027, not his National Merit attempt (that's widely understood to be October 2027, junior year — see `README.md`, which labels what is and isn't verified). Ask the counselor in week 1 whether he's rostered, and whether it's PSAT/NMSQT or PSAT 10.
 
 ---
 

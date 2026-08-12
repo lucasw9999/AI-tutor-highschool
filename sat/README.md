@@ -34,6 +34,41 @@ An **express, question-driven** Digital SAT tutor. **Goal: 1500+ on the Saturday
 
 ---
 
+## 🎓 The PSAT — the school signs him up, and the window is 1–30 October 2026
+
+*Verified **12 August 2026** against College Board's own pages (satsuite.collegeboard.org/psat-nmsqt/test-dates and the SAT Suite school/district pricing page).*
+
+**Lucas is a sophomore in 2026–27, so there are two PSATs in his future and they do completely different jobs. Don't confuse them.**
+
+| Sitting | What it actually is for him |
+|---|---|
+| **October 2026** (this fall, grade 10) | A **free-or-$18 official, full-length, proctored dress rehearsal** — five months before the 6 Mar 2027 SAT. **Not** his National Merit attempt. |
+| **October 2027** (grade 11) | The sitting **widely understood** to be his National Merit qualifier. Put it on the calendar *now* so it isn't discovered late. |
+
+### The October 2026 window
+- **Testing window: October 1–30, 2026.** College Board publishes only the *window* — **the school picks the day inside it.**
+- **He does not register himself.** College Board: *"Students taking SAT School Day or PSAT assessments do not need to register on their own."* / *"Schools or districts will handle the registration process."* **No student-facing deadline is published** — the school rosters him, which is exactly why this one gets missed.
+- **Fee: $18 list price** for the PSAT/NMSQT, and *"List pricing for the SAT Suite of Assessments will not change in 2026-27."* It *"may be paid for by a state, district, or school, or a combination of all three"* — so it may cost nothing. A low-income discount of *"up to a maximum of 45%"* exists, with a floor of *"$4 for PSAT/NMSQT, PSAT 10 and PSAT 8/9."*
+
+### Why the practice sitting is worth taking anyway
+This plan already has him doing full **Bluebook** practice tests at home. A real proctored administration is a strictly better dress rehearsal than anything he can arrange himself — real room, real timing, real strangers, real start-time nerves — and it costs **$18 or nothing**. Treat October 2026 as **the free official rehearsal for 6 March 2027**.
+
+### The National Merit part — read the labels carefully
+- **VERIFIED:** *"The Preliminary SAT/National Merit Scholarship Qualifying Test (PSAT/NMSQT) is the qualifying test for the National Merit Scholarship Program"*, NMSC *"is a cosponsor"*, and **"You cannot opt out of sending your scores to NMSC."**
+- **WIDELY UNDERSTOOD BUT UNVERIFIED:** that only the **junior-year** PSAT/NMSQT counts for National Merit. nationalmerit.org could not be reached when this was checked (12 August 2026), so it is **not** written here as fact. **Confirm at nationalmerit.org** (or with the counselor) before treating October 2027 as the only shot.
+- Deliberately **not** recorded here, because none of it could be retrieved: the qualifying **cutoffs**, the **Selection Index** formula, and the **notification timeline**. Don't backfill these from memory or a forum post.
+
+### ⚠️ There are two different sophomore tests, and only the counselor knows which one he gets
+Schools sometimes give sophomores **PSAT 10** — a *spring* test — instead of the fall PSAT/NMSQT. Which one Foothill offers is a question to **ask**, not to assume.
+
+### Ask the counselor in the first week of school
+1. Is Lucas **on the roster** for a PSAT during the **October 1–30, 2026** window?
+2. Is it the **PSAT/NMSQT** or **PSAT 10**?
+3. **Which date** did the school pick?
+4. Is there a **school sign-up deadline**, or a **fee to pay** — and to whom?
+
+---
+
 ## What's here
 | Path | What it is |
 |---|---|
