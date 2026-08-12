@@ -314,6 +314,93 @@ test('selection on a partially consumed bank', async (t) => {
 })
 
 // ---------------------------------------------------------------------------
+// A proctored sitting samples the paper; it does not remediate
+// ---------------------------------------------------------------------------
+
+test('sampling: mock skips the remediation priorities', async (t) => {
+  await t.test('a taught gap is NOT re-tested inside a sitting', () => {
+    const gaps = [{ topic: 'b', opened_at: ago(9), taught_at: ago(8), cleared_at: null }]
+    const base = { items: ITEMS, attempts: [], gaps, topicMeta: META, config: CFG, now: NOW }
+    assert.equal(pickNext(base).priority, 'gap_retest', 'ordinary practice still re-tests it')
+    assert.notEqual(
+      pickNext({ ...base, sampling: 'mock', mockId: 7 }).priority, 'gap_retest',
+      'a sitting stands in for the real exam, which does not re-test his gaps',
+    )
+  })
+
+  await t.test('the weakest topic does NOT drive a sitting', () => {
+    const attempts = [
+      attempt('a1', 'a', 0, 20), attempt('a2', 'a', 1, 19),
+      attempt('b1', 'b', 0, 18), attempt('b2', 'b', 0, 17),
+      attempt('c1', 'c', 1, 16), attempt('c2', 'c', 1, 15),
+    ]
+    const base = { items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW }
+    assert.equal(pickNext(base).priority, 'weakest', 'ordinary practice still works the weak topic')
+    const inMock = pickNext({ ...base, sampling: 'mock', mockId: 7 })
+    assert.equal(inMock.priority, 'mock_breadth')
+    assert.doesNotMatch(inMock.reason, /below the/, 'a sitting is not justified as remediation')
+  })
+
+  await t.test('a due spaced review does NOT drive a sitting', () => {
+    const attempts = [
+      attempt('a1', 'a', 0, 40), attempt('a2', 'a', 1, 39),
+      attempt('a3', 'a', 1, 38), attempt('a1', 'a', 1, 37),
+      ...['b', 'c'].flatMap((tp) => [1, 2, 3].map((i) => attempt(`${tp}${i}`, tp, 1, 30))),
+    ]
+    const base = { items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 20 }
+    assert.equal(pickNext(base).priority, 'review', 'ordinary practice still reviews it')
+    assert.equal(pickNext({ ...base, sampling: 'mock', mockId: 7 }).priority, 'mock_breadth')
+  })
+
+  await t.test('a sitting still fills a topic he has never attempted', () => {
+    // Coverage is not remediation: a topic with no attempts is part of the exam
+    // and a sitting that skipped it would not be a sitting of the paper.
+    const r = pickNext({ items: ITEMS, attempts: [], topicMeta: META, config: CFG, now: NOW, sampling: 'mock', mockId: 7 })
+    assert.equal(r.priority, 'coverage')
+  })
+
+  await t.test('the paper spreads across topics in proportion to exam weight', () => {
+    // Four items a topic, every one answered 60 days ago, so nothing is unseen
+    // and everything is servable again. b is at 0% — under ordinary practice it
+    // would take every question in the sitting.
+    const items = ['a', 'b', 'c'].flatMap((topic) =>
+      [1, 2, 3, 4].map((i) => ({ id: `${topic}${i}`, topic, unit: '1', kind: 'mcq', answer: 'A' })),
+    )
+    const history = items.map((it) => attempt(it.id, it.topic, it.topic === 'b' ? 0 : 1, 60))
+    assert.equal(
+      pickNext({ items, attempts: history, topicMeta: META, config: CFG, now: NOW }).item.topic, 'b',
+      'ordinary practice works the weak topic; the sitting below must not',
+    )
+
+    let attempts = history
+    const sat = []
+    const servedIds = []
+    for (let i = 0; i < 6; i++) {
+      const r = pickNext({ items, attempts, topicMeta: META, config: CFG, now: NOW, sampling: 'mock', mockId: 7 })
+      assert.equal(r.priority, 'mock_breadth')
+      sat.push(r.item.topic)
+      servedIds.push(r.item.id)
+      // Answered inside the sitting, exactly as api.js would have recorded it.
+      attempts = [...attempts, attempt(r.item.id, r.item.topic, 1, 0, { mock_id: 7, conditions: 'proctored_mock' })]
+    }
+
+    const count = (topic) => sat.filter((x) => x === topic).length
+    assert.deepEqual([...new Set(sat)].sort(), ['a', 'b', 'c'], `every topic must appear: ${sat.join(', ')}`)
+    assert.ok(count('a') > count('b'), `a is worth 35% and b 14%: ${sat.join(', ')}`)
+    assert.ok(count('c') >= count('b'), `c is worth 30% and b 14%: ${sat.join(', ')}`)
+    assert.equal(new Set(servedIds).size, 6, `no question may be asked twice in one sitting: ${servedIds.join(', ')}`)
+  })
+
+  await t.test('the same sitting replays identically however the bank is ordered', () => {
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 60))
+    const picks = [ITEMS, [...ITEMS].reverse(), [...ITEMS.slice(4), ...ITEMS.slice(0, 4)]].map(
+      (order) => pickNext({ items: order, attempts, topicMeta: META, config: CFG, now: NOW, sampling: 'mock', mockId: 7 }).item.id,
+    )
+    assert.equal(new Set(picks).size, 1, `order-dependent: ${picks.join(', ')}`)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // Teaching
 // ---------------------------------------------------------------------------
 

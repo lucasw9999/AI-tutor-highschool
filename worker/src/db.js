@@ -85,6 +85,28 @@ export function makeDb(D1) {
       return run(`UPDATE serves SET logged = 1 WHERE id = ?`, id)
     },
 
+    /**
+     * Spend a serve, and report whether THIS call was the one that spent it.
+     *
+     * @returns {Promise<number>} 1 when this call flipped the row, 0 when the
+     *          serve was already logged (or does not exist).
+     *
+     * The `AND logged = 0` is the whole point. A single UPDATE is atomic in D1 —
+     * there is no transaction available here — so of two concurrent /log calls on
+     * one serve id exactly one changes a row and the other gets 0. The
+     * unconditional markServeLogged() above cannot do this job: it changes a row
+     * for BOTH racers, so its count carries no information, and one answer became
+     * two attempt rows.
+     *
+     * The changed-row count sits in different places in the two drivers this runs
+     * against: D1 exposes it as `meta.changes`, node:sqlite (which the tests drive
+     * through a thin shim) as `changes`. Neither shape may be assumed.
+     */
+    async claimServe(id) {
+      const r = await run(`UPDATE serves SET logged = 1 WHERE id = ? AND logged = 0`, id)
+      return Number(r?.meta?.changes ?? r?.changes ?? 0)
+    },
+
     recordAttempt(a) {
       return run(
         `INSERT INTO attempts

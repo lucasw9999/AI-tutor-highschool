@@ -14,7 +14,10 @@
 // choice rather than a proven requirement.
 //
 // The design does rely on GETs being safe to repeat: every state change is
-// idempotent per serve id, so a retried Action cannot double-count.
+// idempotent per serve id, so a retried Action cannot double-count. /log spends
+// its serve id with a single conditional UPDATE (db.claimServe) before it writes
+// the attempt, so of two concurrent retries exactly one records an answer and the
+// other is refused — a read-then-write guard let both through.
 //
 //
 // The other governing rule: the model carries only what it cannot fake. It
@@ -193,9 +196,16 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     }
   }
 
-  // Inside a mock the selector must not chase remediation: a proctored sitting
-  // stands in for the real exam, which is not aimed at his weakest topic.
-  const choice = pickNext({ ...ctx, gaps: mockId ? [] : ctx.gaps, now })
+  // Inside a mock the selector samples the paper instead of teaching: a proctored
+  // sitting stands in for the real exam, which is not aimed at his weakest topic,
+  // his overdue reviews or his open gaps. Passing gaps: [] as well is deliberate
+  // belt and braces on the one number that can move readiness.
+  const choice = pickNext({
+    ...ctx,
+    gaps: mockId ? [] : ctx.gaps,
+    now,
+    ...(mockId != null && { sampling: 'mock', mockId }),
+  })
   if (!choice) throw new ApiError(409, 'every question is inside the no-repeat window; add items or wait')
 
   const serveId = await db.recordServe({ subject, item_id: choice.item.id, served_at: now, mock_id: mockId })
@@ -222,6 +232,8 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
 export async function handleLog({ db, serveId, response, hints = 0, config, configs = null, now }) {
   const serve = await db.serve(serveId)
   if (!serve) throw new ApiError(404, `unknown serve id ${serveId}`)
+  // Cheap early refusal for the ordinary replay, before any work is done. It is
+  // NOT the guard that makes this safe — see the claim below.
   if (serve.logged) throw new ApiError(409, `serve ${serveId} was already logged`)
 
   // The subject comes from the serve row; the standards must follow it, not the
@@ -233,6 +245,25 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
 
   const verdict = grade(item, response)
   const seconds = Math.max(0, Math.round((new Date(now) - new Date(serve.served_at)) / 1000))
+
+  // Spend the serve BEFORE the attempt is written, with a conditional UPDATE that
+  // reports whether it was this call that spent it.
+  //
+  // The check above is a read-then-write, and D1 offers no transaction here: two
+  // concurrent /log calls on one serve id both read logged = 0, both pass, and one
+  // answer becomes TWO attempt rows — which moves questions_answered, every
+  // per-unit floor and the composite off a single keystroke. Every endpoint is a
+  // GET that ChatGPT may retry, so this needed no unusual circumstances at all.
+  // claimServe is a single statement, which D1 executes atomically, so exactly one
+  // racer changes a row and the other is refused right here.
+  //
+  // The trade-off, taken deliberately: if this dies between the claim and the
+  // insert, the answer is LOST rather than double-counted. That is the correct
+  // direction. A lost answer can simply be asked again; a double-counted one
+  // silently corrupts the only numbers that move readiness.
+  if (!(await db.claimServe(serveId))) {
+    throw new ApiError(409, `serve ${serveId} was already logged`)
+  }
 
   await db.recordAttempt({
     ts: now,
@@ -249,7 +280,6 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     conditions: serve.mock_id ? 'proctored_mock' : hints ? 'tutored' : 'cold',
     mock_id: serve.mock_id,
   })
-  await db.markServeLogged(serveId)
 
   // A cold, unaided correct answer after the lesson is what closes a gap.
   const gaps = await db.gaps(serve.subject)
@@ -280,6 +310,14 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     }),
     ...(verdict.graded_by === 'model' && {
       note: 'Compare your work against the worked solution below. This is practice feedback and does not count toward readiness.',
+    }),
+    // An unparsed verdict used to return correct: null with no note at all, so he
+    // was told nothing: not right, not wrong, no reason, nothing to do next. The
+    // wording does not promise a re-grade of THIS question — the serve is spent
+    // and cannot be logged twice — only that the next one will read cleanly.
+    ...(verdict.graded_by === 'unparsed' && {
+      note: 'I could not read that as one answer, so nothing was graded — it does not count as wrong either. '
+        + 'Read the explanation below, and on the next one send just the letter ("B", not "B or C") so it can be graded.',
     }),
     status: summarize({ ctx, now }),
   }
