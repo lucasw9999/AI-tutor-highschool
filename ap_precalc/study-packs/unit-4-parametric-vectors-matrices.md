@@ -195,39 +195,70 @@ For 2×2:
 
 **P1 (easy).** Find the magnitude of `v = ⟨6, 8⟩`.
 <details><summary>Solution</summary>`‖v‖ = √(6² + 8²) = √(36+64) = √100 = 10`.</details>
+<!-- key: 10 -->
+<!-- accept: |v| = 10 -->
+<!-- accept: ||v|| = 10 -->
+<!-- topic: 4.6 -->
 
 **P2 (easy).** Compute `det([[5, 2], [3, 4]])`.
 <details><summary>Solution</summary>`(5)(4) − (2)(3) = 20 − 6 = 14`.</details>
+<!-- key: 14 -->
+<!-- accept: det = 14 -->
+<!-- topic: 4.9 -->
 
 **P3 (easy).** Eliminate the parameter: `x = 2t`, `y = t − 3`.
 <details><summary>Solution</summary>`t = x/2` → `y = x/2 − 3`. A line, slope ½, y-intercept −3.</details>
+<!-- key: y = x/2 - 3 -->
+<!-- accept: y = 0.5x - 3 -->
+<!-- accept: y = (1/2)x - 3 -->
+<!-- accept: y = (x/2) - 3 -->
+<!-- accept: y = x/2 - 3, slope 1/2, y-intercept -3 -->
+<!-- topic: 4.1 -->
 
 **P4 (medium).** `u = ⟨2, −3⟩`, `w = ⟨−1, 4⟩`. Find `2u − w` and `u · w`.
 <details><summary>Solution</summary>`2u = ⟨4, −6⟩`; `2u − w = ⟨4−(−1), −6−4⟩ = ⟨5, −10⟩`.  Dot: `(2)(−1)+(−3)(4) = −2 −12 = −14`.</details>
+<!-- topic: 4.6 -->
+<!-- note: deliberately NOT keyed. Half the answer is a vector, and its components are separated by a comma — which is also how a compound key separates its parts, so "<5,-10>" cannot be one part. Nor can the bracket style be pinned down: <5,-10>, (5,-10) and 5i-10j are all the same right answer. -->
 
 **P5 (medium).** Write parametric equations for the circle centered `(−3, 4)` with radius 6.
 <details><summary>Solution</summary>`x = −3 + 6cos t`, `y = 4 + 6sin t`, `t ∈ [0, 2π)`.</details>
+<!-- topic: 4.3 -->
+<!-- note: deliberately NOT keyed. "x = -3 + 6cos t" is equally correctly typed 6cos(t) - 3, 6*cos(t)-3, -3+6cos(t), and the pair has to be given together. -->
 
 **P6 (medium).** Identify the conic and give its center/radius: `4x² + 4y² − 16x + 8y − 20 = 0`.
 <details><summary>Solution</summary>Both squared, equal coeffs (4 and 4) → **circle**. Divide by 4: `x² + y² − 4x + 2y − 5 = 0`. Complete the square: `(x−2)² + (y+1)² = 5 + 4 + 1 = 10`. Center `(2, −1)`, radius `√10`.</details>
+<!-- topic: 4.5 -->
+<!-- note: deliberately NOT keyed. The centre is a parenthesised pair whose comma cannot sit inside one part of a compound key, and the radius is sqrt(10) in four typeable spellings. -->
 
 **P7 (medium).** Find the inverse of `A = [[2, 1], [5, 3]]`.
 <details><summary>Solution</summary>`det = (2)(3) − (1)(5) = 1`. `A⁻¹ = (1/1)·[[3, −1], [−5, 2]] = [[3, −1], [−5, 2]]`.</details>
+<!-- topic: 4.9 -->
+<!-- note: deliberately NOT keyed. A matrix answer is commas and brackets all the way down — [[3,-1],[-5,2]], [3 -1; -5 2] and a two-line layout are the same right answer. -->
 
 **P8 (medium).** Multiply `[[1, 0], [2, 3]] · [[4, 5], [6, 7]]`.
 <details><summary>Solution</summary>Row1: `[1·4+0·6, 1·5+0·7] = [4, 5]`. Row2: `[2·4+3·6, 2·5+3·7] = [8+18, 10+21] = [26, 31]`. → `[[4, 5], [26, 31]]`.</details>
+<!-- topic: 4.8 -->
+<!-- note: deliberately NOT keyed — a matrix answer, same as P7. -->
 
 **P9 (exam-level).** Identify the conic: `9x² − 4y² + 36x − 8y − 4 = 0`. (Just classify and give the center.)
 <details><summary>Solution</summary>`x²` coeff `+9`, `y²` coeff `−4` → **opposite signs → hyperbola**. Group: `9(x²+4x) − 4(y²+2y) = 4` → `9(x+2)² − 4(y+1)² = 4 + 36 − 4 = 36`. Divide by 36: `(x+2)²/4 − (y+1)²/9 = 1`. **Hyperbola**, center `(−2, −1)`, opens left/right.</details>
+<!-- topic: 4.5 -->
+<!-- note: deliberately NOT keyed — the centre is a parenthesised pair, as in P6. -->
 
 **P10 (exam-level).** A particle moves with `p(t) = ⟨t − 1, t²⟩`. (a) Where is it at `t = 2`? (b) Find the average rate of change of the y-coordinate on `[0, 2]`. (c) Eliminate the parameter.
 <details><summary>Solution</summary>(a) `p(2) = ⟨1, 4⟩`, i.e. point `(1, 4)`. (b) `(y(2)−y(0))/(2−0) = (4 − 0)/2 = 2`. (c) `t = x + 1` → `y = (x+1)²`.</details>
+<!-- topic: 4.7 -->
+<!-- note: not keyable — three lettered sub-parts. (Its (b) is topic 4.2, which no practice item in this pack covers.) -->
 
 **P11 (exam-level).** Transition matrix `A = [[0.7, 0.4], [0.3, 0.6]]`, current state `⟨60, 40⟩`. Find the next state.
 <details><summary>Solution</summary>`A·⟨60,40⟩ = ⟨0.7·60 + 0.4·40, 0.3·60 + 0.6·40⟩ = ⟨42 + 16, 18 + 24⟩ = ⟨58, 42⟩`.</details>
+<!-- topic: 4.11 -->
+<!-- note: deliberately NOT keyed — a vector answer, as in P4. -->
 
 **P12 (exam-level).** Apply the linear transformation `A = [[2, 0], [0, 3]]` (a scaling) to the unit square's corner `⟨1, 1⟩`, and state the area scaling factor.
 <details><summary>Solution</summary>`A·⟨1,1⟩ = ⟨2, 3⟩`. Area scale factor = `det(A) = (2)(3) − 0 = 6` (the unit square's area is multiplied by 6).</details>
+<!-- topic: 4.10 -->
+<!-- note: deliberately NOT keyed — half the answer is the vector <2,3>, as in P4. -->
 
 ---
 
