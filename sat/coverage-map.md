@@ -18,22 +18,26 @@
 **It's multistage ADAPTIVE:** each section's **Module 1** sets whether **Module 2** is harder or easier — *and your Module-1 performance sets your score ceiling.* **→ Accuracy early matters most.**
 
 ## Reading & Writing — 4 domains (your `study-packs/`)
-| Domain | What it tests | Pack |
-|---|---|---|
-| **Craft & Structure** *(~28%)* | words-in-context, text structure/purpose, cross-text connections | `rw-reading.md` |
-| **Information & Ideas** *(~26%)* | central ideas, detail, command of evidence (textual + **quantitative/graphs**), inference | `rw-reading.md` |
-| **Standard English Conventions** (grammar) *(~26%)* 🔥 | punctuation, sentence boundaries, agreement, verbs, modifiers, parallelism | `rw-grammar.md` — *highest ROI; rules are finite & learnable* |
-| **Expression of Ideas** *(~20%)* | transitions, rhetorical synthesis ("notes" questions) | `rw-expression.md` |
+*Percentages and question counts are both out of the **50 scored** RW questions (54 asked, 4 are unscored pretest items). Verified against College Board 12 August 2026.*
+
+| Domain | Share | Questions | What it tests | Pack |
+|---|---|---|---|---|
+| **Craft & Structure** | ~28% | **13–15** | words-in-context, text structure/purpose, cross-text connections | `rw-reading.md` |
+| **Information & Ideas** | ~26% | **12–14** | central ideas, detail, command of evidence (textual + **quantitative/graphs**), inference | `rw-reading.md` |
+| **Standard English Conventions** (grammar) 🔥 | ~26% | **11–15** | punctuation, sentence boundaries, agreement, verbs, modifiers, parallelism | `rw-grammar.md` — *highest ROI; rules are finite & learnable* |
+| **Expression of Ideas** | ~20% | **8–12** | transitions, rhetorical synthesis ("notes" questions) | `rw-expression.md` |
 
 ## Math — 4 domains (your `study-packs/`)
-| Domain | What it tests | Pack |
-|---|---|---|
-| **Algebra** *(~13–15 Q)* 🔥 | linear equations/inequalities/systems, linear functions | `math-algebra.md` |
-| **Advanced Math** *(~13–15 Q)* 🔥 | quadratics, nonlinear, exponentials, functions, polynomials | `math-advanced.md` |
-| **Problem-Solving & Data Analysis** *(~5–7 Q)* | ratios/%, rates, stats, graphs, probability | `math-problem-solving-data.md` |
-| **Geometry & Trigonometry** *(~5–7 Q)* | lines/angles, triangles, circles, area/volume, right-triangle trig | `math-geometry-trig.md` |
+*Same idea: out of the **40 scored** Math questions (44 asked, 4 pretest). Verified against College Board 12 August 2026.*
 
-> **Math priority:** Algebra + Advanced Math ≈ **60%+ of the 44 math questions** — that's where the points (and the harder Module-2 items) live. Drill those two first; PS&DA and Geometry/Trig are smaller but easy points. *(Per-domain counts verified vs College Board.)*
+| Domain | Share | Questions | What it tests | Pack |
+|---|---|---|---|---|
+| **Algebra** 🔥 | ~35% | **13–15** | linear equations/inequalities/systems, linear functions | `math-algebra.md` |
+| **Advanced Math** 🔥 | ~35% | **13–15** | quadratics, nonlinear, exponentials, functions, polynomials | `math-advanced.md` |
+| **Problem-Solving & Data Analysis** | ~15% | **5–7** | ratios/%, rates, stats, graphs, probability | `math-problem-solving-data.md` |
+| **Geometry & Trigonometry** | ~15% | **5–7** | lines/angles, triangles, circles, area/volume, right-triangle trig | `math-geometry-trig.md` |
+
+> **Math priority:** Algebra + Advanced Math = 35% + 35% = **~70% of Math** — about **28 of the 40 scored** questions. That's where the points (and the harder Module-2 items) live. Drill those two first; PS&DA and Geometry/Trig are smaller but easy points. *(Shares and per-domain counts verified vs College Board 12 August 2026. Note the shares are of the 40 **scored** items, not the 44 asked — against 44 the same two domains would read ~64%, which is why you'll see a lower number quoted elsewhere.)*
 
 ## References (`reference/`)
 `desmos-calculator-skills` (a Math superpower) · `test-strategy-and-pacing` (adaptive game-plan) · `grammar-cheatsheet` (memorize) · **`error-log`** (the #1 lever to 1500+) · `scoring-and-adaptive` (what 1500+ needs) · `vocab-in-context` · `practice-resources` (best official + third-party prep, and how to use each).
