@@ -85,49 +85,68 @@ export function qualifyingWindow({ config, mocks, now }) {
 }
 
 /**
- * Assemble the performance checks for a qualifying window. Each entry is
- * { id, label, met, detail }, so the caller can name the single thing standing
- * between the student and readiness instead of showing a bare number.
+ * Every performance check a subject will be judged on, as {id, label}.
+ *
+ * Single source of truth for the labels, so the "pending" report and the
+ * evaluated report can never drift apart in wording or in which checks exist.
  */
-function performanceChecks({ config, window, attempts, calibrated }) {
+export function plannedChecks(config) {
+  const r = config.readiness
+  const out = [
+    { id: 'composite_mean', label: `Mean composite across ${r.consecutive_qualifying_mocks} mocks ≥ ${r.composite_mean_min}%` },
+    { id: 'composite_floor', label: `Lowest single mock ≥ ${r.composite_floor_min}%` },
+    { id: 'non_declining', label: `No drop steeper than ${r.max_decline_between_mocks} points between mocks` },
+    { id: 'mcq_overall', label: `Multiple choice ≥ ${r.mcq_overall_min}%` },
+  ]
+  for (const unit of config.units) {
+    out.push({ id: `unit_${unit}`, label: `Unit ${unit} ≥ ${r.per_unit_min}%` })
+  }
+  if (r.dominant_practice) {
+    for (const p of config.practices) {
+      const min = p === r.dominant_practice ? r.dominant_practice_min : r.other_practice_min
+      out.push({ id: `practice_${p}`, label: `${p} ≥ ${min}%` })
+    }
+  }
+  if (r.no_calc_min != null) {
+    out.push({ id: 'calc_0', label: `No-calculator section ≥ ${r.no_calc_min}%` })
+    out.push({ id: 'calc_1', label: `Calculator section ≥ ${r.calc_min}%` })
+  }
+  out.push({ id: 'blanks', label: `At most ${r.max_blanks} blank response across the window` })
+  out.push({ id: 'frq', label: `Free response ≥ ${r.frq_min_pct}%` })
+  return out
+}
+
+/**
+ * Evaluate the planned checks against a qualifying window.
+ *
+ * Returns a Map of id -> {met, detail}; the caller zips it with plannedChecks so
+ * labels live in exactly one place.
+ */
+function evaluateChecks({ config, window, attempts, calibrated }) {
   const r = config.readiness
   const ids = new Set(window.map((m) => m.id))
   const mockAttempts = attempts.filter((a) => ids.has(a.mock_id))
   const composites = window.map((m) => m.composite_pct)
-  const checks = []
+  const out = new Map()
 
   const mean = composites.reduce((s, x) => s + x, 0) / composites.length
-  checks.push({
-    id: 'composite_mean',
-    label: `Mean composite across ${window.length} mocks ≥ ${r.composite_mean_min}%`,
-    met: mean >= r.composite_mean_min,
-    detail: `${mean.toFixed(1)}%`,
-  })
+  out.set('composite_mean', { met: mean >= r.composite_mean_min, detail: `${mean.toFixed(1)}%` })
 
   const floor = Math.min(...composites)
-  checks.push({
-    id: 'composite_floor',
-    label: `Lowest single mock ≥ ${r.composite_floor_min}%`,
-    met: floor >= r.composite_floor_min,
-    detail: `${floor.toFixed(1)}%`,
-  })
+  out.set('composite_floor', { met: floor >= r.composite_floor_min, detail: `${floor.toFixed(1)}%` })
 
   let worstDrop = 0
   for (let i = 1; i < composites.length; i++) {
     worstDrop = Math.max(worstDrop, composites[i - 1] - composites[i])
   }
-  checks.push({
-    id: 'non_declining',
-    label: `No drop steeper than ${r.max_decline_between_mocks} points between mocks`,
+  out.set('non_declining', {
     met: worstDrop <= r.max_decline_between_mocks,
     detail: worstDrop > 0 ? `worst drop ${worstDrop.toFixed(1)} pts` : 'no decline',
   })
 
   const mcq = mockAttempts.filter((a) => a.kind === 'mcq')
   const mcqPct = pct(mcq)
-  checks.push({
-    id: 'mcq_overall',
-    label: `Multiple choice ≥ ${r.mcq_overall_min}%`,
+  out.set('mcq_overall', {
     met: mcqPct != null && mcqPct >= r.mcq_overall_min,
     detail: mcqPct == null ? 'no MCQ attempts in window' : `${mcqPct.toFixed(1)}% of ${mcq.length}`,
   })
@@ -135,9 +154,7 @@ function performanceChecks({ config, window, attempts, calibrated }) {
   const byUnit = breakdown(mockAttempts, 'unit')
   for (const unit of config.units) {
     const got = byUnit[unit]
-    checks.push({
-      id: `unit_${unit}`,
-      label: `Unit ${unit} ≥ ${r.per_unit_min}%`,
+    out.set(`unit_${unit}`, {
       met: got != null && got.pct >= r.per_unit_min,
       detail: got == null ? 'never tested under mock conditions' : `${got.pct.toFixed(0)}% of ${got.n}`,
     })
@@ -149,24 +166,17 @@ function performanceChecks({ config, window, attempts, calibrated }) {
     for (const p of config.practices) {
       const min = p === r.dominant_practice ? r.dominant_practice_min : r.other_practice_min
       const got = byPractice[p]
-      checks.push({
-        id: `practice_${p}`,
-        label: `${p} ≥ ${min}%`,
+      out.set(`practice_${p}`, {
         met: got != null && got.pct >= min,
         detail: got == null ? 'never tested under mock conditions' : `${got.pct.toFixed(0)}% of ${got.n}`,
       })
     }
   }
   if (r.no_calc_min != null) {
-    for (const [flag, min, name] of [
-      [0, r.no_calc_min, 'No-calculator'],
-      [1, r.calc_min, 'Calculator'],
-    ]) {
+    for (const [flag, min] of [[0, r.no_calc_min], [1, r.calc_min]]) {
       const set = mockAttempts.filter((a) => a.calc_allowed === flag)
       const p = pct(set)
-      checks.push({
-        id: `calc_${flag}`,
-        label: `${name} section ≥ ${min}%`,
+      out.set(`calc_${flag}`, {
         met: p != null && p >= min,
         detail: p == null ? 'never tested under mock conditions' : `${p.toFixed(0)}% of ${set.length}`,
       })
@@ -174,35 +184,30 @@ function performanceChecks({ config, window, attempts, calibrated }) {
   }
 
   const blanks = window.reduce((n, m) => n + (m.blanks ?? 0), 0)
-  checks.push({
-    id: 'blanks',
-    label: `At most ${r.max_blanks} blank response across the window`,
-    met: blanks <= r.max_blanks,
-    detail: `${blanks} blank${blanks === 1 ? '' : 's'}`,
-  })
+  out.set('blanks', { met: blanks <= r.max_blanks, detail: `${blanks} blank${blanks === 1 ? '' : 's'}` })
 
   // FRQ evidence is quarantined until the grader is proven. Reporting an FRQ
   // percentage scored by the same model that wrote the rubric would measure
   // self-consistency, not accuracy.
-  const frq = mockAttempts.filter((a) => a.kind === 'frq')
   if (!calibrated) {
-    checks.push({
-      id: 'frq',
-      label: 'Free response scored against a calibrated grader',
+    out.set('frq', {
       met: false,
       detail: 'grader not yet calibrated against an officially scored response — FRQ evidence excluded',
     })
   } else {
-    const frqPct = pct(frq)
-    checks.push({
-      id: 'frq',
-      label: `Free response ≥ ${r.frq_min_pct}%`,
+    const frqPct = pct(mockAttempts.filter((a) => a.kind === 'frq'))
+    out.set('frq', {
       met: frqPct != null && frqPct >= r.frq_min_pct,
-      detail: frqPct == null ? 'no FRQ attempts in window' : `${frqPct.toFixed(0)}% of ${frq.length}`,
+      detail: frqPct == null ? 'no FRQ attempts in window' : `${frqPct.toFixed(0)}%`,
     })
   }
 
-  return checks
+  return out
+}
+
+function performanceChecks({ config, window, attempts, calibrated }) {
+  const results = evaluateChecks({ config, window, attempts, calibrated })
+  return plannedChecks(config).map(({ id, label }) => ({ id, label, ...results.get(id) }))
 }
 
 /**
@@ -237,11 +242,22 @@ export function computeReadiness({ config, mocks = [], attempts = [], coverage =
   })
 
   if (!coverageMet || !window) {
+    // Report the whole bar, not just the first hurdle. The performance checks
+    // cannot be evaluated without a window, so they are listed as NOT YET
+    // MEASURED rather than as failures — claiming a student fell short of a
+    // standard he was never assessed against would be its own false statement.
+    const pending = plannedChecks(config).map(({ id, label }) => ({
+      id,
+      label,
+      met: false,
+      pending: true,
+      detail: `not yet measurable — needs ${r.consecutive_qualifying_mocks} qualifying proctored mocks`,
+    }))
     return {
       readiness_pct: 0,
       ready: false,
       first_unmet: !coverageMet ? 'coverage' : 'mock_window',
-      criteria,
+      criteria: [...criteria, ...pending],
       advisories,
     }
   }

@@ -1,0 +1,16 @@
+name = "ap-tutor"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# Keys are set with `wrangler secret put`, never in this file.
+#   wrangler secret put STUDENT_KEY
+#   wrangler secret put PARENT_KEY
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ap-tutor"
+# Filled in by `wrangler d1 create ap-tutor`.
+database_id = "PLACEHOLDER_SET_AT_DEPLOY"
+
+[observability]
+enabled = true
