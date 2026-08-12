@@ -322,3 +322,95 @@ test('B6: nothing but the explicit flag can force a write', (t) => {
     assert.deepEqual(wroteFiles(dir), [], `${JSON.stringify(attempt)} must not write anything`)
   }
 })
+
+// --- B7: free response reaches the build at all ----------------------------
+//
+// 45% of the CSA exam score and all 25 of its free-response points used to stop
+// at the markdown: parse-mcq.js names five mcq-*.md files, nothing named
+// frq-q*.md, and the summary line reported a healthy "items= 218" with not one
+// free-response question in it. These pin the wiring, and pin that it cannot
+// half-land.
+
+const Q1 = 'frq-q1-methods-control.md'
+
+test('B7: the compiled CSA bank holds all 20 free-response items, five per question type', () => {
+  const r = compile()
+  const frq = r.items.filter((i) => i.subject === 'ap_csa' && i.kind === 'frq')
+  assert.equal(frq.length, 20)
+  assert.equal(r.frq.items, 20)
+  assert.deepEqual(r.frq.byType, { Q1: 5, Q2: 5, Q3: 5, Q4: 5 })
+  // 7 + 7 + 5 + 6 = the 25 free-response points of one real paper, five papers over.
+  assert.equal(r.frq.points, 125)
+  for (const it of frq) {
+    assert.ok(it.rubric.criteria.length === it.points, `${it.id} rubric must itemize every point`)
+    assert.equal(it.answer, null, `${it.id} is rubric-scored`)
+    assert.ok(it.explanation, `${it.id} needs a worked solution — build.js requires one of every model-graded item`)
+  }
+})
+
+test('B7: an FRQ item takes its unit from the topics table, as to-sql.js does', () => {
+  const r = compile()
+  const units = new Map(r.topics.filter((t) => t.subject === 'ap_csa').map((t) => [t.id, t.unit]))
+  for (const it of r.items.filter((i) => i.kind === 'frq')) {
+    assert.ok(it.unit, `${it.id} must land in a unit or it is invisible to every per-unit floor`)
+    assert.equal(it.unit, units.get(it.topic), `${it.id}: unit must come from the topic row, not the id's prefix`)
+  }
+})
+
+test('B7: the free-response items trip no gate — the build is no worse for having them', () => {
+  const r = compile()
+  const named = r.errors.filter((e) => /csa-frq-/.test(e))
+  assert.deepEqual(named, [], 'every FRQ item must satisfy validate() and the model-graded contract')
+})
+
+test('B7: the per-subject summary breaks items down by kind', () => {
+  // A single total is exactly what let "items= 218" look healthy while the
+  // free-response half of the exam was missing entirely.
+  const rows = summary(compile())
+  assert.equal(rows.ap_csa.itemsByKind.frq, 20)
+  assert.equal(rows.ap_csa.itemsByKind.mcq, 218)
+  for (const [, c] of Object.entries(rows)) {
+    assert.equal(
+      Object.values(c.itemsByKind).reduce((n, x) => n + x, 0), c.items,
+      'the per-kind counts must account for every item of the subject',
+    )
+  }
+})
+
+test('B7: the INCOMPLETE list discloses that FRQ topics are tagged per file, not per item', () => {
+  const lines = incompleteReport(compile()).join('\n')
+  assert.match(lines, /free-response item\(s\) carry the FIRST topic their file declares/)
+  assert.match(lines, /1\.15, 1\.13, 4\.8, 4\.5/, 'and names the four topics that carries')
+})
+
+test('B7: teaching rows are untouched by FRQ ingestion', () => {
+  // buildTeaching takes a topic's FIRST item explanation as its worked example. An
+  // MCQ's answer-key rationale is a worked example of that one topic; an FRQ's
+  // sample solution is a whole class spanning several. So the MCQ must stay first.
+  const r = compile()
+  for (const topic of ['1.15', '1.13', '4.8', '4.5']) {
+    const row = r.teaching.find((t) => t.subject === 'ap_csa' && t.topic === topic)
+    const firstMcq = r.items.find((i) => i.subject === 'ap_csa' && i.kind === 'mcq' && i.topic === topic && i.explanation)
+    assert.equal(row.worked_example, firstMcq.explanation, `topic ${topic}'s worked example must stay its first MCQ`)
+  }
+})
+
+test('B7: a refused FRQ parse is a build ERROR and yields NO free-response items', () => {
+  // parse-frq.js does not return a partial bank, and build.js must not invent one:
+  // a bank silently missing one of twenty FRQs is the failure mode that shipped 22
+  // of 48 Precalc items under a "success" line.
+  const r = compile(patched(Q1, (t) => t.replace(/### Practice FRQ 5 — [\s\S]*?(?=## \(c\))/, '')))
+  assert.equal(r.items.filter((i) => i.kind === 'frq').length, 0, 'all or nothing')
+  assert.equal(r.frq.items, 0)
+  assert.ok(
+    r.errors.some((e) => /FRQ ingestion refused/.test(e) && e.includes(Q1)),
+    `expected the refusal to be a build error, got:\n  ${brief(r.errors)}`,
+  )
+})
+
+test('B7: the MCQ bank is unchanged by the FRQ wiring', () => {
+  // The two parsers read different files; if this number moves, one of them has
+  // started reading the other's content.
+  const r = compile()
+  assert.equal(r.items.filter((i) => i.subject === 'ap_csa' && i.kind === 'mcq').length, 218)
+})
