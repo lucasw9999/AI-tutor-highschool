@@ -3,7 +3,10 @@ import assert from 'node:assert/strict'
 import { readFileSync, existsSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { makeDb } from '../src/db.js'
-import { handleNext, handleLog, handleTaught, handleMockStart, handleMockSubmit, handleStatus, handleDashboard, ApiError } from '../src/api.js'
+import {
+  handleNext, handleLog, handleTaught, handleMockStart, handleMockSubmit, handleStatus, handleDashboard,
+  ApiError, MOCK_TIME_SLACK, MAX_ITEM_SHARE_OF_BUDGET, MIN_MOCK_COVERAGE,
+} from '../src/api.js'
 
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
 const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', import.meta.url)))
@@ -837,18 +840,40 @@ withSeed('an answer given after the sitting closed cannot be added to it', async
 // ---------------------------------------------------------------------------
 
 /** Sit `n` questions of a mock, right off the real key, at a fixed pace. */
-async function sitMock({ db, mock, n, spacing, seconds = 60, longest = null }) {
+async function sitMock({ db, mock, n, spacing, seconds = 60 }) {
   let answered = 0
   for (let i = 0; answered < n; i++) {
     const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(answered * spacing), mockId: mock })
     if (q.type !== 'question') continue
     const item = await db.item((await db.serve(q.serve)).item_id)
-    // `longest` lets one single question absorb an implausible amount of time
-    // while the sitting as a whole stays inside its budget.
-    const took = longest != null && answered === n - 1 ? longest : seconds
-    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(answered * spacing + took) })
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(answered * spacing + seconds) })
     answered++
   }
+}
+
+/**
+ * Sit a mock on a real clock, every answer right off the real key.
+ *
+ * `spans[i]` is how long the i-th question sits between being handed out and
+ * being answered; `gap` is the dead time between one answer and the next
+ * question. Unlike sitMock above, the clock is CUMULATIVE, so a long interval
+ * pushes everything after it later — which is what a break in the middle of a
+ * sitting actually does, and the difference the per-question rule turns on.
+ *
+ * @returns {Promise<number>} seconds from the first question handed out to the
+ *          last answer recorded: exactly the interval sittingTiming measures.
+ */
+async function sitPaced({ db, mock, spans, gap = 0 }) {
+  let clock = 0
+  for (const [i, took] of spans.entries()) {
+    if (i) clock += gap
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(clock), mockId: mock })
+    assert.equal(q.type, 'question', 'a sitting must never be interrupted by a lesson')
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    clock += took
+    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(clock) })
+  }
+  return clock
 }
 
 withSeed('a four-hour sitting of a ninety-minute section is not exam-condition evidence', async () => {
@@ -913,24 +938,119 @@ withSeed('a four-hour sitting of a ninety-minute section is not exam-condition e
   )
 })
 
-withSeed('one question that absorbs half the section is not exam-condition evidence either', async () => {
+withSeed('a sitting with one long break, still finished inside its allowance, is a real mock', async () => {
   const { db } = realDb()
   const expected = CSA.exam.mcq_count
+  const budget = CSA.exam.mcq_minutes
   const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
 
-  // 41 questions at a brisk one a minute, then one question left open for 50
-  // minutes. The sitting as a WHOLE lands at 91 minutes against a 90-minute
-  // budget — inside any humane slack — so only the per-question evidence shows
-  // that one answer was not produced under exam conditions.
-  await sitMock({ db, mock: m.mock, n: expected, spacing: 60, seconds: 30, longest: 50 * 60 })
+  // 42 of 42 right off the real key at exam pace, with ONE fifty-minute break: he
+  // ate dinner with a question still on screen. The sitting as a whole lands at
+  // 118 minutes against the 135 a 90-minute section may take, so the clock says
+  // this was a mock. The per-question rule used to discard the entire afternoon
+  // for exactly the interruption MOCK_TIME_SLACK is sized for — "a human needs the
+  // bathroom" — and told him he had spent fifty minutes on one question, which is
+  // not what happened: what is measured is serve-to-answer latency, not time on
+  // task, and the server cannot tell a break from a long think.
+  const spans = [...Array(expected - 1).fill(60), 50 * 60]
+  const elapsed = await sitPaced({ db, mock: m.mock, spans, gap: 40 })
+  const cap = budget * 60 * MAX_ITEM_SHARE_OF_BUDGET
+  assert.ok(elapsed / 60 > budget, `the fixture must genuinely overrun the ${budget}-minute budget`)
+  assert.ok(elapsed / 60 < budget * MOCK_TIME_SLACK, `and stay inside the ${budget * MOCK_TIME_SLACK} allowed`)
+  assert.ok(Math.max(...spans) > cap, `with one interval past the ${cap / 60}-minute per-question cap`)
 
-  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(expected * 60 + 50 * 60 + 120) })
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(elapsed + 300) })
+  assert.equal(r.answered, expected, 'the whole section was sat, so coverage is not in question')
+  assert.equal(r.counted, true, 'one break inside the total allowance is what the slack is FOR')
+  assert.equal(r.composite_pct, 100, 'every answer came off the real key, and none of it may be thrown away')
+  assert.equal(r.status.proctored_mocks, 1, 'and it counts as a scored proctored mock')
+  assert.ok(
+    !r.status.advisories.some((a) => /not scored/i.test(a)),
+    `a scored sitting must not also be advertised as unscored: ${JSON.stringify(r.status.advisories)}`,
+  )
+})
+
+withSeed('a sitting put down twice, each time for half the section, is still not exam-condition evidence', async () => {
+  const { db } = realDb()
+  const expected = CSA.exam.mcq_count
+  const budget = CSA.exam.mcq_minutes
+  const allowed = Math.round(budget * MOCK_TIME_SLACK)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  // 40 questions at half a minute each, and TWO questions left sitting for fifty
+  // minutes apiece. The total is 120 minutes — inside the 135 a 90-minute section
+  // may take — so the total-time bar says nothing at all here, and only the
+  // per-question evidence shows what this was. One break is forgiven; the second
+  // is not a break, it is an afternoon spent with the paper open.
+  const spans = [...Array(expected - 2).fill(30), 50 * 60, 50 * 60]
+  const elapsed = await sitPaced({ db, mock: m.mock, spans })
+  assert.ok(
+    elapsed / 60 <= budget * MOCK_TIME_SLACK,
+    `the total must stay inside its ${allowed}-minute allowance, so the per-question rule is the only thing refusing it`,
+  )
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(elapsed + 300) })
   assert.equal(r.answered, expected, 'coverage is not the defect here')
-  assert.equal(r.composite_pct, null, 'a question that ate half the section cannot be scored as exam evidence')
+  assert.equal(r.composite_pct, null, 'a paper set down twice for half the section is not exam evidence')
   assert.equal(r.counted, false)
   assert.match(r.basis, /NOT scored/)
-  assert.match(r.basis, /50 minutes|one question|single question/i, 'the basis must name the outlier')
+  assert.match(r.basis, /50 minutes|one question|two of its questions/i, 'the basis must name the intervals it refused')
+  // The total-time clause is already gated on the total-time flag here, and must
+  // stay that way: this sitting's span never breached anything.
+  assert.doesNotMatch(r.basis, /answers span \d+ minutes/, 'the total was inside its allowance; nothing may say otherwise')
+
+  // Q4-A2: the advisory rides on EVERY later response, and it was printing the
+  // elapsed-versus-budget sentence unconditionally — "ran 120 minutes against a
+  // 90-minute section ... past the 1.5x of the budget a sitting may overrun and
+  // still count" — which is arithmetically false about numbers he can check.
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(elapsed + 900) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `the sitting must stay visible: ${JSON.stringify(s.advisories)}`)
+  assert.match(adv, /unanswered/i, 'the advisory must name the reason that actually tripped')
+  assert.doesNotMatch(
+    adv, new RegExp(`ran \\d+ minutes against a ${budget}-minute section`),
+    `the total never breached its allowance, so the advisory may not say it did: ${adv}`,
+  )
+  assert.doesNotMatch(
+    adv, /may overrun and still count/,
+    `only the total-time bar can be "overrun", and this sitting did not overrun it: ${adv}`,
+  )
   assert.equal(r.status.proctored_mocks, 0)
+})
+
+withSeed('a sitting that is both short AND untimed names both reasons, on every surface', async () => {
+  const { db } = realDb()
+  const budget = CSA.exam.mcq_minutes
+  const floor = Math.round(MIN_MOCK_COVERAGE * 100)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  // 12 of 42, spread over four hours: two independent reasons this cannot become a
+  // score, and fixing only one of them fixes nothing. The submit basis named both;
+  // the advisory suppressed `short` whenever `untimed` fired and then signed off
+  // with "re-sit one against a clock to turn it into a score" — false, because a
+  // timed 12-of-42 sitting gets no composite either.
+  const spans = Array(12).fill(60)
+  const elapsed = await sitPaced({ db, mock: m.mock, spans, gap: 21 * 60 })
+  assert.ok(elapsed / 60 > budget * MOCK_TIME_SLACK, 'the fixture must genuinely be untimed')
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(elapsed + 300) })
+  assert.equal(r.counted, false)
+  assert.equal(r.composite_pct, null)
+  assert.match(r.basis, new RegExp(`short of the ${floor}% of the section`), 'the basis names the coverage reason')
+  assert.match(r.basis, /run against a clock/, 'and the timing reason')
+
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(elapsed + 900) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `the sitting must stay visible: ${JSON.stringify(s.advisories)}`)
+  assert.match(adv, /minutes/, 'the advisory names the timing reason')
+  assert.match(
+    adv, new RegExp(`under the ${floor}% of the section`),
+    `and it must ALSO name the coverage reason, or he is told to fix the wrong one thing: ${adv}`,
+  )
+  assert.match(
+    adv, /cover the section as well/,
+    `a timed re-sit of 12 questions still produces no composite, so the advisory may not promise it would: ${adv}`,
+  )
 })
 
 withSeed('a sitting that overruns by a few minutes is still a real mock', async () => {

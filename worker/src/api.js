@@ -490,12 +490,23 @@ function sectionMinutes(section, e = {}) {
  * with a different result, and calling it exam evidence is the overstatement this
  * whole system exists to prevent.
  *
- * WHY A PER-QUESTION CAP TOO: the total can stay inside the budget while one
- * question absorbs an hour — 41 answers at speed, then the last one looked up.
- * Half the section's entire budget on a single question is not thinking under
- * time pressure at any section shape (45 minutes of a 90-minute MCQ section, 45
- * of one Precalc FRQ set, 90 of a full sitting), and on the real exam it is not
- * survivable, so nothing legitimate is caught by it.
+ * WHY A PER-QUESTION CAP TOO, AND WHY ONE BREAK IS FORGIVEN: the total can stay
+ * inside the budget while the paper is set down for an hour at a time — 41
+ * answers at speed, then one question left open all evening. But what the server
+ * can actually measure is the interval from a question being HANDED OUT to its
+ * answer arriving, which is serve-to-answer latency and not time on task: fifty
+ * minutes on the clock behind one question is a student who ate dinner just as
+ * readily as one who looked the answer up, and nothing here can tell them apart.
+ * So the cap is applied to PACE rather than to presence: the single longest
+ * interval is forgiven outright, as the one break MOCK_TIME_SLACK is already
+ * written to budget for, and the cap then falls on the longest interval that is
+ * left. Half the section's entire budget on a second question, after a break has
+ * already been allowed for, is not one interruption at any section shape (45
+ * minutes of a 90-minute MCQ section, 45 of one Precalc FRQ set, 90 of a full
+ * sitting) — it is an afternoon spent with the paper open. The total-time bar is
+ * what still refuses a genuinely untimed sitting: a four-hour "90-minute
+ * section" runs past its allowance whether the time went into one question or
+ * forty-two.
  *
  * WHAT HAPPENS THEN — disclosed, never discarded. The answers stay on the
  * record and still count as practice; the sitting is stored with no composite,
@@ -513,8 +524,8 @@ export const MAX_ITEM_SHARE_OF_BUDGET = 0.5
  * @returns {null|object} null when there is nothing to judge — no budget for the
  *          section, or no usable attempt timestamps — because inventing a
  *          verdict from missing evidence is the same failure in the other
- *          direction. Otherwise the measured interval, the longest single
- *          answer, and whether either is past its bar.
+ *          direction. Otherwise the measured interval, the two longest single
+ *          answers, and whether either bar is past.
  */
 function sittingTiming({ section, exam = {}, attempts = [] }) {
   const budget_minutes = sectionMinutes(section, exam)
@@ -522,7 +533,7 @@ function sittingTiming({ section, exam = {}, attempts = [] }) {
 
   let firstServed = null
   let lastAnswer = null
-  let longest_item_seconds = 0
+  const spans = []
   for (const a of attempts) {
     const ts = Date.parse(a.ts)
     if (!Number.isFinite(ts)) continue
@@ -530,36 +541,54 @@ function sittingTiming({ section, exam = {}, attempts = [] }) {
     const served = ts - took * 1000
     if (firstServed == null || served < firstServed) firstServed = served
     if (lastAnswer == null || ts > lastAnswer) lastAnswer = ts
-    if (took > longest_item_seconds) longest_item_seconds = took
+    spans.push(took)
   }
   if (firstServed == null) return null
+  spans.sort((x, y) => y - x)
 
   const allowed_minutes = budget_minutes * MOCK_TIME_SLACK
   const item_cap_seconds = budget_minutes * 60 * MAX_ITEM_SHARE_OF_BUDGET
   const elapsed_minutes = (lastAnswer - firstServed) / 60000
   const over_total = elapsed_minutes > allowed_minutes
+  // The single longest interval is the forgiven break; the cap falls on the next
+  // one. See MOCK_TIME_SLACK: what is measured is how long a question sat on
+  // screen, not how long he worked on it, so one long interval is exactly what
+  // the slack is already written to cover.
+  const break_seconds = spans[0] ?? 0
+  const longest_item_seconds = spans[1] ?? 0
   const over_item = longest_item_seconds > item_cap_seconds
   return {
     budget_minutes, allowed_minutes, elapsed_minutes,
-    longest_item_seconds, item_cap_seconds,
+    break_seconds, longest_item_seconds, item_cap_seconds,
     over_total, over_item, untimed: over_total || over_item,
   }
 }
 
-/** The measured facts behind an untimed verdict, in the student's words. */
-function timingFindings(t) {
+/**
+ * The measured facts behind an untimed verdict, as clauses that read in the
+ * middle of a sentence.
+ *
+ * Shared by the submit basis and the advisory that resurfaces afterwards, so the
+ * two surfaces cannot tell him different things about the same sitting. Each
+ * clause is emitted ONLY for the bar it actually breached: the advisory used to
+ * print the elapsed-versus-allowance sentence unconditionally, so a sitting
+ * refused purely on the per-question rule was told its 118 minutes were "past
+ * the 1.5x" of 90 — arithmetically false, about numbers he can check himself.
+ */
+function timingClauses(t) {
   const out = []
   if (t.over_total) {
     out.push(
-      `Its answers span ${Math.round(t.elapsed_minutes)} minutes from the first question being handed out to the ` +
+      `its answers span ${Math.round(t.elapsed_minutes)} minutes from the first question being handed out to the ` +
       `last answer recorded, against the ${t.budget_minutes} minutes this section gets on the real exam — past the ` +
-      `${Math.round(t.allowed_minutes)} minutes allowed for the ordinary overrun of sitting one at home.`,
+      `${Math.round(t.allowed_minutes)} minutes allowed for the ordinary overrun of sitting one at home`,
     )
   }
   if (t.over_item) {
     out.push(
-      `One question alone absorbed ${Math.round(t.longest_item_seconds / 60)} minutes, more than half the ` +
-      `${t.budget_minutes} minutes the whole section gets.`,
+      `two of its questions sat unanswered for ${Math.round(t.break_seconds / 60)} and ` +
+      `${Math.round(t.longest_item_seconds / 60)} minutes — one break is forgiven, and the second of those alone is ` +
+      `more than half the ${t.budget_minutes} minutes the whole section gets, so the paper was put down twice`,
     )
   }
   return out
@@ -833,7 +862,7 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     }
     if (!timed) {
       basis.push(
-        ...timingFindings(timing),
+        `The clock on this sitting does not read as exam conditions: ${timingClauses(timing).join('; and ')}.`,
         `Work at that pace is untimed practice, not evidence about performance under exam conditions, so this `
         + `sitting is recorded but NOT scored and cannot count toward readiness. Nothing is thrown away — the answers `
         + `stand as ordinary practice, and pace is exactly what a mock is for — but a sitting has to be run against a `
@@ -900,17 +929,20 @@ function unscoredSittings(ctx) {
       expected,
       scorable,
       // Four different reasons produce a null composite, and each has its own
-      // thing to fix. Reported as one reason apiece, most fundamental first: a
-      // sitting that was not run against a clock has no pace problem to work on
-      // and no shortage of gradeable items to report — it was not a mock at all
-      // — so saying "you ran out of time" or "nothing could be graded" about it
-      // would be a false statement in its own right, exactly as saying either
-      // about a fully-sat, fully-gradeable paper would be. And a section whose
-      // questions do not exist has neither a pace nor a coverage problem: what
-      // it answered was not that section's questions at all.
+      // thing to fix. `unsupplied` is reported ALONE and ahead of the rest,
+      // because a sitting whose questions do not exist has neither a pace nor a
+      // coverage problem: what it answered was not that section's questions at
+      // all, so saying "you ran out of time" or "nothing could be graded" about
+      // it would be a false statement in its own right. The remaining reasons can
+      // hold at once and are each reported when they do — see `short`.
       unsupplied,
       untimed: !unsupplied && timing?.untimed ? timing : null,
-      short: !unsupplied && !timing?.untimed && scorable != null
+      // Deliberately NOT suppressed by `untimed`: a 12-of-42 sitting that also
+      // took four hours is short AND untimed, and a timed re-sit of 12 questions
+      // still produces no composite. Suppressing one of the two told him to fix
+      // the wrong thing, while the submit basis named both — two surfaces, one
+      // sitting, contradictory instructions.
+      short: !unsupplied && scorable != null
         && rows.length < Math.ceil(scorable * MIN_MOCK_COVERAGE),
     })
   }
@@ -935,13 +967,23 @@ function unscoredAdvisory(unscored) {
   }
   const untimed = unscored.filter((u) => u.untimed)
   if (untimed.length) {
+    // Named from the SAME clauses the submit basis uses, each emitted only for the
+    // bar it actually breached. This surface used to state the elapsed span
+    // against the allowance unconditionally, so a sitting refused purely on the
+    // per-question rule was told its 118 minutes were past the 1.5x of 90 — false
+    // arithmetic, riding on every response the student sees afterwards.
+    const alsoShort = untimed.filter((u) => u.short).map((u) => `#${u.id}`)
     parts.push(
-      `${untimed.map((u) => `#${u.id} answered ${u.answered}${u.expected == null ? '' : ` of ${u.expected}`} but ran ` +
-        `${Math.round(u.untimed.elapsed_minutes)} minutes against a ${u.untimed.budget_minutes}-minute section` +
-        `${u.untimed.over_item ? `, with one question alone taking ${Math.round(u.untimed.longest_item_seconds / 60)} minutes` : ''}`,
-      ).join('; ')} — past the ${Math.round(MOCK_TIME_SLACK * 100) / 100}x of the budget a sitting may overrun and still ` +
-      `count. Those answers stand as practice and nothing was deleted, but untimed work cannot be evidence about ` +
-      `performance under exam conditions: re-sit one against a clock to turn it into a score.`,
+      `${untimed.map((u) => `#${u.id} answered ${u.answered}${u.expected == null ? '' : ` of ${u.expected}`}, but ` +
+        `${timingClauses(u.untimed).join('; and ')}`).join('. ')}. ` +
+      `Those answers stand as practice and nothing was deleted, but untimed work cannot be evidence about ` +
+      `performance under exam conditions: re-sit one against a clock to turn it into a score` +
+      // A sitting that is ALSO short does not become a score by being timed, so
+      // the instruction cannot stop at the clock.
+      (alsoShort.length
+        ? `, though ${alsoShort.join(', ')} ${alsoShort.length === 1 ? 'has' : 'have'} to cover the section as well — ` +
+          `a timed sitting that stops short still gets no composite.`
+        : `.`),
     )
   }
   const short = unscored.filter((u) => u.short)
