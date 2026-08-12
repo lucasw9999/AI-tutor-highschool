@@ -17,6 +17,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { makeDb } from '../src/db.js'
 import { handleNext, handleLog, handleStatus, handleMockStart, handleMockSubmit } from '../src/api.js'
+import { MODEL_GRADED, isServerGraded } from '../src/grade.js'
 import { breakdown } from '../src/readiness.js'
 
 const SEED = new URL('../seed.sql', import.meta.url)
@@ -257,26 +258,46 @@ maybe('a full 42-question mock scores an exact composite and blank count, and it
   }
 })
 
-maybe('a Precalc question is served and never marked wrong for lacking a key', async () => {
+maybe('a Precalc question is graded when it has a key, and never marked wrong when it has none', async () => {
   const { db } = freshDb()
   const q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: T0 })
   assert.ok(['question', 'lesson', 'lesson_missing'].includes(q.type))
 
   if (q.type === 'question') {
-    const r = await handleLog({ db, serveId: q.serve, response: '3', config: PRECALC, now: at(50) })
-    // These items are worked-solution practice with no canonical short answer,
-    // so they are model-graded. The original bug asserted only graded_by ===
-    // 'server' here, which passed while every answer was being scored WRONG.
-    assert.equal(r.graded_by, 'model')
-    assert.equal(r.correct, null, 'the server must not claim a verdict it did not reach')
-    assert.equal(r.graded, false)
-    assert.ok(r.explanation, 'the student must get the worked solution as feedback')
-    assert.match(r.note, /does not count toward readiness/)
+    // RETIRED ASSERTIONS: `graded_by === 'model'`, `correct === null` and
+    // `graded === false`, unconditionally, plus a hard-coded response of '3'.
+    // Those held only because not one of the 48 Precalc items carried an answer
+    // key. 19 of them now do, and demanding this shape of all of them would be
+    // demanding the keys not work.
+    //
+    // The item is looked up in the DATABASE and answered with the key the database
+    // holds, so both halves of the real contract are pinned: a keyed item reaches a
+    // real verdict and marks its own answer RIGHT (a key mangled by JSON or SQL
+    // escaping would show up here as a right answer called wrong), and an unkeyed
+    // one is still never marked at all.
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    const keyed = !MODEL_GRADED.has(item.kind) && String(item.answer ?? '').trim() !== ''
+    const r = await handleLog({
+      db, serveId: q.serve, response: keyed ? item.answer : '3', config: PRECALC, now: at(50),
+    })
+    if (keyed) {
+      assert.equal(r.graded_by, 'server', `${item.id} carries a key, so the server must reach the verdict itself`)
+      assert.equal(r.correct, true, `${item.id}: the stored key ${JSON.stringify(item.answer)} marked its own answer wrong`)
+      assert.equal(r.graded, true)
+    } else {
+      assert.equal(r.graded_by, 'model')
+      assert.equal(r.correct, null, 'the server must not claim a verdict it did not reach')
+      assert.equal(r.graded, false)
+      assert.match(r.note, /does not count toward readiness/)
+    }
+    assert.ok(r.explanation, 'the student must get the worked solution as feedback either way')
     assert.equal(r.seconds, 50)
 
-    // And the recorded attempt must not poison any percentage.
+    // The recorded attempt says who reached the verdict, which is what decides
+    // whether any percentage may count it.
     const rows = await db.attempts('ap_precalc')
-    assert.equal(rows[0].graded_by, 'model')
+    assert.equal(rows[0].graded_by, keyed ? 'server' : 'model')
+    assert.equal(isServerGraded(rows[0]), keyed, 'only a server verdict may be counted')
   }
 
   const s = await handleStatus({ db, subject: 'ap_precalc', config: PRECALC, now: at(60) })
@@ -285,18 +306,44 @@ maybe('a Precalc question is served and never marked wrong for lacking a key', a
   assert.ok(!s.criteria.some((c) => /Unit 4/.test(c.requirement)), 'Unit 4 must be excluded')
 })
 
-maybe('a Precalc mock composite is not dragged to zero by ungraded answers', async () => {
+maybe('a Precalc mock separates the answers it can mark from the work it cannot', async () => {
+  // RETIRED ASSERTION: `assert.equal(r.scored, 0, 'no mechanically graded answers
+  // in this sitting')`, with every answer sent as the literal 'anything'. A
+  // Precalc sitting can now contain keyed questions, so `scored` is a function of
+  // what was served — and 'anything' against a key is a MISS, which would have
+  // made this test quietly assert that a sitting scores its keyed questions wrong.
+  //
+  // So each answer is now the right one for the item served, and the property under
+  // test is the one the name promises: graded answers and ungraded work are counted
+  // separately, and neither drags the other to zero.
   const { db } = freshDb()
   const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: T0 })
+  const answered = []
   for (let i = 0; i < 5; i++) {
     const q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(i * 100), mockId: m.mock })
     if (q.type !== 'question') continue
-    await handleLog({ db, serveId: q.serve, response: 'anything', config: PRECALC, now: at(i * 100 + 60) })
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    const keyed = !MODEL_GRADED.has(item.kind) && String(item.answer ?? '').trim() !== ''
+    const r = await handleLog({
+      db, serveId: q.serve, response: keyed ? item.answer : 'my working, in prose',
+      config: PRECALC, now: at(i * 100 + 60),
+    })
+    if (keyed) assert.equal(r.correct, true, `${item.id}: a right answer inside a mock must not be marked wrong`)
+    else assert.equal(r.correct, null, `${item.id}: model-graded work must not receive a verdict`)
+    answered.push(keyed)
   }
+
   const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(2000) })
-  assert.equal(r.scored, 0, 'no mechanically graded answers in this sitting')
-  assert.ok(r.ungraded > 0)
-  assert.match(r.basis, /need human or model grading/)
+  const keyedCount = answered.filter(Boolean).length
+  assert.equal(r.scored, keyedCount, 'exactly the answers whose items carry a key are scored, and no others')
+  assert.equal(r.ungraded, answered.length - keyedCount, 'and the rest are reported as needing grading, never as misses')
+  assert.ok(r.ungraded > 0, 'precondition: this bank still holds model-graded work')
+  // Five answers is nowhere near the coverage floor, and Precalc's bank supplies
+  // neither half of its paper, so the sitting is recorded and not scored. null is
+  // not zero, and must never be shown as one.
+  assert.equal(r.counted, false)
+  assert.equal(r.composite_pct, null)
+  assert.match(r.basis, /recorded but NOT scored|cannot be scored/)
 })
 
 maybe('reloading the seed does not disturb recorded evidence', async () => {
