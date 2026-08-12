@@ -113,12 +113,12 @@ All under `https://apcentral.collegeboard.org/media/pdf/`. **2023, 2024 and 2025
 
 ### Step 1 — ASK THE SCHOOL FIRST. It is free, and it beats every paid option.
 
-**If Foothill HS teaches AP Computer Science A, the entire problem collapses to the $99 base exam fee and one join code from that teacher.** No tuition, no second school, no shopping. That outcome is so much better than every paid route below that **no money should change hands until the AP Coordinator has answered the three questions in "Exam registration" below** — and the first of those questions is exactly this one. **Whether Foothill offers AP CSA is still unconfirmed by anybody.**
+**If Foothill HS teaches AP Computer Science A, the entire problem collapses to one join code from that teacher plus the base exam fee he owes anyway** (figure: [`../../../ap_precalc/README.md`](../../../ap_precalc/README.md) → **MONEY AND DEADLINES**). No tuition, no second school, no shopping. That outcome is so much better than every paid route below that **no money should change hands until the AP Coordinator has answered the three questions in "Exam registration" below** — and the first of those questions is exactly this one. **Whether Foothill offers AP CSA is still unconfirmed by anybody.**
 
 Ask for **two different things**, because they are not the same thing and only one of them unlocks the item bank:
 
 1. **"Does Foothill teach AP Computer Science A in 2026-27, and can Lucas enrol in that class section?"** → enrolment in an audit-authorized teacher's **class section** is what produces the join code that opens Progress Checks, the Question Bank and the **full Practice Exam**. This is the whole answer if it comes back yes.
-2. **"If Foothill does not teach it, will it still let him sit the exam as an exam-only student?"** → this secures a **seat on exam day**, which he needs regardless. It does **not** produce the item bank. See "Exam-only registration gets him a seat, not the official mock" below — that distinction is the most consequential mechanism on this page.
+2. **"If Foothill does not teach it, will it still let him sit the exam as an exam-only student?"** → this secures a **seat on exam day**, which he needs regardless. It does **not** produce the item bank. See "Exam-only registration gets him a SEAT, not the official mock" below — that distinction is the most consequential mechanism on this page.
 
 Do this **early** either way — AP Classroom access is tied to one specific teacher's course section, so it cannot be arranged retroactively in April.
 
