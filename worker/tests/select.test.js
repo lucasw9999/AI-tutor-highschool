@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
-import { pickNext, topicStats, reviewInterval } from '../src/select.js'
+import { pickNext, topicStats, reviewInterval, RECENCY_HALF_LIFE_DAYS, REVIEW_SHARE } from '../src/select.js'
 import { detectGaps, reconcileGaps, clearsGap, buildLesson } from '../src/teaching.js'
 
 const NOW = '2027-03-01T12:00:00Z'
@@ -11,6 +11,9 @@ const CFG = { readiness: { per_unit_min: 75 } }
 function ago(days) {
   return new Date(new Date(NOW).getTime() - days * 86400000).toISOString()
 }
+
+/** Days from a stored timestamp to NOW, for asserting that a review really is due. */
+const ageDaysOf = (ts) => (new Date(NOW).getTime() - new Date(ts).getTime()) / 86400000
 
 /** Three items each on three topics. */
 const ITEMS = ['a', 'b', 'c'].flatMap((topic) =>
@@ -225,10 +228,15 @@ test('selection on a partially consumed bank', async (t) => {
   })
 
   await t.test('the weakest topic is served from reusable items when it has no unseen ones', () => {
+    // a and c are answered TODAY, not two months ago. Selection accuracy is
+    // recency-weighted (see topicStats), so a single two-month-old correct answer
+    // now reads as about a quarter of an answer's worth of evidence and makes its
+    // topic weak too — which is correct, and which would make this test about
+    // urgency ranking rather than about the reusable-pool fallback it is for.
     const attempts = [
       ...[1, 2, 3].map((i) => attempt(`b${i}`, 'b', 0, 60)), // b at 0%, whole topic consumed
-      attempt('a1', 'a', 1, 60),
-      attempt('c1', 'c', 1, 60),
+      attempt('a1', 'a', 1, 0),
+      attempt('c1', 'c', 1, 0),
     ]
     const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
     assert.equal(r.priority, 'weakest')
@@ -239,7 +247,10 @@ test('selection on a partially consumed bank', async (t) => {
     const attempts = [
       attempt('a1', 'a', 0, 40), attempt('a2', 'a', 1, 39),
       attempt('a3', 'a', 1, 38), attempt('a1', 'a', 1, 37), // a at 75%: at the floor, not below it
-      attempt('b1', 'b', 1, 30), attempt('c1', 'c', 1, 30),
+      // Answered today: a month-old single correct answer is half an answer's
+      // worth of evidence under recency weighting, which would put b and c below
+      // the floor and make this a test about remediation instead of review.
+      attempt('b1', 'b', 1, 0), attempt('c1', 'c', 1, 0),
     ]
     const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 20 })
     assert.equal(r.priority, 'review')
@@ -316,6 +327,265 @@ test('selection on a partially consumed bank', async (t) => {
     })
     assert.equal(r.priority, 'gap_retest')
     assert.equal(r.item.id, 'd3')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Recency (METH-3). The accuracy that drives SELECTION is weighted by how long
+// ago each answer was given; the lifetime figure every REPORTED number is
+// computed from is untouched.
+//
+// The defect: `pct` was correct/n over all history, so a topic drilled to 100%
+// in September still read 100% in May. Priority 3 selects on being BELOW the
+// floor, so the selector did not merely fail to notice decay — it actively
+// routed study away from material he had since forgotten, permanently, over
+// exactly the nine-month horizon that guarantees forgetting.
+// ---------------------------------------------------------------------------
+
+test('accuracy for selection is weighted by recency', async (t) => {
+  await t.test('a topic drilled to 100% eight months ago does not read as mastered today', () => {
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`a${i}`, 'a', 1, 240)), // 100% — last August
+      ...['b', 'c'].flatMap((tp) => [1, 2, 3].map((i) => attempt(`${tp}${i}`, tp, 1, 1))),
+    ]
+    // The lifetime number — which every REPORTED percentage is still computed
+    // from — says he is perfect on a.
+    assert.equal(topicStats(attempts).get('a').pct, 100)
+
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'weakest', 'eight-month-old work is not evidence about what he can do today')
+    assert.equal(r.item.topic, 'a')
+    // Both numbers are stated, because he can check either one and the reason may
+    // never say something he can find false.
+    assert.match(r.reason, /on recent evidence/)
+    assert.match(r.reason, /100%/, 'the lifetime figure has to be named, not quietly replaced')
+  })
+
+  await t.test('a recent miss outweighs a pile of old correct answers', () => {
+    const attempts = [
+      ...Array.from({ length: 10 }, (_, i) => attempt(`a${(i % 3) + 1}`, 'a', 1, 60)),
+      attempt('a1', 'a', 0, 1), attempt('a2', 'a', 0, 1),
+      ...['b', 'c'].flatMap((tp) => [1, 2, 3].map((i) => attempt(`${tp}${i}`, tp, 1, 1))),
+    ]
+    assert.ok(topicStats(attempts).get('a').pct >= 75, 'lifetime, a is 10 of 12 and above the floor')
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'weakest')
+    assert.equal(r.item.topic, 'a', 'two misses this week say more than ten right answers two months ago')
+  })
+
+  await t.test('fresh evidence is judged exactly as it was before', () => {
+    // The weighting only bites on evidence that has aged. One right answer today
+    // is still 100%, one of two is still 50% — so nothing about a topic he is
+    // actively working changes.
+    assert.equal(topicStats([attempt('a1', 'a', 1, 0)], NOW).get('a').recent_pct, 100)
+    assert.equal(
+      topicStats([attempt('a1', 'a', 1, 0), attempt('a2', 'a', 0, 0)], NOW).get('a').recent_pct, 50,
+    )
+  })
+
+  await t.test('one right answer a month ago counts for half of one today', () => {
+    // The half-life pinned as arithmetic rather than as a direction: a single
+    // answer one half-life old carries half the weight of a fresh one, so the
+    // topic reads at half credit until it is worked again.
+    const s = topicStats([attempt('a1', 'a', 1, RECENCY_HALF_LIFE_DAYS)], NOW).get('a')
+    assert.equal(s.pct, 100, 'lifetime accuracy is untouched')
+    assert.equal(s.recent_pct, 50)
+    assert.equal(
+      topicStats([attempt('a1', 'a', 1, RECENCY_HALF_LIFE_DAYS * 2)], NOW).get('a').recent_pct, 25,
+      'and a quarter after two half-lives',
+    )
+  })
+
+  await t.test('recent_pct is only a claim when a clock was supplied', () => {
+    // A recency-weighted percentage is a statement about a MOMENT. With no `now`
+    // there is no moment, so it is null rather than a number silently equal to
+    // the lifetime one.
+    assert.equal(topicStats([attempt('a1', 'a', 1, 10)]).get('a').recent_pct, null)
+  })
+
+  await t.test('the weighting is scoped to selection: readiness computes its own accuracy', () => {
+    // The scope claim, pinned rather than left in a comment. Every number the
+    // student and parent are SHOWN — the composite, mcq_overall, every per-unit
+    // floor — comes from readiness.js, which reads attempt rows directly and has
+    // no access to this module's weighting. If that ever changes, a reported
+    // percentage would start disagreeing with the evidence behind it.
+    const readiness = readFileSync(new URL('../src/readiness.js', import.meta.url), 'utf8')
+    assert.doesNotMatch(
+      readiness, /from '\.\/select\.js'/,
+      'readiness.js must not consume the selector’s recency weighting — reported numbers are unweighted',
+    )
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Spaced review is interleaved with remediation, not ranked below it (METH-5).
+//
+// The defect: priority 3 returned on the FIRST topic below per_unit_min that had
+// any servable item, and poolFor falls back to the topic's whole item set, so it
+// essentially always did. Priority 4 was therefore unreachable until every
+// tested topic cleared the floor — which for most of a nine-month run means the
+// 1/3/7/16/35 schedule never ran at all.
+// ---------------------------------------------------------------------------
+
+/** A bank with one chronically weak topic and three that are due for review. */
+const REVIEW_ITEMS = [
+  ...Array.from({ length: 10 }, (_, i) => ({ id: `w${i + 1}`, topic: 'w', unit: '1', kind: 'mcq', answer: 'A' })),
+  ...['r1', 'r2', 'r3'].flatMap((topic) =>
+    [1, 2, 3].map((i) => ({ id: `${topic}-${i}`, topic, unit: '2', kind: 'mcq', answer: 'A' }))),
+]
+const REVIEW_META = new Map([
+  ['w', { exam_weight_low: 30, exam_weight_high: 40, unit: '1', tested_on_exam: 1 }],
+  ...['r1', 'r2', 'r3'].map((t) => [t, { exam_weight_low: 25, exam_weight_high: 35, unit: '2', tested_on_exam: 1 }]),
+])
+
+/**
+ * w is at 0% and stays there; r1..r3 were each missed long ago, right three times
+ * since, and are now past their 16-day interval — i.e. genuinely due, and above
+ * the floor, so remediation has no claim on them.
+ */
+function reviewHistory() {
+  return [
+    attempt('w1', 'w', 0, 10), attempt('w2', 'w', 0, 9),
+    ...['r1', 'r2', 'r3'].flatMap((tp) => [
+      attempt(`${tp}-1`, tp, 0, 60),
+      attempt(`${tp}-1`, tp, 1, 18), attempt(`${tp}-2`, tp, 1, 17), attempt(`${tp}-1`, tp, 1, 16),
+    ]),
+  ]
+}
+
+test('spaced review gets a reserved share of ordinary practice', async (t) => {
+  await t.test('the fixture really is review and not remediation in disguise', () => {
+    const stats = topicStats(reviewHistory(), NOW)
+    for (const tp of ['r1', 'r2', 'r3']) {
+      assert.ok(stats.get(tp).recent_pct > 75, `${tp} reads ${stats.get(tp).recent_pct}% and must be above the floor`)
+      assert.equal(stats.get(tp).streak, 3)
+      assert.ok(ageDaysOf(stats.get(tp).last_ts) >= reviewInterval(3), `${tp} must be past its interval`)
+    }
+    assert.equal(stats.get('w').recent_pct, 0, 'and w must be the thing remediation wants to serve')
+  })
+
+  await t.test('one ordinary question in three goes to a review that is due', () => {
+    // Nine consecutive serves, each answered before the next is asked, exactly as
+    // a session runs. Under the old strict ordering every one of these was
+    // remediation on w and the review schedule never executed once.
+    const attempts = reviewHistory()
+    const base = attempts.length
+    const picks = []
+    for (let i = 0; i < 9; i++) {
+      const r = pickNext({ items: REVIEW_ITEMS, attempts, topicMeta: REVIEW_META, config: CFG, now: NOW })
+      picks.push({ priority: r.priority, topic: r.item.topic })
+      // Answered right when it is a review (which is what a review measures) and
+      // wrong on w, so the fixture's shape holds across the whole run.
+      attempts.push(attempt(r.item.id, r.item.topic, r.priority === 'review' ? 1 : 0, 0))
+    }
+    // Derived from the rule rather than typed out, so this pins WHICH slots are
+    // reserved as well as how many: a review lands on exactly the slots where the
+    // drill count says it should, and remediation gets every other one.
+    const expected = Array.from({ length: 9 }, (_, i) => ((base + i + 1) % REVIEW_SHARE === 0 ? 'review' : 'weakest'))
+    assert.equal(expected.filter((p) => p === 'review').length, 9 / REVIEW_SHARE, 'one serve in three')
+    assert.deepEqual(
+      picks.map((p) => p.priority), expected,
+      `one in ${REVIEW_SHARE} serves is reserved for a due review, and the other two remediate`,
+    )
+    assert.deepEqual(
+      picks.filter((p) => p.priority === 'review').map((p) => p.topic), ['r1', 'r2', 'r3'],
+      'and the reserved slots work through the due queue rather than repeating one topic',
+    )
+  })
+
+  await t.test('the reserved slot says why a review came ahead of something below its floor', () => {
+    const attempts = reviewHistory()
+    assert.equal((attempts.length + 1) % REVIEW_SHARE, 0, 'the fixture must sit on a reserved slot')
+    const r = pickNext({ items: REVIEW_ITEMS, attempts, topicMeta: REVIEW_META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'review')
+    assert.match(r.reason, /missed it before/)
+    assert.match(r.reason, /w is at 0%/, 'the student must not think the weak topic was forgotten about')
+    assert.match(r.reason, new RegExp(`one ordinary question in ${REVIEW_SHARE}`), 'and must hear why this came first')
+  })
+
+  await t.test('the reserve does not spend its slot on a topic remediation is about to serve anyway', () => {
+    // b is below the floor AND overdue. Remediation is already going to serve it,
+    // with a reason that describes it accurately, so the reserved slot has no
+    // business relabelling that as spaced review.
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`b${i}`, 'b', 0, 60)),
+      attempt('a1', 'a', 1, 0), attempt('c1', 'c', 1, 0),
+    ]
+    assert.equal((attempts.length + 1) % REVIEW_SHARE, 0, 'the fixture must sit on a reserved slot')
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'weakest')
+    assert.equal(r.item.topic, 'b')
+  })
+
+  await t.test('a gap re-test and a coverage hole both still outrank the reserved slot', () => {
+    // The reserve is taken out of REMEDIATION's share. A taught gap awaiting a
+    // cold re-test and a topic he has never attempted are not remediation of a
+    // weakness, and neither may be delayed by a review.
+    const attempts = reviewHistory() // a reserved slot, per the test above
+    const gaps = [{ topic: 'w', opened_at: ago(9), taught_at: ago(8), cleared_at: null }]
+    assert.equal(
+      pickNext({ items: REVIEW_ITEMS, attempts, gaps, topicMeta: REVIEW_META, config: CFG, now: NOW }).priority,
+      'gap_retest',
+    )
+
+    const withHole = new Map([
+      ...REVIEW_META,
+      ['r4', { exam_weight_low: 25, exam_weight_high: 35, unit: '2', tested_on_exam: 1 }],
+    ])
+    const holeItems = [...REVIEW_ITEMS, { id: 'r4-1', topic: 'r4', unit: '2', kind: 'mcq', answer: 'A' }]
+    assert.equal(
+      pickNext({ items: holeItems, attempts, topicMeta: withHole, config: CFG, now: NOW }).priority,
+      'coverage',
+    )
+  })
+
+  await t.test('with nothing due, the reserved slot goes back to remediation', () => {
+    // b is weak, but every miss is from TODAY, so nothing has aged into being due
+    // — the shortest interval is one day. A reserved slot with nothing to review
+    // must not become a wasted question.
+    const items = [...ITEMS, { id: 'b4', topic: 'b', unit: '1', kind: 'mcq', answer: 'A' }]
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`b${i}`, 'b', 0, 0)),
+      attempt('a1', 'a', 1, 0), attempt('c1', 'c', 1, 0),
+    ]
+    assert.equal((attempts.length + 1) % REVIEW_SHARE, 0, 'the fixture must sit on a reserved slot')
+    const r = pickNext({ items, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.priority, 'weakest')
+    assert.equal(r.item.id, 'b4')
+  })
+
+  await t.test('a mock is never interleaved with review, and never counts toward the reserve', () => {
+    // Inside a sitting the whole remediation/review order is skipped, and a
+    // paper's 42 answers must not shift which ordinary question is the reserved
+    // one — the reserve is a property of the drill stream.
+    const attempts = reviewHistory()
+    const inSitting = pickNext({
+      items: REVIEW_ITEMS, attempts, topicMeta: REVIEW_META, config: CFG, now: NOW,
+      sampling: 'mock', mockId: 7,
+    })
+    assert.notEqual(inSitting.priority, 'review')
+
+    const drills = reviewHistory()
+    const withMock = [...drills, ...[1, 2].map((i) => attempt(`w${i + 4}`, 'w', 1, 0, { mock_id: 7 }))]
+    assert.equal(
+      pickNext({ items: REVIEW_ITEMS, attempts: drills, topicMeta: REVIEW_META, config: CFG, now: NOW }).item.id,
+      pickNext({ items: REVIEW_ITEMS, attempts: withMock, topicMeta: REVIEW_META, config: CFG, now: NOW }).item.id,
+      'two proctored answers must not rotate the reserve',
+    )
+  })
+
+  await t.test('the reserved slot is deterministic however the bank is ordered', () => {
+    const attempts = reviewHistory() // a reserved slot, so the review path is the one replayed
+    const orders = {
+      given: REVIEW_ITEMS,
+      reversed: [...REVIEW_ITEMS].reverse(),
+      rotated: [...REVIEW_ITEMS.slice(5), ...REVIEW_ITEMS.slice(0, 5)],
+    }
+    const picked = Object.entries(orders).map(([label, items]) => {
+      const r = pickNext({ items, attempts, topicMeta: REVIEW_META, config: CFG, now: NOW })
+      return `${label}=${r.priority}:${r.item.id}`
+    })
+    assert.equal(new Set(picked.map((p) => p.split('=')[1])).size, 1, `order-dependent: ${picked.join(', ')}`)
   })
 })
 
@@ -1314,7 +1584,9 @@ test('excludeItemIds removes an item from every pool', async (t) => {
   await t.test('the weakest topic skips an excluded item', () => {
     const attempts = [
       attempt('b1', 'b', 0, 60), attempt('b2', 'b', 0, 59),
-      attempt('a1', 'a', 1, 58), attempt('c1', 'c', 1, 57),
+      // Today, so that recency weighting leaves a and c above the floor and b is
+      // the only weak topic — see the reusable-pool test above.
+      attempt('a1', 'a', 1, 0), attempt('c1', 'c', 1, 0),
     ]
     const r = pickNext({ ...base, items: ITEMS, attempts, excludeItemIds: ['b3'] })
     assert.equal(r.priority, 'weakest')
