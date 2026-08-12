@@ -730,9 +730,18 @@ function sectionScoring({ section, exam = {}, supply = new Map() }) {
 export async function handleMockSubmit({ db, mockId, config, configs = null, now }) {
   const m = await db.mock(mockId)
   if (!m) throw new ApiError(404, `unknown mock ${mockId}`)
-  // Cheap early refusal for the ordinary replay. It is NOT the guard that makes
-  // this safe — see the claim below.
-  if (m.ended_at) throw new ApiError(409, `mock ${mockId} is already submitted`)
+  // A sitting that was closed and SCORED is finished; replaying the submit must
+  // not rescore it. But a sitting that was closed and never scored — the scoring
+  // write died in the gap after the close, which is where the composite, the blank
+  // count and a whole readiness recomputation happen, so a CPU kill lands there
+  // preferentially — used to be refused here forever, stranding a real 42-question
+  // sitting with no composite and no way to produce one. `blanks` is what tells
+  // the two apart: db.scoreMock is its only writer, so a NULL there means the
+  // score was never written, while a sitting that was scored and legitimately
+  // produced no composite (short, untimed, unsupplied) still has a blank count.
+  const scored_already = m.ended_at != null && (m.composite_pct != null || m.blanks != null)
+  if (scored_already) throw new ApiError(409, `mock ${mockId} is already submitted`)
+  const rescuing = m.ended_at != null
 
   // The sitting's own subject decides which standards apply, not the caller's `s`.
   const cfg = configFor({ subject: m.subject, config, configs })
@@ -748,15 +757,19 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // Close the sitting BEFORE reading the answers to be scored, with a conditional
   // UPDATE that reports whether it was this call that closed it.
   //
-  // Both halves matter. The `if (m.ended_at)` above is a read-then-write with no
-  // transaction available, so two concurrent submits both read the sitting as open
-  // and both score it. And the close is what tells a concurrent /log that the
+  // Both halves matter. The `if (scored_already)` above is a read-then-write with
+  // no transaction available, so two concurrent submits both read the sitting as
+  // open and both score it. And the close is what tells a concurrent /log that the
   // paper is in: reading the answers first left a window in which a first-time
   // /log filed an answer under a sitting whose composite had already been
   // computed, so readiness counted evidence the stored score never saw. Closing
   // first inverts that — an answer can only be filed under the mock while it is
   // open, so anything filed under it is already in the read below.
-  if (!(await db.closeMock({ id: mockId, ended_at: now }))) {
+  //
+  // A rescue skips this: the paper was handed in when it was handed in, and moving
+  // ended_at would rewrite when the sitting ended. Its mutex is the conditional
+  // scoring write instead, which is equally a single statement.
+  if (!rescuing && !(await db.closeMock({ id: mockId, ended_at: now }))) {
     throw new ApiError(409, `mock ${mockId} is already submitted`)
   }
 
@@ -883,7 +896,14 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     basis.push('Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.')
   }
 
-  await db.scoreMock({ id: mockId, composite_pct: composite, blanks })
+  // The scoring write is conditional on the sitting still being unscored, which is
+  // what lets a rescue of a stranded sitting be safe: of two racing rescues
+  // exactly one stores a composite, and the other is refused here rather than
+  // overwriting it. On the ordinary path the close above already guaranteed this
+  // caller is alone, so a 0 here means another request got in first either way.
+  if (!(await db.scoreMock({ id: mockId, composite_pct: composite, blanks }))) {
+    throw new ApiError(409, `mock ${mockId} was scored by another request`)
+  }
   const ctx = await loadContext(db, m.subject, cfg)
   return {
     mock: Number(mockId),
@@ -902,13 +922,15 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
 /**
  * Proctored sittings that were recorded and then not scored, with the reason.
  *
- * A sitting below MIN_MOCK_COVERAGE, one that was not run against a clock, or one
- * sat on a section the bank cannot supply, gets no composite, which keeps it out
- * of `proctored_mocks`, out of the qualifying window and out of every criterion —
- * so a genuine sitting where he reached 37 of 42 left no trace at all beyond
- * questions_answered. Running out of time is the single failure a mock exists to
- * expose, so it has to be reported rather than dropped. It still cannot be
- * scored: lowering the gate is what let three answers read as 100%.
+ * A sitting below MIN_MOCK_COVERAGE, one that was not run against a clock, one
+ * sat on a section the bank cannot supply, or one whose scoring write never
+ * landed, gets no composite, which keeps it out of `proctored_mocks`, out of the
+ * qualifying window and out of every criterion — so a genuine sitting where he
+ * reached 37 of 42 left no trace at all beyond questions_answered. Running out of
+ * time is the single failure a mock exists to expose, so it has to be reported
+ * rather than dropped. It still cannot be scored: lowering the gate is what let
+ * three answers read as 100%. The one exception is the sitting that was never
+ * scored at all, which is not a verdict but an unfinished write, and says so.
  */
 function unscoredSittings(ctx) {
   const out = []
@@ -919,30 +941,41 @@ function unscoredSittings(ctx) {
       section: m.section, exam: ctx.config.exam, supply: ctx.supply,
     })
     const timing = sittingTiming({ section: m.section, exam: ctx.config.exam, attempts: rows })
+    // Closed, and never scored at all: the scoring write died in the gap after the
+    // close (see db.scoreMock, the only writer of `blanks`, so a NULL there means
+    // it never ran). No verdict has been reached about this sitting yet, so every
+    // OTHER reason would be an invention — a sitting with 42 mechanically graded
+    // answers was disclosed as having "had nothing that could be graded
+    // mechanically", which is the reason a Precalc paper gets, not this one.
+    const unscored_write = m.blanks == null
     // A section the bank cannot supply was never scorable, whatever the clock or
     // the count says, so it is reported ahead of both.
-    const unsupplied = scorable === 0 ? obstacles : null
+    const unsupplied = !unscored_write && scorable === 0 ? obstacles : null
     out.push({
       id: m.id,
       section: m.section,
       answered: rows.length,
+      gradeable: rows.filter((a) => a.graded_by === 'server').length,
       expected,
       scorable,
-      // Four different reasons produce a null composite, and each has its own
-      // thing to fix. `unsupplied` is reported ALONE and ahead of the rest,
-      // because a sitting whose questions do not exist has neither a pace nor a
-      // coverage problem: what it answered was not that section's questions at
-      // all, so saying "you ran out of time" or "nothing could be graded" about
-      // it would be a false statement in its own right. The remaining reasons can
-      // hold at once and are each reported when they do — see `short`.
+      // Five different reasons produce a null composite, and each has its own
+      // thing to fix. `unscored_write` and `unsupplied` are reported ALONE and
+      // ahead of the rest: a sitting that was never scored has no established
+      // verdict to report, and a sitting whose questions do not exist has neither
+      // a pace nor a coverage problem — what it answered was not that section's
+      // questions at all, so saying "you ran out of time" or "nothing could be
+      // graded" about either would be a false statement in its own right. The
+      // remaining reasons can hold at once and are each reported when they do —
+      // see `short`.
+      unscored_write,
       unsupplied,
-      untimed: !unsupplied && timing?.untimed ? timing : null,
+      untimed: !unscored_write && !unsupplied && timing?.untimed ? timing : null,
       // Deliberately NOT suppressed by `untimed`: a 12-of-42 sitting that also
       // took four hours is short AND untimed, and a timed re-sit of 12 questions
       // still produces no composite. Suppressing one of the two told him to fix
       // the wrong thing, while the submit basis named both — two surfaces, one
       // sitting, contradictory instructions.
-      short: !unsupplied && scorable != null
+      short: !unscored_write && !unsupplied && scorable != null
         && rows.length < Math.ceil(scorable * MIN_MOCK_COVERAGE),
     })
   }
@@ -956,6 +989,15 @@ function unscoredAdvisory(unscored) {
     `${n} proctored sitting${n === 1 ? ' was' : 's were'} recorded but NOT scored, so ${n === 1 ? 'it is' : 'they are'} ` +
     `absent from the proctored mock count and from every readiness criterion.`,
   ]
+  const unscored_write = unscored.filter((u) => u.unscored_write)
+  if (unscored_write.length) {
+    parts.push(
+      `${unscored_write.map((u) => `#${u.id} (${u.answered} answered, ${u.gradeable} of them mechanically gradeable) ` +
+        `was closed but never scored — the scoring step did not finish`).join('. ')}. Nothing is wrong with the ` +
+      `sitting itself and no answer was lost: submit it again with submitMock and the same mock id, and it will be ` +
+      `scored from the answers already on it.`,
+    )
+  }
   const unsupplied = unscored.filter((u) => u.unsupplied)
   if (unsupplied.length) {
     parts.push(
@@ -995,7 +1037,7 @@ function unscoredAdvisory(unscored) {
       `the section can produce a composite, so re-sit a full one to turn this into a score.`,
     )
   }
-  const other = unscored.filter((u) => !u.short && !u.untimed && !u.unsupplied)
+  const other = unscored.filter((u) => !u.short && !u.untimed && !u.unsupplied && !u.unscored_write)
   if (other.length) {
     parts.push(
       `${other.map((u) => `#${u.id} (${u.answered} answered)`).join(', ')} had nothing that could be graded ` +
