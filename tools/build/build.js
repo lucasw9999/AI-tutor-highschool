@@ -229,7 +229,35 @@ function bySubject(rows) {
   return out
 }
 
-function main() {
+/**
+ * A build answers two independent questions, and they must not be conflated:
+ *
+ *   1. did the compile produce FAITHFUL artifacts from the markdown?
+ *   2. is the content COMPLETE enough for the readiness engine to work?
+ *
+ * (2) is false today — ap_precalc has 33 exam-tested topics with no items — and the
+ * gates above are right to fail the build for it. But failing also meant writing
+ * nothing, which stranded fixes that were already correct in the markdown (a wrong
+ * answer key, a false arithmetic check, 92 backtick-corrupted MCQ options) inside
+ * the compiler, where no student could ever see them.
+ *
+ * This flag separates the two: write the faithful artifacts, keep every ERROR, keep
+ * the non-zero exit. It is an exact argv flag on purpose — never an env var, never a
+ * default, never inferred from CI — so nothing a job inherits can turn it on, and it
+ * says out loud that what it wrote is incomplete and must not be deployed as if it
+ * were finished.
+ */
+const WRITE_DESPITE_INCOMPLETE = '--write-despite-incomplete'
+
+function writeArtifacts({ items, topics, teaching }) {
+  mkdirSync(OUT, { recursive: true })
+  writeFileSync(`${OUT}/items.json`, `${JSON.stringify(items, null, 2)}\n`)
+  writeFileSync(`${OUT}/topics.json`, `${JSON.stringify(topics, null, 2)}\n`)
+  writeFileSync(`${OUT}/teaching.json`, `${JSON.stringify(teaching, null, 2)}\n`)
+}
+
+function main(argv = process.argv.slice(2)) {
+  const writeAnyway = argv.includes(WRITE_DESPITE_INCOMPLETE)
   const r = compile()
   const rows = summary(r)
 
@@ -256,14 +284,28 @@ function main() {
 
   if (r.errors.length) {
     for (const e of r.errors) console.error(`ERROR ${e}`)
-    console.error(`\nBuild FAILED with ${r.errors.length} error(s). Nothing written.`)
+    if (!writeAnyway) {
+      console.error(`\nBuild FAILED with ${r.errors.length} error(s). Nothing written.`)
+      process.exit(1)
+    }
+    // Same errors, same failure — only the artifacts change hands.
+    writeArtifacts(r)
+    console.error(`\nBuild FAILED with ${r.errors.length} error(s).`)
+    console.error('*** INCOMPLETE CONTENT WRITTEN ***')
+    console.error(
+      `  ${WRITE_DESPITE_INCOMPLETE} was passed, so ${OUT}/items.json, topics.json and teaching.json were\n` +
+      '  rewritten from the markdown even though the errors above are UNFIXED. These artifacts are\n' +
+      '  faithful to the content, and the content is incomplete: readiness cannot be computed from it.\n' +
+      '  They must NOT be deployed, seeded or reported as if the content were complete. The build has\n' +
+      '  still FAILED — fix every ERROR above and re-run without the flag before shipping.',
+    )
     process.exit(1)
   }
 
-  mkdirSync(OUT, { recursive: true })
-  writeFileSync(`${OUT}/items.json`, `${JSON.stringify(r.items, null, 2)}\n`)
-  writeFileSync(`${OUT}/topics.json`, `${JSON.stringify(r.topics, null, 2)}\n`)
-  writeFileSync(`${OUT}/teaching.json`, `${JSON.stringify(r.teaching, null, 2)}\n`)
+  writeArtifacts(r)
+  if (writeAnyway) {
+    console.log(`\n${WRITE_DESPITE_INCOMPLETE} had no effect: the content passed every gate.`)
+  }
   console.log(`\nBuild OK. Wrote ${OUT}/items.json, topics.json, teaching.json`)
 }
 
