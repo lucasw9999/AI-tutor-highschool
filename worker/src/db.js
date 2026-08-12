@@ -403,13 +403,41 @@ export function makeDb(D1) {
       )
     },
 
+    /**
+     * Open a sitting, unless one on this subject is still open.
+     *
+     * @returns {Promise<number|null>} the mock id, or null when this subject
+     *          already has a sitting that was started and never submitted.
+     *
+     * WHY THIS IS REFUSED AT ALL. An abandoned open sitting was invisible on every
+     * surface: unscoredSittings skips a mock with no ended_at, proctored_mocks
+     * counts only sittings with a composite, and nothing insisted the previous one
+     * be finished. So "start a section, see it going badly, walk away, start
+     * another" left no record anywhere — the one gaming path the coverage and
+     * timing gates do not close, in a system whose whole premise is refusing
+     * unearned claims. Answers already on the abandoned paper are not lost: they
+     * are attempts, and submitting it scores whatever is on it, with the reason.
+     *
+     * WHY THE GUARD IS IN THE STATEMENT, like recordServe's and claimServe's.
+     * Reading the mocks table and then inserting is a read-then-write, and D1
+     * offers no transaction: two concurrent /mock/start calls would both see no
+     * open sitting and both insert, which is exactly the state being refused.
+     * Because the check and the insert are one statement, the second cannot land
+     * whatever the interleaving, and the loser gets a 409 naming the sitting that
+     * is open.
+     *
+     * Scoped to the SUBJECT: two exams are in progress, and a CSA paper on the
+     * desk says nothing about a Precalculus one.
+     */
     async startMock({ subject, section, started_at, proctored, source }) {
       const r = await one(
         `INSERT INTO mocks (subject, section, started_at, proctored, source)
-         VALUES (?,?,?,?,?) RETURNING id`,
-        subject, section, started_at, proctored, source,
+         SELECT ?,?,?,?,?
+          WHERE NOT EXISTS (SELECT 1 FROM mocks WHERE subject = ? AND ended_at IS NULL)
+         RETURNING id`,
+        subject, section, started_at, proctored, source, subject,
       )
-      return r.id
+      return r?.id ?? null
     },
 
     mock(id) {

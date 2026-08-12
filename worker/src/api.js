@@ -86,6 +86,19 @@ export function daysToExam(examDate, now) {
   return Math.round((Date.parse(`${exam}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000)
 }
 
+/**
+ * Whole calendar days from a stored timestamp to `now`, in the exam's own zone.
+ *
+ * The same unit and the same zone as days_to_exam, deliberately: "9 days ago" and
+ * "72 days to the exam" appear side by side on the parent's page, and two
+ * different definitions of a day between them would make the pair not add up.
+ */
+function calendarDaysSince(then, now) {
+  const from = EXAM_ZONE_CALENDAR.format(new Date(then))
+  const to = EXAM_ZONE_CALENDAR.format(new Date(now))
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000)
+}
+
 /** Newest resolution per topic, so spent evidence cannot re-open a closed gap. */
 function resolvedSince(gaps) {
   const since = new Map()
@@ -804,7 +817,24 @@ function timingClauses(t) {
 export async function handleMockStart({ db, subject, section, source, config, now }) {
   if (!['I', 'II', 'full'].includes(section)) throw new ApiError(400, `section must be I, II or full`)
   if (!['bank', 'official'].includes(source)) throw new ApiError(400, `source must be bank or official`)
+  // Refused inside the INSERT (see db.startMock), so two concurrent starts cannot
+  // both open a paper either. A sitting that was walked away from has to be
+  // submitted — which scores whatever is on it, with the reason — before another
+  // can be opened, or the abandoned one leaves no trace of how it was going.
   const id = await db.startMock({ subject, section, started_at: now, proctored: 1, source })
+  if (id == null) {
+    const open = (await db.mocks(subject))
+      .filter((m) => !m.ended_at)
+      .sort((a, b) => new Date(a.started_at) - new Date(b.started_at))[0]
+    throw new ApiError(
+      409,
+      `mock ${open?.id} is a ${subject} sitting that was started${open?.started_at ? ` at ${open.started_at}` : ''} and `
+        + `never submitted, so a second one cannot be opened. Nothing was recorded. Submit that one with submitMock and `
+        + `the same mock id — it will be scored from the answers already on it, and a short or slow sitting is still `
+        + `recorded with the reason it could not count. Starting a fresh sitting instead would leave the abandoned one `
+        + `absent from the mock count and from every criterion, which is how a section that went badly disappears.`,
+    )
+  }
   return {
     mock: id,
     section,
@@ -1401,6 +1431,245 @@ function unscoredAdvisory(unscored) {
 }
 
 /**
+ * How long the student may go without answering anything before the silence is
+ * reported rather than left to look like a slow week.
+ *
+ * WHY SEVEN DAYS. Every spaced-review interval but the last two (16 and 35 days)
+ * is shorter than a week, so at seven days everything he has ever missed and not
+ * re-confirmed is overdue by construction — the schedule itself says so. It is
+ * also a sixth of readiness.freshness_days (42), the point at which his most
+ * recent mock stops counting at all, so a week is the largest gap that cannot
+ * start eroding the evidence trail. And it is the unit a parent checks: a day or
+ * two is a weekend, a week is a change of behaviour.
+ *
+ * The number below the threshold is still computed and still shown on the parent
+ * page; what the threshold decides is when the student is TOLD.
+ */
+export const SILENCE_DAYS = 7
+
+/**
+ * How many timed multiple-choice answers it takes before a pace figure is treated
+ * as a measurement, and how far over the exam's own pace it has to sit before the
+ * student is told.
+ *
+ * PACE_SAMPLE_MIN = 10, because a median over two or three answers is noise, and
+ * "not yet measurable" rather than a guess is this project's standing rule
+ * everywhere else (see the pending criteria).
+ *
+ * PACE_OVER_MULTIPLE = 1.25, and it is not arbitrary. What the server can measure
+ * is serve-to-answer latency, which includes reading the question in a chat
+ * transcript and typing an answer — overhead the real exam does not have (the same
+ * overhead MOCK_TIME_SLACK budgets 1.5x for across a whole sitting). A quarter of
+ * the exam's per-question pace is 32 seconds on CSA's 129, generously more than
+ * that overhead; and being 25% over the exam's own pace means a 42-question
+ * section takes 113 minutes against the 90 it gets, i.e. he does not finish. Below
+ * that bar the number is reported to the parent and no advisory is raised, so an
+ * honest few seconds of chat overhead does not become a nag.
+ *
+ * PACE_WINDOW keeps the measurement about the present. Pace is a skill that
+ * improves; a median over nine months would keep reporting September.
+ */
+export const PACE_SAMPLE_MIN = 10
+export const PACE_OVER_MULTIPLE = 1.25
+const PACE_WINDOW = 40
+
+/** The middle value, which one abandoned question cannot drag. */
+function median(xs) {
+  const sorted = [...xs].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+/**
+ * The seconds the real exam allows for THIS question, or null when its config
+ * says nothing.
+ *
+ * The two configs state it differently and both have to work: CSA has one
+ * `pace_seconds_per_mcq`, Precalculus has separate no-calculator and calculator
+ * paces (134 and 185), because its two multiple-choice parts are timed
+ * differently. So the target is per QUESTION, from the item's own calc_allowed,
+ * rather than one number per subject.
+ */
+function paceTargetSeconds(exam = {}, attempt = {}) {
+  if (exam.pace_seconds_per_mcq != null) return exam.pace_seconds_per_mcq
+  if (attempt.calc_allowed && exam.pace_seconds_calc != null) return exam.pace_seconds_calc
+  return exam.pace_seconds_no_calc ?? null
+}
+
+/**
+ * How fast he is actually answering, against the pace the exam allows.
+ *
+ * `pace_seconds_per_mcq` (and Precalc's two split values) sat in the configs and
+ * were read NOWHERE in worker/src. Per-question `seconds` fed the total-time gate
+ * and the per-item break cap, both of which are ADMISSION tests on a sitting —
+ * they decide whether a mock counts — and neither is feedback. So a student could
+ * clear every gate while being consistently half a minute a question too slow,
+ * and never be told the one thing that would cost him the grade on the day.
+ *
+ * WHAT IS MEASURED, and what is left out. The median serve-to-answer time over his
+ * most recent multiple-choice answers: median rather than mean because one
+ * question left on screen over dinner is not his pace, and the timing gate already
+ * judges those. Blanks are excluded (they take no time and would flatter him),
+ * hinted answers are excluded (that interval contains a lesson), and non-mcq work
+ * is excluded (a rubric question has no per-question pace). Both drills and
+ * proctored answers count: pace is a habit, and a habit that only appears in
+ * mocks is not one.
+ *
+ * @returns {null|object} null when nothing here can be measured — no timed mcq
+ *          answers, or a config with no pace at all. `measured` says whether the
+ *          sample is big enough to draw a conclusion from, `over` whether it is
+ *          past the bar at which the student is told.
+ */
+function paceOf({ attempts = [], exam = {} }) {
+  const usable = attempts.filter((a) => (
+    a.kind === 'mcq'
+    && !a.hints_used
+    && (a.response ?? '') !== ''
+    && Number.isFinite(Number(a.seconds)) && Number(a.seconds) > 0
+    && paceTargetSeconds(exam, a) != null
+  ))
+  const recent = usable.slice(-PACE_WINDOW)
+  if (!recent.length) return null
+
+  const seconds = Math.round(median(recent.map((a) => Number(a.seconds))))
+  const target = Math.round(median(recent.map((a) => paceTargetSeconds(exam, a))))
+  const questions = expectedQuestions('I', exam)
+  const budget_minutes = sectionMinutes('I', exam) || null
+  const measured = recent.length >= PACE_SAMPLE_MIN
+  return {
+    n: recent.length,
+    seconds,
+    target_seconds: target,
+    over_by_seconds: seconds - target,
+    projected_minutes: questions ? Math.round((seconds * questions) / 60) : null,
+    section_questions: questions,
+    budget_minutes,
+    measured,
+    over: measured && seconds > target * PACE_OVER_MULTIPLE,
+  }
+}
+
+/** The pace sentence the student reads. Only raised when `pace.over`. */
+function paceAdvisory(pace) {
+  const projection = pace.projected_minutes && pace.budget_minutes && pace.section_questions
+    ? ` At that pace a ${pace.section_questions}-question section takes about ${pace.projected_minutes} minutes `
+      + `against the ${pace.budget_minutes} minutes it gets, so you would run out of time before the end.`
+    : ''
+  return `Pace: the middle answer of your last ${pace.n} multiple-choice questions took ${pace.seconds} seconds, `
+    + `against the ${pace.target_seconds} seconds one question gets on the real exam — ${pace.over_by_seconds} seconds `
+    + `over.${projection} That measurement is from the server's own clock and includes reading the question here and `
+    + `typing the answer, which the real exam does not, so a small overrun is expected and is not reported; this is `
+    + `past that. Pace is trainable, and it is the one thing a mock cannot tell you after the fact.`
+}
+
+/** When he last answered anything, in the same calendar unit as days_to_exam. */
+function lastAnswerOf(attempts, now) {
+  let latest = null
+  for (const a of attempts) {
+    if (!a.ts) continue
+    if (latest == null || new Date(a.ts) > new Date(latest)) latest = a.ts
+  }
+  return latest == null ? null : { at: latest, days: calendarDaysSince(latest, now), on: String(latest).slice(0, 10) }
+}
+
+/** The silence sentence. Only raised past SILENCE_DAYS. */
+function silenceAdvisory(last) {
+  return `Nothing has been recorded for ${last.days} days — the last answer was on ${last.on}. Every readiness number `
+    + `below is therefore a snapshot of ${last.on} rather than of today, and ${last.days} days is longer than every `
+    + `spaced-review interval but the last two, so everything previously missed is now overdue. Nothing here can tell `
+    + `a planned break apart from having stopped: one answer puts the measurement back in the present.`
+}
+
+/** Every open gap with its age, so "a gap is open" can be told from "for two months". */
+function openGapAges(gaps = [], now) {
+  return gaps
+    .filter((g) => !g.cleared_at)
+    .map((g) => ({
+      topic: g.topic,
+      opened_at: g.opened_at,
+      days_open: g.opened_at ? calendarDaysSince(g.opened_at, now) : null,
+      taught: g.taught_at != null,
+    }))
+    .sort((a, b) => (b.days_open ?? 0) - (a.days_open ?? 0) || String(a.topic).localeCompare(String(b.topic)))
+}
+
+/**
+ * Proctored sittings that were STARTED and never submitted, once they are older
+ * than the section's own time budget.
+ *
+ * This was invisible everywhere. unscoredSittings skips a mock with no ended_at,
+ * proctored_mocks counts only sittings with a composite, and nothing else looked
+ * at the mocks table — so a section abandoned mid-paper left no trace on any
+ * surface the student or parent sees, while every FINISHED failure mode (short,
+ * untimed, unsupplied, unscored) produces a loud advisory. Start a section, see it
+ * going badly, walk away, start another: a system built on refusing unearned
+ * claims was silent about the one action that quietly discards evidence.
+ *
+ * THE THRESHOLD IS THE SECTION'S OWN BUDGET, and the wording is exactly that. Up
+ * to it, an open sitting is a sitting in progress, which is not a thing to report;
+ * past it the paper cannot still be being sat to time, whatever else is true. The
+ * measurement is from started_at, which the server wrote itself.
+ *
+ * Refusing a SECOND open sitting on the same subject is the other half, and it
+ * lives in db.startMock's statement — see handleMockStart.
+ */
+function unfinishedSittings(ctx, now) {
+  const out = []
+  for (const m of ctx.mocks) {
+    if (!m.proctored || m.ended_at || !m.started_at) continue
+    const budget_minutes = sectionMinutes(m.section, ctx.config?.exam)
+    const open_minutes = Math.round((new Date(now) - new Date(m.started_at)) / 60000)
+    if (!budget_minutes || !(open_minutes > budget_minutes)) continue
+    out.push({
+      id: m.id,
+      section: m.section,
+      started_at: m.started_at,
+      answered: ctx.attempts.filter((a) => a.mock_id === m.id).length,
+      open_minutes,
+      budget_minutes,
+    })
+  }
+  return out
+}
+
+/** The sentence for a sitting that was started and never finished. */
+function unfinishedAdvisory(unfinished) {
+  const n = unfinished.length
+  return `${n} proctored sitting${n === 1 ? ' was' : 's were'} started and never submitted: `
+    + `${unfinished.map((u) => `#${u.id} (section ${u.section}, opened ${u.started_at}, ${u.answered} answer(s) on it) `
+      + `has been open ${u.open_minutes} minutes, past the ${u.budget_minutes} minutes section ${u.section} gets on the `
+      + `real exam`).join('; ')}. `
+    + `An unsubmitted sitting is scored as nothing and counts as nothing: it is absent from the proctored mock count and `
+    + `from every criterion, so walking away from a section leaves no record of how it was going. Submit it with `
+    + `submitMock and it will be scored from the answers already on it — a short or slow sitting still gets recorded, `
+    + `with the reason. A new sitting on this subject cannot be started until this one is submitted.`
+}
+
+/**
+ * Everything the summary and the parent page both need computed off one context,
+ * so the two surfaces cannot describe the same evidence differently.
+ */
+function signalsOf({ ctx, now }) {
+  return {
+    unscored: unscoredSittings(ctx),
+    unfinished: unfinishedSittings(ctx, now),
+    pace: paceOf({ attempts: ctx.attempts, exam: ctx.config?.exam }),
+    last_answer: lastAnswerOf(ctx.attempts, now),
+    open_gaps: openGapAges(ctx.gaps, now),
+  }
+}
+
+/** The advisories every surface raises, in the order they matter to the student. */
+function signalAdvisories(signals) {
+  return [
+    ...(signals.unscored.length ? [unscoredAdvisory(signals.unscored)] : []),
+    ...(signals.unfinished.length ? [unfinishedAdvisory(signals.unfinished)] : []),
+    ...(signals.last_answer && signals.last_answer.days >= SILENCE_DAYS ? [silenceAdvisory(signals.last_answer)] : []),
+    ...(signals.pace?.over ? [paceAdvisory(signals.pace)] : []),
+  ]
+}
+
+/**
  * The always-visible summary.
  *
  * Attached to every response because of a specific complaint: "otherwise, you
@@ -1420,9 +1689,11 @@ export function summarize({ ctx, now }) {
   const blocker = r.criteria.find((c) => !c.met)
   const daysLeft = daysToExam(ctx.config.exam_date, now)
 
-  // The submit response says this once; the advisory is what makes it resurface.
-  const unscored = unscoredSittings(ctx)
-  const advisories = unscored.length ? [...r.advisories, unscoredAdvisory(unscored)] : r.advisories
+  // The submit response says the unscored part once; the advisory is what makes it
+  // resurface — along with everything else the recorded evidence says and no
+  // number in this object can: a sitting left open, a fortnight of silence, a pace
+  // that will not finish the paper. See signalsOf.
+  const advisories = [...r.advisories, ...signalAdvisories(signalsOf({ ctx, now }))]
 
   return {
     subject: ctx.config.display_name,
@@ -1473,16 +1744,22 @@ export async function handleDashboard({ db, configs, now }) {
     })
     // The parent card lists scored mocks only, so an unscored sitting is invisible
     // there for the same reason it was invisible in the student's summary. Same
-    // advisory, same wording, one surface fewer to be surprised by.
-    const unscored = unscoredSittings(ctx)
+    // advisories, same wording, one surface fewer to be surprised by.
+    const signals = signalsOf({ ctx, now })
     subjects.push({
       config,
       coverage,
       attempts: ctx.attempts,
       mocks: ctx.mocks,
-      readiness: unscored.length
-        ? { ...readiness, advisories: [...readiness.advisories, unscoredAdvisory(unscored)] }
-        : readiness,
+      // The parent page is a SNAPSHOT with no dates on it, which is how six weeks
+      // of silence came to look exactly like a hard week: the same 0%, the same
+      // blocker, the same chips. These are what let it say when, and for how long.
+      // Computed here rather than in dashboard.js, which renders and never derives.
+      last_answer: signals.last_answer,
+      pace: signals.pace,
+      open_gaps: signals.open_gaps,
+      unfinished_sittings: signals.unfinished,
+      readiness: { ...readiness, advisories: [...readiness.advisories, ...signalAdvisories(signals)] },
     })
   }
   return { subjects, now }
