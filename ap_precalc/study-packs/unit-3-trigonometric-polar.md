@@ -232,10 +232,14 @@ Amplitude = |4| = **4.** Midline = **−2** (so y = −2). Period = 2π/3.
 Max = −2 + 4 = 2; min = −2 − 4 = −6.
 </details>
 <!-- part 1: 4 -->
+<!-- part 1: amplitude 4 -->
+<!-- part 1: amp 4 -->
 <!-- part 2: -2 -->
 <!-- part 2: y=-2 -->
+<!-- part 2: midline -2 -->
 <!-- part 3: 2pi/3 -->
 <!-- part 3: 2π/3 -->
+<!-- part 3: period 2pi/3 -->
 <!-- format: Answer as three comma-separated values in the order amplitude, midline, period — values only, writing pi as pi (e.g. 5, 1, pi/2). -->
 <!-- topic: 3.2 -->
 
@@ -290,6 +294,7 @@ sin x · csc x = sin x · (1/sin x) = 1. tan x · cot x = tan x · (1/tan x) = 1
 Sum = **2.**
 </details>
 <!-- key: 2 -->
+<!-- accept: = 2 -->
 <!-- topic: 3.8 -->
 
 ---
@@ -357,6 +362,7 @@ Positive → distance from origin is increasing on this interval.
 <!-- accept: 2.546 -->
 <!-- accept: 2.5465 -->
 <!-- accept: 2.55 -->
+<!-- accept: 8/pi = 2.546 -->
 <!-- topic: 3.11 -->
 
 ---
