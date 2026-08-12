@@ -368,7 +368,7 @@ test('B7: the per-subject summary breaks items down by kind', () => {
   // free-response half of the exam was missing entirely.
   const rows = summary(compile())
   assert.equal(rows.ap_csa.itemsByKind.frq, 20)
-  assert.equal(rows.ap_csa.itemsByKind.mcq, 218)
+  assert.equal(rows.ap_csa.itemsByKind.mcq, 221)
   for (const [, c] of Object.entries(rows)) {
     assert.equal(
       Object.values(c.itemsByKind).reduce((n, x) => n + x, 0), c.items,
@@ -411,6 +411,13 @@ test('B7: a refused FRQ parse is a build ERROR and yields NO free-response items
 test('B7: the MCQ bank is unchanged by the FRQ wiring', () => {
   // The two parsers read different files; if this number moves, one of them has
   // started reading the other's content.
+  //
+  // 218 -> 221: mcq-unit-1.md gained Q23-Q25 on the in-scope half of topic 1.12
+  // (superclass/subclass/class-hierarchy vocabulary, and that every class is a
+  // subclass of Object). The CED excludes DESIGNING and IMPLEMENTING inheritance
+  // relationships; the vocabulary is required Unit 1 content, and the bank used to
+  // carry one item on it. Moving this literal is bank growth, not a downgraded gate
+  // — the FRQ total above and every content gate are untouched.
   const r = compile()
-  assert.equal(r.items.filter((i) => i.subject === 'ap_csa' && i.kind === 'mcq').length, 218)
+  assert.equal(r.items.filter((i) => i.subject === 'ap_csa' && i.kind === 'mcq').length, 221)
 })
