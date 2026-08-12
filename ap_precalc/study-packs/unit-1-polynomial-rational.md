@@ -209,12 +209,13 @@ Concave up → secant lies **above** the curve → estimate is **too high (overe
 $c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Rightarrow 36a+6b=36\Rightarrow 6a+b=6$. Subtract: $3a=-2\Rightarrow a=-\tfrac23\approx-0.667$, then $b=8-3a=10$, $c=20$. AROC on [0,6]: $\frac{56-20}{6}=6$. Linear estimate at $t=1.5$: $D(0)+6(1.5)=20+9=\mathbf{29}$. (Note: true $D(1.5)=-0.667(2.25)+10(1.5)+20\approx33.5$; the secant **underestimates** because the parabola opens down/concave down here.)
 </details>
 
-**P9 (exam-level, calculator).** Population model $P(t)=a+b\ln(t+1)$ thousand, with $P(0)=12$ and $P(40)=58$. Find $a$ and $b$ (3 decimals), then find $P(20)$.
+**P9 (exam-level, calculator).** A drug's concentration in the blood $t$ hours after a single dose is modeled by $C(t)=\dfrac{24t}{t^2+4}$ mg/L, for $t\ge 0$. (a) Give the horizontal asymptote and say what it means about the drug. (b) Use a graphing calculator to find when the concentration is greatest, and that greatest concentration. (c) Find the AROC of $C$ on [0, 6]. Is $C$ increasing or decreasing at $t=6$? (d) State the domain restriction this model needs, and say where it comes from.
 <details><summary>Solution</summary>
 
-$P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b=\frac{46}{\ln 41}=\frac{46}{3.7136}\approx\mathbf{12.387}$. Then $P(20)=12+12.387\ln(21)=12+12.387(3.0445)\approx12+37.712=\mathbf{49.712}$.
-
-*Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)
+(a) $\deg N=1 < \deg D=2$ → **HA: y = 0**. In context: long after the dose the concentration decays toward 0 — the body clears the drug (it never quite reaches 0). Check: $C(100)\approx0.240$, $C(1000)\approx0.024$.
+(b) Graph on $[0,20]$: the peak is at **$t=2$ hours**, where **$C=6$ mg/L**. **Check it by hand** — divide top and bottom by $t$: $C(t)=\dfrac{24}{t+4/t}$, which is largest when $t+\frac4t$ is smallest, i.e. when $t=\frac4t \Rightarrow t=2$, giving $C=\frac{24}{4}=6$ ✓. Both values are exact, so to 3 decimals they are 2.000 h and 6.000 mg/L.
+(c) $C(0)=0$ and $C(6)=\frac{144}{40}=3.6$, so AROC $=\dfrac{3.6-0}{6-0}=\mathbf{0.6}$ mg/L per hour. But $C$ is **decreasing** at $t=6$: the peak was back at $t=2$, and $C(5.9)\approx3.649 > C(6)=3.6 > C(6.1)\approx3.553$. **A positive average rate of change over an interval says nothing about the direction at a point inside it** — the average is positive here only because of the climb from 0 to 6 mg/L in the first two hours.
+(d) $t^2+4$ is never zero, so there is **no algebraic** exclusion — the restriction is **contextual: $t\ge 0$**, because $t$ counts hours since the dose and negative time is meaningless. (Realistically also an upper bound at the next dose, after which this model no longer describes the situation.)
 </details>
 
 **P10 (exam-level, no-calc) — FRQ Q4 Symbolic style.** (a) Solve $\log_2(8x)=5$. (b) Condense $\log_3 x + 2\log_3 3$ into a single log. (c) Solve $e^{2x}-e^{x}-6=0$ for all real x.
@@ -225,7 +226,7 @@ $P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b
 (c) Quadratic-in-disguise: let $u=e^x$. $u^2-u-6=0\Rightarrow(u-3)(u+2)=0\Rightarrow u=3$ or $u=-2$. $e^x=3\Rightarrow x=\ln 3$. $e^x=-2$ impossible (exp is always positive). **x = ln 3.** (This "quadratic in $e^x$" was literally 2025 Q4(C).)
 </details>
 
-**P11 (exam-level) — FRQ Q1 Function Concepts style.** $f$ is given by a table: $f(1)=8, f(2)=4, f(3)=2, f(4)=1$. (a) Compute $h=g\circ f$ at $x=2$ where $g(x)=x^2-3$. (b) Find $f^{-1}(2)$. (c) Which model best fits $f$ — linear, quadratic, or exponential — and justify.
+**P11 (exam-level, calculator) — FRQ Q1 Function Concepts style.** $f$ is given by a table: $f(1)=8, f(2)=4, f(3)=2, f(4)=1$. (a) Compute $h=g\circ f$ at $x=2$ where $g(x)=x^2-3$. (b) Find $f^{-1}(2)$. (c) Which model best fits $f$ — linear, quadratic, or exponential — and justify.
 <details><summary>Solution</summary>
 
 (a) $f(2)=4$, so $h(2)=g(4)=4^2-3=13$.
