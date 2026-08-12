@@ -81,7 +81,7 @@ Full pacing numbers and protocols live in `pacing-and-strategy.md` — read that
 
 - **Only what is in the answer box is scored.** Scratch paper is for thinking; an annotation is *not* an answer. If your good idea is in the margin or in an annotation, it earns nothing. Every line you want credit for gets typed into the response field.
 - **The red clock at 5 minutes is your only warning.** Nobody will call out "30 minutes left." So you own your own pacing: check the on-screen clock yourself at fixed points (§7/§8 of `pacing-and-strategy.md`), and treat the clock turning red as the hard trigger for the end-of-section sweep below.
-- **You can move freely between questions until time expires** — within a section. So flagging and coming back is a real strategy, not a gamble.
+- **In Section II you can move freely between the four FRQs until time expires** — the directions say so outright, so flagging and coming back is a real strategy, not a gamble. (That quote is about Section II; for the MCQ, stick to the flag-and-return triage in `pacing-and-strategy.md §3`.)
 
 **MCQ (Section I):**
 - Target ~2 min 9 sec per question.

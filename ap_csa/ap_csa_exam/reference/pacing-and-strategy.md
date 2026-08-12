@@ -14,7 +14,7 @@
 | Weight | 55% of composite | 45% of composite |
 | Java Quick Reference | Provided | Provided |
 | Time cues | On-screen clock only — **turns red at 5 min left; no proctor updates or warnings** | Same |
-| Moving between questions | Free, until time expires | Free, until time expires |
+| Moving between questions | Flag and return within the section (what the §3 triage relies on) | **Free, until time expires** — stated in the Section II directions |
 | What gets credit | The answer you select | **Only text typed into the response field** — paper and annotations score zero |
 | Guessing penalty | **None — never leave blank** | N/A (write something for partial credit) |
 
@@ -100,7 +100,7 @@ Quoted from the 2026 AP CSA Section II directions in Bluebook:
    - **You are your own timekeeper.** The checkpoints in §7 and §8 are not optional decoration; they are the only pacing you will get. Glance at the clock at each one. A watch that isn't a smartwatch is allowed, and helps.
    - **Red = sweep, not panic.** Red clock is the trigger to stop new logic and do the blank-sweep (fill every blank MCQ / type a header and a loop into every blank FRQ part, and copy in anything that only exists on paper).
    - **Practise it in mocks.** Run every timed mock with the clock in front of you and nobody calling time, and make the last 5 minutes a sweep. If your mocks are proctored by a person holding a timer, you are training for a cue that will not exist on 12 May 2027.
-3. **Free movement inside a section.** You can go back and forth between questions in a section until time expires — which is exactly what makes the flag-and-return triage in §3 safe.
+3. **Free movement inside Section II.** The Section II directions say it in so many words: you can go back and forth between the four FRQs until time expires — which is what makes "start the one you can do first" and the flag-and-return triage in §3 safe. (The quote is from the Section II directions specifically; don't assume anything beyond that about Section I except what §3 already does — flag, move on, come back.)
 
 ---
 
