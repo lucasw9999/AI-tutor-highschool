@@ -55,6 +55,18 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
     },
     async serve(id) { return state.serves.find((s) => s.id === Number(id)) ?? null },
     async markServeLogged(id) { (await this.serve(id)).logged = 1 },
+    /**
+     * The conditional claim, with the same contract as the single UPDATE in
+     * db.js: 1 when this call spent the serve, 0 when it was already spent.
+     * A fake cannot reproduce the race — see tests/db.test.js for that, over
+     * real SQLite — but it can hold the handler to the same return contract.
+     */
+    async claimServe(id) {
+      const s = await this.serve(id)
+      if (!s || s.logged) return 0
+      s.logged = 1
+      return 1
+    },
     async recordAttempt(a) { state.attempts.push({ id: state.nextAttempt++, ...a }) },
     async openGap(g) {
       if (!state.gaps.some((x) => x.subject === g.subject && x.topic === g.topic && !x.cleared_at)) {
@@ -146,6 +158,25 @@ function ctxFullBank(n = CSA.exam.mcq_count + 2) {
   })
 }
 
+/**
+ * Two topics, each deep enough that a whole sitting COULD be spent on one of
+ * them. With four items per topic the weakest-topic branch runs dry after two
+ * questions and the paper accidentally spreads, which hides the defect.
+ */
+function ctxTwoTopics(n = 8) {
+  return fakeDb({
+    items: ['t1', 't2'].flatMap((topic) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `${topic}-${i + 1}`, subject: 'ap_csa', topic, unit: '1', practice: 'P3', kind: 'mcq',
+        stem: `Question ${topic}-${i + 1}`, options: { A: 'a', B: 'b', C: 'c', D: 'd' },
+        answer: 'B', explanation: `Because of ${topic}.`, calc_allowed: 0,
+      })),
+    ),
+    topics: TOPICS,
+    teaching: TEACHING,
+  })
+}
+
 test('/next hands out a question and never leaks the answer', async () => {
   const db = ctx()
   const r = await handleNext({ db, subject: 'ap_csa', config: CSA, now: T0 })
@@ -222,6 +253,23 @@ test('a hinted answer is recorded as tutored, not cold', async () => {
   await handleLog({ db, serveId: q.serve, response: 'B', hints: true, config: CSA, now: at(5) })
   assert.equal(db.state.attempts[0].conditions, 'tutored')
   assert.equal(db.state.attempts[0].hints_used, 1)
+})
+
+test('an answer the server cannot read is explained, not left as a silent nothing', async () => {
+  // "B or C" is neither a choice nor a wrong choice: grade() reports it unparsed
+  // so it cannot become a miss he then has to work off. But an unparsed verdict
+  // returned correct: null, graded: false and NO note, so he was told nothing at
+  // all and had no way to know what to do about it.
+  const db = ctx()
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: T0 })
+  const r = await handleLog({ db, serveId: q.serve, response: 'B or C', config: CSA, now: at(20) })
+
+  assert.equal(r.graded_by, 'unparsed')
+  assert.equal(r.graded, false)
+  assert.equal(r.correct, null, 'an unreadable answer is not a wrong answer')
+  assert.ok(r.note, 'a verdict of "nothing" with no explanation leaves him stuck')
+  assert.match(r.note, /could not/i, 'say plainly that it could not be read')
+  assert.match(r.note, /letter/i, 'and what to do about it: reply with just the letter')
 })
 
 // ---------------------------------------------------------------------------
@@ -579,6 +627,43 @@ test('a proctored mock is not aimed at his weakest topic', async () => {
   const inside = await handleNext({ db: sitting, subject: 'ap_csa', config: CSA, now: at(100), mockId: m.mock })
   assert.equal(inside.type, 'question')
   assert.doesNotMatch(inside.why, /Re-testing/, 'the real exam is not a remediation set on his weakest topic')
+})
+
+test('a mock sitting spreads across the exam instead of drilling the weak topic', async () => {
+  // Suppressing the gap-driven lesson and the gap re-test was not enough: the
+  // weakest-topic and spaced-review priorities still applied inside a sitting, so
+  // a mock was aimed squarely at what he is worst at. The real AP exam is not,
+  // and a sitting that is systematically understates the composite — the only
+  // number that moves readiness.
+  const db = ctxTwoTopics()
+  const seed = (item_id, topic, correct) => db.state.attempts.push({
+    id: db.state.nextAttempt++, ts: at(1), subject: 'ap_csa', item_id, topic, unit: '1',
+    practice: 'P3', response: 'X', correct, graded_by: 'server', seconds: 30,
+    hints_used: 0, conditions: 'cold', mock_id: null,
+  })
+  seed('t1-1', 't1', 0)   // t1 at 0%
+  seed('t1-2', 't1', 0)
+  seed('t2-1', 't2', 1)   // t2 at 100%
+  seed('t2-2', 't2', 1)
+
+  // Outside a sitting, t1 is exactly what he should be working on.
+  const drill = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(100) })
+  assert.equal(drill.type, 'lesson')
+  assert.equal(drill.lesson.topic, 't1', 'ordinary practice must still chase the weak topic')
+
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(150) })
+  const served = []
+  for (let i = 0; i < 4; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(200 + i * 60), mockId: m.mock })
+    assert.equal(q.type, 'question')
+    assert.doesNotMatch(q.why, /below the/, 'a sitting must not be justified as remediation')
+    served.push(q.topic)
+    await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(200 + i * 60 + 40) })
+  }
+  assert.equal(
+    new Set(served).size, 2,
+    `both topics carry exam weight, so a 4-question sitting must reach both — got ${served.join(', ')}`,
+  )
 })
 
 test('days_to_exam counts calendar days in one fixed zone', async () => {

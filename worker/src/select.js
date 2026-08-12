@@ -18,6 +18,12 @@
 // topic's OWN pool: its never-asked items first, then its items whose reuse
 // window has passed. A topic that has been used up must not fall through to a
 // lower priority just because some other topic still has unseen items.
+//
+// Inside a proctored sitting (`sampling: 'mock'`) that order does not apply.
+// Priorities 1, 3 and 4 are all remediation — they aim the paper at what he is
+// worst at — and the exam he is preparing for is aimed at nothing. A sitting is
+// sampled for breadth in proportion to exam weight instead, because the composite
+// it produces is the only number that can move readiness.
 
 import { isServerGraded } from './grade.js'
 
@@ -74,11 +80,19 @@ function examWeight(topic, topicMeta) {
 /**
  * Choose the next item.
  *
+ * @param {'mock'|null} sampling  'mock' samples a proctored sitting instead of
+ *        teaching: the remediation priorities (1, 3, 4) are skipped and breadth
+ *        is drawn in proportion to exam weight. `mockId` says which sitting, so
+ *        the balance is measured over THIS paper rather than his whole history.
  * @returns {{item: object, reason: string, priority: string, conditions: string}|null}
  *          null only when every item is inside the reuse window, which means the
  *          bank is exhausted rather than that the student is finished.
  */
-export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(), config, now, reuseDays = 56 }) {
+export function pickNext({
+  items, attempts = [], gaps = [], topicMeta = new Map(), config, now, reuseDays = 56,
+  sampling = null, mockId = null,
+}) {
+  const inMock = sampling === 'mock'
   const stats = topicStats(attempts)
   // Coverage asks "has he tried this?", which an ungraded attempt still answers.
   const attempted = new Set(attempts.map((a) => a.topic))
@@ -118,16 +132,25 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
     return pool.sort((a, b) => a.id.localeCompare(b.id))
   }
 
+  /**
+   * Everything servable when no particular topic is being asked for: on-exam
+   * never-asked items first, then on-exam reusable ones, and only then class-only
+   * material. Non-empty whenever `fresh` is, which is checked above.
+   */
+  const breadthPool = () => [unseen.filter(onExam), fresh.filter(onExam), unseen, fresh].find((p) => p.length)
+
   // 1. A gap that has been taught but never re-tested cold. Oldest first, so a
   //    long-open gap is not starved by a newer one. Deliberately not filtered by
   //    exam weight: a gap opens on any topic he misses twice, and it only closes
   //    on a cold correct answer on that same topic, so skipping class-only
   //    topics here would leave those gaps open forever.
+  //
+  //    Skipped inside a sitting: the real exam does not re-test his gaps.
   const openedAt = (g) => {
     const t = new Date(g.opened_at).getTime()
     return Number.isNaN(t) ? Infinity : t
   }
-  const toRetest = gaps
+  const toRetest = inMock ? [] : gaps
     .filter((g) => g.taught_at && !g.cleared_at)
     .sort((a, b) => openedAt(a) - openedAt(b) || a.topic.localeCompare(b.topic))
   for (const g of toRetest) {
@@ -152,6 +175,51 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
       priority: 'coverage',
       conditions: 'cold',
       reason: `First question on ${pick.topic}. Until you have attempted it, it does not count as covered.`,
+    }
+  }
+
+  // Everything below this line is remediation, and a proctored sitting must not
+  // remediate. Priorities 3 and 4 aim the paper at his weakest topics and his
+  // overdue reviews; the real AP exam is aimed at neither, so a sitting that is
+  // aimed there scores him lower than the exam would — while /mock/start tells him
+  // "a mock only counts if it is run like the real thing." The composite is the
+  // only number that moves readiness, which is what makes this the one place where
+  // aiming at a weakness does harm. Coverage (2, above) stays: a topic he has
+  // never attempted is part of the paper, not a weakness being chased.
+  if (inMock) {
+    // How much of THIS sitting each topic has taken so far, keyed on the mock id
+    // so a term of ordinary drilling cannot distort the paper.
+    const answered = new Map()
+    let asked = 0
+    for (const a of attempts) {
+      if (a.mock_id == null || mockId == null || Number(a.mock_id) !== Number(mockId)) continue
+      answered.set(a.topic, (answered.get(a.topic) ?? 0) + 1)
+      asked++
+    }
+
+    const pool = breadthPool()
+    const topics = [...new Set(pool.map((it) => it.topic))]
+    const weight = new Map(topics.map((t) => [t, examWeight(t, topicMeta)]))
+    const total = [...weight.values()].reduce((n, w) => n + w, 0)
+    // The share of the paper each topic's exam weight entitles it to; an equal
+    // share when the bank carries no weights at all.
+    const share = (t) => (total > 0 ? weight.get(t) / total : 1 / topics.length)
+    // Whichever topic is furthest below its entitlement. Deterministic, like every
+    // other branch — no RNG anywhere — so a disputed sitting replays question for
+    // question. The final tie-break is stringified because an item may carry a
+    // NULL topic, and a bank defect must not crash the sitting.
+    const [next] = topics
+      .map((topic) => ({ topic, owed: share(topic) * (asked + 1) - (answered.get(topic) ?? 0) }))
+      .sort((a, b) => b.owed - a.owed
+        || weight.get(b.topic) - weight.get(a.topic)
+        || String(a.topic).localeCompare(String(b.topic)))
+
+    return {
+      item: poolFor(next.topic)[0],
+      priority: 'mock_breadth',
+      conditions: 'proctored_mock',
+      reason: `Mock question on ${next.topic}, drawn to keep this sitting spread across the paper the way the exam ` +
+        `weights it. A mock aimed at your weak spots would score you lower than the real exam will.`,
     }
   }
 
@@ -199,7 +267,7 @@ export function pickNext({ items, attempts = [], gaps = [], topicMeta = new Map(
   //    ago to have forgotten beats a never-asked class-only one, or the exam
   //    filter above evaporates the moment every on-exam item has been seen once.
   //    `fresh` is non-empty here, checked above, so this always finds a pool.
-  const pool = [unseen.filter(onExam), fresh.filter(onExam), unseen, fresh].find((p) => p.length)
+  const pool = breadthPool()
   const pick = [...pool].sort((a, b) => examWeight(b.topic, topicMeta) - examWeight(a.topic, topicMeta) || a.id.localeCompare(b.id))[0]
   // Only claim he is at every floor when that is true. Branch 3 may have found a
   // topic below its floor and merely been unable to serve it, and this sentence

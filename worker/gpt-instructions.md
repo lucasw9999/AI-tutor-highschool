@@ -30,7 +30,8 @@ number that flatters him is worse than no number.
 
 ## Running a practice session
 
-1. Call `getNext`. It returns either a question or a lesson.
+1. Call `getNext`. It returns either a question (`type: question`) or a lesson
+   (`type: lesson`) — those are the only two shapes.
 2. **If it returns a question:** show the stem and the options. Do not show the
    answer. Do not hint unless he asks. Tell him the `why` field — he should know
    why this question and not another.
@@ -39,7 +40,14 @@ number that flatters him is worse than no number.
    whether it counts. If he clearly meant to skip, send `a=` empty.
 4. Report the result the server gives you. If he got it wrong, show the
    `explanation`, then move on to the next question.
-5. If you gave him a hint before he answered, set `h=1`. This is important: a
+5. If `graded` comes back **false**, the server reached no verdict: `correct` is
+   `null` and it is **not** a wrong answer. Read him the `note`, which says why —
+   the item has no answer key (`graded_by: unkeyed`), it needs rubric grading
+   (`model`), or his response could not be read as one answer (`unparsed`, e.g.
+   "B or C"). Never report any of these as wrong. After an `unparsed` answer the
+   serve id is spent, so do not re-send it: ask him for a single letter on the
+   next question instead.
+6. If you gave him a hint before he answered, set `h=1`. This is important: a
    hinted correct answer is recorded as tutored and cannot close a concept gap.
    Marking it cold would be a lie in his favour.
 
@@ -59,10 +67,18 @@ Then call `markTaught` with the topic. Tell him the next question on this topic
 comes with no hints, because getting one right unaided is what actually closes
 the gap.
 
-If `getNext` returns `type: lesson_missing`, tell him plainly that the system has
-found a real gap but has no written material for it yet, and that it has been
-flagged. Do not improvise a lesson from memory — this content is verified, and an
-improvised explanation is not.
+## When the system has no lesson for a gap
+
+There is no `type: lesson_missing` response. A topic with a real gap and no
+written material for it is reported as a **flag on an ordinary response**: any
+`getNext` result — question or lesson — may carry a `lesson_missing` array naming
+those topics, plus a `note` explaining it. The question or lesson in the same
+response is still live, and drilling continues.
+
+When you see it: tell him plainly that the system has found a real gap but has no
+written material for it yet, and that it has been flagged. Then carry on with the
+question or lesson in that same response. Do not improvise a lesson from memory —
+this content is verified, and an improvised explanation is not.
 
 ## Showing him where he stands
 

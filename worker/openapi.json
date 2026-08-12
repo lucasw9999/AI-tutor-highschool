@@ -406,8 +406,7 @@
                   "type": "string",
                   "enum": [
                     "question",
-                    "lesson",
-                    "lesson_missing"
+                    "lesson"
                   ]
                 },
                 "serve": {
@@ -458,6 +457,13 @@
                 "lesson": {
                   "$ref": "#/components/schemas/Lesson"
                 },
+                "lesson_missing": {
+                  "type": "array",
+                  "description": "Topics with a real gap but no written lesson yet. Never a response type of its own: the question or lesson below is still served. Say the system owes him this one, do NOT improvise a lesson, and carry on.",
+                  "items": {
+                    "type": "string"
+                  }
+                },
                 "note": {
                   "type": "string"
                 },
@@ -486,7 +492,7 @@
                 },
                 "graded": {
                   "type": "boolean",
-                  "description": "True when the server reached a mechanical verdict. False for model-graded and unkeyed items, where correct is null and note explains why."
+                  "description": "True when the server reached a mechanical verdict. False for model-graded items, unkeyed items, and answers it could not read (graded_by unparsed), where correct is null and note explains why."
                 },
                 "blank": {
                   "type": "boolean"
@@ -500,7 +506,13 @@
                 },
                 "graded_by": {
                   "type": "string",
-                  "description": "server, model, or unkeyed."
+                  "description": "server, model, unkeyed, or unparsed. unparsed means the response could not be read as one answer (\"B or C\"): it is NOT wrong, nothing was scored, and the serve is spent — ask for a single letter on the next question.",
+                  "enum": [
+                    "server",
+                    "model",
+                    "unkeyed",
+                    "unparsed"
+                  ]
                 },
                 "seconds": {
                   "type": "integer",
