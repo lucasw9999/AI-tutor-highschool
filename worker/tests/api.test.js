@@ -797,6 +797,23 @@ function realDb() {
 }
 
 /**
+ * The real seeded bank with one half of the exam taken out of it.
+ *
+ * A bank that cannot supply a half of a section is not a hypothetical: it is what
+ * ap_csa itself was until the free-response items were compiled into it, and it is
+ * every subject whose second half has not been written yet. Now that the seed holds
+ * both halves, the scenario has to be built rather than found — deleting the rows
+ * is the whole of it, since the exam table still says section II is 4 free-response
+ * questions and a full paper is 42 + 4.
+ */
+function realDbMissing(kind) {
+  const { sqlite, db } = realDb()
+  const gone = sqlite.prepare('DELETE FROM items WHERE kind = ?').run(kind).changes
+  assert.ok(gone > 0, `the seed is supposed to hold ${kind} items for this fixture to remove — it held none`)
+  return { sqlite, db, removed: Number(gone) }
+}
+
+/**
  * Exactly the evidence readiness.js judges a window on: the attempts tied to the
  * window's mock ids (`attempts.filter((a) => ids.has(a.mock_id))`), reduced to
  * the numbers the criteria are computed from. If a post-submit keystroke can
@@ -884,17 +901,31 @@ withSeed('an answer given after the sitting closed cannot be added to it', async
 // minutes, and six such afternoons read as "ready".
 // ---------------------------------------------------------------------------
 
-/** Sit `n` questions of a mock, right off the real key, at a fixed pace. */
+/**
+ * Sit `n` questions of a mock, right off the real key, at a fixed pace.
+ *
+ * A rubric-scored question has no key to answer off — `answer` is NULL on every
+ * free-response item, deliberately, because grade.js would otherwise mark every
+ * response to it wrong. Sending that NULL through as the response filed a BLANK,
+ * which is a different sitting from the one the caller asked for. So a rubric item
+ * gets a written response instead, and comes back graded_by 'model': answered, and
+ * not markable, which is exactly what a real free-response answer is today.
+ */
 async function sitMock({ db, mock, n, spacing, seconds = 60 }) {
   let answered = 0
   for (let i = 0; answered < n; i++) {
     const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(answered * spacing), mockId: mock })
     if (q.type !== 'question') continue
     const item = await db.item((await db.serve(q.serve)).item_id)
-    await handleLog({ db, serveId: q.serve, response: item.answer, config: CSA, now: at(answered * spacing + seconds) })
+    await handleLog({
+      db, serveId: q.serve, response: item.answer ?? WRITTEN_RESPONSE, config: CSA, now: at(answered * spacing + seconds),
+    })
     answered++
   }
 }
+
+/** What a student types at a free-response question: prose and code, not a letter. */
+const WRITTEN_RESPONSE = 'public int total(int[] a) { int s = 0; for (int x : a) s += x; return s; }'
 
 /**
  * Sit a mock on a real clock, every answer right off the real key.
@@ -1182,12 +1213,12 @@ test('a sitting recorded but not scored stays visible, with the pace implication
 })
 
 // ---------------------------------------------------------------------------
-// A section whose questions the bank cannot supply must not produce a composite
+// A section the bank cannot ask AND MARK must not produce a composite
 //
 // Driven over REAL SQLite and the REAL seeded bank, because the entire defect is
 // a disagreement between the exam table and the content. `frq_count` says a
-// section II sitting is 4 questions; the bank holds ZERO free-response items —
-// every one of its 218 CSA items is kind 'mcq' — and the selector filters by
+// section II sitting is 4 questions; the bank held ZERO free-response items —
+// every one of its 218 CSA items was kind 'mcq' — and the selector filters by
 // topic, never by kind or section. So a section II sitting was handed 4 multiple
 // choice questions, and 4 answers against "the 4 questions a section II sitting
 // is expected to contain" cleared MIN_MOCK_COVERAGE outright: composite 100,
@@ -1203,21 +1234,38 @@ test('a sitting recorded but not scored stays visible, with the pace implication
 // against max_blanks 1 — three such sittings made that criterion UNMEETABLE and
 // `ready` unreachable through sec=full, while the basis claimed 4 questions
 // "were never reached" that were never offered.
+//
+// The bank has since gained the exam's free-response half — 20 items, 125 rubric
+// points — so section II can now be ASKED. It still cannot be MARKED: every one
+// of those items is rubric-scored and the grader is not calibrated, which is a
+// second, independent reason the same sitting gets no composite, and the reason
+// the sittings below now turn on. The bank-cannot-supply case has not gone away
+// (it is every subject whose second half is unwritten), so it is built explicitly
+// with realDbMissing.
 // ---------------------------------------------------------------------------
 
-withSeed('a section II sitting is recorded but NOT scored, because the bank holds no free-response questions', async () => {
+withSeed('a section II sitting is recorded but NOT scored, because nothing on it can be marked', async () => {
   const { db, sqlite } = realDb()
   const m = await handleMockStart({ db, subject: 'ap_csa', section: 'II', source: 'official', config: CSA, now: T0 })
 
-  // Every question the exam table claims section II contains, answered right off
-  // the real key, at a brisk minute apiece: coverage and the clock are both
-  // satisfied, so the ONLY thing wrong with this sitting is that section II
-  // cannot be drawn from this bank at all.
+  // Every question the exam table says section II contains — four real
+  // free-response questions now, each answered in writing, at a brisk minute
+  // apiece: coverage and the clock are both satisfied, so the ONLY thing wrong
+  // with this sitting is that nothing on it can be marked mechanically.
   await sitMock({ db, mock: m.mock, n: CSA.exam.frq_count, spacing: 60 })
+  const kinds = await paperRows(db, 'ap_csa', m.mock)
+  assert.deepEqual(
+    [...new Set(kinds.map((a) => a.kind))], ['frq'],
+    'a section II paper is free-response, and the bank can now supply it',
+  )
+  assert.deepEqual(
+    [...new Set(kinds.map((a) => a.graded_by))], ['model'],
+    'and every one of those answers is routed to the rubric rather than marked',
+  )
 
   const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(600) })
-  assert.equal(r.answered, CSA.exam.frq_count, 'the fixture answers the whole of what the table calls section II')
-  assert.equal(r.composite_pct, null, '4 multiple choice questions are not a section II paper, whatever the count says')
+  assert.equal(r.answered, CSA.exam.frq_count, 'the fixture answers the whole of section II')
+  assert.equal(r.composite_pct, null, 'four rubric answers nobody has graded are not a score')
   assert.equal(r.counted, false, 'and a sitting with no composite cannot count toward readiness')
   assert.equal(
     sqlite.prepare('SELECT composite_pct FROM mocks WHERE id = ?').get(m.mock).composite_pct, null,
@@ -1232,6 +1280,10 @@ withSeed('a section II sitting is recorded but NOT scored, because the bank hold
   // He is told why, in the numbers, and told nothing that is untrue.
   assert.match(r.basis, /NOT scored/, 'the basis must say plainly that it was not scored')
   assert.match(r.basis, /free.response/i, 'and name what section II is made of')
+  assert.match(
+    r.basis, /rubric-scored rather than mechanically marked/,
+    `and give the reason that is actually true of this paper: ${r.basis}`,
+  )
   assert.doesNotMatch(r.basis, /Scored \d+ right/, 'an unscored sitting must not also report a score')
   assert.doesNotMatch(r.basis, /never reached/, 'nothing can be "never reached" that was never offered')
 
@@ -1247,18 +1299,50 @@ withSeed('a section II sitting is recorded but NOT scored, because the bank hold
   const adv = s.advisories.find((a) => /not scored/i.test(a))
   assert.ok(adv, `the sitting must not vanish from the summary either: ${JSON.stringify(s.advisories)}`)
   assert.doesNotMatch(
-    adv, /graded mechanically/,
-    `its 4 answers WERE graded mechanically, so that cannot be the reason given: ${adv}`,
+    adv, /short of the \d+% of the section/,
+    `the section was covered in full, so shortfall cannot be the reason given: ${adv}`,
+  )
+})
+
+withSeed('a section II sitting the bank cannot supply is refused outright, not filled with the other half', async () => {
+  // The bank-cannot-supply case, built explicitly now that the seed holds both
+  // halves. Before the kind filter this sitting was handed 4 MULTIPLE CHOICE
+  // questions and reported as "4 of the 4 questions a section II sitting is
+  // expected to contain"; the paper is now refused at the first question, and the
+  // refusal says the thing that is actually wrong — the content does not exist.
+  const { db } = realDbMissing('frq')
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'II', source: 'official', config: CSA, now: T0 })
+
+  const { answered, refusal } = await sitUntilRefused({ db, mock: m.mock, limit: CSA.exam.frq_count + 4 })
+  assert.equal(answered, 0, 'a section II paper made of multiple choice is not a section II paper at all')
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `the first serve is refused: ${refusal}`)
+  assert.match(
+    refusal.message, /cannot be given a single question/,
+    `and not as "already been asked every question", which would be untrue of an empty paper: ${refusal.message}`,
+  )
+  assert.match(refusal.message, /4 free-response question\(s\)/, refusal.message)
+  assert.match(refusal.message, /holds 0 exam-tested question\(s\) it may put on that section/, refusal.message)
+  assert.doesNotMatch(refusal.message, /wait/i, 'waiting cannot conjure a free-response item into the bank')
+  assert.match(refusal.message, /Nothing was recorded/, 'and nothing may be filed against a paper that does not exist')
+
+  // Nothing was recorded, so there is nothing to submit either — and the sitting is
+  // left open rather than stranded closed and unscorable.
+  await assert.rejects(
+    () => handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(600) }),
+    (e) => e instanceof ApiError && e.status === 409 && /no logged answers/.test(e.message),
   )
 })
 
 withSeed('a full sitting is scored over the questions it can be scored on, not marked down for the ones the bank cannot ask', async () => {
-  const { db } = realDb()
+  // On a bank with no free-response items at all: the half exists on the exam and
+  // cannot be asked here, which is precisely what must not be counted against him.
+  // (With the half in the bank it IS asked — see the padding test below.)
+  const { db } = realDbMissing('frq')
   const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: T0 })
 
   // Every multiple choice question a full sitting contains, all 42 right off the
-  // real key, well inside the 180-minute budget. There is nothing else the bank
-  // can put in front of him: it holds no free-response items.
+  // real key, well inside the 180-minute budget. There is nothing else this bank
+  // can put in front of him.
   await sitMock({ db, mock: m.mock, n: CSA.exam.mcq_count, spacing: 60 })
 
   const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(4000) })
@@ -1398,53 +1482,64 @@ withSeed('a full sitting cannot be padded past the section it is a sitting of, a
   const frq = CSA.exam.frq_count
   const m = await handleMockStart({ db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: T0 })
 
-  // Answer for as long as the server will serve. The bank holds 218 mcq items
-  // and zero free-response ones, so without a bound the paper simply keeps
-  // growing past the 46 questions a full sitting contains.
+  // Answer for as long as the server will serve. The bank holds 218 mcq items and
+  // 20 free-response ones, so without a bound the paper simply keeps growing past
+  // the 46 questions a full sitting contains — the padding this test exists for.
   const { answered, refusal } = await sitUntilRefused({ db, mock: m.mock, limit: mcq + frq + 4 })
 
+  const rows = await paperRows(db, 'ap_csa', m.mock)
   assert.equal(
-    (await paperRows(db, 'ap_csa', m.mock)).filter((a) => a.kind === 'frq').length, 0,
-    'the bank holds no free-response items, so none can have been sat',
+    rows.filter((a) => a.kind === 'frq').length, frq,
+    `a full paper is ${frq} free-response questions and the bank now holds them, so exactly ${frq} were sat — the ` +
+      `per-half bound is what stops the 5th, and this assertion read 0 while the half was missing from the bank`,
   )
+  assert.equal(rows.filter((a) => a.kind === 'mcq').length, mcq, 'and the multiple choice half in full')
   assert.equal(
-    answered, mcq,
-    `a full paper is ${mcq} multiple choice plus ${frq} free-response; the bank can supply the first half only, so ` +
-      `${mcq} answers is the whole of what this sitting may hold — it took ${answered}`,
+    answered, mcq + frq,
+    `a full paper is ${mcq} multiple choice plus ${frq} free-response, so ${mcq + frq} answers is the whole of what ` +
+      `this sitting may hold — it took ${answered}`,
   )
   assert.ok(refusal instanceof ApiError && refusal.status === 409, `the serve after that must be refused: ${refusal}`)
-  assert.match(refusal.message, /free.response/i, 'and say which half of the section is still owed')
-  assert.doesNotMatch(refusal.message, /wait/i, 'waiting cannot conjure a free-response item into the bank')
-
-  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(mcq * 60 + 600) })
-  assert.equal(r.answered, mcq)
-  assert.equal(r.expected, mcq + frq, 'the real section size is a true fact and he should still see it')
-  assert.doesNotMatch(
-    r.basis, new RegExp(`of the ${mcq + frq} questions a section full sitting is expected to contain`),
-    `no part of this paper was free-response, so it cannot be reported against the section's whole count: ${r.basis}`,
-  )
   assert.match(
-    r.basis, new RegExp(`0 of its ${frq} free-response`),
-    `the basis has to say the free-response half was never asked: ${r.basis}`,
+    refusal.message, new RegExp(`all ${mcq + frq} question\\(s\\) a section full sitting contains`),
+    `and say the paper is as long as the section already: ${refusal.message}`,
   )
-  assert.match(r.basis, new RegExp(`${mcq} of its ${mcq} multiple choice`), `and what was: ${r.basis}`)
-  assert.equal(r.counted, true, 'every question the bank can put on a full paper, all right, is a scored sitting')
+  assert.doesNotMatch(refusal.message, /wait/i, 'waiting cannot make a paper longer than its own section')
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at((mcq + frq) * 60 + 600) })
+  assert.equal(r.answered, mcq + frq)
+  assert.equal(r.expected, mcq + frq, 'the real section size is a true fact and he should still see it')
+  assert.match(
+    r.basis, new RegExp(`${frq} of its ${frq} free-response`),
+    `the basis has to say the free-response half was sat: ${r.basis}`,
+  )
+  assert.match(r.basis, new RegExp(`${mcq} of its ${mcq} multiple choice`), `and the multiple choice half too: ${r.basis}`)
+  assert.match(
+    r.basis, new RegExp(`${frq} response\\(s\\) need human or model grading`),
+    `and that the rubric half is excluded from the composite rather than folded into it: ${r.basis}`,
+  )
+  assert.equal(r.counted, true, 'every question a full paper holds, every markable one right, is a scored sitting')
   assert.equal(r.composite_pct, 100)
   assert.equal(r.scored_out_of, mcq, 'the divisor is the section half that can be asked and marked, not the paper length')
+  assert.equal(r.blanks, 0, 'a rubric answer nobody has graded is not an empty bubble')
 })
 
-withSeed('a section the bank cannot supply is still only as long as that section', async () => {
+withSeed('a section II sitting is its own half and no longer, and its answers are all free-response', async () => {
   const { db } = realDb()
   const frq = CSA.exam.frq_count
   const m = await handleMockStart({ db, subject: 'ap_csa', section: 'II', source: 'bank', config: CSA, now: T0 })
 
-  // Section II is 4 questions and the bank holds no free-response items at all, so
-  // its frq half can never fill and the per-half bound cannot stop the paper. The
-  // section's own length is what does: multiple choice practice against a clock is
-  // real work and is kept (see handleMockStart), but 12 answers are not a 4-question
-  // section, and the basis would have had to report them against it.
+  // Section II is 4 free-response questions. Two bounds could stop the paper here —
+  // the frq half filling, and the section's own length — and this pins that the
+  // paper stops at 4 whichever gets there first, with nothing of the other half on
+  // it. Before the kind filter it was 4 MULTIPLE CHOICE questions, and only the
+  // section-length bound stopped a 12-answer paper being reported against it.
   const { answered, refusal } = await sitUntilRefused({ db, mock: m.mock, limit: frq + 8 })
-  assert.equal(answered, frq, `a section II paper is ${frq} questions long, whatever kind the bank can supply`)
+  assert.equal(answered, frq, `a section II paper is ${frq} questions long`)
+  assert.deepEqual(
+    [...new Set((await paperRows(db, 'ap_csa', m.mock)).map((a) => a.kind))], ['frq'],
+    'and every one of them is the kind section II is made of',
+  )
   assert.ok(refusal instanceof ApiError && refusal.status === 409, `and the next serve is refused: ${refusal}`)
   assert.match(refusal.message, new RegExp(`all ${frq} question\\(s\\) a section II sitting contains`), refusal.message)
 
@@ -1452,7 +1547,11 @@ withSeed('a section the bank cannot supply is still only as long as that section
   // which half its answers actually filled.
   const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(2000) })
   assert.equal(r.counted, false)
-  assert.match(r.basis, new RegExp(`0 of its ${frq} free-response`), r.basis)
+  assert.match(
+    r.basis, new RegExp(`Answered ${frq} of the ${frq} questions a section II sitting is expected to contain`),
+    `the whole section was sat, and by the kind it is made of, so it may be reported against it: ${r.basis}`,
+  )
+  assert.match(r.basis, /rubric-scored rather than mechanically marked/, r.basis)
   assert.equal(r.status.questions_answered, frq, 'and nothing he did was thrown away')
 })
 
