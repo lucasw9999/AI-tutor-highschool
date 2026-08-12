@@ -82,11 +82,11 @@ function criteriaTable(criteria) {
 function lastAnswerLine(last) {
   if (!last) return `<li><b>No answers recorded yet.</b> Nothing on this card has been measured from anything.</li>`
   const when = last.days <= 0 ? 'today' : last.days === 1 ? 'yesterday' : `${last.days} days ago`
-  const stale = last.days >= 7 ? ' class="stale"' : ''
-  return `<li${stale}>Last answer <b>${esc(when)}</b> (${esc(last.on ?? String(last.at).slice(0, 10))}).`
-    + (last.days >= 7
-      ? ` Every number on this card is a snapshot of that date, not of today.`
-      : '')
+  // `stale` is api.js's judgement against its own threshold, not a second copy of
+  // that threshold here: this file renders and never derives.
+  return `<li${last.stale ? ' class="stale"' : ''}>Last answer <b>${esc(when)}</b> `
+    + `(${esc(last.on ?? String(last.at).slice(0, 10))}).`
+    + (last.stale ? ` Every number on this card is a snapshot of that date, not of today.` : '')
     + `</li>`
 }
 

@@ -231,11 +231,13 @@ test('at 0% the bar is genuinely empty, not a misleading sliver', () => {
 test('the parent is told when he last worked, and for how long he has not', () => {
   const html = subjectSection({
     ...subject(),
-    last_answer: { at: '2027-02-18T12:00:00Z', days: 42, on: '2027-02-18' },
+    last_answer: { at: '2027-02-18T12:00:00Z', days: 42, on: '2027-02-18', stale: true },
     now: NOW,
   })
   assert.match(html, /2027-02-18/, 'the date of the last answer')
   assert.match(html, /42 days ago/, 'and how long ago that was, or the page is a snapshot again')
+  assert.match(html, /snapshot of that date/, 'and that every number beside it is that old')
+  assert.match(html, /class="stale"/, 'marked, so a parent scanning the card cannot miss it')
 })
 
 test('a subject with no answers at all says so, rather than showing nothing', () => {
@@ -247,10 +249,11 @@ test('a subject with no answers at all says so, rather than showing nothing', ()
 test('an answer from today is not reported as an age', () => {
   const html = subjectSection({
     ...subject(),
-    last_answer: { at: NOW, days: 0, on: '2027-04-01' },
+    last_answer: { at: NOW, days: 0, on: '2027-04-01', stale: false },
     now: NOW,
   })
   assert.match(html, /today/i)
+  assert.ok(!html.includes('snapshot of that date'), 'and today is not reported as out of date')
 })
 
 test('open gaps are rendered with their ages, oldest first', () => {
