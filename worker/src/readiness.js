@@ -8,7 +8,9 @@
 // Three rules are structural, not stylistic:
 //   1. Drills cannot move readiness. Only attempts tied to a proctored mock count.
 //   2. Model-graded work (FRQs) cannot move readiness until the grader has been
-//      calibrated against an officially scored response.
+//      calibrated against an officially scored response AND has actually
+//      recorded a verdict. A rubric item that was merely routed to the model is
+//      unmeasured, not a zero.
 //   3. The window being judged must itself contain an official College Board
 //      sitting. An official mock elsewhere in the logbook anchors nothing.
 
@@ -108,36 +110,66 @@ export function qualifyingWindow({ config, mocks, now }) {
       reason: `only ${scored.length} of ${r.total_logged_mocks_min} required proctored mocks logged`,
     }
   }
+  // Unreachable on shipped config, and kept deliberately: both subjects set
+  // total_logged_mocks_min (6 and 4) above consecutive_qualifying_mocks (3), so
+  // the check above already covers this. Everything below slices exactly `need`
+  // sittings and every message calls them "the last N mocks", so a config with a
+  // lower total would judge — and describe — a window shorter than it claims.
+  // A test builds such a config so this branch is exercised rather than assumed.
   if (scored.length < need) {
     return { window: null, reason: `need ${need} consecutive mocks, have ${scored.length}` }
   }
 
-  // Walk candidate windows newest first. Testing only the last `need` mocks
-  // throws away a whole record when one late sitting stretches the span: three
-  // mocks in one week two months ago plus one yesterday would report that
-  // nothing at all is measurable, which understates what is known.
+  // Two sittings more than window_span_days_max apart can never share a window,
+  // so the logbook falls into BLOCKS of practice separated by exactly those gaps.
+  // The only candidate a block offers is its own newest `need` sittings: judging
+  // an earlier slice of the same block would drop a sitting close enough to
+  // belong with it.
   //
-  // A candidate may leave out a NEWER sitting only when that sitting is more
-  // than window_span_days_max away from it — i.e. it belongs to a later block
-  // of practice rather than to this one. Without that restriction, three
-  // bunched-up sittings this week could be stepped over in favour of older,
-  // better-looking scores, and stale evidence would mask fresh evidence. That
-  // gap also guarantees the fallback window's newest mock is older than
-  // window_span_days_max, so with freshness_days <= that limit (as both subject
-  // configs set it) an earlier block can inform the report but can never be
-  // reported as ready.
-  let firstReason = null
-  for (let end = scored.length - 1; end >= need - 1; end--) {
-    const newer = scored[end + 1]
-    if (newer && daysBetween(scored[end].started_at, newer.started_at) <= r.window_span_days_max) continue
-    const win = scored.slice(end - need + 1, end + 1)
-    const reason = disqualify(win, r, need)
-    if (!reason) return { window: win, reason: null }
-    // Report the most recent candidate's reason: that is the run the student
-    // just sat, and the one the message wording refers to.
-    firstReason ??= reason
+  // Blocks are walked newest first, and one is passed over ONLY when it holds
+  // fewer than `need` sittings — too few to be judged under any rule, so nothing
+  // measurable is hidden by skipping it. The first block that CAN form a
+  // candidate is the verdict: if that candidate is disqualified, the
+  // disqualification is the answer, because reaching further back would judge
+  // older, better-looking scores while ignoring what the student just sat.
+  //
+  // That is the correction to R3, which asked only whether the IMMEDIATELY newer
+  // sitting was far away. Three crammed sittings yesterday, 48 days after the
+  // previous block, satisfied that test, so all three were stepped over and
+  // two-month-old 95s were reported as though they were current.
+  //
+  // The rule balances the two failure directions. Fresh weak evidence is never
+  // stepped over for stale strong evidence, because a block that can be judged
+  // always is. And a legitimate older block is still measured when the newest
+  // sittings are too few to judge at all, so a lone recent mock does not erase
+  // the record behind it. Where the two conflict — the newest block can form a
+  // candidate but fails — honesty about the most recent evidence wins.
+  //
+  // Because a pass-over only ever crosses a gap wider than window_span_days_max,
+  // and both configs set freshness_days <= that limit, any window that leaves out
+  // newer sittings is necessarily stale: an earlier block can inform the report
+  // but can never be reported as ready.
+
+  // The reason always describes the most recent `need` sittings — the run the
+  // student just sat, which is what the wording refers to — even when an older
+  // block supplies the judged window. It is never null on a failing path: if
+  // those sittings qualified they would be the first candidate and returned
+  // below, and a candidate that straddles a block boundary spans more than
+  // window_span_days_max by construction.
+  const reason = disqualify(scored.slice(-need), r, need)
+
+  for (let end = scored.length - 1; end >= need - 1; ) {
+    let start = end
+    while (start > 0 && daysBetween(scored[start - 1].started_at, scored[start].started_at) <= r.window_span_days_max) {
+      start--
+    }
+    if (end - start + 1 >= need) {
+      const win = scored.slice(end - need + 1, end + 1)
+      return disqualify(win, r, need) ? { window: null, reason } : { window: win, reason: null }
+    }
+    end = start - 1
   }
-  return { window: null, reason: firstReason }
+  return { window: null, reason }
 }
 
 /**
@@ -195,7 +227,12 @@ function evaluateChecks({ config, window, attempts, calibrated, now }) {
   // work is quarantined until calibration, and an attempt on an item with no
   // answer key was never graded at all — counting either as a miss would blame
   // the student for a gap in the bank.
-  const mockAttempts = inWindow.filter(isServerGraded)
+  //
+  // The kind is checked as well as the verdict: a rubric-scored item is
+  // model-graded whatever `graded_by` a future calibrated grader writes on it, so
+  // it can never be allowed to move an MCQ, per-unit, per-practice or
+  // per-calculator-half number. Filtering on graded_by alone left that open.
+  const mockAttempts = inWindow.filter((a) => isServerGraded(a) && !MODEL_GRADED.has(a.kind))
 
   const composites = window.map((m) => m.composite_pct)
   const out = new Map()
@@ -284,12 +321,41 @@ function evaluateChecks({ config, window, attempts, calibrated, now }) {
     // set of model-graded kinds: no item in the bank is stored as kind 'frq' —
     // every free-response item is 'constructed_model_graded' — so matching that
     // literal would have measured nothing the moment calibration was switched on.
-    const frqRaw = pct(inWindow.filter((a) => MODEL_GRADED.has(a.kind)))
+    //
+    // Trusted is not the same as scored. grade.js books EVERY rubric item as
+    // `{correct: 0, graded_by: 'model'}` when it is served: attempts.correct is
+    // NOT NULL, so 0 is the only value that row can carry, and 'model' means
+    // "routed to the rubric", not "scored zero". Nothing writes a verdict back
+    // yet. Averaging those rows reported that the student scored 0% on free
+    // response when nothing had been graded at all — the same false negative
+    // isServerGraded() exists to prevent, so its definition of "carries a
+    // verdict" is what is applied here rather than bypassed. Until a calibrated
+    // grader records verdicts under some other `graded_by`, this reports the FRQ
+    // criterion as PENDING, which is the truth: unmeasured, not zero.
+    const frqAttempts = inWindow.filter((a) => MODEL_GRADED.has(a.kind))
+    const graded = frqAttempts.filter(isServerGraded)
+    const frqRaw = pct(graded)
     const frqPct = frqRaw == null ? null : roundDown(frqRaw, 0)
-    out.set('frq', {
-      met: frqPct != null && frqPct >= r.frq_min_pct,
-      detail: frqPct == null ? 'no FRQ attempts in window' : `${frqPct}%`,
-    })
+    const unscored = frqAttempts.length - graded.length
+    if (frqPct == null && frqAttempts.length) {
+      out.set('frq', {
+        met: false,
+        pending: true,
+        detail: `${frqAttempts.length} free-response attempt${frqAttempts.length === 1 ? '' : 's'} in window, none carrying a scored verdict yet — nothing to measure`,
+      })
+    } else {
+      out.set('frq', {
+        met: frqPct != null && frqPct >= r.frq_min_pct,
+        // A percentage over part of the free-response work says so, so the
+        // number can never read as a verdict on work nobody graded.
+        detail:
+          frqPct == null
+            ? 'no FRQ attempts in window'
+            : unscored
+              ? `${frqPct}% of ${graded.length} scored; ${unscored} not yet scored`
+              : `${frqPct}%`,
+      })
+    }
   }
 
   return out

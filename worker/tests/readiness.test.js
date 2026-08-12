@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { computeReadiness, qualifyingWindow, pct, breakdown, daysBetween } from '../src/readiness.js'
-import { MODEL_GRADED } from '../src/grade.js'
+import { grade, MODEL_GRADED } from '../src/grade.js'
 
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
 const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', import.meta.url)))
@@ -42,11 +42,38 @@ function run({ mock_id, total, right, kind = 'mcq', unit = '1', practice = 'P1',
 }
 
 /**
- * Free-response rows in the shape a calibrated grader would actually write:
- * a model-graded kind the bank really contains, marked `graded_by: 'model'`.
+ * Free-response rows carrying a RECORDED rubric verdict: a model-graded kind the
+ * bank really contains, marked with a `graded_by` that is not one of the three
+ * "not graded" markers, so `correct` on these rows is a real score.
+ *
+ * grade.js does NOT write these today. It books every model-graded item as
+ * `{correct: 0, graded_by: 'model'}` the moment it is served — 'model' means
+ * "routed to the rubric", not "scored zero" — and no code path ever writes a
+ * verdict back. `ungradedFrqRun` below is that real shape. The previous comment
+ * here claimed these rows were "the shape grade.js actually produces", which was
+ * false as to `correct` and hid the fact that a calibrated grader reading real
+ * rows would have reported 0% on free response.
  */
 function frqRun({ mock_id, total = 4, right = total, kind = 'constructed_model_graded' }) {
-  return run({ mock_id, total, right, kind, unit: '2', practice: 'P3', graded_by: 'model' })
+  return run({ mock_id, total, right, kind, unit: '2', practice: 'P3', graded_by: 'model_scored' })
+}
+
+/**
+ * Free-response rows exactly as grade.js books them: routed to the rubric and
+ * never scored. Built from the grader's own return value so the fixture cannot
+ * drift away from what the code writes.
+ */
+function ungradedFrqRun({ mock_id, total = 4, kind = 'constructed_model_graded' }) {
+  const booked = grade({ kind, answer: null }, 'a full worked response')
+  return Array.from({ length: total }, () => ({
+    mock_id,
+    kind,
+    unit: '2',
+    practice: 'P3',
+    calc_allowed: 0,
+    correct: booked.correct,
+    graded_by: booked.graded_by,
+  }))
 }
 
 /**
@@ -284,9 +311,10 @@ test('an uncalibrated FRQ grader blocks 100% and says why', () => {
 
 test('100% requires every criterion at once, and reports ready', () => {
   const mocks = sixMocks([90, 90, 90, 92, 93, 94])
-  // The free-response rows are the shape grade.js actually produces for
-  // rubric-scored work: a model-graded kind, marked graded_by 'model'. The old
-  // fixture used {kind: 'frq'} with no graded_by, which no code path can write.
+  // The free-response rows carry a recorded rubric verdict — a model-graded kind
+  // the bank really contains, marked graded_by 'model_scored'. grade.js cannot
+  // write that yet (see frqRun and ungradedFrqRun); until it can, no real record
+  // reaches 100, which is the honest state rather than a fixture bug.
   const attempts = [...passingAttempts([4, 5, 6]), ...[4, 5, 6].flatMap((mock_id) => frqRun({ mock_id }))]
   const r = computeReadiness({ config: CSA, mocks, attempts, coverage: FULL_COVERAGE, calibrated: true, now: NOW })
 
@@ -432,6 +460,30 @@ test('window search', async (t) => {
     assert.equal(r.readiness_pct, 0)
   })
 
+  await t.test('a crammed recent block is not stepped over even when it starts a new block', () => {
+    // R3 asked only whether the IMMEDIATELY newer sitting was more than
+    // window_span_days_max away. Here it is — 50 days ago to 2 days ago is a
+    // 48-day gap — so the search stepped over all THREE fresh sittings and
+    // judged the stale 95s: readiness_pct 94, composite_mean "95.0%", and
+    // yesterday's three 50s ignored entirely. The most recent evidence must
+    // never be ignorable: three crammed sittings cannot be judged, and that is
+    // what the report has to say.
+    const mocks = record([62, 55, 50, 2, 1, 0], { official: 2, composites: [95, 95, 95, 50, 50, 50] })
+    const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.equal(window, null, 'the three newest sittings are the evidence, and they are a cram')
+    assert.match(reason, /cram/)
+
+    const r = computeReadiness({
+      config: CSA, mocks, attempts: passingAttempts([1, 2, 3]),
+      coverage: FULL_COVERAGE, calibrated: true, now: NOW,
+    })
+    assert.equal(r.readiness_pct, 0, 'nothing is measurable, so nothing may be reported as measured')
+    assert.equal(r.first_unmet, 'mock_window')
+    const mean = r.criteria.find((c) => c.id === 'composite_mean')
+    assert.equal(mean.pending, true, 'the stale 95s must not be reported as this window')
+    assert.ok(!/95/.test(mean.detail), `stale composite reported as current: ${mean.detail}`)
+  })
+
   await t.test('an earlier block can never be reported as ready', () => {
     // The only sittings a window may skip are ones separated from it by more
     // than window_span_days_max, which is why freshness_days must not exceed
@@ -463,6 +515,29 @@ test('window search', async (t) => {
 
     const six = record([60, 50, 40, 30, 20, 10])
     assert.notEqual(qualifyingWindow({ config: CSA, mocks: six, now: NOW }).window, null, 'exactly 6 qualifies')
+  })
+
+  await t.test('a block of exactly the required length is judged, not passed over', () => {
+    // A block is only ever passed over for being too SHORT to judge. One holding
+    // exactly consecutive_qualifying_mocks sittings is judgeable, so it must be
+    // judged: skipping it would reach back for older numbers again.
+    const mocks = record([200, 150, 145, 62, 55, 50, 2], { official: 4 })
+    const { window } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.deepEqual(window?.map((m) => m.id), [4, 5, 6], 'the 62/55/50 block is exactly 3 sittings and qualifies')
+  })
+
+  await t.test('a config asking for more consecutive mocks than it logs reports the shortfall', () => {
+    // Unreachable on shipped config — total_logged_mocks_min is 6 for CSA and 4
+    // for Precalc, both above the 3 consecutive mocks a window needs — but the
+    // guard is kept, because every message below describes "the last 3 mocks"
+    // and every candidate is a slice of exactly that length. Without it, a
+    // config with a lower total would judge, and describe, a window shorter than
+    // it claims. This config is the one that makes the guard live.
+    const cfg = { ...CSA, readiness: { ...CSA.readiness, total_logged_mocks_min: 2 } }
+    assert.ok(cfg.readiness.total_logged_mocks_min < cfg.readiness.consecutive_qualifying_mocks)
+    const { window, reason } = qualifyingWindow({ config: cfg, mocks: record([30, 20]), now: NOW })
+    assert.equal(window, null, 'two sittings can never form a three-mock window')
+    assert.match(reason, /need 3 consecutive mocks, have 2/)
   })
 })
 
@@ -569,6 +644,32 @@ test('threshold boundaries', async (t) => {
     assert.notEqual(qualifyingWindow({ config: CSA, mocks: at(44), now: NOW }).window, null, '42 days is not yet stale')
     assert.equal(qualifyingWindow({ config: CSA, mocks: at(44.04), now: NOW }).window, null)
   })
+
+  await t.test('the gap that starts a new block: 42.0 days does not, 42.04 does', () => {
+    // The ONLY sittings a candidate window may leave out are ones separated from
+    // it by more than window_span_days_max: they belong to a later block of
+    // practice, and a block too small to judge (one sitting here) hides nothing.
+    // At exactly the limit the newest sitting still belongs WITH the run behind
+    // it, so that run cannot be judged without it — and with it the span is 47
+    // days, which is stale. This is the boundary of the whole rule, so it is
+    // pinned from both sides.
+    const at = (newest) => record([120, 100, 62, 55, 50, newest], { official: 3 })
+    assert.equal(
+      daysBetween(at(8)[4].started_at, at(8)[5].started_at),
+      42,
+      'the gap under test is exactly window_span_days_max',
+    )
+    assert.equal(
+      qualifyingWindow({ config: CSA, mocks: at(8), now: NOW }).window,
+      null,
+      'a 42.0-day gap does not start a new block, so the 8-day sitting is part of the run and stretches it to 47 days',
+    )
+    assert.deepEqual(
+      qualifyingWindow({ config: CSA, mocks: at(7.96), now: NOW }).window?.map((m) => m.id),
+      [3, 4, 5],
+      'a 42.04-day gap starts a new block, and one sitting alone can never be judged',
+    )
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -671,6 +772,68 @@ test('calibrated free-response evidence counts the kinds the bank really stores'
     assert.equal(c.met, false)
     assert.equal(c.pending, true, 'unmeasurable is not the same as fallen short')
     assert.match(c.detail, /not yet calibrated/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// An FRQ attempt that was never scored is not a score of zero
+// ---------------------------------------------------------------------------
+
+test('unscored free-response work is reported as unmeasured, never as 0%', async (t) => {
+  await t.test('grade.js books rubric work unscored, and a calibrated grader must not read that as zero', () => {
+    // attempts.correct is NOT NULL, so the row grade.js writes for every rubric
+    // item is correct: 0 with graded_by 'model'. Nothing writes a verdict back.
+    // Reading those rows as data told the student he scored 0% on free response
+    // when in fact nothing had been graded — the same false negative
+    // isServerGraded() exists to prevent, one layer up.
+    const booked = grade({ kind: 'constructed_model_graded', answer: null }, 'a full worked response')
+    assert.equal(booked.graded_by, 'model')
+    assert.equal(booked.correct, 0, 'the placeholder that made the 0% report possible')
+
+    const attempts = [...passingAttempts([4, 5, 6]), ...[4, 5, 6].flatMap((mock_id) => ungradedFrqRun({ mock_id }))]
+    const c = criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts }), 'frq')
+    assert.equal(c.met, false)
+    assert.equal(c.pending, true, 'never scored is not the same as scored zero')
+    assert.ok(!/%/.test(c.detail), `a percentage over unscored rows: ${c.detail}`)
+    assert.match(c.detail, /12 free-response attempts/)
+    assert.match(c.detail, /none .*scored/)
+  })
+
+  await t.test('a recorded verdict is measured, and unscored work beside it is disclosed', () => {
+    const attempts = [
+      ...passingAttempts([4, 5, 6]),
+      ...frqRun({ mock_id: 4, total: 10, right: 10 }),
+      ...ungradedFrqRun({ mock_id: 5, total: 2 }),
+    ]
+    const c = criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts }), 'frq')
+    assert.equal(c.met, true, 'the scored rows are real evidence')
+    assert.equal(c.detail, '100% of 10 scored; 2 not yet scored')
+  })
+
+  await t.test('no free-response evidence at all is a shortfall, not an unmeasured criterion', () => {
+    // Distinct from the case above: here the student has produced no rubric work
+    // to grade, which is a gap in HIS evidence — the same treatment an untested
+    // unit gets. Pending is reserved for work he did that nothing ever scored.
+    const c = criterion(assess({ composites: [90, 90, 90, 92, 93, 94] }), 'frq')
+    assert.equal(c.met, false)
+    assert.equal(c.pending, undefined, 'no attempts is a shortfall he can close, not a measurement gap')
+    assert.equal(c.detail, 'no FRQ attempts in window')
+  })
+
+  await t.test('a recorded rubric verdict never leaks into a mechanical floor', () => {
+    // A rubric verdict is model-graded however it is marked, so it may not move
+    // an MCQ, per-unit or per-practice number — those are mechanical floors.
+    const composites = [90, 90, 90, 92, 93, 94]
+    const base = assess({ composites, attempts: passingAttempts([4, 5, 6]) })
+    const withFrq = assess({
+      composites,
+      attempts: [...passingAttempts([4, 5, 6]), ...frqRun({ mock_id: 4, total: 40, right: 0 })],
+    })
+    assert.equal(criterion(withFrq, 'frq').detail, '0%', 'scored zero IS a verdict, and it fails')
+    assert.equal(criterion(withFrq, 'frq').met, false)
+    for (const id of ['mcq_overall', 'unit_2', 'practice_P3']) {
+      assert.deepEqual(criterion(withFrq, id), criterion(base, id), `${id} moved on free-response evidence`)
+    }
   })
 })
 
