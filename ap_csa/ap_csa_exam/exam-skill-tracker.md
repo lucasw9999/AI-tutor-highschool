@@ -98,7 +98,7 @@ One row per recurring error pattern. Status advances from ⬜ → 🟢 / ⭐ as 
 **B. Grader-calibration gate** — must pass before any FRQ self-score counts toward the bar. The grader (examiner) must BLIND-grade an officially-scored sample response and land **within ±1 point** of the official award on each FRQ. **This gate is passable today — it does NOT wait on the 2026 Scoring Guidelines.** Acceptable calibration sources:
 
 - a **CED sample-FRQ response** (MessageBuilder Q1, CupcakeMachine Q2, ItemInventory Q3, Schedule Q4 — official awards are in the CED); **or**
-- the **2025 officially scored samples**, live on AP Central as of 12 August 2026: `ap25-apc-computer-science-a-q1.pdf` … `-q4.pdf` (real responses with official awards) graded against `ap25-sg-computer-science-a.pdf`, with `ap25-cr-report-computer-science-a.pdf` and `ap25-computer-science-a-scoring-statistics.pdf` as context. **2024 and 2023 packages are also posted.** ⚠️ AP Central notes the 2023–25 materials **"do not completely align with the current AP CSA Exam"** after the 2025–26 revisions, so **apply the repo's Q1/Q3/Q4 filter and skip Q2**; run the ±1-point check against that year's own rubric and award; **or**
+- the **2025 officially scored samples**, live on AP Central as of 12 August 2026: `ap25-apc-computer-science-a-q1.pdf` … `-q4.pdf` (real responses with official awards) graded against `ap25-sg-computer-science-a.pdf`, with `ap25-cr-report-computer-science-a.pdf` and `ap25-computer-science-a-scoring-statistics.pdf` as context. **2024 and 2023 packages are also posted, and the exact filenames are now listed** in `reference/question-sources-and-access.md` — including the trap that the 2024/2023 *question papers* are `ap24-frq-comp-sci-a.pdf` / `ap23-frq-comp-sci-a.pdf`, not the `computer-science-a` stem. With the filter applied that is **9 usable rubric-plus-award pairs** (3 years × Q1/Q3/Q4), so this gate has plenty of fresh material for every 8-week re-test. ⚠️ AP Central notes the 2023–25 materials **"do not completely align with the current AP CSA Exam"** after the 2025–26 revisions, so **apply the repo's Q1/Q3/Q4 filter and skip Q2**; run the ±1-point check against that year's own rubric and award; **or**
 - once posted, a 2026 Scoring-Guidelines sample (an upgrade, not a prerequisite).
 
 Re-test **every 8 weeks** and **immediately after College Board posts the 2026 Scoring Guidelines**. If off by >1 point, FRQ scores are presumed inflated: subtract the measured bias and do not count FRQ toward readiness until re-calibrated. (See "Gate-B persistent-failure exit" in the Resilience & fallbacks block below for what to do if the gate fails twice in a row.)
@@ -137,10 +137,10 @@ Re-test **every 8 weeks** and **immediately after College Board posts the 2026 S
 
 | Recalibration check | Status | Notes |
 |---|---|---|
-| Official 2026 score distribution published | ⬜ | Watch `apstudents.collegeboard.org/about-ap-scores/score-distributions` |
+| Official 2026 score distribution published | ⬜ | Two places to look, and the **per-subject PDF is the one this repo previously never named**: `apcentral.collegeboard.org/media/pdf/ap26-computer-science-a-score-distributions.pdf` (404 as of 12 August 2026), plus `apstudents.collegeboard.org/about-ap-scores/score-distributions`. The 2025 baseline is live now — `ap25-computer-science-a-score-distributions.pdf`, titled "2025 Student Score Distributions – AP® Computer Science A" (verified 12 August 2026); the Precalc twin is `ap25-precalculus-score-distributions.pdf`. These are posted **per subject, per year**, and they carry the official 1–5 spread that `C5` is read from. Pull the 2025 pair now so the comparison is ready the day 2026 posts. ⚠️ 2025 is a **pre-redesign** distribution for CSA — treat it as context for the shape of the curve, not as his cutoff; **the 2026 CSA distribution is the first one measured on the redesigned exam** and is the one criterion F actually needs. |
 | Bar updated to C5 + 8 pts (floor 78%) | ⬜ | — |
 | All logged mocks re-scored against official conversion | ⬜ | — |
-| Gate B re-run against 2026 Scoring Guidelines | ⬜ | Watch `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` |
+| Gate B re-run against 2026 Scoring Guidelines | ⬜ | Watch `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` — re-confirmed 404 on 12 August 2026, along with `ap26-cr-report-*`, `ap26-apc-*-q1` and `ap26-*-scoring-statistics` for **both** subjects. AP Central lists 2026 as free-response questions only. |
 
 ---
 
@@ -161,6 +161,8 @@ These rules ensure a genuinely-ready student is never blocked by an unsatisfiabl
 **2. Official-anchor fallback (when AP Classroom is unobtainable)**
 
 **First choice, if the teacher's join code exists:** AP Classroom's full **Practice Exam** (alongside its Bluebook-Style Assessments) is an official full-length mock and satisfies criterion C directly — verified 12 August 2026. Use the fallback below only when AP Classroom genuinely cannot be obtained.
+
+> ⚠️ **The ungated Bluebook practice route does NOT satisfy this criterion.** `bluebook.collegeboard.org/students/practice` is student-accessible with only his own College Board account (verified 12 August 2026 — see `reference/question-sources-and-access.md`), and it is the right way to rehearse the exam application early. But what it offers is a **test preview** — a short, unscored, untimed tool tour — **not a full-length mock.** It is a realism prerequisite, never an official anchor. Do not log it as a mock.
 
 Satisfies criterion C's ≥1 official-material mock requirement and criterion 5's difficulty-gap check:
 

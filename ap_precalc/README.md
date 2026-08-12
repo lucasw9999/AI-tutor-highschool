@@ -15,7 +15,7 @@ A **condensed, exam-driven, question-first** catch-up system for AP Precalculus.
 
 **Everything here is free, official, and public — no login, no join code.** All PDFs live under one base URL: **`https://apcentral.collegeboard.org/media/pdf/`** — paste the base plus the filename into a browser. Save them into one folder per subject per year; that folder *is* the free-response practice supply for the next two years.
 
-**Verified 12 August 2026:** every filename printed below was resolved to a live document on that date, **except the two rows that say otherwise in words** (Priority 1 item 5 and Priority 3 item 10, where the exact filename was not confirmed and you should click through from AP Central instead). Two cautions that will otherwise cost you time:
+**Verified 12 August 2026:** every filename printed below was resolved to a live document on that date, **except where a row says otherwise in words** — those rows name the artifact but not a confirmed filename, so click through from AP Central instead of constructing a URL. Two cautions that will otherwise cost you time:
 - **Do not "fix" a filename that looks inconsistent.** College Board does not use one naming pattern across years. `ap24-precalculus-student-samples-frq-1.pdf` (Precalc 2024) and `ap24-frq-comp-sci-a.pdf` (CSA 2024) look wrong next to their 2025 siblings and are nevertheless correct. The 2025-shaped guess for Precalc 2024, `ap24-apc-precalculus-q1.pdf`, returns **404**.
 - **A 404 means the name is wrong, not that the document is gone.** Fall back to AP Central → the subject → *Exam Questions* and click through.
 
@@ -49,7 +49,7 @@ AP Central keeps only the **3 most recent years** of free-response material. **W
 | 10 | **Course and Exam Description** — AP Central → the subject → *Course and Exam Description* | **both** | ⚠️ **Check the cover before trusting it.** The Precalculus CED was **refreshed 15 July 2026**; the current cover reads **"Effective Fall 2026"** and prints the new 42-question exam table. **An older download — including the October 2025 printing — shows the OLD format.** Replace any local copy dated before 15 July 2026. |
 | 11 | `ap-computer-science-a-course-and-exam-description-clarification.pdf` | **CSA** | The CSA CED errata sheet ("Implemented as of August 2025"). Its value is reassurance: **no CSA content moved.** It also explains why the "Available Resources" links inside the CED PDF are broken — College Board says so outright, so don't chase them. |
 | 12 | `ap25-precalculus-score-distributions.pdf` and `ap25-computer-science-a-score-distributions.pdf` | **both** | The official **1–5 score distribution** per subject per year — the real answer to "what does this level of performance convert to?" Baseline copies now; watch for the 2026 and 2027 editions, since the **2026 CSA** one is the first curve measured on the redesigned exam. |
-| 13 | `ap-precalculus-hybrid-sample-free-response-booklet.pdf` | **Precalc** | The paper booklet layout he handwrites his FRQ answers into on exam day. Print a few and practice in them. |
+| 13 | `ap-precalculus-hybrid-sample-free-response-booklet.pdf` | **Precalc** | The paper booklet layout he handwrites his FRQ answers into on exam day. Print a few and practice in them. *(Filename as recorded in `reference/practice-resources-and-exam-day.md`; not re-resolved on 12 August 2026 — if it 404s, search AP Central for "sample free-response booklet".)* |
 
 ### ✅ Priority 4 — the one item that isn't a download
 
