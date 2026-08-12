@@ -243,6 +243,21 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
   const item = await db.item(serve.item_id)
   if (!item) throw new ApiError(500, `serve ${serveId} points at a missing item`)
 
+  // A serve handed out inside a sitting can still be logged after that sitting
+  // was submitted: requireOpenMock guards /next, and this was the other door.
+  //
+  // The answer is KEPT — he did the work, and a lost answer is its own small
+  // lie — but it is recorded as ordinary practice: an answer typed after the
+  // timer stopped, with the paper handed in, is not evidence about how he
+  // performs under exam conditions. Filing it under the mock did exactly what
+  // the stored composite cannot: readiness reads the judged window's evidence
+  // as `attempts.filter((a) => ids.has(a.mock_id))`, so one untimed keystroke
+  // hours later moved mcq_overall and a per-unit floor on a closed sitting.
+  const sitting = serve.mock_id == null ? null : await db.mock(serve.mock_id)
+  const closed = sitting?.ended_at ? sitting : null
+  const mockId = closed ? null : serve.mock_id
+  const conditions = mockId ? 'proctored_mock' : hints ? 'tutored' : 'cold'
+
   const verdict = grade(item, response)
   const seconds = Math.max(0, Math.round((new Date(now) - new Date(serve.served_at)) / 1000))
 
@@ -277,14 +292,14 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     graded_by: verdict.graded_by,
     seconds,
     hints_used: hints ? 1 : 0,
-    conditions: serve.mock_id ? 'proctored_mock' : hints ? 'tutored' : 'cold',
-    mock_id: serve.mock_id,
+    conditions,
+    mock_id: mockId,
   })
 
   // A cold, unaided correct answer after the lesson is what closes a gap.
   const gaps = await db.gaps(serve.subject)
   const open = gaps.find((g) => g.topic === item.topic && !g.cleared_at)
-  const attemptRow = { ts: now, correct: verdict.correct, hints_used: hints ? 1 : 0, conditions: serve.mock_id ? 'proctored_mock' : hints ? 'tutored' : 'cold' }
+  const attemptRow = { ts: now, correct: verdict.correct, hints_used: hints ? 1 : 0, conditions }
   let gapClosed = null
   if (clearsGap(open, attemptRow)) {
     await db.clearGap({ subject: serve.subject, topic: item.topic, cleared_at: now })
@@ -293,6 +308,33 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
 
   const ctx = await loadContext(db, serve.subject, cfg)
   const graded = verdict.graded_by === 'server'
+
+  // Notes accumulate, because two of them can be true at once: a demoted answer
+  // on a model-graded item needs to say both things. Assembling them by
+  // overwriting one `note` key silently dropped whichever came first.
+  const notes = []
+  if (closed) {
+    notes.push(
+      `This question was handed out inside mock ${closed.id}, which was submitted at ${closed.ended_at}. ` +
+      `Your answer is recorded and graded as ordinary practice, NOT as part of that sitting: work done after ` +
+      `the timer stops is not proctored evidence, so the mock's score stays exactly as it was sat.`,
+    )
+  }
+  if (verdict.graded_by === 'unkeyed') {
+    notes.push('This item has no answer key yet, so your answer was recorded but not graded. That is a gap in the question bank, not a mistake by you.')
+  }
+  if (verdict.graded_by === 'model') {
+    notes.push('Compare your work against the worked solution below. This is practice feedback and does not count toward readiness.')
+  }
+  // An unparsed verdict used to return correct: null with no note at all, so he
+  // was told nothing: not right, not wrong, no reason, nothing to do next. The
+  // wording does not promise a re-grade of THIS question — the serve is spent
+  // and cannot be logged twice — only that the next one will read cleanly.
+  if (verdict.graded_by === 'unparsed') {
+    notes.push('I could not read that as one answer, so nothing was graded — it does not count as wrong either. '
+      + 'Read the explanation below, and on the next one send just the letter ("B", not "B or C") so it can be graded.')
+  }
+
   return {
     // `correct` is only a claim when the server actually graded it. For
     // model-graded and unkeyed items it is null, so nothing downstream can read
@@ -305,20 +347,7 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     seconds,
     explanation: item.explanation,
     gap_closed: gapClosed,
-    ...(verdict.graded_by === 'unkeyed' && {
-      note: 'This item has no answer key yet, so your answer was recorded but not graded. That is a gap in the question bank, not a mistake by you.',
-    }),
-    ...(verdict.graded_by === 'model' && {
-      note: 'Compare your work against the worked solution below. This is practice feedback and does not count toward readiness.',
-    }),
-    // An unparsed verdict used to return correct: null with no note at all, so he
-    // was told nothing: not right, not wrong, no reason, nothing to do next. The
-    // wording does not promise a re-grade of THIS question — the serve is spent
-    // and cannot be logged twice — only that the next one will read cleanly.
-    ...(verdict.graded_by === 'unparsed' && {
-      note: 'I could not read that as one answer, so nothing was graded — it does not count as wrong either. '
-        + 'Read the explanation below, and on the next one send just the letter ("B", not "B or C") so it can be graded.',
-    }),
+    ...(notes.length && { note: notes.join(' ') }),
     status: summarize({ ctx, now }),
   }
 }
@@ -413,9 +442,18 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // unkeyed items would fold an ungraded zero into the score and understate it.
   const scored = attempts.filter((a) => a.graded_by === 'server')
   const right = scored.filter((a) => a.correct).length
-  const blanks = attempts.filter((a) => (a.response ?? '') === '').length
   const ungraded = attempts.length - scored.length
   const expected = expectedQuestions(m.section, cfg.exam)
+
+  // Blanks count what the answer sheet would show, which is the same rule the
+  // composite applies below: a question left empty and a question never reached
+  // are both an unfilled bubble. Counting only the explicit ones let a 38-of-42
+  // sitting report composite 90.5 (the 4 unreached scored as wrong) alongside
+  // "0 blanks", so the max_blanks criterion was blind to exactly the four
+  // questions the composite had just penalised — one fix, two stories.
+  const unreached = expected == null ? 0 : Math.max(0, expected - attempts.length)
+  const left = attempts.filter((a) => (a.response ?? '') === '').length
+  const blanks = left + unreached
 
   // Two guards against two different false claims:
   //   1. `correct / answered` reads 100% on three questions out of 42, and six
@@ -434,6 +472,16 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   }
   if (ungraded) {
     basis.push(`${ungraded} response(s) need human or model grading and are excluded from the composite.`)
+  }
+  if (unreached) {
+    const split = left ? ` (${left} left empty, ${unreached} never reached)` : ''
+    // Only claim they counted as wrong when something was actually scored. On an
+    // unscored sitting nothing was marked at all, and saying otherwise would be
+    // its own small false statement.
+    basis.push(composite == null
+      ? `${unreached} question(s) were never reached, so the answer sheet shows ${blanks} blank(s)${split}.`
+      : `${unreached} question(s) were never reached. Those count as blank AND as wrong, exactly as the real `
+        + `answer sheet would read them, so the blank count is ${blanks}${split}.`)
   }
   if (composite == null) {
     basis.push(covered
@@ -462,6 +510,61 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
 }
 
 /**
+ * Proctored sittings that were recorded and then not scored, with the reason.
+ *
+ * A sitting below MIN_MOCK_COVERAGE gets no composite, which keeps it out of
+ * `proctored_mocks`, out of the qualifying window and out of every criterion —
+ * so a genuine sitting where he reached 37 of 42 left no trace at all beyond
+ * questions_answered. Running out of time is the single failure a mock exists to
+ * expose, so it has to be reported rather than dropped. It still cannot be
+ * scored: lowering the gate is what let three answers read as 100%.
+ */
+function unscoredSittings(ctx) {
+  const out = []
+  for (const m of ctx.mocks) {
+    if (!m.proctored || !m.ended_at || m.composite_pct != null) continue
+    const answered = ctx.attempts.filter((a) => a.mock_id === m.id).length
+    const expected = expectedQuestions(m.section, ctx.config.exam)
+    out.push({
+      id: m.id,
+      answered,
+      expected,
+      // Two different reasons produce a null composite, and saying "you ran out
+      // of time" about a fully-sat paper that simply had nothing mechanically
+      // gradeable would be a false statement in its own right.
+      short: expected != null && answered < Math.ceil(expected * MIN_MOCK_COVERAGE),
+    })
+  }
+  return out
+}
+
+/** The advisory that keeps an unscored sitting visible, in the words that fit it. */
+function unscoredAdvisory(unscored) {
+  const n = unscored.length
+  const parts = [
+    `${n} proctored sitting${n === 1 ? ' was' : 's were'} recorded but NOT scored, so ${n === 1 ? 'it is' : 'they are'} ` +
+    `absent from the proctored mock count and from every readiness criterion.`,
+  ]
+  const short = unscored.filter((u) => u.short)
+  if (short.length) {
+    parts.push(
+      `${short.map((u) => `#${u.id} reached ${u.answered} of ${u.expected}`).join(', ')} — under the ` +
+      `${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a scored sitting has to cover. Running out of time is ` +
+      `exactly what a mock is for: treat that as a pace problem to work on, not as noise. Only a sitting that covers ` +
+      `the section can produce a composite, so re-sit a full one to turn this into a score.`,
+    )
+  }
+  const other = unscored.filter((u) => !u.short)
+  if (other.length) {
+    parts.push(
+      `${other.map((u) => `#${u.id} (${u.answered} answered)`).join(', ')} had nothing that could be graded ` +
+      `mechanically, so there was no composite to compute.`,
+    )
+  }
+  return parts.join(' ')
+}
+
+/**
  * The always-visible summary.
  *
  * Attached to every response because of a specific complaint: "otherwise, you
@@ -481,6 +584,10 @@ export function summarize({ ctx, now }) {
   const blocker = r.criteria.find((c) => !c.met)
   const daysLeft = daysToExam(ctx.config.exam_date, now)
 
+  // The submit response says this once; the advisory is what makes it resurface.
+  const unscored = unscoredSittings(ctx)
+  const advisories = unscored.length ? [...r.advisories, unscoredAdvisory(unscored)] : r.advisories
+
   return {
     subject: ctx.config.display_name,
     readiness_pct: r.readiness_pct,
@@ -493,7 +600,7 @@ export function summarize({ ctx, now }) {
     proctored_mocks: ctx.mocks.filter((m) => m.proctored && m.composite_pct != null).length,
     next_thing_blocking: blocker ? `${blocker.label} — ${blocker.detail}` : null,
     open_gaps: openGaps,
-    advisories: r.advisories,
+    advisories,
   }
 }
 
@@ -525,14 +632,21 @@ export async function handleDashboard({ db, configs, now }) {
   for (const [subject, config] of Object.entries(configs)) {
     const ctx = await loadContext(db, subject, config)
     const coverage = coverageOf(ctx)
+    const readiness = computeReadiness({
+      config, mocks: ctx.mocks, attempts: ctx.attempts, coverage, calibrated: false, now,
+    })
+    // The parent card lists scored mocks only, so an unscored sitting is invisible
+    // there for the same reason it was invisible in the student's summary. Same
+    // advisory, same wording, one surface fewer to be surprised by.
+    const unscored = unscoredSittings(ctx)
     subjects.push({
       config,
       coverage,
       attempts: ctx.attempts,
       mocks: ctx.mocks,
-      readiness: computeReadiness({
-        config, mocks: ctx.mocks, attempts: ctx.attempts, coverage, calibrated: false, now,
-      }),
+      readiness: unscored.length
+        ? { ...readiness, advisories: [...readiness.advisories, unscoredAdvisory(unscored)] }
+        : readiness,
     })
   }
   return { subjects, now }
