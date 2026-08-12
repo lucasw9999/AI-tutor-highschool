@@ -4,7 +4,9 @@
 
 ---
 
-## The exam (what a 4–5 is made of) — **May 2027 format**
+## The exam (what a 4–5 is made of) — **Tue, May 11, 2027** (Session 1)
+
+> ⚠️ **AP CSA is the very next day — Wed, May 12, 2027.** Two AP exams back to back; plan the final week around both.
 > ⚠️ **The exam format changed for May 2027** (Lucas's year). Numbers below are the new format (College Board CED Clarifications, effective Fall 2026). **Course content is unchanged** — all study packs stay valid. Details + source: `reference/2027-exam-changes.md`.
 
 | Section | Count | Weight | Calculator |
@@ -20,7 +22,7 @@
 
 Hybrid digital: MCQ in Bluebook; FRQs handwritten. **Calculator: an approved physical graphing calculator is permitted, *and* a built-in Desmos is available in Bluebook** → see `reference/graphing-calculator-skills.md`.
 
-**Encouraging:** ~**50% (2024) → ~54% (2025) of all students score a 4 or 5** (mean ≈ 3.5). A strong score is genuinely achievable with focused prep.
+**Encouraging:** ~**50% (2024) → ~54% (2025) → 58% (2026) of all students score a 4 or 5** — the 2026 breakdown was 5 = 29%, 4 = 29%, 3 = 24%, 2 = 11%, 1 = 7%, so **82% scored 3 or higher** (verified 2026-08-11). A strong score is genuinely achievable with focused prep.
 
 > **Key fact:** the AP exam tests **Units 1–3 only.** Unit 4 is required for the *class* but never appears on the *exam* — so we learn it for the A, but don't drill exam-format questions on it.
 

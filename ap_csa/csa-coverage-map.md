@@ -80,7 +80,7 @@
 - [ ] Scope & access — `public` vs **`private`**
 - [ ] `this` keyword
 - [ ] 🔥 **Encapsulation rule:** never access a private field from outside; use the accessor (FRQ point-killer)
-- [ ] `toString` (commonly used in Q2)
+- [ ] `toString` — *the CED places this in **Unit 1 (topic 1.15)**, not Unit 3. Commonly used in Q2, but **overriding** it is an explicit exclusion.*
 
 ## Unit 4 — Data Collections · **30–40% of MCQ** 🔥🔥 (the big one)
 *(Official CED topics 4.1–4.17.)*
@@ -113,7 +113,7 @@
 - [ ] ◽ Merge sort (recognize behavior)
 - [ ] ⭐ **Recursion** basics (read & trace recursive methods)
 - [ ] ◽ Recursive search/sort (lighter — mostly tracing)
-- [ ] ◽ `HashMap` (optional in curriculum)
+- [ ] ❌ `HashMap` — **NOT on the exam.** Zero occurrences in the official CED: absent, not "optional."
 
 ## Inheritance — ❌ NOT ON THE REDESIGNED EXAM (do not study for the AP)
 The official CED (Effective Fall 2025) contains **zero** inheritance, polymorphism, interface, or abstract-class content — verified by full-text search of the CED. These were **removed** in the redesign.
@@ -128,7 +128,7 @@ The official CED (Effective Fall 2025) contains **zero** inheritance, polymorphi
 - 🚫 **Inheritance, polymorphism, interfaces, abstract classes** — *removed in the redesign* (verified: 0 occurrences in the official CED)
 - GUIs / Swing (CSAwesome marks these optional)
 - Generics beyond `ArrayList<E>`, lambdas, streams, enums, varargs, annotations
-- File *writing*, networking, threads, `HashMap` (HashMap is optional enrichment only)
+- File *writing*, networking, threads, `HashMap`/`HashSet` (**zero occurrences in the CED — absent from the exam, not "optional enrichment"**)
 - Heavy recursion proofs / binary trees (those were the old discontinued "AB" course)
 
 ---

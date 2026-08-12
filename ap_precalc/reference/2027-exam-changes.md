@@ -21,7 +21,7 @@ Plus two FRQ content tweaks (same task types, just adjusted):
 - **FRQ Q1 (Function Concepts):** minor Part C(i) tweak, **no scoring change**.
 
 ## What does NOT change
-- Section weighting stays ~**63% MCQ / ~37% FRQ** (College Board didn't announce a weight change — confirm in the summer-2026 CED).
+- Section weighting **confirmed** on the official AP Central exam page (verified 2026-08-11): **MCQ 62.5%** (Part A 43.75% + Part B 18.75%) / **FRQ 37.5%** (Part A 18.75% + Part B 18.75%). Section I total time is **1 hr 45 min** (65 + 40); Section II is **1 hr 10 min** (35 + 35). Course content unchanged.
 - Still a **hybrid digital** exam (MCQ in Bluebook; FRQs handwritten on paper) — **not** fully digital.
 - Calculator policy (see `graphing-calculator-skills.md`): an **approved physical graphing calculator is permitted, and a built-in Desmos is available in Bluebook** — use either or both.
 
