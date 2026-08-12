@@ -21,7 +21,7 @@ const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', imp
  */
 const ATTEMPT_COLS = [
   'id', 'ts', 'subject', 'item_id', 'topic', 'unit', 'practice', 'response',
-  'correct', 'graded_by', 'seconds', 'hints_used', 'conditions', 'mock_id',
+  'correct', 'graded_by', 'seconds', 'hints_used', 'conditions', 'mock_id', 'picked',
 ]
 
 /**
@@ -790,9 +790,28 @@ function d1(sqlite) {
   }
 }
 
+/**
+ * Bring a database built from worker/seed.sql up to worker/schema.sql.
+ *
+ * seed.sql embeds a SNAPSHOT of the schema and is regenerated centrally, so a
+ * column added to schema.sql is absent here until that regeneration lands — and
+ * every CREATE TABLE in it is IF NOT EXISTS, so reloading cannot add one either.
+ * This runs the same ALTERs schema.sql lists for a live database, each only when
+ * it is actually missing, so it goes on working once the seed catches up.
+ *
+ * Without it every seeded test below would drive db.js's unmigrated write path
+ * and the migrated one — the one production is supposed to be on — would be
+ * exercised only by tests/db.test.js, which loads schema.sql directly.
+ */
+function migrateToSchema(sqlite) {
+  const columns = new Set(sqlite.prepare(`PRAGMA table_info(attempts)`).all().map((c) => c.name))
+  if (!columns.has('picked')) sqlite.exec(`ALTER TABLE attempts ADD COLUMN picked TEXT`)
+}
+
 function realDb() {
   const sqlite = new DatabaseSync(':memory:')
   sqlite.exec(readFileSync(SEED, 'utf8'))
+  migrateToSchema(sqlite)
   return { sqlite, db: makeDb(d1(sqlite)) }
 }
 

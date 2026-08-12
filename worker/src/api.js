@@ -478,6 +478,13 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     practice: item.practice,
     response: response ?? '',
     correct: verdict.correct,
+    // WHICH option he chose, as the grader read it — the misconception itself,
+    // not just the fact of a miss. grade.js has always computed this and nothing
+    // stored it, so every answer threw away the difference between "he does not
+    // understand short-circuit evaluation" and "he misread the question". Null
+    // whenever there was no option to record (a blank, an unreadable response, an
+    // unkeyed item, model-graded work, any non-mcq item), never guessed.
+    picked: verdict.picked ?? null,
     graded_by: verdict.graded_by,
     seconds,
     hints_used: hints ? 1 : 0,

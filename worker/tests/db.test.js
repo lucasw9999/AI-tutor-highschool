@@ -124,6 +124,96 @@ test('attempts() carries the response column through to the caller', async () =>
 })
 
 // ---------------------------------------------------------------------------
+// The distractor he chose (METH-10)
+//
+// grade.js has always computed `picked` — which option a wrong answer resolved
+// to — and handed it back to api.js, which threw it away, because the attempts
+// table had no column for it. The distractor IS the misconception: 'D' on a
+// short-circuit question is "he does not know && stops evaluating", while 'A' on
+// the same question is "he misread the operator". That difference was being
+// recomputed and discarded on every answer, and it cannot be recovered later —
+// grade.js's parsing rules are versioned, the serve is spent, and the response
+// column holds what he typed rather than what it was read as.
+// ---------------------------------------------------------------------------
+
+test('the option a wrong answer resolved to is persisted, not computed and discarded', async () => {
+  const { db, sqlite } = freshDb()
+  seedOneItem(sqlite) // keyed 'B'
+  const serveId = await db.recordServe({ subject: 'ap_csa', item_id: 'csa-1', served_at: T0 })
+  const logged = await handleLog({ db, serveId, response: 'D', config: CSA, now: at(30) })
+  assert.equal(logged.correct, false, 'the fixture is keyed B, so D is a miss')
+
+  // Read straight out of the table, not through db.js, so this cannot pass on a
+  // projection that invents the column.
+  assert.equal(
+    sqlite.prepare(`SELECT picked FROM attempts`).get().picked, 'D',
+    'the distractor he chose is the misconception; nothing else on the row carries it',
+  )
+  const rows = await db.attempts('ap_csa')
+  assert.equal(rows[0].picked, 'D', 'and ATTEMPT_COLS must project it, or no consumer can ever read it')
+})
+
+test('a correct answer records the option it resolved to as well', async () => {
+  const { db, sqlite } = freshDb()
+  seedOneItem(sqlite)
+  const serveId = await db.recordServe({ subject: 'ap_csa', item_id: 'csa-1', served_at: T0 })
+  // Named by its text, not its letter: what is stored is what the grader READ,
+  // which is the only form a later reader can compare against the key.
+  await handleLog({ db, serveId, response: 'two', config: CSA, now: at(20) })
+  assert.equal((await db.attempts('ap_csa'))[0].picked, 'B')
+})
+
+test('an answer with no option behind it stores no option', async () => {
+  const { db, sqlite } = freshDb()
+  seedOneItem(sqlite)
+  for (const [response, why] of [['', 'a blank chose nothing'], ['B or C', 'an unparsed answer resolved to nothing']]) {
+    const serveId = await db.recordServe({ subject: 'ap_csa', item_id: 'csa-1', served_at: T0 })
+    await handleLog({ db, serveId, response, config: CSA, now: at(20) })
+    const row = (await db.attempts('ap_csa')).at(-1)
+    assert.equal(row.picked, null, `${why}, so the column must stay NULL rather than guess one`)
+  }
+})
+
+test('a database that predates the column still records the answer', async () => {
+  // What the deployed database looks like until it is migrated: every CREATE
+  // TABLE in schema.sql is IF NOT EXISTS, so reloading the schema (or seed.sql,
+  // which embeds it) does NOT add a column to a table that already exists.
+  // Naming an absent column in the INSERT makes SQLite reject the statement, and
+  // that would turn EVERY /log into a 500 — the tutor would stop recording
+  // answers at all in order to record one extra letter about them.
+  const { db, sqlite } = freshDb()
+  seedOneItem(sqlite)
+  sqlite.exec(`ALTER TABLE attempts DROP COLUMN picked`)
+
+  const serveId = await db.recordServe({ subject: 'ap_csa', item_id: 'csa-1', served_at: T0 })
+  const logged = await handleLog({ db, serveId, response: 'D', config: CSA, now: at(30) })
+  assert.equal(logged.correct, false, 'the answer is still graded')
+  const rows = await db.attempts('ap_csa')
+  assert.equal(rows.length, 1, 'and still recorded — an unmigrated column may not cost an answer')
+  assert.equal(rows[0].response, 'D')
+  assert.ok('picked' in rows[0], 'the row SHAPE must not depend on the migration state')
+  assert.equal(rows[0].picked, null, 'only the value is missing, and it is missing as null rather than absent')
+})
+
+test('a sitting records the distractor too, and only while the sitting is open', async () => {
+  const { db, sqlite } = freshDb()
+  seedSection(sqlite, 4)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(10), mockId: m.mock })
+  await handleLog({ db, serveId: q.serve, response: 'C', config: CSA, now: at(40) })
+  assert.equal((await db.attempts('ap_csa')).at(-1).picked, 'C', 'the mock-filing INSERT has to carry it too')
+
+  // The other write path: a serve cashed in after the sitting closed is demoted
+  // to ordinary practice, and the distractor still has to survive the demotion.
+  const late = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(50), mockId: m.mock })
+  await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(60) })
+  await handleLog({ db, serveId: late.serve, response: 'A', config: CSA, now: at(70) })
+  const demoted = (await db.attempts('ap_csa')).at(-1)
+  assert.equal(demoted.mock_id, null, 'the fixture must actually exercise the demotion path')
+  assert.equal(demoted.picked, 'A')
+})
+
+// ---------------------------------------------------------------------------
 // A serve id can be spent exactly once, even by two callers at once
 // ---------------------------------------------------------------------------
 
