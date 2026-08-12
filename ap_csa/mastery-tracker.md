@@ -31,6 +31,7 @@
 | Casting int↔double | ⬜ | | |
 | Math class | ⬜ | | |
 | Creating objects / references | ⬜ | | |
+| Superclass/subclass vocabulary; every class is a subclass of `Object` (1.12) | ⬜ | | describe/identify only — writing inheritance is excluded |
 | Calling methods (void/return/params) | ⬜ | | |
 | String methods 🔥 | ⬜ | | |
 | `==` vs `.equals()` 🔥 | ⬜ | | |
@@ -96,8 +97,8 @@
 | Q3 ArrayList (5 pts) | ⬜ | | |
 | Q4 2D Array (6 pts) | ⬜ | | |
 
-### Inheritance — ❌ NOT on the redesigned exam (skip for AP prep)
-*Removed in the 2025 redesign (0 occurrences in the official CED). Not a scoring priority — don't track it.*
+### Inheritance — vocabulary only (topic 1.12); writing it is excluded
+*Track it in the Unit 1 row above ("Superclass/subclass vocabulary; every class is a subclass of `Object`"). Those words are required Unit 1 content and are testable at describe/identify level. What the CED excludes is **"Designing and implementing inheritance relationships"** — so don't drill `extends`, `super`, or overriding, and don't track polymorphism or abstract classes at all. (verified 12 August 2026)*
 
 ---
 
