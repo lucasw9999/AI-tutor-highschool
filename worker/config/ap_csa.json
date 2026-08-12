@@ -41,6 +41,8 @@
     "total_logged_mocks_min": 6,
     "window_span_days_min": 10,
     "window_span_days_max": 42,
+    "reuse_days": 28,
+    "reuse_days_note": "How long a question stays 'already answered' before it counts as evidence again, read by select.js. Sized to THIS bank, not picked round: 218 items at the ~8 answers a day of ordinary drilling is about 27 days to work through, so 28 lets the bank cycle instead of locking. It is also inside select.js's longest spaced-review interval (35 days) — a window longer than that would stop a due review being served with the very item that was missed — and below window_span_days_max / (consecutive_qualifying_mocks - 1) = 21... which it is NOT, deliberately: 218 items covers 2 disjoint 42-question sittings (84) with room to spare, so the qualifying window is satisfiable at 28. tools/build/validate.js checks that arithmetic on every build. Beyond the window select.js still serves the least-recently-seen question rather than refusing, and labels it a repeat.",
     "freshness_days": 42,
     "burnout_drop_points": 8,
     "require_official_mock": true

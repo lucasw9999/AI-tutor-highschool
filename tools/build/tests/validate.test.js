@@ -1,7 +1,20 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { validate } from '../validate.js'
+import { readFileSync } from 'node:fs'
+import { validate, feasibility, MIN_MOCK_COVERAGE, ASSUMED_REUSE_DAYS, readinessConfigs } from '../validate.js'
 import { buildTeaching } from '../parse-teaching.js'
+import { MIN_MOCK_COVERAGE as API_MIN_MOCK_COVERAGE } from '../../../worker/src/api.js'
+import { DEFAULT_REUSE_DAYS } from '../../../worker/src/select.js'
+
+/**
+ * No readiness configs, for the item-level checks below.
+ *
+ * The feasibility gate judges a whole SUBJECT'S BANK against that subject's
+ * readiness config ("can 218 items supply six 38-question sittings?"), so a
+ * two-item fixture is not a claim it can answer. These calls pass no configs; the
+ * gate has its own tests further down, including one over the real bank.
+ */
+const NO_BANK = []
 
 const TOPICS = [
   { id: '1.3', subject: 'ap_csa', unit: '1', ek: 'Integer division truncates' },
@@ -25,61 +38,61 @@ function item(over = {}) {
 }
 
 test('a clean item produces no errors', () => {
-  assert.deepEqual(validate([item()], TOPICS).errors, [])
+  assert.deepEqual(validate([item()], TOPICS, NO_BANK).errors, [])
 })
 
 test('missing tags are errors', () => {
-  const { errors } = validate([item({ topic: null, practice: null })], TOPICS)
+  const { errors } = validate([item({ topic: null, practice: null })], TOPICS, NO_BANK)
   assert.equal(errors.filter((e) => /missing topic/.test(e)).length, 1)
   assert.equal(errors.filter((e) => /missing practice/.test(e)).length, 1)
 })
 
 test('unparsed options are an error', () => {
-  assert.match(validate([item({ options: null })], TOPICS).errors.join('|'), /could not parse options/)
+  assert.match(validate([item({ options: null })], TOPICS, NO_BANK).errors.join('|'), /could not parse options/)
 })
 
 test('an answer key outside the options is an error', () => {
   assert.match(
-    validate([item({ answer: 'E' })], TOPICS).errors.join('|'),
+    validate([item({ answer: 'E' })], TOPICS, NO_BANK).errors.join('|'),
     /answer key E is not one of the options/,
   )
 })
 
 test('an unknown topic is an error', () => {
   assert.match(
-    validate([item({ topic: '9.9' })], TOPICS).errors.join('|'),
+    validate([item({ topic: '9.9' })], TOPICS, NO_BANK).errors.join('|'),
     /topic 9\.9 is not in the coverage matrix/,
   )
 })
 
 test('an empty stem is an error', () => {
-  assert.match(validate([item({ stem: '   ' })], TOPICS).errors.join('|'), /empty stem/)
+  assert.match(validate([item({ stem: '   ' })], TOPICS, NO_BANK).errors.join('|'), /empty stem/)
 })
 
 test('off-syllabus constructs in the stem are errors', () => {
   assert.match(
-    validate([item({ stem: 'String s = "x"; s.charAt(0);' })], TOPICS).errors.join('|'),
+    validate([item({ stem: 'String s = "x"; s.charAt(0);' })], TOPICS, NO_BANK).errors.join('|'),
     /off-syllabus/,
   )
 })
 
 test('off-syllabus in options is an error too', () => {
   assert.match(
-    validate([item({ options: { A: 'new HashMap<>()', B: 'b', C: 'c', D: 'd' } })], TOPICS).errors.join('|'),
+    validate([item({ options: { A: 'new HashMap<>()', B: 'b', C: 'c', D: 'd' } })], TOPICS, NO_BANK).errors.join('|'),
     /off-syllabus/,
   )
 })
 
 test('explanations may discuss banned constructs', () => {
   assert.deepEqual(
-    validate([item({ explanation: 'charAt is not on the Quick Reference' })], TOPICS).errors,
+    validate([item({ explanation: 'charAt is not on the Quick Reference' })], TOPICS, NO_BANK).errors,
     [],
   )
 })
 
 test('allow-offsyllabus suppresses the check for that item', () => {
   assert.deepEqual(
-    validate([item({ stem: 'Which returns one character? s.charAt(0)', allowOffSyllabus: true })], TOPICS)
+    validate([item({ stem: 'Which returns one character? s.charAt(0)', allowOffSyllabus: true })], TOPICS, NO_BANK)
       .errors,
     [],
   )
@@ -87,17 +100,17 @@ test('allow-offsyllabus suppresses the check for that item', () => {
 
 test('skewed answer distribution is a warning, not an error', () => {
   const items = Array.from({ length: 25 }, (_, n) => item({ id: `q${n}`, answer: 'A' }))
-  const { errors, warnings } = validate(items, TOPICS)
+  const { errors, warnings } = validate(items, TOPICS, NO_BANK)
   assert.deepEqual(errors, [])
   assert.match(warnings.join('|'), /answer A/)
 })
 
 test('a topic with no items is a warning', () => {
-  assert.match(validate([item()], TOPICS).warnings.join('|'), /topic 1\.5 has no items/)
+  assert.match(validate([item()], TOPICS, NO_BANK).warnings.join('|'), /topic 1\.5 has no items/)
 })
 
 test('duplicate item ids are an error', () => {
-  assert.match(validate([item(), item()], TOPICS).errors.join('|'), /duplicate item id/)
+  assert.match(validate([item(), item()], TOPICS, NO_BANK).errors.join('|'), /duplicate item id/)
 })
 
 // --- letter-valued options that collide with an option label (N7) ---------
@@ -109,6 +122,7 @@ test('an option whose text is a bare letter matching a DIFFERENT option label is
   const { errors } = validate(
     [item({ options: { A: 'A', B: 'An ArithmeticException is thrown.', C: 'B', D: 'Nothing.' }, answer: 'C' })],
     TOPICS,
+    NO_BANK,
   )
   const hit = errors.filter((e) => e.includes('csa-ac-q1') && /disambiguat/.test(e))
   assert.equal(hit.length, 1, `expected exactly one disambiguation error, got ${JSON.stringify(errors)}`)
@@ -122,6 +136,7 @@ test('a lowercase letter option still collides (case-insensitive)', () => {
   const { errors } = validate(
     [item({ options: { A: 'c', B: 'bc', C: 'An empty string.', D: 'Exception thrown.' }, answer: 'D' })],
     TOPICS,
+    NO_BANK,
   )
   assert.ok(
     errors.some((e) => e.includes('csa-ac-q1') && /disambiguat/.test(e)),
@@ -132,7 +147,7 @@ test('a lowercase letter option still collides (case-insensitive)', () => {
 test('an option matching its OWN label is not ambiguous and is not an error', () => {
   // Reading "A" as a letter and matching "A" as text both land on option A —
   // there is nothing to disambiguate, so this must not be flagged.
-  const { errors } = validate([item({ options: { A: 'A', B: 'b text', C: 'c text', D: 'd text' } })], TOPICS)
+  const { errors } = validate([item({ options: { A: 'A', B: 'b text', C: 'c text', D: 'd text' } })], TOPICS, NO_BANK)
   assert.deepEqual(errors.filter((e) => /disambiguat/.test(e)), [])
 })
 
@@ -142,6 +157,7 @@ test('a bare letter option that names no label at all is not an error', () => {
   const { errors } = validate(
     [item({ options: { A: 'def', B: 'ef', C: 'cdef', D: 'e' }, answer: 'B' })],
     TOPICS,
+    NO_BANK,
   )
   assert.deepEqual(errors.filter((e) => /disambiguat/.test(e)), [])
 })
@@ -154,7 +170,7 @@ test('a model-graded item is never flagged, even carrying a colliding options fi
     options: { A: 'A', B: 'B', C: 'A' },
     solution: 'the worked solution',
   })
-  const { errors } = validate([modelGraded], TOPICS)
+  const { errors } = validate([modelGraded], TOPICS, NO_BANK)
   assert.deepEqual(errors.filter((e) => /disambiguat/.test(e)), [])
 })
 
@@ -188,4 +204,142 @@ test('buildTeaching flags topics with no usable explanations as gaps', () => {
 
 test('buildTeaching returns one entry per topic', () => {
   assert.equal(buildTeaching(TOPICS, T_ITEMS).entries.length, 2)
+})
+
+// --- feasibility: can the bank supply what the readiness config demands? ----
+//
+// The campaign already gates "an exam-tested topic with no items". This is the
+// same question one level up, and nothing asked it: CSA demands 6 scored mocks of
+// 38 answered questions each, which is 228 servings from a 218-item bank, and the
+// no-repeat window used to be longer than the whole mock schedule. The standard
+// was therefore arithmetically unsatisfiable, and the only symptom was a 409.
+
+/** A subject config shaped like worker/config/<subject>.json. P = 36 here. */
+function standards({ exam = {}, readiness = {} } = {}) {
+  return {
+    subject: 'ap_test',
+    exam: { mcq_count: 40, frq_count: 0, ...exam },
+    readiness: {
+      total_logged_mocks_min: 3,
+      consecutive_qualifying_mocks: 3,
+      window_span_days_max: 42,
+      reuse_days: 14,
+      composite_mean_min: 80,
+      ...readiness,
+    },
+  }
+}
+
+const bank = (n, over = {}) => Array.from({ length: n }, (_, i) => (
+  { id: `t${i}`, subject: 'ap_test', kind: 'mcq', answer: 'A', topic: '1.1', ...over }
+))
+
+test('feasibility: a bank that can supply the standard is judged silently', () => {
+  const f = feasibility(bank(108), standards())
+  assert.deepEqual(f.errors, [])
+  assert.deepEqual(f.warnings, [])
+})
+
+test('feasibility: a bank too small for ONE sitting is an error with the arithmetic in it', () => {
+  const { errors } = feasibility(bank(35), standards())
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /\b35\b/, 'must name the bank size')
+  assert.match(errors[0], /\b36\b/, 'must name how many distinct questions a sitting needs')
+  assert.match(errors[0], /exam\.mcq_count/, 'must name the config key that sets the demand')
+  assert.match(errors[0], /total_logged_mocks_min/, 'must name the criterion that becomes unreachable')
+})
+
+test('feasibility: a bank with nothing mechanically gradable can never produce a composite', () => {
+  const { errors } = feasibility(
+    bank(108, { kind: 'constructed_model_graded', answer: null }),
+    standards(),
+  )
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /mechanic/i)
+  assert.match(errors[0], /composite/)
+  assert.match(errors[0], /constructed_model_graded/, 'must name the kinds that are actually in the bank')
+})
+
+test('feasibility: an unkeyed MCQ does not count as mechanically gradable', () => {
+  const { errors } = feasibility(bank(108, { answer: '  ' }), standards())
+  assert.equal(errors.length, 1, JSON.stringify(errors))
+  assert.match(errors[0], /composite/)
+})
+
+test('feasibility: a reuse window covering the whole qualifying span forces disjoint sittings', () => {
+  // 3 qualifying sittings inside 42 days is one every 21 days; a 56-day window
+  // means none of them may re-ask an earlier one's question, so they need
+  // 3 x 36 = 108 distinct items and 80 will not do.
+  const { errors } = feasibility(bank(80), standards({ readiness: { reuse_days: 56 } }))
+  const hit = errors.filter((e) => /reuse_days/.test(e))
+  assert.equal(hit.length, 1, JSON.stringify(errors))
+  assert.match(hit[0], /consecutive_qualifying_mocks/)
+  assert.match(hit[0], /window_span_days_max/)
+  assert.match(hit[0], /\b108\b/, 'must name the requirement')
+  assert.match(hit[0], /\b80\b/, 'must name the supply')
+  assert.match(hit[0], /\b21\b/, 'must name the window that would fix it')
+})
+
+test('feasibility: the same bank is fine once the window is sized below that span', () => {
+  const { errors } = feasibility(bank(80), standards({ readiness: { reuse_days: 21 } }))
+  assert.deepEqual(errors, [], 'a sitting three weeks after another may re-ask its questions')
+})
+
+test('feasibility: a config that states no window is judged on the selector\'s fallback', () => {
+  const { errors } = feasibility(bank(80), standards({ readiness: { reuse_days: undefined } }))
+  assert.match(errors.join('|'), /reuse_days/, `${ASSUMED_REUSE_DAYS}-day fallback covers the whole span`)
+})
+
+test('feasibility: needing more servings than the bank holds is a WARNING, not an error', () => {
+  // Reuse ACROSS sittings weeks apart is ordinary test practice, and the selector
+  // labels a repeat that is still inside the window. So this is worth saying and
+  // is not a failure — and it must never be "fixed" by lowering the mock count.
+  const { errors, warnings } = feasibility(bank(40), standards())
+  assert.deepEqual(errors, [])
+  assert.equal(warnings.length, 1, JSON.stringify(warnings))
+  assert.match(warnings[0], /total_logged_mocks_min/)
+  assert.match(warnings[0], /\b108\b/)
+  assert.match(warnings[0], /\b40\b/)
+})
+
+test('feasibility: a subject with no items in this build is not judged', () => {
+  // build.js has its own gate for a configured subject that parsed to nothing;
+  // this one must not double-report it as an impossible bank.
+  const f = feasibility([], standards())
+  assert.deepEqual([...f.errors, ...f.warnings], [])
+})
+
+test('feasibility runs from validate() over every configured subject', () => {
+  const items = [{ id: 'x1', subject: 'ap_test', kind: 'mcq', answer: 'A', topic: '1.3', stem: 's', practice: 'P1', options: { A: 'a', B: 'b', C: 'c', D: 'd' } }]
+  const topics = [{ id: '1.3', subject: 'ap_test', ek: 'idea' }]
+  const { errors } = validate(items, topics, [standards()])
+  assert.match(errors.join('|'), /a scored sitting needs/, 'the gate must be wired into validate(), not just exported')
+})
+
+test('the shipped configs and the shipped bank are judged against each other', () => {
+  // Pins what the gate actually says about real content. If a bank grows or a
+  // threshold moves, this test is where the new arithmetic gets read out.
+  const root = new URL('../../../', import.meta.url)
+  const items = JSON.parse(readFileSync(new URL('content/items.json', root), 'utf8'))
+  const configs = readinessConfigs()
+  assert.deepEqual(configs.map((c) => c.subject).sort(), ['ap_csa', 'ap_precalc'])
+
+  const csa = feasibility(items.filter((i) => i.subject === 'ap_csa'), configs.find((c) => c.subject === 'ap_csa'))
+  assert.deepEqual(csa.errors, [], 'CSA can assemble and score every sitting its config asks for')
+  assert.equal(csa.warnings.length, 1, JSON.stringify(csa.warnings))
+  assert.match(csa.warnings[0], /ap_csa/)
+  assert.match(csa.warnings[0], /total_logged_mocks_min/, '6 sittings x 42 questions is 252 servings from 218 items')
+
+  const pc = feasibility(items.filter((i) => i.subject === 'ap_precalc'), configs.find((c) => c.subject === 'ap_precalc'))
+  assert.equal(pc.errors.length, 1, JSON.stringify(pc.errors))
+  assert.match(pc.errors[0], /ap_precalc/)
+  assert.match(pc.errors[0], /composite/, 'all 48 Precalc items are model-graded, so no sitting can be scored')
+})
+
+test('the gate cannot drift from the thresholds it is judging against', () => {
+  // Both numbers live in worker/src and are re-stated here so the content build
+  // does not have to import the Worker. Re-stated, not guessed: if either moves,
+  // this fails rather than the gate quietly judging against a stale figure.
+  assert.equal(MIN_MOCK_COVERAGE, API_MIN_MOCK_COVERAGE, 'api.js decides when a sitting is scored')
+  assert.equal(ASSUMED_REUSE_DAYS, DEFAULT_REUSE_DAYS, 'select.js decides the window when a config states none')
 })
