@@ -9,8 +9,9 @@
 //   1. Drills cannot move readiness. Only attempts tied to a proctored mock count.
 //   2. Model-graded work (FRQs) cannot move readiness until the grader has been
 //      calibrated against an officially scored response AND has actually
-//      recorded a verdict. A rubric item that was merely routed to the model is
-//      unmeasured, not a zero.
+//      recorded a verdict on ALL of the window's rubric work. A rubric item that
+//      was merely routed to the model is unmeasured, not a zero — and a window
+//      that is only partly scored is unmeasured too.
 //   3. The window being judged must itself contain an official College Board
 //      sitting. An official mock elsewhere in the logbook anchors nothing.
 
@@ -35,13 +36,30 @@ export function daysBetween(a, b) {
  * where exceeding is the failure.
  */
 export function roundDown(value, decimals = 1) {
-  const f = 10 ** decimals
-  return Math.floor(value * f) / f
+  return Math.floor(scaled(value, decimals)) / 10 ** decimals
 }
 
 export function roundUp(value, decimals = 1) {
-  const f = 10 ** decimals
-  return Math.ceil(value * f) / f
+  return Math.ceil(scaled(value, decimals)) / 10 ** decimals
+}
+
+/**
+ * `value` moved to the digit being rounded at, with binary representation noise
+ * snapped off first.
+ *
+ * (29 / 50) * 100 is 57.99999999999999 in IEEE doubles, so flooring it printed
+ * "57%" for a student who scored 58 — a whole point of his own work, given away
+ * by arithmetic. Twelve significant digits erases that (it rounds to exactly 58)
+ * and is nowhere near coarse enough to reach a real difference: the closest any
+ * two distinct measurements here can come is 1/86400000 of a day for an age, or
+ * 100/n of a percent for n attempts.
+ *
+ * The snap happens AFTER the scaling multiply, because that multiply introduces
+ * noise of its own (77.96 * 10 is 779.6000000000001). The directional property is
+ * untouched: 77.96 still floors to 77.9, below the 78 floor it does not meet.
+ */
+function scaled(value, decimals) {
+  return Number((value * 10 ** decimals).toPrecision(12))
 }
 
 /** Percent correct over a set of attempts, or null when the set is empty. */
@@ -68,23 +86,60 @@ export function breakdown(attempts, field) {
 /**
  * Why this candidate window cannot be judged, or null when it can.
  *
+ * `label` names the run being judged, because it is not always the newest one:
+ * when the most recent sittings are too few to form a window, an older run is
+ * judged instead, and a reason describing the newest three would then be a true
+ * fact about a different run. "Tighten your spacing" when what he actually needs
+ * is an official College Board sitting is a wrong instruction assembled out of
+ * true statements.
+ *
  * The official-material check is applied to the window itself, not to the
  * logbook: three bank-sourced mocks are unanchored however many official
  * sittings happened months earlier, and "at least one from official College
  * Board material" is a promise about the mocks being scored.
  */
-function disqualify(win, r, need) {
+function disqualify(win, r, label) {
   const span = daysBetween(win[0].started_at, win[win.length - 1].started_at)
   if (span < r.window_span_days_min) {
-    return `last ${need} mocks span only ${roundDown(span).toFixed(1)} days; need ${r.window_span_days_min}+ so this is not one cram session`
+    return `${label} span only ${roundDown(span).toFixed(1)} days; need ${r.window_span_days_min}+ so this is not one cram session`
   }
   if (span > r.window_span_days_max) {
-    return `last ${need} mocks span ${roundUp(span).toFixed(1)} days; the earliest is stale beyond ${r.window_span_days_max}`
+    return `${label} span ${roundUp(span).toFixed(1)} days; the earliest is stale beyond ${r.window_span_days_max}`
   }
   if (r.require_official_mock && !win.some((m) => m.source === 'official')) {
-    return 'no official College Board mock inside the window — bank-only scores are unanchored'
+    return `no official College Board mock inside ${label} — bank-only scores are unanchored`
   }
   return null
+}
+
+/** How long ago a sitting was, in whole days, rounded away from freshness. */
+function ageOf(m, now) {
+  return roundUp(daysBetween(m.started_at, now), 0)
+}
+
+/**
+ * The newer sittings a judged window leaves out, spelled out with their scores —
+ * or '' when it leaves none out.
+ *
+ * Every sitting newer than the judged window belongs to a block that was passed
+ * over for holding fewer than `need` consecutive sittings, so it cannot be
+ * judged as a window. That does NOT make it nothing: a scored composite is
+ * evidence, and it is the most recent evidence there is. Left undisclosed, the
+ * report printed a 106-day age and a three-mock window beside a mock-history chip
+ * dated yesterday, and yesterday's score appeared in no number at all.
+ */
+function excludedNote(excluded, need, now) {
+  if (!excluded.length) return ''
+  const each = excluded
+    .map((m) => {
+      const age = ageOf(m, now)
+      return `${age} day${age === 1 ? '' : 's'} ago at ${roundDown(m.composite_pct).toFixed(1)}%`
+    })
+    .join(', ')
+  return (
+    `${excluded.length} newer sitting${excluded.length === 1 ? '' : 's'} not measured here (${each})` +
+    ` — too few consecutive sittings to form a window of ${need}`
+  )
 }
 
 /**
@@ -95,6 +150,11 @@ function disqualify(win, r, need) {
  * (so they are not all one cram afternoon), not so spread out that the earliest
  * is stale, and at least one drawn from official College Board material so the
  * bank's difficulty is anchored to something real.
+ *
+ * @returns {{window: Array|null, reason: string|null, excluded: Array}}
+ *   `excluded` holds the scored sittings NEWER than the judged window. The caller
+ *   has to disclose them: they are the student's most recent work, and no number
+ *   in the report measures them.
  */
 export function qualifyingWindow({ config, mocks, now }) {
   const r = config.readiness
@@ -108,6 +168,7 @@ export function qualifyingWindow({ config, mocks, now }) {
     return {
       window: null,
       reason: `only ${scored.length} of ${r.total_logged_mocks_min} required proctored mocks logged`,
+      excluded: [],
     }
   }
   // Unreachable on shipped config, and kept deliberately: both subjects set
@@ -117,7 +178,7 @@ export function qualifyingWindow({ config, mocks, now }) {
   // lower total would judge — and describe — a window shorter than it claims.
   // A test builds such a config so this branch is exercised rather than assumed.
   if (scored.length < need) {
-    return { window: null, reason: `need ${need} consecutive mocks, have ${scored.length}` }
+    return { window: null, reason: `need ${need} consecutive mocks, have ${scored.length}`, excluded: [] }
   }
 
   // Two sittings more than window_span_days_max apart can never share a window,
@@ -127,10 +188,12 @@ export function qualifyingWindow({ config, mocks, now }) {
   // belong with it.
   //
   // Blocks are walked newest first, and one is passed over ONLY when it holds
-  // fewer than `need` sittings — too few to be judged under any rule, so nothing
-  // measurable is hidden by skipping it. The first block that CAN form a
-  // candidate is the verdict: if that candidate is disqualified, the
-  // disqualification is the answer, because reaching further back would judge
+  // fewer than `need` sittings — too few to be judged under any rule. That is not
+  // the same as hiding nothing: a lone scored composite IS measurable evidence,
+  // and it is the newest there is. It cannot be judged as a window, so it comes
+  // back in `excluded` and is disclosed, rather than disappearing. The first block
+  // that CAN form a candidate is the verdict: if that candidate is disqualified,
+  // the disqualification is the answer, because reaching further back would judge
   // older, better-looking scores while ignoring what the student just sat.
   //
   // That is the correction to R3, which asked only whether the IMMEDIATELY newer
@@ -150,14 +213,6 @@ export function qualifyingWindow({ config, mocks, now }) {
   // newer sittings is necessarily stale: an earlier block can inform the report
   // but can never be reported as ready.
 
-  // The reason always describes the most recent `need` sittings — the run the
-  // student just sat, which is what the wording refers to — even when an older
-  // block supplies the judged window. It is never null on a failing path: if
-  // those sittings qualified they would be the first candidate and returned
-  // below, and a candidate that straddles a block boundary spans more than
-  // window_span_days_max by construction.
-  const reason = disqualify(scored.slice(-need), r, need)
-
   for (let end = scored.length - 1; end >= need - 1; ) {
     let start = end
     while (start > 0 && daysBetween(scored[start - 1].started_at, scored[start].started_at) <= r.window_span_days_max) {
@@ -165,11 +220,26 @@ export function qualifyingWindow({ config, mocks, now }) {
     }
     if (end - start + 1 >= need) {
       const win = scored.slice(end - need + 1, end + 1)
-      return disqualify(win, r, need) ? { window: null, reason } : { window: win, reason: null }
+      // The reason describes THIS run — the one that was actually judged. When an
+      // older block supplies the candidate, saying "the last 3 mocks" would state
+      // a true fact about sittings no criterion here looked at.
+      const label =
+        end === scored.length - 1
+          ? `the last ${need} mocks`
+          : `the ${need} mocks ending ${ageOf(win[win.length - 1], now)} days ago`
+      const why = disqualify(win, r, label)
+      return why
+        ? { window: null, reason: why, excluded: [] }
+        : { window: win, reason: null, excluded: scored.slice(end + 1) }
     }
     end = start - 1
   }
-  return { window: null, reason }
+  // No block is long enough to offer a candidate at all, so no run was judged.
+  // What the student would have to turn into a window is his most recent `need`
+  // sittings, so those are what the reason is about. It is never null: a run
+  // straddling a block boundary spans more than window_span_days_max by
+  // construction.
+  return { window: null, reason: disqualify(scored.slice(-need), r, `the last ${need} mocks`), excluded: [] }
 }
 
 /**
@@ -180,11 +250,16 @@ export function qualifyingWindow({ config, mocks, now }) {
  * Freshness lives here too: a student with no window yet still has to be told
  * that mock evidence expires, and leaving it out hid the requirement from
  * exactly the reader who had not met it.
+ *
+ * The freshness label says "in the judged window" because that is the sitting it
+ * measures. It read "Most recent mock" before, which is a different sitting
+ * whenever a newer one exists that no window can reach — and the report then
+ * offered a 106-day age as the age of work done yesterday.
  */
 export function plannedChecks(config) {
   const r = config.readiness
   const out = [
-    { id: 'freshness', label: `Most recent mock within ${r.freshness_days} days` },
+    { id: 'freshness', label: `Newest mock in the judged window within ${r.freshness_days} days` },
     { id: 'composite_mean', label: `Mean composite across ${r.consecutive_qualifying_mocks} mocks ≥ ${r.composite_mean_min}%` },
     { id: 'composite_floor', label: `Lowest single mock ≥ ${r.composite_floor_min}%` },
     { id: 'non_declining', label: `No drop steeper than ${r.max_decline_between_mocks} points between mocks` },
@@ -218,10 +293,11 @@ export function plannedChecks(config) {
  * so no criterion can print a value that reads as clearing the bar it just
  * failed. See roundDown/roundUp for why the rounding is directional.
  */
-function evaluateChecks({ config, window, attempts, calibrated, now }) {
+function evaluateChecks({ config, window, attempts, calibrated, excluded, now }) {
   const r = config.readiness
   const ids = new Set(window.map((m) => m.id))
   const inWindow = attempts.filter((a) => ids.has(a.mock_id))
+  const note = excludedNote(excluded, r.consecutive_qualifying_mocks, now)
 
   // Only mechanically graded evidence can move a mechanical floor. Model-graded
   // work is quarantined until calibration, and an attempt on an item with no
@@ -240,8 +316,16 @@ function evaluateChecks({ config, window, attempts, calibrated, now }) {
   // Evidence decays. A great score from two months ago is not a claim about
   // today, so age rounds UP: 42.4 days reads as 43, never as "42 days" beside a
   // failure of a 42-day bar.
-  const age = roundUp(daysBetween(window[window.length - 1].started_at, now), 0)
-  out.set('freshness', { met: age <= r.freshness_days, detail: `${age} days ago` })
+  //
+  // This is the age of the newest sitting IN THE JUDGED WINDOW, which is not
+  // always the newest he has sat. Where they differ, the difference is stated
+  // here as well as on the window criterion, because this string is what the
+  // summary prints as the one thing blocking him.
+  const age = ageOf(window[window.length - 1], now)
+  out.set('freshness', {
+    met: age <= r.freshness_days,
+    detail: note ? `${age} days ago; ${note}` : `${age} days ago`,
+  })
 
   const mean = roundDown(composites.reduce((s, x) => s + x, 0) / composites.length)
   out.set('composite_mean', { met: mean >= r.composite_mean_min, detail: `${mean.toFixed(1)}%` })
@@ -329,31 +413,39 @@ function evaluateChecks({ config, window, attempts, calibrated, now }) {
     // yet. Averaging those rows reported that the student scored 0% on free
     // response when nothing had been graded at all — the same false negative
     // isServerGraded() exists to prevent, so its definition of "carries a
-    // verdict" is what is applied here rather than bypassed. Until a calibrated
-    // grader records verdicts under some other `graded_by`, this reports the FRQ
-    // criterion as PENDING, which is the truth: unmeasured, not zero.
+    // verdict" is what is applied here rather than bypassed.
+    //
+    // PART of the window's rubric work being scored is not a measurement of the
+    // window either. One recorded verdict out of twelve rows marked this
+    // criterion met and carried a record to "100% ready", with the eleven
+    // unscored rows disclosed only inside a detail string — a headline number
+    // resting on one row. So ANY unscored rubric work in the window keeps the
+    // criterion PENDING: unmeasured, not zero, and not passed. The scored share
+    // is reported as a count of rows rather than a percentage, because a
+    // percentage over one row reads as a verdict on work nobody graded.
     const frqAttempts = inWindow.filter((a) => MODEL_GRADED.has(a.kind))
     const graded = frqAttempts.filter(isServerGraded)
-    const frqRaw = pct(graded)
-    const frqPct = frqRaw == null ? null : roundDown(frqRaw, 0)
     const unscored = frqAttempts.length - graded.length
-    if (frqPct == null && frqAttempts.length) {
+    if (unscored && graded.length) {
+      out.set('frq', {
+        met: false,
+        pending: true,
+        detail:
+          `only ${graded.length} of ${frqAttempts.length} free-response attempts carry a scored verdict` +
+          ` — a partly scored rubric is not a measurement of the window`,
+      })
+    } else if (unscored) {
       out.set('frq', {
         met: false,
         pending: true,
         detail: `${frqAttempts.length} free-response attempt${frqAttempts.length === 1 ? '' : 's'} in window, none carrying a scored verdict yet — nothing to measure`,
       })
     } else {
+      const frqRaw = pct(graded)
+      const frqPct = frqRaw == null ? null : roundDown(frqRaw, 0)
       out.set('frq', {
         met: frqPct != null && frqPct >= r.frq_min_pct,
-        // A percentage over part of the free-response work says so, so the
-        // number can never read as a verdict on work nobody graded.
-        detail:
-          frqPct == null
-            ? 'no FRQ attempts in window'
-            : unscored
-              ? `${frqPct}% of ${graded.length} scored; ${unscored} not yet scored`
-              : `${frqPct}%`,
+        detail: frqPct == null ? 'no FRQ attempts in window' : `${frqPct}%`,
       })
     }
   }
@@ -361,8 +453,8 @@ function evaluateChecks({ config, window, attempts, calibrated, now }) {
   return out
 }
 
-function performanceChecks({ config, window, attempts, calibrated, now }) {
-  const results = evaluateChecks({ config, window, attempts, calibrated, now })
+function performanceChecks({ config, window, attempts, calibrated, excluded, now }) {
+  const results = evaluateChecks({ config, window, attempts, calibrated, excluded, now })
   return plannedChecks(config).map(({ id, label }) => ({ id, label, ...results.get(id) }))
 }
 
@@ -398,12 +490,16 @@ export function computeReadiness({ config, mocks = [], attempts = [], coverage =
     detail: topicsTotal === 0 ? 'no topics loaded' : `${topicsDrilled} of ${topicsTotal} topics`,
   })
 
-  const { window, reason } = qualifyingWindow({ config, mocks, now })
+  const { window, reason, excluded } = qualifyingWindow({ config, mocks, now })
+  // A window that leaves newer sittings out says so, with their scores. "3 mocks
+  // in window" beside a mock-history chip dated yesterday read as though the
+  // window were the whole record.
+  const windowNote = excludedNote(excluded, r.consecutive_qualifying_mocks, now)
   criteria.push({
     id: 'mock_window',
     label: `${r.consecutive_qualifying_mocks} consecutive qualifying proctored mocks`,
     met: window != null,
-    detail: window ? `${window.length} mocks in window` : reason,
+    detail: window ? `${window.length} mocks in window${windowNote ? `; ${windowNote}` : ''}` : reason,
   })
 
   // Both paths report the WHOLE bar, from the same plannedChecks list, so the
@@ -414,7 +510,7 @@ export function computeReadiness({ config, mocks = [], attempts = [], coverage =
   const measurable = coverageMet && window != null
   criteria.push(
     ...(measurable
-      ? performanceChecks({ config, window, attempts, calibrated, now })
+      ? performanceChecks({ config, window, attempts, calibrated, excluded, now })
       : pendingChecks({ config, window })),
   )
 

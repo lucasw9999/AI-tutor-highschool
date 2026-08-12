@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { computeReadiness, qualifyingWindow, pct, breakdown, daysBetween } from '../src/readiness.js'
+import { readFileSync, readdirSync } from 'node:fs'
+import { computeReadiness, qualifyingWindow, pct, breakdown, daysBetween, roundDown, roundUp } from '../src/readiness.js'
 import { grade, MODEL_GRADED } from '../src/grade.js'
 
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
@@ -282,13 +282,23 @@ test('performance floors', async (t) => {
   })
 
   await t.test('a window stretched beyond the max span is rejected outright', () => {
-    // Last three at 100, 55 and 5 days ago: a 95-day spread, so the earliest
-    // score is too old to be evidence about the same student.
-    const daysAgo = [160, 140, 120, 100, 55, 5]
-    const mocks = daysAgo.map((d, i) => mock(i + 1, d, 90, i === 0 ? { source: 'official' } : {}))
+    // Six sittings 40 days apart: one block (a gap has to EXCEED 42 days to split
+    // one), whose newest three span 80 days, so the earliest of them is stale.
+    //
+    // REWRITTEN FIXTURE, with the reason: this test used to space the sittings
+    // 160/140/120/100/55/5, describing "the last three at 100, 55 and 5 days ago"
+    // as a 95-day spread. Under the block rule those three are three SEPARATE
+    // blocks and never form a candidate at all — the judged candidate was the
+    // older 140/120/100 run, and R3's fix makes the reason describe that run
+    // (which has no official anchor inside it) instead of a span nothing judged.
+    // So the fixture now really does put an over-long run in front of the search,
+    // which is what the test claims to be about.
+    const daysAgo = [210, 170, 130, 90, 50, 10]
+    const mocks = daysAgo.map((d, i) => mock(i + 1, d, 90, i === 5 ? { source: 'official' } : {}))
     const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
     assert.equal(window, null)
     assert.match(reason, /stale beyond 42/)
+    assert.match(reason, /the last 3 mocks/, 'the over-long run IS the newest one here')
   })
 })
 
@@ -799,15 +809,37 @@ test('unscored free-response work is reported as unmeasured, never as 0%', async
     assert.match(c.detail, /none .*scored/)
   })
 
-  await t.test('a recorded verdict is measured, and unscored work beside it is disclosed', () => {
+  await t.test('a partly scored rubric is unmeasured too, and says which share carries a verdict', () => {
+    // EXPECTATION REWRITTEN, with the reason: this used to assert met:true and
+    // '100% of 10 scored; 2 not yet scored' — a PASS on the criterion, with the
+    // qualification living inside a detail string while the verdict and the
+    // headline number stayed unqualified. Ten verdicts out of twelve rows is not a
+    // measurement of the window's free response, and at 1-of-12 the same rule
+    // carried a record to "100% ready" on a single row. So any unscored rubric
+    // work in the window keeps the criterion pending: unmeasured, not zero, and
+    // not passed either. The scored share is still disclosed, as a count.
     const attempts = [
       ...passingAttempts([4, 5, 6]),
       ...frqRun({ mock_id: 4, total: 10, right: 10 }),
       ...ungradedFrqRun({ mock_id: 5, total: 2 }),
     ]
+    const r = assess({ composites: [90, 90, 90, 92, 93, 94], attempts })
+    const c = criterion(r, 'frq')
+    assert.equal(c.met, false, '10 of 12 rows scored is still a partly measured window')
+    assert.equal(c.pending, true)
+    assert.equal(c.detail, 'only 10 of 12 free-response attempts carry a scored verdict — a partly scored rubric is not a measurement of the window')
+    assert.equal(r.ready, false)
+    assert.ok(r.readiness_pct <= 99, `got ${r.readiness_pct}`)
+  })
+
+  await t.test('a window whose rubric work is fully scored is measured, and can pass', () => {
+    // The other side of the same rule: nothing unscored, so the percentage is a
+    // real measurement of the window and the criterion is decided on it.
+    const attempts = [...passingAttempts([4, 5, 6]), ...frqRun({ mock_id: 4, total: 12, right: 12 })]
     const c = criterion(assess({ composites: [90, 90, 90, 92, 93, 94], attempts }), 'frq')
-    assert.equal(c.met, true, 'the scored rows are real evidence')
-    assert.equal(c.detail, '100% of 10 scored; 2 not yet scored')
+    assert.equal(c.met, true)
+    assert.equal(c.pending, undefined)
+    assert.equal(c.detail, '100%')
   })
 
   await t.test('no free-response evidence at all is a shortfall, not an unmeasured criterion', () => {
@@ -885,4 +917,204 @@ test('one day past the span limit changes the verdict but not what the number me
     outside.criteria.filter((c) => c.pending).length === outside.criteria.length - 2,
     'every performance check is reported as not yet measurable, none as failed',
   )
+})
+
+// ---------------------------------------------------------------------------
+// R1: the freshness check measures the run that was JUDGED, and a newer sitting
+// no window can reach is still the student's most recent work
+// ---------------------------------------------------------------------------
+
+test('the newest sitting is never invisible, and freshness says which run it measured', async (t) => {
+  // A 95% block at 130/118/106 days ago (official anchor inside), an older pair
+  // behind it, and one lone sitting YESTERDAY at 45%. The 105-day gap splits the
+  // blocks; the single-sitting recent block is too short to judge; so the OLD
+  // block is what gets measured. That is the documented rule — but the report
+  // then printed "Most recent mock within 42 days — 106 days ago" beside a
+  // mock-history chip dated yesterday, and yesterday's 45% appeared in no number.
+  const mocks = record([200, 190, 130, 118, 106, 1], { official: 3, composites: [95, 95, 95, 95, 95, 45] })
+  const judged = () =>
+    computeReadiness({
+      config: CSA, mocks, attempts: passingAttempts([3, 4, 5]),
+      coverage: FULL_COVERAGE, calibrated: false, now: NOW,
+    })
+
+  await t.test('the search reports which newer sittings the judged window leaves out', () => {
+    const q = qualifyingWindow({ config: CSA, mocks, now: NOW })
+    assert.deepEqual(q.window?.map((m) => m.id), [3, 4, 5])
+    assert.deepEqual(q.excluded.map((m) => m.id), [6], "yesterday's sitting is outside the judged window")
+  })
+
+  await t.test('the window criterion discloses the newer sitting it left out, with its score', () => {
+    const mw = criterion(judged(), 'mock_window')
+    assert.equal(mw.met, true)
+    assert.match(mw.detail, /3 mocks in window/)
+    assert.match(mw.detail, /1 newer sitting/, `a newer sitting was dropped silently: ${mw.detail}`)
+    assert.match(mw.detail, /1 day ago/, `the age of the excluded sitting must be stated: ${mw.detail}`)
+    assert.match(mw.detail, /45/, `the score of his most recent sitting must appear: ${mw.detail}`)
+  })
+
+  await t.test('the freshness check does not claim to be about his most recent mock', () => {
+    const f = criterion(judged(), 'freshness')
+    assert.equal(f.met, false)
+    assert.match(f.detail, /106 days ago/)
+    assert.ok(
+      !/^Most recent mock/.test(f.label),
+      `the label describes a sitting this check never looked at: ${f.label}`,
+    )
+    assert.match(f.label, /judged window/, `the label must name what it measured: ${f.label}`)
+    assert.match(f.detail, /1 newer sitting/, `the blocker states an age no sitting of his has: ${f.detail}`)
+  })
+
+  await t.test('disclosing the excluded sitting cannot raise the number', () => {
+    const r = judged()
+    assert.equal(r.ready, false)
+    assert.equal(r.first_unmet, 'freshness')
+    assert.ok(r.readiness_pct <= 99, `got ${r.readiness_pct}`)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// R2: one scored rubric row is not a measurement of the window
+// ---------------------------------------------------------------------------
+
+test('one scored rubric row cannot mark the whole free-response criterion met', () => {
+  const attempts = [
+    ...passingAttempts([4, 5, 6]),
+    ...frqRun({ mock_id: 4, total: 1, right: 1 }),
+    ...ungradedFrqRun({ mock_id: 4, total: 3 }),
+    ...ungradedFrqRun({ mock_id: 5, total: 4 }),
+    ...ungradedFrqRun({ mock_id: 6, total: 4 }),
+  ]
+  const r = assess({ composites: [90, 90, 90, 92, 93, 94], attempts })
+  const c = criterion(r, 'frq')
+  assert.equal(c.met, false, '1 of 12 rubric rows scored is not evidence the criterion holds')
+  assert.equal(c.pending, true, 'partly scored is unmeasured, exactly as not scored at all is')
+  assert.equal(r.ready, false, 'a calibrated grader must not reach ready on one rubric row')
+  assert.ok(r.readiness_pct <= 99, `got ${r.readiness_pct}`)
+  assert.match(c.detail, /1 of 12/, `the scored share must be stated plainly: ${c.detail}`)
+  assert.ok(!/%/.test(c.detail), `a percentage over one row reads as a verdict: ${c.detail}`)
+})
+
+// ---------------------------------------------------------------------------
+// R3: the stated blocker belongs to the run that was actually judged
+// ---------------------------------------------------------------------------
+
+test('the stated blocker is the judged run’s own disqualification', () => {
+  // Official sitting 200 days ago; a bank-only block at 130/118/106; two crammed
+  // sittings at 5 and 2 days. The judged candidate is 130/118/106, rejected for
+  // having no official anchor inside it. Reporting the newest three instead told
+  // him to tighten his spacing when what he needs is a College Board sitting.
+  const mocks = record([200, 130, 118, 106, 5, 2], { official: 0 })
+  const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+  assert.equal(window, null)
+  assert.match(reason, /official/, `the judged run was rejected for its missing anchor: ${reason}`)
+  assert.ok(!/span/.test(reason), `the reason describes a run that was never judged: ${reason}`)
+  assert.match(reason, /106 days ago/, `the reason must identify the run it is about: ${reason}`)
+})
+
+// ---------------------------------------------------------------------------
+// R4: a printed percentage may not sit a whole point below the measured one
+// ---------------------------------------------------------------------------
+
+test('a printed percentage is never a point below the measured one', async (t) => {
+  await t.test('29 of 50 prints 58%, not 57%', () => {
+    // (29 / 50) * 100 evaluates to 57.99999999999999 in binary floating point.
+    const attempts = [
+      ...passingAttempts([4, 5, 6]).filter((a) => a.unit !== '3'),
+      ...run({ mock_id: 4, total: 50, right: 29, unit: '3' }),
+    ]
+    const c = criterion(assess({ composites: [90, 90, 90, 90, 90, 90], attempts }), 'unit_3')
+    assert.equal(c.detail, '58% of 50')
+    assert.equal(c.met, false, '58% is still under the 75% unit floor')
+  })
+
+  await t.test('every noisy ratio prints the whole number it measures', () => {
+    for (const [right, total] of [[29, 50], [57, 100], [58, 100], [116, 200], [87, 150]]) {
+      const p = (right / total) * 100
+      assert.equal(roundDown(p, 0), Math.round(p), `${right}/${total} = ${p}`)
+      assert.equal(roundDown(p, 1), Math.round(p), `${right}/${total} at one decimal`)
+    }
+  })
+
+  await t.test('directional rounding still keeps a display from contradicting a verdict', () => {
+    assert.equal(roundDown(77.96), 77.9, '77.96 must print below the 78 floor it does not meet')
+    assert.equal(roundDown(81.96), 81.9)
+    assert.equal(roundDown(79.96), 79.9)
+    assert.equal(roundDown(74.5, 0), 74)
+    assert.equal(roundUp(5.04), 5.1)
+    assert.equal(roundUp(42.04), 42.1)
+    assert.equal(roundUp(42.4, 0), 43)
+    assert.equal(roundUp(42, 0), 42, 'an exact 42 is not pushed over its own bar')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// R5: frq_calibrated is documented exactly as accurately as it is wired
+// ---------------------------------------------------------------------------
+
+test('frq_calibrated is not described as a rule while nothing reads it', () => {
+  const srcDir = new URL('../src/', import.meta.url)
+  const src = readdirSync(srcDir)
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => readFileSync(new URL(f, srcDir), 'utf8'))
+    .join('\n')
+  const wired = src.includes('frq_calibrated')
+  for (const [name, cfg] of [['ap_csa', CSA], ['ap_precalc', PRECALC]]) {
+    if (wired) {
+      // Someone made the key live: it belongs among the enforced rules again.
+      assert.ok('frq_calibrated' in cfg.readiness, `${name}: the key is read, so it belongs in readiness`)
+      continue
+    }
+    assert.ok(
+      !('frq_calibrated' in cfg.readiness),
+      `${name}: nothing in worker/src reads readiness.frq_calibrated, so it must not sit among the enforced rules`,
+    )
+    assert.ok(!('frq_calibrated_note' in cfg.readiness), `${name}: the note must travel with the key`)
+    const doc = cfg._documentation_only?.frq_calibrated
+    assert.ok(doc, `${name}: the key must be recorded in the documentation-only block`)
+    assert.equal(doc.value, false)
+    assert.match(doc.note, /not read|nothing reads/i, `${name}: the note must say plainly that nothing reads it`)
+    assert.match(doc.note, /calibrated: false/, `${name}: the note must name the change that would make it live`)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// R6: a block one sitting short of the requirement can never be judged
+// ---------------------------------------------------------------------------
+
+test('a block short by one sitting is passed over, not judged', () => {
+  // The newest block holds TWO sittings — one short of the three a window needs —
+  // so it is passed over and the 130/118/106 block is judged. A size comparison
+  // that accepted a block one short would build a candidate spanning 106 days,
+  // fail it, and report no window at all: a measurable record hidden. The nearest
+  // existing case has a ONE-sitting newest block, which such a mutant also skips.
+  const mocks = record([200, 130, 118, 106, 5, 2], { official: 2 })
+  const { window, reason } = qualifyingWindow({ config: CSA, mocks, now: NOW })
+  assert.deepEqual(window?.map((m) => m.id), [2, 3, 4], `the 130/118/106 block is the judged run: ${reason}`)
+})
+
+// ---------------------------------------------------------------------------
+// R7: a student who HAS a window is never told he needs one
+// ---------------------------------------------------------------------------
+
+test('the pending wording matches which evidence is actually missing', () => {
+  const mocks = sixMocks([90, 90, 90, 92, 93, 94])
+  assert.notEqual(qualifyingWindow({ config: CSA, mocks, now: NOW }).window, null, 'the window exists')
+  const r = computeReadiness({
+    config: CSA, mocks, attempts: passingAttempts([4, 5, 6]),
+    coverage: { topics_total: 53, topics_drilled: 40 }, calibrated: true, now: NOW,
+  })
+  assert.equal(r.first_unmet, 'coverage')
+  const mean = criterion(r, 'composite_mean')
+  assert.equal(mean.pending, true)
+  assert.match(mean.detail, /every exam-tested topic/, `coverage is what is missing: ${mean.detail}`)
+  assert.ok(
+    !/qualifying proctored mocks/.test(mean.detail),
+    `he has three qualifying mocks, so he must not be told to go and sit three: ${mean.detail}`,
+  )
+
+  const none = computeReadiness({ config: CSA, mocks: [], attempts: [], coverage: FULL_COVERAGE, now: NOW })
+  const noneMean = criterion(none, 'composite_mean')
+  assert.equal(noneMean.pending, true)
+  assert.match(noneMean.detail, /needs 3 qualifying proctored mocks/, `no window is what is missing: ${noneMean.detail}`)
 })
