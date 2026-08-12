@@ -94,11 +94,18 @@ export function clearsGap(gap, attempt) {
  * and the mistake this student actually made.
  *
  * Returns null when no teaching material exists for the topic, which the caller
- * must surface as a content gap rather than silently skipping the lesson.
+ * must surface as a content gap rather than silently skipping the lesson. A row
+ * that exists but carries no usable content — plain_idea, worked_example and
+ * common_mistake all null or empty — counts as no teaching material: otherwise
+ * this would hand back a truthy "lesson" with nothing in it, and the caller would
+ * mark an empty remediation as taught. A PARTIALLY filled row (e.g. an idea but
+ * no worked example) is real material and must still produce a lesson from
+ * whatever fields it has.
  */
 export function buildLesson({ topic, teaching, gap }) {
   const t = teaching?.get?.(topic) ?? teaching?.[topic]
-  if (!t) return null
+  const hasContent = t && (t.plain_idea || t.worked_example || t.common_mistake)
+  if (!hasContent) return null
   return {
     topic,
     why_now: `You have missed ${gap?.distinct_misses ?? GAP_THRESHOLD} different questions on ${topic}. That is a pattern, not a slip, so here is the idea before the next one.`,

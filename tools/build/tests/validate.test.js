@@ -166,11 +166,15 @@ const T_ITEMS = [
   { id: 'c', topic: '1.5', explanation: null },
 ]
 
-test('buildTeaching uses the EK as plain_idea and explanations for example and trap', () => {
+test('buildTeaching uses the EK as plain_idea and the first explanation as the worked example', () => {
   const e = buildTeaching(TOPICS, T_ITEMS).entries.find((x) => x.topic === '1.3')
   assert.equal(e.plain_idea, 'Integer division truncates')
   assert.equal(e.worked_example, '17/5 is 3 because integer division drops the remainder.')
-  assert.equal(e.common_mistake, 'Multiplication binds before addition.')
+  // CSA's source (topic-coverage-matrix.md) has no genuine "common mistake" label,
+  // so this must stay null rather than silently becoming item b's UNRELATED
+  // explanation — see tools/build/tests/parse-teaching.test.js for the full
+  // regression coverage of this guarantee.
+  assert.equal(e.common_mistake, null)
   assert.equal(e.complete, true)
 })
 
