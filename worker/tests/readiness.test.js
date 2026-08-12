@@ -144,15 +144,28 @@ test('drill attempts cannot move readiness, however many are correct', () => {
 
 test('incomplete coverage pins readiness at 0 even with a perfect mock record', () => {
   const mocks = [mock(1, 30, 95, { source: 'official' }), mock(2, 20, 96), mock(3, 10, 97), mock(4, 8, 95), mock(5, 5, 96), mock(6, 2, 97)]
-  const r = computeReadiness({
-    config: CSA,
-    mocks,
-    attempts: passingAttempts([1, 2, 3, 4, 5, 6]),
-    coverage: { topics_total: 53, topics_drilled: 40 },
-    now: NOW,
-  })
+  const judge = (topicsDrilled) =>
+    computeReadiness({
+      config: CSA,
+      mocks,
+      attempts: passingAttempts([1, 2, 3, 4, 5, 6]),
+      coverage: { topics_total: 53, topics_drilled: topicsDrilled },
+      now: NOW,
+    })
+  const r = judge(40)
   assert.equal(r.readiness_pct, 0)
   assert.equal(r.first_unmet, 'coverage')
+
+  // Pinned at the boundary too: coverage is a prerequisite, and ONE untouched
+  // exam-tested topic is enough to fail it. "Every topic attempted" has to mean
+  // every topic — a gate that accepted 52 of 53 would be the original bug back at
+  // one topic's width, and only a wide miss like 40 was pinned before.
+  const one = judge(52)
+  assert.equal(one.criteria.find((c) => c.id === 'coverage').met, false, '52 of 53 topics is not every topic')
+  assert.equal(one.detail ?? one.criteria.find((c) => c.id === 'coverage').detail, '52 of 53 topics')
+  assert.equal(one.readiness_pct, 0)
+  assert.equal(one.first_unmet, 'coverage')
+  assert.equal(judge(53).criteria.find((c) => c.id === 'coverage').met, true, 'and 53 of 53 does meet it')
 })
 
 // ---------------------------------------------------------------------------
