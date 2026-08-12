@@ -7,13 +7,7 @@ A **condensed, exam-driven, question-first** catch-up system for AP Precalculus.
 >
 > ⚠️ **For the parent — the content blocker, and it has a date.** The Precalc question bank is **not built**: `npm run build` fails with *"the bank holds 0 of the 38 multiple choice question(s) it takes to cover the 42 a full paper contains"* and *"33 of 36 exam-tested topic(s) have NO items."* Until that work lands, **no Precalc mock can be assembled and readiness is unmeasurable at any level of effort** — the number will correctly read 0 however much he studies. **Hard fail-by: Mon 15 Mar 2027** (derived from the readiness engine's own rules). **Recommended target: Sun 31 Jan 2027** (judgement, not derived). Arithmetic and consequences: **`study-plan.md`**.
 >
-> ⚠️ **For the parent — one more non-compressible task.** The readiness bar requires an **official** College Board paper inside the scored mock window, and the only full-length official Precalc paper is the **AP Classroom Practice Exam**, which is gated to authorized educators. **Get a join code from his AP Precalc teacher in the first week of school (Sept 2026).** No code → no official mock → no qualifying window, regardless of every score.
-
----
->
-> ⚠️ **For the parent — the content blocker, and it has a date.** The Precalc question bank is **not built**: `npm run build` fails with *"the bank holds 0 of the 38 multiple choice question(s) it takes to cover the 42 a full paper contains"* and *"33 of 36 exam-tested topic(s) have NO items."* Until that work lands, **no Precalc mock can be assembled and readiness is unmeasurable at any level of effort** — the number will correctly read 0 however much he studies. **Hard fail-by: Mon 15 Mar 2027** (derived from the readiness engine's own rules). **Recommended target: Sun 31 Jan 2027** (judgement, not derived). Arithmetic and consequences: **`study-plan.md`**.
->
-> ⚠️ **For the parent — one more non-compressible task.** The readiness bar requires an **official** College Board paper inside the scored mock window, and the only full-length official Precalc paper is the **AP Classroom Practice Exam**, which is gated to authorized educators. **Get a join code from his AP Precalc teacher in the first week of school (Sept 2026).** No code → no official mock → no qualifying window, regardless of every score. *(The ungated Bluebook practice in Priority 4 above does **not** substitute — it is a short unscored test preview, not a full-length paper.)*
+> ⚠️ **For the parent — one more non-compressible task.** The readiness bar requires an **official** College Board paper inside the scored mock window, and the only full-length official Precalc paper is the **AP Classroom Practice Exam**, which is gated to authorized educators. **Get a join code from his AP Precalc teacher in the first week of school (Sept 2026).** No code → no official mock → no qualifying window, regardless of every score. *(The ungated Bluebook practice in Priority 4 of the download list below does **not** substitute — it is a short unscored test preview, not a full-length paper.)*
 
 ---
 
@@ -21,7 +15,7 @@ A **condensed, exam-driven, question-first** catch-up system for AP Precalculus.
 
 **Everything here is free, official, and public — no login, no join code.** All PDFs live under one base URL: **`https://apcentral.collegeboard.org/media/pdf/`** — paste the base plus the filename into a browser. Save them into one folder per subject per year; that folder *is* the free-response practice supply for the next two years.
 
-**Verified 12 August 2026:** every filename below was resolved to a live document on that date. Two cautions that will otherwise cost you time:
+**Verified 12 August 2026:** every filename printed below was resolved to a live document on that date, **except the two rows that say otherwise in words** (Priority 1 item 5 and Priority 3 item 10, where the exact filename was not confirmed and you should click through from AP Central instead). Two cautions that will otherwise cost you time:
 - **Do not "fix" a filename that looks inconsistent.** College Board does not use one naming pattern across years. `ap24-precalculus-student-samples-frq-1.pdf` (Precalc 2024) and `ap24-frq-comp-sci-a.pdf` (CSA 2024) look wrong next to their 2025 siblings and are nevertheless correct. The 2025-shaped guess for Precalc 2024, `ap24-apc-precalculus-q1.pdf`, returns **404**.
 - **A 404 means the name is wrong, not that the document is gone.** Fall back to AP Central → the subject → *Exam Questions* and click through.
 
