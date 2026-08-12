@@ -192,12 +192,47 @@ test('every model-graded item carries a worked solution to compare against', () 
   }
 })
 
-test('the Precalc items are declared model-graded, not left silently keyless', () => {
+test('every Precalc item is either keyed and server-graded, or model-graded with a worked solution', () => {
+  // WHY THE OLD ASSERTION WAS RETIRED. This test used to read
+  // "the Precalc items are declared model-graded, not left silently keyless" and
+  // assert `kind === 'constructed_model_graded'` for all 48 of them. That was a
+  // true description of the bank as it shipped, but it pinned the SYMPTOM as the
+  // rule: MODEL_GRADED work is excluded from every readiness floor
+  // (isServerGraded, above), so while that assertion held, a student could answer
+  // every Precalc question correctly and still measure 0%. The packs can now
+  // declare a per-problem answer key (tools/build/parse-precalc.js), which is what
+  // turns an item into 'constructed' and makes it count — and the first key landed
+  // would have failed this test for doing precisely the thing it was blocking.
+  //
+  // What this file actually guards is unchanged, so it is now stated per item and
+  // holds at every ratio of keyed to unkeyed: an item is either mechanically
+  // gradeable AND carries a key grade.js can mark against, or it is declared
+  // model-graded AND carries the worked solution the rubric needs. The state this
+  // file exists to forbid — a gradeable kind with nothing to grade against, which
+  // grade() would report 'unkeyed' and every downstream number would inherit — is
+  // still impossible in both directions.
   const r = compile()
   const pc = r.items.filter((i) => i.subject === 'ap_precalc')
   assert.ok(pc.length > 0)
   for (const it of pc) {
-    assert.equal(it.kind, 'constructed_model_graded', `${it.id} must declare model grading`)
+    const keyed = it.answer != null && String(it.answer).trim() !== ''
+    if (keyed) {
+      assert.equal(it.kind, 'constructed', `${it.id} carries an answer key but is not server-graded`)
+      // A key that does not credit its own canonical answer is a false negative
+      // waiting to happen, so it is checked against the real grader, not asserted.
+      const v = grade(it, it.answer)
+      assert.equal(v.correct, 1, `${it.id}: its own key "${it.answer}" does not grade as correct`)
+      assert.equal(v.graded_by, 'server', `${it.id}: a keyed item must not be routed to the model`)
+      // ...and so is every accepted form the pack declares or the build expands.
+      for (const form of it.answer_variants ?? []) {
+        const av = grade(it, form)
+        assert.equal(av.correct, 1, `${it.id}: accepted form ${JSON.stringify(form)} is marked WRONG`)
+        assert.equal(av.graded_by, 'server', `${it.id}: accepted form ${JSON.stringify(form)} was not server-graded`)
+      }
+    } else {
+      assert.equal(it.kind, 'constructed_model_graded', `${it.id} has no key and must declare model grading`)
+      assert.deepEqual(it.answer_variants ?? [], [], `${it.id} declares accepted forms but no key to accept them`)
+    }
     assert.ok(it.explanation, `${it.id} must ship its worked solution`)
   }
 })
