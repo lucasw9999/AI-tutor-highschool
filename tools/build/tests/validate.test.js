@@ -2,8 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { validate, feasibility, MIN_MOCK_COVERAGE, ASSUMED_REUSE_DAYS, readinessConfigs } from '../validate.js'
+import { compile } from '../build.js'
 import { buildTeaching } from '../parse-teaching.js'
 import { MIN_MOCK_COVERAGE as API_MIN_MOCK_COVERAGE } from '../../../worker/src/api.js'
+import { MODEL_GRADED } from '../../../worker/src/grade.js'
 import { DEFAULT_REUSE_DAYS } from '../../../worker/src/select.js'
 
 /**
@@ -454,13 +456,61 @@ test('the shipped configs and the shipped bank are judged against each other', (
     '6 sittings x the 38 multiple choice a scored sitting needs is 228 servings from 218 mcq items',
   )
 
-  const pc = feasibility(items.filter((i) => i.subject === 'ap_precalc'), configs.find((c) => c.subject === 'ap_precalc'))
+  const pcItems = items.filter((i) => i.subject === 'ap_precalc')
+  const pcConfig = configs.find((c) => c.subject === 'ap_precalc')
+  const pc = feasibility(pcItems, pcConfig)
   assert.equal(pc.errors.length, 1, JSON.stringify(pc.errors))
   assert.match(pc.errors[0], /ap_precalc/)
-  assert.match(pc.errors[0], /composite/, 'all 48 Precalc items are model-graded, so no sitting can be scored')
   assert.match(
     pc.errors[0], /0 of the 38 multiple choice/,
-    'and its items are kind constructed_model_graded, so neither half of its paper can be supplied either',
+    'no Precalc item is of kind mcq or frq, so neither half of its paper can be supplied',
+  )
+  assert.match(pc.errors[0], /0 of the 4 free-response/, 'and the gate must name BOTH halves it is short of')
+
+  // RETIRED ASSERTION: `assert.match(pc.errors[0], /composite/, 'all 48 Precalc
+  // items are model-graded, so no sitting can be scored')`.
+  //
+  // That clause is appended by feasibility() only when NOTHING in the bank can be
+  // graded mechanically, and it was true only because not one Precalc item had an
+  // answer key. 19 of them now do, so the clause correctly stops firing — and an
+  // assertion that it still fires would be demanding that the bank stay unmarkable.
+  // What replaces it is a biconditional rather than the opposite match, so this can
+  // never again pass for the wrong reason: the clause appears if and only if the
+  // bank it is describing genuinely holds nothing a grader can mark.
+  const markable = pcItems.filter((i) => !MODEL_GRADED.has(i.kind) && String(i.answer ?? '').trim() !== '')
+  assert.equal(
+    /not one item in this bank can be graded mechanically/.test(pc.errors[0]),
+    markable.length === 0,
+    `the shipped Precalc bank has ${markable.length} mechanically markable item(s); the "nothing here can be ` +
+    'marked" clause must appear exactly when that count is zero',
+  )
+
+  // And the corrected contract, stated over the bank the MARKDOWN compiles to,
+  // unconditionally: a stale content/items.json must not be able to keep this test
+  // describing a bank that no longer exists. (build-gates.test.js separately
+  // forbids the artifacts from lagging the markdown at all.)
+  const compiled = compile().items.filter((i) => i.subject === 'ap_precalc')
+  const compiledKeyed = compiled.filter((i) => !MODEL_GRADED.has(i.kind) && String(i.answer ?? '').trim() !== '')
+  assert.ok(
+    compiledKeyed.length >= 19,
+    `the packs key ${compiledKeyed.length} Precalc items; keys are only ever added, so this floor may rise, never fall`,
+  )
+  const compiledPc = feasibility(compiled, pcConfig)
+  assert.equal(compiledPc.errors.length, 1, JSON.stringify(compiledPc.errors))
+  assert.doesNotMatch(
+    compiledPc.errors[0], /not one item in this bank can be graded mechanically/,
+    'keyed Precalc items exist and grade server-side, so the gate must not claim the bank is unmarkable',
+  )
+  assert.match(
+    compiledPc.errors[0], new RegExp(`constructed=${compiledKeyed.length}\\b`),
+    'and the gate must report the keyed items it can see, so the remaining shortfall is read as a KIND problem',
+  )
+  // The unkeyed half is still unkeyed, and the gate still counts it as unmarkable —
+  // keying 19 items did not quietly reclassify the other 29.
+  assert.equal(
+    compiled.length - compiledKeyed.length,
+    compiled.filter((i) => MODEL_GRADED.has(i.kind)).length,
+    'every Precalc item that is not keyed must be declared model-graded, never left as an unkeyed gradeable',
   )
 })
 

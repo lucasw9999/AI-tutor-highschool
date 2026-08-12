@@ -22,7 +22,8 @@ import { DatabaseSync } from 'node:sqlite'
 import worker from '../src/index.js'
 import { handleMockStart, handleMockSubmit, MIN_MOCK_COVERAGE, MOCK_TIME_SLACK } from '../src/api.js'
 import { makeDb } from '../src/db.js'
-import { grade, MODEL_GRADED } from '../src/grade.js'
+import { grade, MODEL_GRADED, isServerGraded } from '../src/grade.js'
+import { breakdown } from '../src/readiness.js'
 
 const SPEC = JSON.parse(readFileSync(new URL('../openapi.json', import.meta.url), 'utf8'))
 const ROUTER = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
@@ -379,6 +380,19 @@ function d1(sqlite) {
 
 const STUDENT_KEY = 'test-student-key'
 
+/** A fixed server clock, for the serves these tests create directly. */
+const NOW = '2027-03-01T12:00:00Z'
+
+/**
+ * Whether grade.js will mark this item mechanically — the grader's own rule
+ * (MODEL_GRADED plus a usable key), applied to the row as the DATABASE holds it.
+ *
+ * Asked of the database on purpose. "The parser produced a key" and "the key
+ * reached the item the Worker serves" are different claims, and only the second
+ * one decides whether a right answer is marked right.
+ */
+const isKeyed = (row) => !MODEL_GRADED.has(row.kind) && String(row.answer ?? '').trim() !== ''
+
 /** A Worker env with the real schema, the real seeded content, and real keys. */
 function freshEnv() {
   const sqlite = new DatabaseSync(':memory:')
@@ -469,23 +483,96 @@ async function realResponses(env) {
   const logged = record('Log', 'logAnswer', await call(env, '/log', { s: 'ap_csa', v: q.serve, a: 'B' }), 'logAnswer(ap_csa)')
   assert.equal(logged.graded, true)
 
-  // Precalc: all 48 items are constructed_model_graded, so 100% of answers come
-  // back correct:null, graded:false, keyed:null, plus a note explaining why.
+  // Precalc: 19 of the 48 items now carry answer keys and grade server-side; the
+  // other 29 are model-graded. Both shapes are recorded, because both are real and
+  // the schema has to survive each of them.
+  //
+  // RETIRED ASSERTIONS: `assert.equal(plogged.correct, null)` and
+  // `assert.equal(plogged.graded, false)` on whatever /next happened to serve. They
+  // held only because NO Precalc item had an answer key, so every Precalc answer was
+  // ungraded by construction. Asserting that of an arbitrary served item now demands
+  // that the keys not work. What replaces them: the served item is looked up in the
+  // DATABASE and held to the shape its own kind requires, and then BOTH shapes are
+  // provoked deliberately — a model-graded item for the nullable one the schema
+  // needs, and a keyed one answered with its own key for the graded one.
+  const pdb = makeDb(env.DB)
   const pq = record('Next', 'getNext', await call(env, '/next', { s: 'ap_precalc' }), 'getNext(ap_precalc)')
   const plogged = record('Log', 'logAnswer', await call(env, '/log', { s: 'ap_precalc', v: pq.serve, a: '3' }), 'logAnswer(ap_precalc)')
-  assert.equal(plogged.correct, null, 'the shape the schema has to survive')
-  assert.equal(plogged.graded, false)
-  assert.ok(plogged.note, 'the server explains that this was not mechanically graded')
+  const pserved = env.sqlite.prepare(
+    `SELECT i.kind, i.answer FROM serves s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
+  ).get(pq.serve)
+  if (isKeyed(pserved)) {
+    assert.equal(plogged.graded, true, 'a keyed Precalc item must be graded, not routed to the model')
+    assert.equal(typeof plogged.correct, 'boolean', 'and it must reach a real verdict')
+  } else {
+    assert.equal(plogged.correct, null, 'the server must not claim a verdict it did not reach')
+    assert.equal(plogged.graded, false)
+  }
+
+  // The UNGRADED shape, provoked rather than hoped for: correct:null, graded:false,
+  // keyed:null, plus a note. This is the body that proves the schema declares those
+  // fields nullable, so it may not depend on which item selection chose.
+  const modelGraded = env.sqlite.prepare(
+    `SELECT id FROM items WHERE subject = 'ap_precalc' AND kind = 'constructed_model_graded' LIMIT 1`,
+  ).get()
+  assert.ok(modelGraded, 'the bank must still hold model-graded Precalc work')
+  const mgServe = await pdb.recordServe({ subject: 'ap_precalc', item_id: modelGraded.id, served_at: NOW })
+  const ungraded = record(
+    'Log', 'logAnswer',
+    await call(env, '/log', { s: 'ap_precalc', v: mgServe, a: 'my working, in prose' }),
+    'logAnswer(ap_precalc, model-graded)',
+  )
+  assert.equal(ungraded.correct, null, 'the nullable shape the schema has to survive')
+  assert.equal(ungraded.graded, false)
+  assert.ok(ungraded.note, 'the server explains that this was not mechanically graded')
+
+  // THE GRADED shape, and the point of the whole keying exercise: a Precalc key
+  // read back out of the DATABASE marks its own answer RIGHT, through the real
+  // router. A key that survived the parser but not JSON and SQL escaping would mark
+  // a correct answer wrong, silently, in front of him.
+  const keyedItem = env.sqlite.prepare(
+    `SELECT id, answer FROM items WHERE subject = 'ap_precalc'
+       AND kind NOT IN ('frq', 'constructed_model_graded') AND trim(coalesce(answer, '')) <> '' LIMIT 1`,
+  ).get()
+  assert.ok(keyedItem, 'the seed must carry the keyed Precalc items, or none of the keying reached runtime')
+  const keyedServe = await pdb.recordServe({ subject: 'ap_precalc', item_id: keyedItem.id, served_at: NOW })
+  const gradedRight = record(
+    'Log', 'logAnswer',
+    await call(env, '/log', { s: 'ap_precalc', v: keyedServe, a: keyedItem.answer }),
+    'logAnswer(ap_precalc, keyed)',
+  )
+  assert.equal(gradedRight.graded, true, `${keyedItem.id}: a keyed Precalc item must grade server-side`)
+  assert.equal(
+    gradedRight.correct, true,
+    `${keyedItem.id}: the key as the database holds it (${JSON.stringify(keyedItem.answer)}) marked its own answer WRONG`,
+  )
 
   record('Status', 'getStatus', await call(env, '/status', { s: 'ap_csa' }), 'getStatus')
 
-  // A Precalc mock: nothing in it can be mechanically scored, so the composite
-  // is computed over a subset and `scored`/`ungraded` are what explain the 0.
+  // A Precalc mock. It still cannot be COUNTED, and the reason is not that nothing
+  // in it can be marked: it is that every Precalc item is kind `constructed`, which
+  // fills neither the mcq half nor the frq half api.js builds a paper from, so the
+  // sitting can never reach the coverage floor.
+  //
+  // RETIRED ASSERTION: `assert.equal(submitted.scored, 0, 'nothing in a Precalc
+  // sitting can be graded mechanically')`. With 19 keyed items a Precalc sitting can
+  // now contain graded answers, so `scored` is a function of what was served — and
+  // it is derived from the served item here instead of being pinned at zero, while
+  // `counted` and `composite_pct`, which are what actually reach him, stay pinned.
   const mock = record('MockStart', 'startMock', await call(env, '/mock/start', { s: 'ap_precalc', sec: 'I', src: 'bank' }), 'startMock')
   const mq = await call(env, '/next', { s: 'ap_precalc', m: mock.mock })
+  assert.equal(mq.body.type, 'question', `a Precalc sitting must be servable: ${JSON.stringify(mq.body)}`)
   await call(env, '/log', { s: 'ap_precalc', v: mq.body.serve, a: 'some work' })
+  const mockServed = env.sqlite.prepare(
+    `SELECT i.kind, i.answer FROM serves s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
+  ).get(mq.body.serve)
   const submitted = record('MockSubmit', 'submitMock', await call(env, '/mock/submit', { s: 'ap_precalc', m: mock.mock }), 'submitMock')
-  assert.equal(submitted.scored, 0, 'nothing in a Precalc sitting can be graded mechanically')
+  assert.equal(
+    submitted.scored, isKeyed(mockServed) ? 1 : 0,
+    'a Precalc sitting scores exactly the answers whose items carry a key, and no others',
+  )
+  assert.equal(submitted.counted, false, 'and it still cannot count: neither half of its paper can be supplied')
+  assert.equal(submitted.composite_pct, null, 'an uncounted sitting has no composite, and 0 is not one')
 
   // The teaching interrupt: two distinct misses on one topic returns a lesson
   // instead of a question, which is a different shape under the same schema —
@@ -581,6 +668,142 @@ withSeed('the responses that carry no nested status are exactly the ones the ins
     'gpt-instructions.md names these operations as returning no nested status summary, but the router disagrees. ' +
       'Whichever changed, both have to say the same thing: the GPT is told to show a status on every response.',
   )
+})
+
+// --- the answer keys, all the way through the database ----------------------
+//
+// THE WORST DEFECT THIS PROJECT CAN SHIP IS MARKING A RIGHT ANSWER WRONG. A key
+// that survives the parser but not JSON and SQL escaping does exactly that: the
+// grader compares what he typed against whatever landed in the `answer` column,
+// and a mangled key marks him wrong silently, with no signal anywhere that the
+// content and the verdict have come apart.
+//
+// Nothing exercised the Precalc keys against the seeded database before these
+// tests. The parser tests stop at the item object, grade.js's own tests use
+// fixtures and the shipped CSA bank, and the router tests asserted that a Precalc
+// answer is never graded at all — which was true only while no Precalc item had a
+// key, and is the assertion the keys retired. So the whole production path is
+// driven here: seed.sql -> node:sqlite -> db.js -> the real router -> grade.js,
+// on real content, with the responses a student would actually type.
+
+/** Every Precalc item in the seed that grade.js will mark mechanically. */
+function keyedPrecalc(sqlite) {
+  return sqlite.prepare(
+    `SELECT id, topic, unit, kind, answer, answer_variants_json FROM items
+      WHERE subject = 'ap_precalc' AND kind NOT IN ('frq', 'constructed_model_graded')
+        AND trim(coalesce(answer, '')) <> '' ORDER BY id`,
+  ).all()
+}
+
+withSeed('every accepted form of a keyed Precalc answer is marked RIGHT by the key the database holds', async () => {
+  const env = freshEnv()
+  const db = makeDb(env.DB)
+  const keyed = keyedPrecalc(env.sqlite)
+  assert.ok(
+    keyed.length >= 19,
+    `the seed carries ${keyed.length} keyed Precalc item(s); the packs key 19, so anything less means the seed is ` +
+      'stale and the keys have not reached runtime',
+  )
+
+  // Read back through db.js, not straight off the row, so the JSON columns are
+  // parsed by the same code the Worker runs.
+  const misses = []
+  let forms = 0
+  for (const row of keyed) {
+    const item = await db.item(row.id)
+    assert.equal(item.answer, row.answer, `${row.id}: db.js must hand the grader the stored key verbatim`)
+    // The canonical key AND every alternate form the pack declares acceptable.
+    // Exhaustive on purpose: the variants exist precisely because a student writes
+    // "AROC = 3" and not "3", and each one is a separate chance to mark him wrong.
+    for (const form of [item.answer, ...(item.answer_variants ?? [])]) {
+      forms++
+      const r = grade(item, form)
+      if (!(r.graded_by === 'server' && r.correct === 1)) {
+        misses.push(`${row.id}: ${JSON.stringify(form)} -> graded_by=${r.graded_by} correct=${r.correct}`)
+      }
+    }
+  }
+  assert.deepEqual(
+    misses, [],
+    `a form the content itself declares CORRECT was not credited against the key in the database — this is the ` +
+      `false-negative defect, on real content:\n  ${misses.slice(0, 20).join('\n  ')}`,
+  )
+  assert.ok(forms > keyed.length, `precondition: the keys carry alternate forms (${forms} forms over ${keyed.length} items)`)
+})
+
+withSeed('a keyed Precalc item goes through the real router and lands as countable evidence', async () => {
+  const env = freshEnv()
+  const db = makeDb(env.DB)
+  const keyed = new Map(keyedPrecalc(env.sqlite).map((r) => [r.id, r]))
+
+  // Every one of them, served by handing the real /log a real serve — so the
+  // assertion covers the whole keyed bank rather than whichever item the selector
+  // happened to reach first.
+  for (const [id, row] of keyed) {
+    const serveId = await db.recordServe({ subject: 'ap_precalc', item_id: id, served_at: NOW })
+    const res = await call(env, '/log', { s: 'ap_precalc', v: serveId, a: row.answer })
+    assert.equal(res.status, 200, `${id}: /log failed: ${JSON.stringify(res.body)}`)
+    assert.equal(res.body.graded, true, `${id}: a keyed item must be graded server-side, not routed to the model`)
+    assert.equal(res.body.correct, true, `${id}: the stored key ${JSON.stringify(row.answer)} did not match itself`)
+    assert.equal(res.body.graded_by, 'server', `${id}: graded_by must say who reached the verdict`)
+  }
+
+  // The stored evidence, which is the only thing any number is computed from.
+  const rows = (await db.attempts('ap_precalc')).filter((a) => keyed.has(a.item_id))
+  assert.equal(rows.length, keyed.size, 'every graded answer must be recorded as an attempt')
+  for (const a of rows) {
+    assert.equal(a.graded_by, 'server', `${a.item_id}: the attempt must be booked as a server verdict`)
+    assert.equal(a.correct, 1, `${a.item_id}: a right answer must be recorded as right`)
+    assert.ok(isServerGraded(a), `${a.item_id}: readiness must be able to count this attempt`)
+    // The TASK-1 payoff, at runtime: a real CED topic, never a `<unit>.0` bucket.
+    assert.match(a.topic, /^\d+\.\d+$/, `${a.item_id}: the attempt must carry a topic`)
+    assert.doesNotMatch(a.topic, /\.0$/, `${a.item_id}: evidence must land on a real topic, not a placeholder bucket`)
+    assert.ok(a.unit, `${a.item_id}: a NULL unit is invisible to every per-unit floor`)
+  }
+
+  // And therefore a TOPIC PERCENTAGE exists — the number that was unmeasurable at
+  // any effort while every Precalc item was model-graded and bucketed at <unit>.0.
+  const byTopic = breakdown(rows.filter(isServerGraded), 'topic')
+  const topics = Object.keys(byTopic).sort()
+  assert.ok(topics.length >= 10, `only ${topics.length} Precalc topic(s) can be measured: ${topics.join(', ')}`)
+  for (const [topic, cell] of Object.entries(byTopic)) {
+    assert.equal(cell.pct, 100, `${topic}: every answer given was the item's own key, so the topic must read 100%`)
+    assert.ok(cell.n > 0)
+  }
+})
+
+withSeed('the selector actually serves keyed Precalc items to the student', async () => {
+  // The two tests above prove the key works when the item is put in front of him.
+  // This proves the item IS put in front of him: /next is the only way he ever
+  // receives one, and a keyed bank the selector never reaches measures nothing.
+  const env = freshEnv()
+  const db = makeDb(env.DB)
+  const seen = { keyed: 0, model: 0 }
+
+  for (let i = 0; i < 24; i++) {
+    const q = await call(env, '/next', { s: 'ap_precalc' })
+    assert.equal(q.status, 200, `/next failed: ${JSON.stringify(q.body)}`)
+    if (q.body.type !== 'question') continue
+    const item = await db.item((await db.serve(q.body.serve)).item_id)
+    assert.ok(!('answer' in q.body), 'the /next payload must not leak the answer key')
+
+    const keyed = isKeyed(item)
+    const response = keyed ? item.answer : 'here is my working'
+    const r = await call(env, '/log', { s: 'ap_precalc', v: q.body.serve, a: response })
+    assert.equal(r.status, 200, `/log failed: ${JSON.stringify(r.body)}`)
+    if (keyed) {
+      seen.keyed++
+      assert.equal(r.body.graded, true, `${item.id}: served by the selector and then not graded`)
+      assert.equal(r.body.correct, true, `${item.id}: its own key was marked wrong after a real /next`)
+    } else {
+      seen.model++
+      assert.equal(r.body.graded, false, `${item.id}: nothing may claim a verdict on model-graded work`)
+      assert.equal(r.body.correct, null)
+    }
+  }
+
+  assert.ok(seen.keyed > 0, `24 real drill turns served no keyed Precalc item at all (model-graded: ${seen.model})`)
+  assert.ok(seen.model > 0, `precondition: the bank still holds model-graded Precalc work (keyed: ${seen.keyed})`)
 })
 
 withSeed('the Precalculus warning in the instructions matches what the bank can actually be scored on', () => {
@@ -823,8 +1046,8 @@ const DIVISOR_SCENARIOS = [
   { what: 'CSA full, 42 of the 46 askable', subject: 'ap_csa', section: 'full', config: CSA, n: 42, right: 40 },
   { what: 'CSA full, two never reached', subject: 'ap_csa', section: 'full', config: CSA, n: 40, right: 38 },
   { what: 'CSA full, two unreached and four unmarked', subject: 'ap_csa', section: 'full', config: CSA, n: 40, right: 34, ungraded: 4 },
-  { what: 'Precalc I, no keyed item in the bank', subject: 'ap_precalc', section: 'I', config: PRECALC, n: 42, right: 0 },
-  { what: 'Precalc II, rubric-scored throughout', subject: 'ap_precalc', section: 'II', config: PRECALC, n: 4, right: 0 },
+  { what: 'Precalc I, bank supplies no multiple choice', subject: 'ap_precalc', section: 'I', config: PRECALC, n: 42, right: 0 },
+  { what: 'Precalc II, bank supplies no free response', subject: 'ap_precalc', section: 'II', config: PRECALC, n: 4, right: 0 },
   { what: 'Precalc full, neither half scorable', subject: 'ap_precalc', section: 'full', config: PRECALC, n: 42, right: 0 },
 ]
 
