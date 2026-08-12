@@ -36,8 +36,6 @@
     "no_calc_min": 65,
     "calc_min": 65,
     "frq_min_pct": 70,
-    "frq_calibrated": false,
-    "frq_calibrated_note": "False until the FRQ grader is validated against an officially scored College Board response. While false, the frq criterion is reported as pending rather than failed, and free-response evidence does not count toward readiness.",
     "max_blanks": 1,
     "consecutive_qualifying_mocks": 3,
     "total_logged_mocks_min": 4,
@@ -51,6 +49,10 @@
   },
   "_documentation_only": {
     "_note": "Keys below are not read anywhere in worker/src. They record intent that was never wired into the readiness engine, or historical context; treat every value here as reference, not as an enforced rule.",
+    "frq_calibrated": {
+      "value": false,
+      "note": "Meant to say whether the FRQ grader has been validated against an officially scored College Board response. NOT read by anything: api.js passes `calibrated: false` as a literal at all three computeReadiness call sites (summarize, handleStatus, handleDashboard), so editing this key changes no output whatsoever. It sat under `readiness` with a note asserting runtime behaviour it does not have. To make it live, api.js's owner replaces those three literals with `config.readiness.frq_calibrated === true` and moves this key back up into `readiness`; readiness.js already takes `calibrated` as a parameter and needs no change. Until then the engine is hard-wired to the safe state: the frq criterion is reported as pending rather than failed, free-response evidence cannot move the number, and 100% is unreachable. This matters more here than for CSA: every one of the 48 Precalc items is model-graded, so the whole bank sits behind this quarantine."
+    },
     "reduced_confidence_mocks_min": {
       "value": 3,
       "note": "Meant to raise the required mock count when the evidence is weak (e.g. still bank-only). Not implemented — no criterion or advisory reads it."
