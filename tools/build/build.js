@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { parseMcqFile, MCQ_FILES } from './parse-mcq.js'
+import { parseFrqAll } from './parse-frq.js'
 import { parseTopics } from './parse-topics.js'
 import { buildTeaching } from './parse-teaching.js'
 import { parseAll as parsePrecalcTopics } from './parse-precalc-topics.js'
@@ -45,12 +46,39 @@ function precalcUnitBuckets(items) {
 export function compile(readFile = (f) => readFileSync(f, 'utf8')) {
   // --- AP CSA ------------------------------------------------------------
   const csaTopics = parseTopics(readFile(MATRIX))
-  const csaItems = MCQ_FILES.flatMap((f) => parseMcqFile(readFile(`${BANK_DIR}/${f}`), f))
+  const csaMcq = MCQ_FILES.flatMap((f) => parseMcqFile(readFile(`${BANK_DIR}/${f}`), f))
+
+  // Free response is 45% of the CSA exam score and all 25 of its points, and it
+  // used to reach the build not at all: parse-mcq.js names five mcq-*.md files
+  // and nothing named frq-q*.md, so 20 finished practice FRQs were invisible to
+  // every gate, to the selector, and to the student. A refused parse is an ERROR
+  // and yields no items — parse-frq.js does not return a partial bank — so this
+  // can never quietly compile a bank with some of the free-response half in it.
+  //
+  // Units come from the topics table, exactly as to-sql.js derives them, rather
+  // than from the topic id's prefix: a topic whose unit is not what its prefix
+  // suggests still lands in the right unit.
+  const csaUnits = new Map(csaTopics.map((t) => [t.id, t.unit]))
+  const frqErrors = []
+  let csaFrq = []
+  try {
+    csaFrq = parseFrqAll((f) => readFile(`${BANK_DIR}/${f}`)).items
+      .map((it) => ({ ...it, unit: csaUnits.get(it.topic) ?? null }))
+  } catch (err) {
+    frqErrors.push(err.message)
+  }
+
+  // MCQ items first, deliberately. buildTeaching takes a topic's FIRST item
+  // explanation as its worked example, and an MCQ's answer-key rationale is a
+  // worked example of that one topic, while an FRQ's sample solution is a whole
+  // class or a whole method spanning several. Appending keeps every existing
+  // teaching row byte-identical.
+  const csaItems = [...csaMcq, ...csaFrq]
   const csaTeaching = buildTeaching(csaTopics, csaItems)
 
   // --- AP Precalculus ----------------------------------------------------
   const pc = parsePrecalcTopics(readFile)
-  const errors = [...pc.errors]
+  const errors = [...frqErrors, ...pc.errors]
 
   let pcItems = []
   let pcItemErrors = []
@@ -159,6 +187,17 @@ export function compile(readFile = (f) => readFileSync(f, 'utf8')) {
     precalcIncomplete: pc.incomplete,
     precalcUntagged: pcItems.filter((i) => i.topic.endsWith('.0')).length,
     perUnitSections: pc.perUnit,
+    // Free response, so the build can never again report a CSA bank without
+    // saying how much of the exam's other half is in it.
+    frq: {
+      items: csaFrq.length,
+      points: csaFrq.reduce((n, it) => n + it.points, 0),
+      byType: Object.fromEntries(
+        [...new Set(csaFrq.map((i) => i.question_type))].sort()
+          .map((slot) => [slot, csaFrq.filter((i) => i.question_type === slot).length]),
+      ),
+      primaryTopics: [...new Set(csaFrq.map((i) => i.topic))],
+    },
     unreachable,
     blankTeaching,
     topicsMissingTeaching,
@@ -171,14 +210,25 @@ export function compile(readFile = (f) => readFileSync(f, 'utf8')) {
  * Rows WRITTEN and rows COMPLETE are separate numbers. Reporting only the complete
  * count understated reality — it printed "teaching= 36" while 44 Precalc rows were
  * being written to teaching.json and loaded into D1, several of them missing fields.
+ *
+ * Items are also broken down BY KIND. A single item total is what let CSA report a
+ * healthy 218 while holding not one free-response question — 45% of the exam score
+ * and every one of its 25 free-response points, absent, invisible in the summary
+ * line. api.js measures a section's supply per kind (sectionParts), so the build
+ * must report per kind too, or the two can disagree without anyone noticing.
  */
 export function summary({ topics, items, teaching }) {
   const rows = {}
   for (const s of SUBJECTS) {
     const subjectTeaching = teaching.filter((t) => t.subject === s)
+    const subjectItems = items.filter((i) => i.subject === s)
     rows[s] = {
       topics: topics.filter((t) => t.subject === s).length,
-      items: items.filter((i) => i.subject === s).length,
+      items: subjectItems.length,
+      itemsByKind: Object.fromEntries(
+        [...new Set(subjectItems.map((i) => i.kind ?? 'no kind'))].sort()
+          .map((kind) => [kind, subjectItems.filter((i) => i.kind === kind).length]),
+      ),
       teachingWritten: subjectTeaching.length,
       teachingComplete: subjectTeaching.filter((t) => t.complete !== false).length,
     }
@@ -206,6 +256,20 @@ export function incompleteReport(r) {
   }
   if (r.precalcUntagged) {
     out.push(`${r.precalcUntagged} precalc item(s) are bucketed at <unit>.0 and cannot drive topic-level teaching until tagged`)
+  }
+  // The same disclosure the Precalc buckets get, for the same reason: the FRQ
+  // markdown declares its topics per FILE (its Cross-links line, which agrees
+  // with the "Bank Item(s)" column of the coverage matrix), never per item. Each
+  // item therefore carries the first topic its file declares — the document's own
+  // ordering — and the other topics that file covers get no item of their own from
+  // it. Said out loud rather than presented as a per-item tag the content does
+  // not state.
+  if (r.frq.items) {
+    out.push(
+      `ap_csa: ${r.frq.items} free-response item(s) carry the FIRST topic their file declares ` +
+      `(${r.frq.primaryTopics.join(', ')}) because the markdown declares topics per FRQ file, not per item — so ` +
+      'topic-level selection sees each question type as one topic',
+    )
   }
   for (const [subject, ids] of Object.entries(bySubject(r.unreachable))) {
     out.push(`${subject}: ${ids.length} exam-tested topic(s) cannot reach readiness — no items exist for ${ids.join(', ')}`)
@@ -263,11 +327,16 @@ function main(argv = process.argv.slice(2)) {
 
   console.log('Per subject:')
   for (const [subject, c] of Object.entries(rows)) {
+    const kinds = Object.entries(c.itemsByKind).map(([k, n]) => `${k}=${n}`).join(' ') || 'none'
     console.log(
-      `  ${subject.padEnd(11)} topics=${String(c.topics).padStart(3)}  items=${String(c.items).padStart(4)}` +
+      `  ${subject.padEnd(11)} topics=${String(c.topics).padStart(3)}  items=${String(c.items).padStart(4)} (${kinds})` +
       `  teaching rows written=${String(c.teachingWritten).padStart(3)} complete=${String(c.teachingComplete).padStart(3)}`,
     )
   }
+  console.log(
+    `Free response: ${r.frq.items} item(s) worth ${r.frq.points} rubric points ` +
+    `${JSON.stringify(r.frq.byType)}`,
+  )
   console.log(`Precalc concept sections per unit: ${JSON.stringify(r.perUnitSections)}`)
 
   for (const w of r.warnings) console.warn(`WARN  ${w}`)
