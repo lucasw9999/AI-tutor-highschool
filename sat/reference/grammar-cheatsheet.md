@@ -2,6 +2,13 @@
 
 **Why this matters for your score:** Standard English Conventions is ~26% of your Reading & Writing section (11-15 questions). These are the *most learnable* points on the whole SAT — every question follows the exact same prompt ("Which choice completes the text so that it conforms to the conventions of Standard English?"), and there are only about a dozen rules. Memorize this page and you can answer most SEC questions in under 20 seconds, banking time for the hard reading. Easy points. Take them all.
 
+> ### 🔁 You are already being graded on six of these in English class
+> **Commas · Semicolon vs. Colon vs. Dash (and the 5 ways to join clauses) · Subject-Verb Agreement · Pronoun Agreement & Case · Verb Tense & Form · Parallelism** are the same rules as **§3, §7, §10, §11, §12 and §6** of [`../../10th_english/guides/grammar.md`](../../10th_english/guides/grammar.md), which is built from Mrs. Pagtakhan's actual cumulative grammar exams. Six of that file's thirteen sections and this cheat-sheet's list are the *same content in two formats* — hers explains the rule and drills it in essay context; this one drills it in SAT answer-choice format.
+>
+> **So this work is never spent once.** Study it here and your grammar-exam grade goes up; study it there and your SAT RW score goes up. The difference is the clock: **English grammar exams are cumulative and continuous all year, the SAT has one hard date (Sat 6 March 2027).** Do it early and both get paid. Erica Meltzer's free rules page (digital-SAT-updated) covers exactly this ground — see `practice-resources.md`.
+>
+> Reading skill goes **one way only**, though: sustained close reading of a real play builds SAT Craft & Structure inference, but SAT passages are a few sentences long and won't teach you to hold an argument across five paragraphs. Don't expect SAT reading practice to carry the English essays.
+
 ---
 
 ## THE 20-SECOND METHOD (do this on every SEC question)

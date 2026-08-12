@@ -333,4 +333,4 @@ Both wives see clearly (Portia senses the plot; Calpurnia foresees death) but ar
 
 ---
 
-*All quotations above were verified against the MIT/Folger Shakespeare full text. The study pack is keyed to Mrs. Pagtakhan's A-essay rules (broad-theme intro, thesis-last, quote-blending, 2:1 commentary, RIP-word ban).*
+*All quotations above were verified against the MIT/Folger Shakespeare full text — the Folger edition is free and online at [folger.edu/explore/shakespeares-works/julius-caesar/read/](https://www.folger.edu/explore/shakespeares-works/julius-caesar/read/) (entire play, per-scene navigation, no login; link checked 12 August 2026), so you can check any quote in this pack yourself before it goes into an essay. The study pack is keyed to Mrs. Pagtakhan's A-essay rules (broad-theme intro, thesis-last, quote-blending, 2:1 commentary, RIP-word ban).*

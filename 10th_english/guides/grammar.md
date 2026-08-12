@@ -4,6 +4,13 @@
 
 **How to use this:** Don't read it like a textbook. Cover the answers, hit the practice items, then check yourself. Re-drill anything you miss the night before an exam. Each section = the rule, the traps, wrong-vs-right examples, then drills with answers.
 
+> ### 🔁 Six of these thirteen sections are also SAT questions
+> **§3 Commas & Comma Splices · §6 Parallel Structure · §7 Semicolons & Colons · §10 Subject–Verb Agreement · §11 Pronoun–Antecedent Agreement · §12 Verb-Tense Consistency** are the *same rules* the SAT's Standard English Conventions domain tests — the highest-ROI part of SAT Reading & Writing. The SAT-format version of these rules (decision trees, the "5 legal ways to join two independent clauses," and practice in real SAT question shape) is in [`../../sat/reference/grammar-cheatsheet.md`](../../sat/reference/grammar-cheatsheet.md).
+>
+> **This is the only work in either project that you never have to do twice.** Learn a rule for Mrs. P's cumulative grammar exam and you've also banked SAT points — and the timing is opposite in a useful way: **the grammar exams are continuous all year, while the SAT has one hard deadline (Sat 6 March 2027).** Every rule you nail now is one you don't have to cram in February.
+>
+> Verified links and Meltzer's free digital-SAT rules page: [`../reference/practice-resources.md`](../reference/practice-resources.md).
+
 ---
 
 ## 0. The fastest essay fix: the RIP-words editing pass
