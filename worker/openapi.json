@@ -1,0 +1,339 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AP Tutor",
+    "description": "Serves AP Computer Science A and AP Precalculus questions, grades them, and reports exam readiness from proctored mock evidence.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    { "url": "https://REPLACE_AT_DEPLOY.workers.dev" }
+  ],
+  "paths": {
+    "/next": {
+      "get": {
+        "operationId": "getNext",
+        "summary": "Get the next thing to do",
+        "description": "Returns either a question or a short lesson, chosen by the server from answer history. Always call this instead of inventing a question. Never reveal the answer before the student responds. Show the status summary that comes back.",
+        "parameters": [
+          { "$ref": "#/components/parameters/subject" },
+          { "$ref": "#/components/parameters/key" },
+          {
+            "name": "m",
+            "in": "query",
+            "required": false,
+            "description": "Mock id from startMock. Include only while a proctored mock is in progress.",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Next" } }
+      }
+    },
+    "/log": {
+      "get": {
+        "operationId": "logAnswer",
+        "summary": "Submit the student's answer",
+        "description": "Sends the student's raw answer for server-side grading. Pass the serve id from getNext and the answer exactly as typed. Do not grade it yourself and do not guess whether it was right. Use a= with no value for a deliberate blank.",
+        "parameters": [
+          {
+            "name": "v",
+            "in": "query",
+            "required": true,
+            "description": "The serve id returned by getNext.",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "a",
+            "in": "query",
+            "required": true,
+            "description": "The student's answer, verbatim. A letter for multiple choice, or the short answer as typed.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "h",
+            "in": "query",
+            "required": false,
+            "description": "Set to 1 if you gave a hint before the answer. This marks the attempt as tutored so it cannot close a gap.",
+            "schema": { "type": "string", "enum": ["0", "1"] }
+          },
+          { "$ref": "#/components/parameters/subject" },
+          { "$ref": "#/components/parameters/key" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Log" } }
+      }
+    },
+    "/taught": {
+      "get": {
+        "operationId": "markTaught",
+        "summary": "Confirm a lesson was delivered",
+        "description": "Call this immediately after you have shown the student the lesson returned by getNext. It records that the explanation was given, so the topic comes back as an unaided re-test rather than being explained again.",
+        "parameters": [
+          {
+            "name": "t",
+            "in": "query",
+            "required": true,
+            "description": "The topic id from the lesson.",
+            "schema": { "type": "string" }
+          },
+          { "$ref": "#/components/parameters/subject" },
+          { "$ref": "#/components/parameters/key" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Taught" } }
+      }
+    },
+    "/status": {
+      "get": {
+        "operationId": "getStatus",
+        "summary": "Full readiness report",
+        "description": "Returns every readiness criterion with its evidence, plus what 100 percent would require. Use this when the student or parent asks how it is going, or how ready he is for the exam. Report the numbers as given; never round up or reassure past them.",
+        "parameters": [
+          { "$ref": "#/components/parameters/subject" },
+          { "$ref": "#/components/parameters/key" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/Status" } }
+      }
+    },
+    "/mock/start": {
+      "get": {
+        "operationId": "startMock",
+        "summary": "Begin a proctored mock exam",
+        "description": "Opens a timed mock sitting. Only answers logged inside a mock can move readiness. Read the returned rules aloud, then pass the mock id to every getNext and stop giving hints entirely until the mock is submitted.",
+        "parameters": [
+          {
+            "name": "sec",
+            "in": "query",
+            "required": true,
+            "description": "Which section: I for multiple choice, II for free response, or full.",
+            "schema": { "type": "string", "enum": ["I", "II", "full"] }
+          },
+          {
+            "name": "src",
+            "in": "query",
+            "required": true,
+            "description": "Where the questions come from: official for College Board material, bank for this question bank.",
+            "schema": { "type": "string", "enum": ["official", "bank"] }
+          },
+          { "$ref": "#/components/parameters/subject" },
+          { "$ref": "#/components/parameters/key" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/MockStart" } }
+      }
+    },
+    "/mock/submit": {
+      "get": {
+        "operationId": "submitMock",
+        "summary": "Finish and score a mock exam",
+        "description": "Closes the sitting and scores it from the answers logged against it. Call this once the student has finished or run out of time. The returned composite is multiple choice only.",
+        "parameters": [
+          {
+            "name": "m",
+            "in": "query",
+            "required": true,
+            "description": "The mock id returned by startMock.",
+            "schema": { "type": "integer" }
+          },
+          { "$ref": "#/components/parameters/subject" },
+          { "$ref": "#/components/parameters/key" }
+        ],
+        "responses": { "200": { "$ref": "#/components/responses/MockSubmit" } }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "subject": {
+        "name": "s",
+        "in": "query",
+        "required": true,
+        "description": "Which course: ap_csa or ap_precalc.",
+        "schema": { "type": "string", "enum": ["ap_csa", "ap_precalc"] }
+      },
+      "key": {
+        "name": "k",
+        "in": "query",
+        "required": true,
+        "description": "Access key. Use the value given in your instructions.",
+        "schema": { "type": "string" }
+      }
+    },
+    "schemas": {
+      "Status": {
+        "type": "object",
+        "description": "Where the student stands right now.",
+        "properties": {
+          "subject": { "type": "string" },
+          "readiness_pct": { "type": "integer", "description": "0 to 100. Only reaches 100 when every criterion holds at once." },
+          "ready": { "type": "boolean" },
+          "goal": { "type": "string" },
+          "exam_date": { "type": "string" },
+          "days_to_exam": { "type": "integer" },
+          "coverage": { "type": "string" },
+          "questions_answered": { "type": "integer" },
+          "proctored_mocks": { "type": "integer" },
+          "next_thing_blocking": { "type": "string", "description": "The single requirement standing in the way. Null when ready." },
+          "open_gaps": { "type": "array", "items": { "type": "string" } },
+          "advisories": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "Lesson": {
+        "type": "object",
+        "description": "A short explanation to deliver before the next question.",
+        "properties": {
+          "topic": { "type": "string" },
+          "why_now": { "type": "string" },
+          "plain_idea": { "type": "string" },
+          "worked_example": { "type": "string" },
+          "common_mistake": { "type": "string" },
+          "then": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "Next": {
+        "description": "A question, or a lesson to deliver first.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Either type=question with a stem, or type=lesson with material to teach.",
+              "properties": {
+                "type": { "type": "string", "enum": ["question", "lesson", "lesson_missing"] },
+                "serve": { "type": "integer", "description": "Pass this back to logAnswer. Valid once." },
+                "stem": { "type": "string" },
+                "options": {
+                  "type": "object",
+                  "description": "Multiple choice options keyed by letter.",
+                  "properties": {
+                    "A": { "type": "string" },
+                    "B": { "type": "string" },
+                    "C": { "type": "string" },
+                    "D": { "type": "string" }
+                  }
+                },
+                "kind": { "type": "string" },
+                "topic": { "type": "string" },
+                "calc_allowed": { "type": "integer" },
+                "why": { "type": "string", "description": "Why this question was chosen. Worth telling the student." },
+                "lesson": { "$ref": "#/components/schemas/Lesson" },
+                "note": { "type": "string" },
+                "status": { "$ref": "#/components/schemas/Status" }
+              }
+            }
+          }
+        }
+      },
+      "Log": {
+        "description": "The graded result.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "The server's verdict on the answer.",
+              "properties": {
+                "correct": { "type": "boolean" },
+                "blank": { "type": "boolean" },
+                "keyed": { "type": "string", "description": "The correct answer. Only reveal it after the student has answered." },
+                "graded_by": { "type": "string" },
+                "seconds": { "type": "integer", "description": "Server-measured time taken." },
+                "explanation": { "type": "string" },
+                "gap_closed": { "type": "string" },
+                "status": { "$ref": "#/components/schemas/Status" }
+              }
+            }
+          }
+        }
+      },
+      "Taught": {
+        "description": "The lesson was recorded as delivered.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Confirmation that the topic now awaits an unaided re-test.",
+              "properties": {
+                "ok": { "type": "boolean" },
+                "topic": { "type": "string" },
+                "next": { "type": "string" },
+                "status": { "$ref": "#/components/schemas/Status" }
+              }
+            }
+          }
+        }
+      },
+      "Status": {
+        "description": "The full readiness report.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Every criterion with its evidence, plus what 100 percent requires.",
+              "properties": {
+                "subject": { "type": "string" },
+                "readiness_pct": { "type": "integer" },
+                "ready": { "type": "boolean" },
+                "goal": { "type": "string" },
+                "exam_date": { "type": "string" },
+                "days_to_exam": { "type": "integer" },
+                "coverage": { "type": "string" },
+                "questions_answered": { "type": "integer" },
+                "proctored_mocks": { "type": "integer" },
+                "next_thing_blocking": { "type": "string" },
+                "open_gaps": { "type": "array", "items": { "type": "string" } },
+                "advisories": { "type": "array", "items": { "type": "string" } },
+                "criteria": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "description": "One readiness requirement.",
+                    "properties": {
+                      "requirement": { "type": "string" },
+                      "met": { "type": "boolean" },
+                      "evidence": { "type": "string" }
+                    }
+                  }
+                },
+                "what_100_means": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "MockStart": {
+        "description": "The mock sitting is open.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "Mock id, timing, and the rules to read aloud.",
+              "properties": {
+                "mock": { "type": "integer" },
+                "section": { "type": "string" },
+                "source": { "type": "string" },
+                "timing": { "type": "string" },
+                "rules": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "MockSubmit": {
+        "description": "The mock is scored.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "description": "The composite score and what it is based on.",
+              "properties": {
+                "mock": { "type": "integer" },
+                "composite_pct": { "type": "number" },
+                "answered": { "type": "integer" },
+                "blanks": { "type": "integer" },
+                "basis": { "type": "string" },
+                "status": { "$ref": "#/components/schemas/Status" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

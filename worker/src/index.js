@@ -4,8 +4,9 @@
 import { makeDb } from './db.js'
 import {
   ApiError, handleNext, handleLog, handleTaught,
-  handleMockStart, handleMockSubmit, handleStatus,
+  handleMockStart, handleMockSubmit, handleStatus, handleDashboard,
 } from './api.js'
+import { renderDashboard } from './dashboard.js'
 import CSA from '../config/ap_csa.json'
 import PRECALC from '../config/ap_precalc.json'
 
@@ -107,6 +108,16 @@ export default {
           if (!Number.isInteger(mockId) || mockId <= 0) throw new ApiError(400, 'm must be the mock id from /mock/start')
           const subject = url.searchParams.get('s')
           return json(await handleMockSubmit({ db, mockId, config: CONFIGS[subject] ?? CSA, now }))
+        }
+
+        case '/dash': {
+          // Parent-only: the dashboard shows the whole evidence trail at once.
+          if (!isParent) throw new ApiError(403, 'the dashboard requires the parent key')
+          const data = await handleDashboard({ db, configs: CONFIGS, now })
+          return new Response(renderDashboard(data), {
+            status: 200,
+            headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+          })
         }
 
         default:
