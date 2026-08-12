@@ -478,13 +478,11 @@ test('a single-section mock reports that section\'s real budget', async () => {
   }
 })
 
-// KNOWN DEFECT, NOT A FLAKE: handleMockStart computes timing as
-// `section === 'II' ? frq : mcq`, so the 'full' the schema advertises falls to
+// Fixed by commit 143ac30: handleMockStart used to compute timing as
+// `section === 'II' ? frq : mcq`, so the 'full' the schema advertises fell to
 // the MCQ branch — 90 minutes for CSA instead of 180, 105 for Precalc instead
-// of 175. The fix belongs in handleMockStart in src/api.js, which this fixer
-// does not own; marked todo so the suite reports it every run without going
-// red on someone else's file.
-test('a full sitting reports both section budgets', { todo: 'src/api.js handleMockStart ignores full; see comment above' }, async () => {
+// of 175. sectionMinutes in src/api.js now returns `mcq + frq` for 'full'.
+test('a full sitting reports both section budgets', async () => {
   for (const subject of Object.keys(SUBJECTS)) {
     assert.equal(await minutesFor(subject, 'full'), EXAM_MINUTES[subject].full, `${subject} full sitting timing`)
   }
