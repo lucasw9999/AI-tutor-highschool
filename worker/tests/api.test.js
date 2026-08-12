@@ -70,6 +70,23 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
       return 1
     },
     async recordAttempt(a) { state.attempts.push({ id: state.nextAttempt++, ...a }) },
+    /**
+     * The atomic conditional filing, with the same contract as the single INSERT
+     * in db.js: the mock id when the sitting was still open, null when it had
+     * closed, in which case `conditions_if_closed` is what gets stored. A fake
+     * cannot reproduce the race — see tests/db.test.js for that, over real
+     * SQLite — but it can hold the handler to the same return contract.
+     */
+    async recordAttemptUnderOpenMock({ conditions_if_closed, mock_id, ...a }) {
+      const sitting = await this.mock(mock_id)
+      const open = sitting && !sitting.ended_at
+      state.attempts.push({
+        id: state.nextAttempt++, ...a,
+        conditions: open ? 'proctored_mock' : conditions_if_closed,
+        mock_id: open ? sitting.id : null,
+      })
+      return open ? sitting.id : null
+    },
     async openGap(g) {
       if (!state.gaps.some((x) => x.subject === g.subject && x.topic === g.topic && !x.cleared_at)) {
         state.gaps.push({ ...g, taught_at: null, cleared_at: null })
@@ -87,9 +104,15 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
       return row.id
     },
     async mock(id) { return state.mocks.find((m) => m.id === Number(id)) ?? null },
-    async endMock({ id, ended_at, composite_pct, blanks }) {
+    /** Conditional close, same contract as db.js: 1 when this call closed it, else 0. */
+    async closeMock({ id, ended_at }) {
       const m = await this.mock(id)
-      Object.assign(m, { ended_at, composite_pct, blanks })
+      if (!m || m.ended_at) return 0
+      m.ended_at = ended_at
+      return 1
+    },
+    async scoreMock({ id, composite_pct, blanks }) {
+      Object.assign(await this.mock(id), { composite_pct, blanks })
     },
   }
 }

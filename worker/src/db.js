@@ -138,6 +138,50 @@ export function makeDb(D1) {
       )
     },
 
+    /**
+     * Record an attempt and file it under `mock_id` ONLY if that sitting is still
+     * open, deciding which inside the INSERT itself.
+     *
+     * @returns {Promise<number|null>} the mock id actually stored — the sitting
+     *          when it was still open at insert time, null when it had already
+     *          been submitted (or does not exist), in which case
+     *          `conditions_if_closed` is stored instead of 'proctored_mock'.
+     *
+     * The subquery is the whole point, and it is claimServe's argument applied to
+     * the other write. Deciding in JS — read the mock, see ended_at IS NULL, then
+     * insert — is a read-then-write with no transaction available, so a first-time
+     * /log racing /mock/submit reads the sitting as open, files its answer under
+     * the mock, and the readiness engine counts that answer (it reads the window's
+     * evidence as `attempts.filter((a) => ids.has(a.mock_id))`) while the stored
+     * composite is frozen at what was scored a moment earlier. That is the
+     * post-submit defect reopening through a narrow window.
+     *
+     * Because the filing decision and the insert are ONE statement, mock_id can
+     * only come back set if the sitting was open at the instant the row landed.
+     * handleMockSubmit closes the sitting before it reads the attempts it scores,
+     * so an answer that was filed under the mock was necessarily already there to
+     * be scored: the stored composite and the evidence readiness counts cannot
+     * disagree, whatever the interleaving.
+     *
+     * The answer is never lost either way — a demoted row is still an attempt,
+     * recorded as ordinary practice.
+     */
+    async recordAttemptUnderOpenMock(a) {
+      const r = await one(
+        `INSERT INTO attempts
+           (ts, subject, item_id, topic, unit, practice, response, correct,
+            graded_by, seconds, hints_used, conditions, mock_id)
+         SELECT ?,?,?,?,?,?,?,?,?,?,?,
+                CASE WHEN m.id IS NULL THEN ? ELSE 'proctored_mock' END,
+                m.id
+           FROM (SELECT 1) LEFT JOIN mocks m ON m.id = ? AND m.ended_at IS NULL
+         RETURNING mock_id`,
+        a.ts, a.subject, a.item_id, a.topic, a.unit, a.practice, a.response,
+        a.correct, a.graded_by, a.seconds, a.hints_used, a.conditions_if_closed, a.mock_id,
+      )
+      return r?.mock_id ?? null
+    },
+
     openGap({ subject, topic, opened_at }) {
       return run(
         `INSERT OR IGNORE INTO gaps (subject, topic, opened_at) VALUES (?,?,?)`,
@@ -172,11 +216,37 @@ export function makeDb(D1) {
       return one(`SELECT * FROM mocks WHERE id = ?`, id)
     },
 
-    endMock({ id, ended_at, composite_pct, blanks }) {
-      return run(
-        `UPDATE mocks SET ended_at = ?, composite_pct = ?, blanks = ? WHERE id = ?`,
-        ended_at, composite_pct, blanks, id,
-      )
+    /**
+     * Close a sitting, and report whether THIS call was the one that closed it.
+     *
+     * @returns {Promise<number>} 1 when this call closed the sitting, 0 when it
+     *          was already submitted (or does not exist).
+     *
+     * The `AND ended_at IS NULL` is claimServe's guard on the other table, and it
+     * is needed for the same reason: handleMockSubmit's `if (m.ended_at) throw` is
+     * a read-then-write, D1 offers no transaction, so two concurrent submits both
+     * read the sitting as open and both write a composite — and, worse, the close
+     * is what tells a concurrent /log that the paper is in. A single UPDATE is
+     * atomic, so exactly one submit closes the sitting and the other is refused.
+     *
+     * Closing is deliberately separate from scoring: the composite has to be
+     * computed from attempts read AFTER the sitting is closed, or an answer that
+     * landed in between would be filed under the mock and missing from the score.
+     * If this dies between the two, the sitting stays closed with no composite —
+     * recorded, disclosed as unscored, and unable to move readiness. That is the
+     * safe direction: it understates rather than overstates.
+     *
+     * The changed-row count sits in different places in the two drivers this runs
+     * against — D1 exposes it as `meta.changes`, node:sqlite as `changes`.
+     */
+    async closeMock({ id, ended_at }) {
+      const r = await run(`UPDATE mocks SET ended_at = ? WHERE id = ? AND ended_at IS NULL`, ended_at, id)
+      return Number(r?.meta?.changes ?? r?.changes ?? 0)
+    },
+
+    /** Store what a closed sitting scored. Only the caller that closed it may. */
+    scoreMock({ id, composite_pct, blanks }) {
+      return run(`UPDATE mocks SET composite_pct = ?, blanks = ? WHERE id = ?`, composite_pct, blanks, id)
     },
   }
 }
