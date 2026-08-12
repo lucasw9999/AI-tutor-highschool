@@ -47,6 +47,67 @@ test('unmeasurable criteria are shown as pending, not as failures', () => {
   assert.match(html, /not being reported as a failure/)
 })
 
+test('an uncalibrated FRQ criterion renders as pending, never as a false ✗ (H2)', () => {
+  // Built directly, independent of readiness.js, so this test does not depend on
+  // the readiness fixer's pending:true change having landed yet. The renderer
+  // must be correct for a frq criterion in either calibration state.
+  const criteria = [
+    { id: 'coverage', label: 'Every exam-tested topic attempted at least once', met: true, detail: '53 of 53 topics' },
+    { id: 'mock_window', label: '3 consecutive qualifying proctored mocks', met: true, detail: '3 mocks in window' },
+    { id: 'freshness', label: 'Most recent mock within 42 days', met: true, detail: '1 days ago' },
+    { id: 'composite_mean', label: 'Mean composite across 3 mocks ≥ 82%', met: true, detail: '90.0%' },
+    {
+      id: 'frq',
+      label: 'Free response ≥ 85%',
+      met: false,
+      pending: true,
+      detail: 'grader not yet calibrated against an officially scored response',
+    },
+  ]
+  const readiness = { readiness_pct: 80, ready: false, first_unmet: 'frq', criteria, advisories: [] }
+  const s = { config: CSA, readiness, coverage: { topics_total: 53, topics_drilled: 53 }, attempts: [], mocks: [], now: NOW }
+  const html = subjectSection(s)
+  assert.match(
+    html,
+    /<td class="s pend">·<\/td><td>Free response ≥ 85%<\/td>/,
+    'an uncalibrated FRQ criterion must render with the neutral pending marker',
+  )
+  assert.ok(
+    !html.includes('<td class="s nope">✗</td><td>Free response ≥ 85%</td>'),
+    'FRQ must never render as a hard failure while it is merely uncalibrated',
+  )
+})
+
+test('H1-DISPLAY regression: a displayed evidence value never reads as passing beside a failing mark', () => {
+  // Lowest mock is 77.96 against a 78 floor. If readiness.js ever formats for
+  // display without rounding before comparing, this shows "78.0%" next to a ✗ —
+  // a value that reads as meeting the floor it just failed. Root cause lives in
+  // readiness.js (owned by another fixer); this is a render-level tripwire.
+  const mocks = [90, 90, 90, 92, 93, 77.96].map((c, i) => ({
+    id: i + 1,
+    subject: 'ap_csa',
+    started_at: new Date(new Date(NOW).getTime() - (40 - i * 7) * 86400000).toISOString(),
+    proctored: 1,
+    source: i === 0 ? 'official' : 'bank',
+    composite_pct: c,
+    blanks: 0,
+  }))
+  const coverage = { topics_total: 53, topics_drilled: 53 }
+  const readiness = computeReadiness({ config: CSA, mocks, attempts: [], coverage, calibrated: false, now: NOW })
+  const html = subjectSection({ config: CSA, readiness, coverage, attempts: [], mocks, now: NOW })
+
+  const row = html.match(/<td class="(s [a-z]+)">[^<]*<\/td><td>Lowest single mock[^<]*<\/td><td class="ev">([^<]*)<\/td>/)
+  assert.ok(row, 'the composite-floor row must be present in the rendered table')
+  const [, markClass, evidenceText] = row
+  if (markClass === 's nope') {
+    const shown = parseFloat(evidenceText)
+    assert.ok(
+      shown < CSA.readiness.composite_floor_min,
+      `Evidence shows "${evidenceText}" beside a failing mark, which reads as meeting the ${CSA.readiness.composite_floor_min}% floor`,
+    )
+  }
+})
+
 test('a ready subject renders as ready, with no blocker box', () => {
   const mocks = [90, 90, 90, 92, 93, 94].map((c, i) => ({
     id: i + 1,
@@ -131,10 +192,19 @@ test('the page is valid standalone HTML with no external requests', () => {
   assert.match(html, /noindex/, 'must not be indexable')
 })
 
-test('the footer states the FRQ caveat plainly', () => {
+test('the footer states the FRQ caveat plainly, and never claims FRQ is excluded (H2)', () => {
+  // FRQ evidence still caps readiness at 99% / not-ready even when uncalibrated
+  // (it stays an unmet — now pending — criterion), so the footer must not claim
+  // it is "excluded from readiness". It must instead say plainly that FRQ cannot
+  // count toward readiness yet, and that 100% is unreachable until calibrated.
   const html = renderDashboard({ subjects: [subject()], now: NOW })
-  assert.match(html, /advisory and excluded from readiness/)
-  assert.match(html, /calibrated/)
+  assert.ok(
+    !html.includes('excluded from readiness'),
+    'FRQ still blocks the number even when uncalibrated, so the footer must not claim it is excluded',
+  )
+  assert.match(html, /cannot count toward readiness/)
+  assert.match(html, /100% readiness is not reachable/)
+  assert.match(html, /calibrated against an officially scored College Board response/)
 })
 
 test('at 0% the bar is genuinely empty, not a misleading sliver', () => {
