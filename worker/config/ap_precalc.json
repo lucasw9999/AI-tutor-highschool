@@ -18,15 +18,15 @@
     "frq_weight": 0.375,
     "frq_types": ["Function Concepts", "Modeling Non-Periodic", "Modeling Periodic", "Symbolic Manipulation"],
     "pace_seconds_no_calc": 134,
-    "pace_seconds_calc": 185
+    "pace_seconds_calc": 185,
+    "unit_weights": {
+      "1": [30, 40],
+      "2": [27, 40],
+      "3": [30, 35]
+    },
+    "_note": "mcq_weight, frq_weight, and unit_weights describe the REAL AP exam's official section and unit weighting, for reference only. The readiness engine does not apply them: composite_pct is a flat percent-correct across all server-graded attempts with no section weighting, and readiness.per_unit_min holds every unit to the same floor regardless of its exam weight."
   },
   "units": ["1", "2", "3"],
-  "units_class_only": ["4"],
-  "unit_weights": {
-    "1": [30, 40],
-    "2": [27, 40],
-    "3": [30, 35]
-  },
   "readiness": {
     "composite_mean_min": 70,
     "composite_floor_min": 65,
@@ -36,16 +36,31 @@
     "no_calc_min": 65,
     "calc_min": 65,
     "frq_min_pct": 70,
+    "frq_calibrated": false,
+    "frq_calibrated_note": "False until the FRQ grader is validated against an officially scored College Board response. While false, the frq criterion is reported as pending rather than failed, and free-response evidence does not count toward readiness.",
     "max_blanks": 1,
     "consecutive_qualifying_mocks": 3,
     "total_logged_mocks_min": 4,
-    "reduced_confidence_mocks_min": 3,
     "window_span_days_min": 10,
     "window_span_days_max": 42,
     "freshness_days": 42,
     "burnout_drop_points": 8,
-    "difficulty_gap_max": 7,
     "require_official_mock": true
   },
-  "historical_note": "4-5 rate: ~50% (2024) -> ~54% (2025) -> 58% (2026); 2026 was 5=29%, 4=29%, 3=24%, 2=11%, 1=7%. Floors are an INITIAL setting - revisit after the first three real mocks and raise rather than lower if in doubt. Unit 4 is class-only and excluded from readiness."
+  "_documentation_only": {
+    "_note": "Keys below are not read anywhere in worker/src. They record intent that was never wired into the readiness engine, or historical context; treat every value here as reference, not as an enforced rule.",
+    "reduced_confidence_mocks_min": {
+      "value": 3,
+      "note": "Meant to raise the required mock count when the evidence is weak (e.g. still bank-only). Not implemented — no criterion or advisory reads it."
+    },
+    "difficulty_gap_max": {
+      "value": 7,
+      "note": "Meant to cap how far the question bank's difficulty can drift from the official exam's. Not implemented — no criterion or advisory reads it."
+    },
+    "units_class_only": {
+      "value": ["4"],
+      "note": "Unit 4 is class-only (not tested on the exam). This key is decorative: the actual exclusion mechanism is that \"4\" is simply omitted from the `units` array above, which is what the readiness engine and topic selection both read. Editing this key changes nothing — edit `units` instead."
+    }
+  },
+  "historical_note": "4-5 rate: ~50% (2024) -> ~54% (2025) -> 58% (2026); 2026 was 5=29%, 4=29%, 3=24%, 2=11%, 1=7%. Floors are an INITIAL setting - revisit after the first three real mocks and raise rather than lower if in doubt. Unit 4 is class-only and excluded from readiness because it is omitted from the `units` array above, not because of the `units_class_only` key (documentation only, see `_documentation_only`)."
 }
