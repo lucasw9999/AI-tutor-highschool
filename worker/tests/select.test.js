@@ -850,6 +850,49 @@ test('a full sitting samples the exam rather than a corner of it', async (t) => 
     )
   })
 
+  await t.test('a malformed weight on ONE topic row does not zero its unit out of the paper', () => {
+    // A unit's weight is read as the MAXIMUM over its topic rows, not the minimum,
+    // because exam_weight_low/high is one unit weight replicated onto every row and
+    // a single bad row must not speak for the unit. That defence was undefended:
+    // on both shipped banks every item-bearing topic row in a unit carries the same
+    // value, so max, min and mean agree everywhere and the whole suite stays green
+    // with a min. If one CSA unit-1 topic row shipped with a null weight, a min
+    // would make that unit's weight 0 and unit 1 — 20.2% of the exam — would get
+    // zero questions on every sitting, with nothing failing.
+    const broken = { null: { exam_weight_low: null, exam_weight_high: null }, zero: { exam_weight_low: 0, exam_weight_high: 0 } }
+    for (const [label, bad] of Object.entries(broken)) {
+      const heavy = { unit: 'H', exam_weight_low: 60, exam_weight_high: 60, tested_on_exam: 1 }
+      const light = { unit: 'L', exam_weight_low: 40, exam_weight_high: 40, tested_on_exam: 1 }
+      const topicMeta = new Map([
+        ['h1', heavy], ['h2', heavy], ['h3', { unit: 'H', tested_on_exam: 1, ...bad }], ['l1', light],
+      ])
+      const items = [...topicMeta].flatMap(([topic, meta]) =>
+        Array.from({ length: 20 }, (_, i) => ({ id: `${topic}-${String(i + 1).padStart(2, '0')}`, topic, unit: meta.unit, kind: 'mcq', answer: 'A' })),
+      )
+      // Coverage pre-satisfied and long past the reuse window, so the paper is
+      // composed entirely by the weight-proportional rule.
+      const attempts = [...topicMeta.keys()].map((topic) => attempt(`${topic}-01`, topic, 1, 100))
+      const paper = []
+      for (let q = 0; q < 40; q++) {
+        const r = pickNext({ items, attempts, topicMeta, config: CFG, now: NOW, sampling: 'mock', mockId: 7 })
+        assert.equal(r.priority, 'mock_breadth')
+        paper.push(r.item)
+        attempts.push(attempt(r.item.id, r.item.topic, 1, 0, { mock_id: 7, conditions: 'proctored_mock' }))
+      }
+      const served = (unit) => paper.filter((it) => it.unit === unit).length
+      assert.ok(
+        Math.abs(served('H') - 24) <= 2,
+        `with a ${label} weight on topic h3, the 60% unit was served ${served('H')} of 40 questions, not ~24 — ` +
+          `the 40% unit took ${served('L')}. One malformed row must not speak for the unit.`,
+      )
+      // And the bad row is still a topic of that unit, so it still gets asked.
+      assert.ok(
+        paper.some((it) => it.topic === 'h3'),
+        `the ${label}-weighted topic row was dropped from the paper; its unit is tested, so its topics are too`,
+      )
+    }
+  })
+
   await t.test('a proctored sitting is never padded with material the exam does not test', () => {
     // Precalc: 48 items on 4 topics, and topic 4.0 (unit 4, tested_on_exam 0)
     // holds 12 of them. A full paper wants 42 and the on-exam bank has 36, so
@@ -1155,9 +1198,17 @@ test('a degraded repeat is reported in words AND in a shape a caller can persist
     assert.equal(r.repeat, true)
     assert.doesNotMatch(r.reason, /answered it today/, 'it was answered at 20:00 the day before')
     assert.match(r.reason, /yesterday/)
+    // The SAME fact, machine-readable, must agree with that sentence. Elapsed days
+    // put 0.667 here, which a caller rounds or floors to "today" while the reason
+    // beside it says "yesterday" — one report of one fact contradicting the other.
+    assert.equal(
+      r.repeat_of.days_since, 1,
+      'days_since is whole calendar days, the same unit as the sentence the student reads',
+    )
+    assert.equal(r.repeat_of.last_answered_at, ago(16 / 24), 'and the exact instant is still there for a caller that wants hours')
   })
 
-  await t.test('an answer from earlier the same day IS described as today', () => {
+  await t.test('an answer from earlier the same day IS described as today, and counts as zero days', () => {
     const items = [{ id: 'x1', topic: 'a', unit: '1', kind: 'mcq', answer: 'A' }]
     const r = pickNext({
       items, attempts: [attempt('x1', 'a', 1, 2 / 24)], topicMeta: META, config: CFG, now: NOW, reuseDays: 56,
@@ -1165,6 +1216,7 @@ test('a degraded repeat is reported in words AND in a shape a caller can persist
     assert.equal(r.repeat, true)
     assert.match(r.reason, /today/)
     assert.doesNotMatch(r.reason, /yesterday/)
+    assert.equal(r.repeat_of.days_since, 0)
   })
 
   await t.test('breadth calls fresh ground fresh, and a repeat another go', () => {

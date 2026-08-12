@@ -167,8 +167,10 @@ function examWeight(topic, topicMeta) {
  *          days_since: number}}|null}
  *          `repeat: true` marks a question he has answered inside the no-repeat
  *          window, served because the pool it was drawn from had nothing fresher;
- *          `repeat_of` says which answer made it one, and the `reason` says so in
- *          words too. null when there is no item left that this paper has not
+ *          `repeat_of` says which answer made it one — `days_since` in whole
+ *          CALENDAR days, the same unit as the sentence in `reason`, so the two
+ *          reports of that one fact cannot contradict each other. The `reason` says
+ *          it in words too. null when there is no item left that this paper has not
  *          already asked — the bank being smaller than one sitting, which
  *          tools/build/validate.js fails the build over — or, inside a sitting, when
  *          the exam-tested bank is exhausted and the only thing left to serve would
@@ -315,7 +317,13 @@ export function pickNext({
     return {
       ...choice,
       repeat: true,
-      repeat_of: { item_id: choice.item.id, last_answered_at: seen, days_since: ageDays(seen, now) },
+      // Whole CALENDAR days, the same unit as the sentence right beside it. These
+      // are two reports of ONE fact — the human-readable one the student reads and
+      // the machine-readable one a caller persists — and they may not disagree.
+      // Fractional elapsed days made them: an answer given 16 hours ago is
+      // `days_since: 0.667`, which a caller renders as "today" while the reason
+      // says "yesterday". One of those is false whichever the student is shown.
+      repeat_of: { item_id: choice.item.id, last_answered_at: seen, days_since: days },
       reason: `${choice.reason} You have answered this exact question before — you answered it ${when}, and ` +
         `${shortage}, so getting it right here is a memory check rather than fresh evidence.`,
     }
