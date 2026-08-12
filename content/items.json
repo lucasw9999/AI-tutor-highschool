@@ -1,0 +1,4144 @@
+[
+  {
+    "id": "csa-ac-q1",
+    "subject": "ap_csa",
+    "number": 1,
+    "label": "Analyze Code · 1.3 integer division & modulo",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint a = 17, b = 5;\nSystem.out.println(a / b + \".\" + a % b);\n```",
+    "options": {
+      "A": "3.4",
+      "B": "3.0",
+      "C": "3.2",
+      "D": "4.2"
+    },
+    "answer": "C",
+    "explanation": "Integer division `17 / 5 = 3`; `17 % 5 = 2`; concatenated with `\".\"` (string mode once a String appears) → `\"3.2\"`.",
+    "topic": "1.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q2",
+    "subject": "ap_csa",
+    "number": 2,
+    "label": "Analyze Code · 1.3 operator precedence",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nSystem.out.println(2 + 3 * 4 - 10 / 3);\n```",
+    "options": {
+      "A": "11",
+      "B": "12",
+      "C": "9",
+      "D": "7"
+    },
+    "answer": "A",
+    "explanation": "`*` and `/` bind first: `3*4 = 12`, `10/3 = 3` (integer). Then `2 + 12 - 3 = 11`.",
+    "topic": "1.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q3",
+    "subject": "ap_csa",
+    "number": 3,
+    "label": "Analyze Code · 1.3 concatenation left-to-right",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nSystem.out.println(1 + 2 + \"x\" + 1 + 2);\n```",
+    "options": {
+      "A": "3x3",
+      "B": "12x12",
+      "C": "1212x",
+      "D": "3x12"
+    },
+    "answer": "D",
+    "explanation": "Evaluated left to right: `1+2 = 3` (still ints), then `3 + \"x\" = \"3x\"`, then `\"3x\"+1 = \"3x1\"`, `+2 = \"3x12\"`.",
+    "topic": "1.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q4",
+    "subject": "ap_csa",
+    "number": 4,
+    "label": "Analyze Code · 1.3 int divide-by-zero",
+    "kind": "mcq",
+    "stem": "What is the result of running this segment?\n```java\nint x = 8, y = 0;\nSystem.out.println(x / y);\n```",
+    "options": {
+      "A": "0",
+      "B": "8",
+      "C": "The program throws an `ArithmeticException`.",
+      "D": "It prints `Infinity`."
+    },
+    "answer": "C",
+    "explanation": "Integer division by zero throws `ArithmeticException` at runtime before anything prints. (`Infinity` only arises from `double` division like `8.0 / 0.0`, not integer division.)",
+    "topic": "1.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q5",
+    "subject": "ap_csa",
+    "number": 5,
+    "label": "Analyze Code · 1.5 cast truncates",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\ndouble d = 9.99;\nSystem.out.println((int) d);\n```",
+    "options": {
+      "A": "10",
+      "B": "9",
+      "C": "9.99",
+      "D": "9.0"
+    },
+    "answer": "B",
+    "explanation": "`(int)` **truncates** toward zero (it does not round): `9.99 → 9`.",
+    "topic": "1.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q6",
+    "subject": "ap_csa",
+    "number": 6,
+    "label": "Analyze Code · 1.5 round-via-cast trick",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\ndouble price = 4.5;\nint rounded = (int)(price + 0.5);\nSystem.out.println(rounded);\n```",
+    "options": {
+      "A": "4",
+      "B": "4.5",
+      "C": "5",
+      "D": "5.0"
+    },
+    "answer": "C",
+    "explanation": "`4.5 + 0.5 = 5.0`; `(int)` truncates `5.0 → 5`. The `+0.5`-then-truncate idiom rounds to nearest; the result is an `int`, so no decimal point.",
+    "topic": "1.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q7",
+    "subject": "ap_csa",
+    "number": 7,
+    "label": "Analyze Code · 1.5 cast binds before divide",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint a = 7, b = 2;\nSystem.out.println((double) a / b);\n```",
+    "options": {
+      "A": "3.0",
+      "B": "3.5",
+      "C": "3",
+      "D": "4.0"
+    },
+    "answer": "B",
+    "explanation": "The cast applies to `a` first → `7.0`, then `7.0 / 2` is **double** division = `3.5`. (Contrast `(double)(a / b)`, which truncates first → `3.0`.)",
+    "topic": "1.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q8",
+    "subject": "ap_csa",
+    "number": 8,
+    "label": "Analyze Code · 1.5 integer overflow wrap-around",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint big = Integer.MAX_VALUE;\nSystem.out.println(big + 1);\n```",
+    "options": {
+      "A": "2147483648",
+      "B": "Integer.MAX_VALUE",
+      "C": "-2147483648",
+      "D": "0"
+    },
+    "answer": "C",
+    "explanation": "Adding 1 to `Integer.MAX_VALUE` **overflows** and wraps to `Integer.MIN_VALUE` = `-2147483648`. No exception is thrown for overflow, and it does not saturate at the max or reset to `0`.",
+    "topic": "1.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q9",
+    "subject": "ap_csa",
+    "number": 9,
+    "label": "Analyze Code · 1.6 post-increment returns old value",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint x = 5;\nint y = x++;\nSystem.out.println(x + \" \" + y);\n```",
+    "options": {
+      "A": "6 5",
+      "B": "6 6",
+      "C": "5 6",
+      "D": "5 5"
+    },
+    "answer": "A",
+    "explanation": "`x++` returns the **original** value (5) to `y`, then increments `x` to 6. So `x` is 6, `y` is 5.",
+    "topic": "1.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q10",
+    "subject": "ap_csa",
+    "number": 10,
+    "label": "Analyze Code · 1.6 compound assignment",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint n = 20;\nn -= 3;\nn *= 2;\nn %= 7;\nSystem.out.println(n);\n```",
+    "options": {
+      "A": "34",
+      "B": "5",
+      "C": "0",
+      "D": "6"
+    },
+    "answer": "D",
+    "explanation": "`20 - 3 = 17`; `17 * 2 = 34`; `34 % 7 = 6` (34 = 4·7 + 6).",
+    "topic": "1.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q11",
+    "subject": "ap_csa",
+    "number": 11,
+    "label": "Analyze Code · 1.11 Math.pow returns double",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nSystem.out.println(Math.pow(2, 5));\n```",
+    "options": {
+      "A": "32",
+      "B": "10.0",
+      "C": "32.0",
+      "D": "25.0"
+    },
+    "answer": "C",
+    "explanation": "`Math.pow(2, 5)` returns a **double**, `2^5 = 32.0` (printed with the decimal point).",
+    "topic": "1.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q12",
+    "subject": "ap_csa",
+    "number": 12,
+    "label": "Analyze Code · 1.11 Math.abs / Math.sqrt",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nSystem.out.println(Math.abs(-9) + (int) Math.sqrt(20));\n```",
+    "options": {
+      "A": "14",
+      "B": "9",
+      "C": "13.0",
+      "D": "13"
+    },
+    "answer": "D",
+    "explanation": "`Math.abs(-9) = 9` (int overload). `Math.sqrt(20) ≈ 4.47`, cast to `int` truncates to `4`. `9 + 4 = 13`.",
+    "topic": "1.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q13",
+    "subject": "ap_csa",
+    "number": 13,
+    "label": "Analyze Code · 1.11 random range",
+    "kind": "mcq",
+    "stem": "Which expression produces a random integer in the range **5 to 10 inclusive**?\n```java\n// Math.random() returns a double in [0.0, 1.0)\n```",
+    "options": {
+      "A": "(int)(Math.random() * 10) + 5",
+      "B": "(int)(Math.random() * 6) + 5",
+      "C": "(int)(Math.random() * 5) + 10",
+      "D": "(int)(Math.random() * 11)"
+    },
+    "answer": "B",
+    "explanation": "`(int)(Math.random()*6)` yields `0..5`; adding 5 shifts to `5..10` (6 values, inclusive). This is a trace of the standard range formula `(int)(Math.random()*count) + min`.",
+    "topic": "1.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q14",
+    "subject": "ap_csa",
+    "number": 14,
+    "label": "Analyze Code · 2.5 short-circuit && guards divide",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint x = 4, y = 0;\nif (y != 0 && x / y > 1) {\n    System.out.println(\"A\");\n} else {\n    System.out.println(\"B\");\n}\n```",
+    "options": {
+      "A": "A",
+      "B": "An `ArithmeticException` is thrown.",
+      "C": "B",
+      "D": "Nothing."
+    },
+    "answer": "C",
+    "explanation": "`y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.",
+    "topic": "2.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q15",
+    "subject": "ap_csa",
+    "number": 15,
+    "label": "Analyze Code · 2.5 short-circuit || skips second test",
+    "kind": "mcq",
+    "stem": "How many times does `check()` run?\n```java\nboolean b = true;\nif (b || check()) {\n    System.out.println(\"done\");\n}\n// check() prints nothing relevant; question is how many times it is called\n```",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "0"
+    },
+    "answer": "D",
+    "explanation": "`true || ...` short-circuits — once the left side is `true`, the right operand `check()` is **never called**. (A) is the count if you think `||` always evaluates the right side; (B) double-counts a re-evaluation when the body runs; (C) imagines the `if` re-polls `check()` until it settles.",
+    "topic": "2.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q16",
+    "subject": "ap_csa",
+    "number": 16,
+    "label": "Analyze Code · 2.5 logical precedence ! > && > ||",
+    "kind": "mcq",
+    "stem": "What is the value of `result`?\n```java\nboolean a = true, b = false, c = true;\nboolean result = a || b && !c;\n```",
+    "options": {
+      "A": "true",
+      "B": "false",
+      "C": "It does not compile — `&&` and `||` cannot be combined without parentheses.",
+      "D": "It is unspecified — the result depends on operand evaluation order."
+    },
+    "answer": "A",
+    "explanation": "Precedence is `!` > `&&` > `||`: `!c = false`; then `b && false = false`; then `a || false = true`. (B) is the wrong-precedence value from grouping left to right as `(a || b) && !c` = `true && false` = `false`; (C) is false — Java fully defines this precedence, so no parentheses are required; (D) is false — operand order is fully specified (left to right), so the result is determinate.",
+    "topic": "2.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q17",
+    "subject": "ap_csa",
+    "number": 17,
+    "label": "Analyze Code · 2.6 De Morgan equivalence",
+    "kind": "mcq",
+    "stem": "Given `int x`, which expression is **always equal** to `!(x > 0 && x < 10)`?",
+    "options": {
+      "A": "x <= 0 && x >= 10",
+      "B": "x < 0 || x > 10",
+      "C": "x <= 0 || x >= 10",
+      "D": "!(x > 0) && !(x < 10)"
+    },
+    "answer": "C",
+    "explanation": "De Morgan: `!(A && B)` = `!A || !B`. `!(x>0)` = `x<=0`, `!(x<10)` = `x>=10`, joined by `||`.",
+    "topic": "2.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q18",
+    "subject": "ap_csa",
+    "number": 18,
+    "label": "Analyze Code · 2.2 == compares int values",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint a = 3, b = 3;\nSystem.out.println(a == b);\n```",
+    "options": {
+      "A": "true",
+      "B": "false",
+      "C": "Compile error",
+      "D": "3"
+    },
+    "answer": "A",
+    "explanation": "For **primitives**, `==` compares values; `3 == 3` is `true`. (`==` is the value test for primitives — only for *objects* does it compare references.)",
+    "topic": "2.2",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q19",
+    "subject": "ap_csa",
+    "number": 19,
+    "label": "Analyze Code · 2.6 == vs .equals on String",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"cat\";\nString t = new String(\"cat\");\nSystem.out.println(s.equals(t) + \" \" + (s == t));\n```",
+    "options": {
+      "A": "true true",
+      "B": "true false",
+      "C": "false false",
+      "D": "false true"
+    },
+    "answer": "B",
+    "explanation": "`.equals` compares **contents** → `true`; `==` compares **references**, and `new String(...)` is a distinct object → `false`.",
+    "topic": "2.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q20",
+    "subject": "ap_csa",
+    "number": 20,
+    "label": "Analyze Code · 2.4 if-else-if stops at first true",
+    "kind": "mcq",
+    "stem": "What is printed when `n = 5`?\n```java\nint n = 5;\nif (n > 10)      System.out.println(\"big\");\nelse if (n > 3)  System.out.println(\"mid\");\nelse if (n > 0)  System.out.println(\"small\");\nelse             System.out.println(\"none\");\n```",
+    "options": {
+      "A": "big",
+      "B": "mid",
+      "C": "small",
+      "D": "mid` and `small"
+    },
+    "answer": "B",
+    "explanation": "`5 > 10` false; `5 > 3` true → prints `mid` and the chain **stops** (later branches are skipped even though `5 > 0` is also true).",
+    "topic": "2.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q21",
+    "subject": "ap_csa",
+    "number": 21,
+    "label": "Analyze Code · 2.4 dangling-else / nested if",
+    "kind": "mcq",
+    "stem": "What is printed when `x = 8`?\n```java\nint x = 8;\nif (x > 5)\n    if (x > 10)\n        System.out.println(\"high\");\n    else\n        System.out.println(\"mid\");\n```",
+    "options": {
+      "A": "high",
+      "B": "Nothing.",
+      "C": "high` then `mid",
+      "D": "mid"
+    },
+    "answer": "D",
+    "explanation": "The `else` binds to the **nearest** `if` (`x > 10`). `x > 5` true, enter; `x > 10` false → the inner `else` runs → `mid`.",
+    "topic": "2.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q22",
+    "subject": "ap_csa",
+    "number": 22,
+    "label": "Analyze Code · 2.7 while loop count",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint n = 1, count = 0;\nwhile (n < 100) {\n    n = n * 2;\n    count++;\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "6",
+      "B": "8",
+      "C": "64",
+      "D": "7"
+    },
+    "answer": "D",
+    "explanation": "n: 1→2→4→8→16→32→64→128, one `count++` per step. The loop multiplies 7 times (128 is the first value ≥ 100). `count = 7`.",
+    "topic": "2.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q23",
+    "subject": "ap_csa",
+    "number": 23,
+    "label": "Analyze Code · 2.7 off-by-one in while",
+    "kind": "mcq",
+    "stem": "How many times does the body execute?\n```java\nint i = 0;\nwhile (i <= 5) {\n    System.out.print(\"*\");\n    i++;\n}\n```",
+    "options": {
+      "A": "5",
+      "B": "6",
+      "C": "7",
+      "D": "Infinite"
+    },
+    "answer": "B",
+    "explanation": "`i` takes 0,1,2,3,4,5 (six values) before `i = 6` fails `i <= 5`. Six stars. (Using `<` would give 5 — the classic off-by-one.)",
+    "topic": "2.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q24",
+    "subject": "ap_csa",
+    "number": 24,
+    "label": "Analyze Code · 2.8 for loop accumulation",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint sum = 0;\nfor (int i = 2; i <= 10; i += 2) {\n    sum += i;\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "20",
+      "B": "30",
+      "C": "25",
+      "D": "12"
+    },
+    "answer": "B",
+    "explanation": "i = 2,4,6,8,10; sum = 2+4+6+8+10 = `30`.",
+    "topic": "2.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q25",
+    "subject": "ap_csa",
+    "number": 25,
+    "label": "Analyze Code · 2.8 for↔while loop variable scope",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint total = 0;\nfor (int k = 5; k > 0; k--) {\n    total += k;\n}\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "10",
+      "B": "0",
+      "C": "15",
+      "D": "5"
+    },
+    "answer": "C",
+    "explanation": "k = 5,4,3,2,1; total = 5+4+3+2+1 = `15`. The decrementing `for` is equivalent to a `while` with `k--` at the bottom.",
+    "topic": "2.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q26",
+    "subject": "ap_csa",
+    "number": 26,
+    "label": "Analyze Code · 2.9 digit extraction with %/ /",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint n = 4729, sum = 0;\nwhile (n > 0) {\n    sum += n % 10;\n    n = n / 10;\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "22",
+      "B": "4729",
+      "C": "9",
+      "D": "18"
+    },
+    "answer": "A",
+    "explanation": "Peels off last digits: 9, 2, 7, 4 → sum = 9+2+7+4 = `22`.",
+    "topic": "2.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q27",
+    "subject": "ap_csa",
+    "number": 27,
+    "label": "Analyze Code · 2.9 count occurrences / divisibility",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint count = 0;\nfor (int i = 1; i <= 30; i++) {\n    if (i % 4 == 0) count++;\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "6",
+      "B": "8",
+      "C": "4",
+      "D": "7"
+    },
+    "answer": "D",
+    "explanation": "Multiples of 4 in 1..30: 4,8,12,16,20,24,28 → `7`.",
+    "topic": "2.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q28",
+    "subject": "ap_csa",
+    "number": 28,
+    "label": "Analyze Code · 2.9 find max scan",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] data = {3, 9, 2, 9, 7};\nint max = data[0];\nfor (int i = 1; i < data.length; i++) {\n    if (data[i] > max) max = data[i];\n}\nSystem.out.println(max);\n```",
+    "options": {
+      "A": "7",
+      "B": "9",
+      "C": "3",
+      "D": "2"
+    },
+    "answer": "B",
+    "explanation": "Standard max scan: starts at 3, updates to 9, stays 9 (the `>` keeps the first 9; either 9 gives the same value). Max = `9`.",
+    "topic": "2.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q29",
+    "subject": "ap_csa",
+    "number": 29,
+    "label": "Analyze Code · 1.15 substring exclusive `to`",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"programming\";\nSystem.out.println(s.substring(3, 7));\n```",
+    "options": {
+      "A": "ogra",
+      "B": "ramm",
+      "C": "gram",
+      "D": "gramm"
+    },
+    "answer": "C",
+    "explanation": "Indices 3,4,5,6 (the `to` index 7 is **excluded**). `p(0)r(1)o(2)g(3)r(4)a(5)m(6)` → `gram` (length = 7−3 = 4).",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q30",
+    "subject": "ap_csa",
+    "number": 30,
+    "label": "Analyze Code · 1.15 substring(from) to end",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"abcdef\";\nSystem.out.println(s.substring(4));\n```",
+    "options": {
+      "A": "def",
+      "B": "ef",
+      "C": "cdef",
+      "D": "e"
+    },
+    "answer": "B",
+    "explanation": "`substring(4)` returns from index 4 to the end: characters at 4 (`e`) and 5 (`f`) → `ef`.",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q31",
+    "subject": "ap_csa",
+    "number": 31,
+    "label": "Analyze Code · 1.15 indexOf",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"banana\";\nSystem.out.println(s.indexOf(\"na\"));\n```",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "4",
+      "D": "-1"
+    },
+    "answer": "B",
+    "explanation": "`indexOf` returns the **first** occurrence: `b(0)a(1)n(2)a(3)...`, \"na\" first starts at index 2.",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q32",
+    "subject": "ap_csa",
+    "number": 32,
+    "label": "Analyze Code · 2.10 single-char access via substring",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"hello\";\nString out = \"\";\nfor (int i = 0; i < s.length(); i++) {\n    out = s.substring(i, i + 1) + out;\n}\nSystem.out.println(out);\n```",
+    "options": {
+      "A": "hello",
+      "B": "o",
+      "C": "h",
+      "D": "olleh"
+    },
+    "answer": "D",
+    "explanation": "Each char (`s.substring(i, i+1)`) is prepended, reversing the string: `olleh`. (This is the in-syllabus reverse algorithm; there is no `charAt`.)",
+    "topic": "2.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q33",
+    "subject": "ap_csa",
+    "number": 33,
+    "label": "Analyze Code · 2.10 substring length property / StringIndexOutOfBounds",
+    "kind": "mcq",
+    "stem": "What is the result?\n```java\nString s = \"abc\";\nSystem.out.println(s.substring(2, 4));\n```",
+    "options": {
+      "A": "c",
+      "B": "bc",
+      "C": "An empty string",
+      "D": "A `StringIndexOutOfBoundsException` is thrown."
+    },
+    "answer": "D",
+    "explanation": "`s` has length 3 (valid indices 0..2). `substring(2, 4)` needs index up to 3, which is out of range → `StringIndexOutOfBoundsException`.",
+    "topic": "2.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q34",
+    "subject": "ap_csa",
+    "number": 34,
+    "label": "Analyze Code · 2.10 split then iterate",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString csv = \"red,green,blue,yellow\";\nString[] parts = csv.split(\",\");\nSystem.out.println(parts.length + \" \" + parts[2]);\n```",
+    "options": {
+      "A": "4 blue",
+      "B": "3 blue",
+      "C": "4 green",
+      "D": "4 yellow"
+    },
+    "answer": "A",
+    "explanation": "`split(\",\")` on a literal comma gives `[\"red\",\"green\",\"blue\",\"yellow\"]` — length 4; index 2 is `blue`.",
+    "topic": "2.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q35",
+    "subject": "ap_csa",
+    "number": 35,
+    "label": "Analyze Code · 2.11 triangular nested loop",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint total = 0;\nfor (int i = 0; i < 5; i++) {\n    for (int j = 0; j <= i; j++) {\n        total++;\n    }\n}\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "25",
+      "B": "10",
+      "C": "20",
+      "D": "15"
+    },
+    "answer": "D",
+    "explanation": "Inner runs i+1 times: 1+2+3+4+5 = `15` (the inner condition is `j <= i`).",
+    "topic": "2.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q36",
+    "subject": "ap_csa",
+    "number": 36,
+    "label": "Analyze Code · 2.11 nested loop pattern output",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nfor (int r = 1; r <= 3; r++) {\n    for (int c = 1; c <= r; c++) {\n        System.out.print(c);\n    }\n    System.out.println();\n}\n```",
+    "options": {
+      "A": "1` / `12` / `123",
+      "B": "1` / `11` / `111",
+      "C": "123` / `12` / `1",
+      "D": "111` / `22` / `3"
+    },
+    "answer": "A",
+    "explanation": "Row r prints `1..r`: row1 `1`, row2 `12`, row3 `123` (each on its own line).",
+    "topic": "2.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q37",
+    "subject": "ap_csa",
+    "number": 37,
+    "label": "Analyze Code · 2.12 statement execution count",
+    "kind": "mcq",
+    "stem": "How many times does the marked statement execute?\n```java\nint n = 6;\nfor (int i = 0; i < n; i++) {\n    for (int j = 0; j < n; j++) {\n        System.out.print(\"*\");   // <-- count this\n    }\n}\n```",
+    "options": {
+      "A": "6",
+      "B": "12",
+      "C": "36",
+      "D": "64"
+    },
+    "answer": "C",
+    "explanation": "Outer 6 × inner 6 = `36` executions (quadratic — n²). No Big-O needed, just the count.",
+    "topic": "2.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q38",
+    "subject": "ap_csa",
+    "number": 38,
+    "label": "Analyze Code · 2.12 compare linear vs quadratic count",
+    "kind": "mcq",
+    "stem": "For input size `n`, how many times does `step()` run?\n```java\nfor (int i = 0; i < n; i++) {\n    step();           // loop A\n}\nfor (int i = 0; i < n; i++) {\n    for (int j = 0; j < n; j++) {\n        step();       // loop B\n    }\n}\n```",
+    "options": {
+      "A": "n + n` = `2n",
+      "B": "n + n²",
+      "C": "n²",
+      "D": "2n²"
+    },
+    "answer": "B",
+    "explanation": "Loop A runs `step()` `n` times (linear); loop B runs it `n × n = n²` times (quadratic). Sequential blocks add: `n + n²`.",
+    "topic": "2.12",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q39",
+    "subject": "ap_csa",
+    "number": 39,
+    "label": "Analyze Code · 4.3 length attribute & bounds",
+    "kind": "mcq",
+    "stem": "What is the result of running this segment?\n```java\nint[] arr = {10, 20, 30, 40};\nint sum = 0;\nfor (int i = 1; i <= arr.length; i++) {\n    sum += arr[i];\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "100",
+      "B": "90",
+      "C": "120",
+      "D": "An `ArrayIndexOutOfBoundsException` is thrown."
+    },
+    "answer": "D",
+    "explanation": "Valid indices are 0..3, but `i <= arr.length` lets `i` reach 4, so `arr[4]` throws `ArrayIndexOutOfBoundsException` (off-by-one). Note `arr.length` is an **attribute** — no parentheses.",
+    "topic": "4.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q40",
+    "subject": "ap_csa",
+    "number": 40,
+    "label": "Analyze Code · 4.3 default values",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = new int[3];\nboolean[] b = new boolean[2];\nSystem.out.println(a[1] + \" \" + b[0]);\n```",
+    "options": {
+      "A": "0 true",
+      "B": "null false",
+      "C": "0 false",
+      "D": "0 0"
+    },
+    "answer": "C",
+    "explanation": "`new` zero-fills arrays with type defaults: `int` → `0`, `boolean` → `false`.",
+    "topic": "4.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q41",
+    "subject": "ap_csa",
+    "number": 41,
+    "label": "Analyze Code · 4.4 indexed traversal sum",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] arr = {4, 8, 15, 16, 23, 42};\nint sum = 0;\nfor (int i = 0; i < arr.length; i++) {\n    if (arr[i] % 2 == 0) sum += arr[i];\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "108",
+      "B": "70",
+      "C": "42",
+      "D": "81"
+    },
+    "answer": "B",
+    "explanation": "Even elements: 4, 8, 16, 42 → 4+8+16+42 = `70` (15 and 23 are odd, skipped).",
+    "topic": "4.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q42",
+    "subject": "ap_csa",
+    "number": 42,
+    "label": "Analyze Code · 4.4 enhanced-for copies primitive",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] arr = {1, 2, 3};\nfor (int x : arr) {\n    x = x * 10;\n}\nSystem.out.println(arr[0] + \" \" + arr[1] + \" \" + arr[2]);\n```",
+    "options": {
+      "A": "10 20 30",
+      "B": "0 0 0",
+      "C": "10 2 3",
+      "D": "1 2 3"
+    },
+    "answer": "D",
+    "explanation": "The enhanced-for variable `x` is a **copy** of each primitive element; reassigning `x` does **not** change the array. Output unchanged: `1 2 3`.",
+    "topic": "4.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q43",
+    "subject": "ap_csa",
+    "number": 43,
+    "label": "Analyze Code · 4.5 reverse in place",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {1, 2, 3, 4, 5};\nfor (int i = 0; i < a.length / 2; i++) {\n    int temp = a[i];\n    a[i] = a[a.length - 1 - i];\n    a[a.length - 1 - i] = temp;\n}\nSystem.out.println(a[0] + \"\" + a[1] + a[2] + a[3] + a[4]);\n```",
+    "options": {
+      "A": "54321",
+      "B": "12345",
+      "C": "51234",
+      "D": "54323"
+    },
+    "answer": "A",
+    "explanation": "Swaps ends inward (i = 0,1; the middle element index 2 stays): `{5,4,3,2,1}` → prints `54321`.",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q44",
+    "subject": "ap_csa",
+    "number": 44,
+    "label": "Analyze Code · 4.5 shift elements left",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {10, 20, 30, 40};\nfor (int i = 0; i < a.length - 1; i++) {\n    a[i] = a[i + 1];\n}\nSystem.out.println(a[0] + \" \" + a[1] + \" \" + a[2] + \" \" + a[3]);\n```",
+    "options": {
+      "A": "20 30 40 0",
+      "B": "10 20 30 40",
+      "C": "20 30 40 40",
+      "D": "40 40 40 40"
+    },
+    "answer": "C",
+    "explanation": "Each element copies the one to its right; the last element is never overwritten, so it duplicates: `{20,30,40,40}`.",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q45",
+    "subject": "ap_csa",
+    "number": 45,
+    "label": "Analyze Code · 4.14 linear search returns index",
+    "kind": "mcq",
+    "stem": "What does `search` return for the call shown?\n```java\nint[] a = {7, 3, 9, 3, 5};\n// search returns the index of the first occurrence of target, or -1\nint target = 3;\nint found = -1;\nfor (int i = 0; i < a.length; i++) {\n    if (a[i] == target) { found = i; break; }\n}\nSystem.out.println(found);\n```",
+    "options": {
+      "A": "1",
+      "B": "3",
+      "C": "-1",
+      "D": "0"
+    },
+    "answer": "A",
+    "explanation": "Linear search from the front stops at the **first** match: `a[1] == 3` → returns index `1`.",
+    "topic": "4.14",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q46",
+    "subject": "ap_csa",
+    "number": 46,
+    "label": "Analyze Code · 4.7 Integer.parseInt + autoboxing",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"42\";\nint n = Integer.parseInt(s);\nInteger boxed = n + 8;\nSystem.out.println(boxed);\n```",
+    "options": {
+      "A": "428",
+      "B": "42",
+      "C": "\"50\"",
+      "D": "50"
+    },
+    "answer": "D",
+    "explanation": "`parseInt(\"42\") = 42`; `42 + 8 = 50`; the `int` 50 **autoboxes** into the `Integer boxed`, printed as `50`.",
+    "topic": "4.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q47",
+    "subject": "ap_csa",
+    "number": 47,
+    "label": "Analyze Code · 4.7 Double.parseDouble",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\ndouble d = Double.parseDouble(\"3.5\") + Double.parseDouble(\"1.5\");\nSystem.out.println(d);\n```",
+    "options": {
+      "A": "5",
+      "B": "3.51.5",
+      "C": "5.0",
+      "D": "4.0"
+    },
+    "answer": "C",
+    "explanation": "`3.5 + 1.5 = 5.0`, printed as a double with the decimal point.",
+    "topic": "4.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q48",
+    "subject": "ap_csa",
+    "number": 48,
+    "label": "Analyze Code · 4.6 Scanner over a file + split",
+    "kind": "mcq",
+    "stem": "A file `data.txt` contains exactly these two lines:\n```\nAnn,17\nBen,16\n```\nWhat does this segment print? (assume inside a method that `throws IOException`)\n```java\nScanner sc = new Scanner(new File(\"data.txt\"));\nint total = 0;\nwhile (sc.hasNext()) {\n    String line = sc.next();          // each line is one token (no spaces)\n    String[] f = line.split(\",\");\n    total += Integer.parseInt(f[1]);\n}\nsc.close();\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "33",
+      "B": "17",
+      "C": "16",
+      "D": "1716"
+    },
+    "answer": "A",
+    "explanation": "Two tokens `Ann,17` and `Ben,16`; `split(\",\")[1]` is the age; `Integer.parseInt` → 17 and 16; total = `33`. The `hasNext()` loop reads to end of file, then `close()`.",
+    "topic": "4.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q49",
+    "subject": "ap_csa",
+    "number": 49,
+    "label": "Analyze Code · 4.8 add(index) + set",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nArrayList<Integer> list = new ArrayList<Integer>();\nlist.add(5);\nlist.add(8);\nlist.add(1, 6);\nlist.set(0, 9);\nSystem.out.println(list);\n```",
+    "options": {
+      "A": "[9, 8, 6]",
+      "B": "[5, 6, 8]",
+      "C": "[9, 6, 8, 1]",
+      "D": "[9, 6, 8]"
+    },
+    "answer": "D",
+    "explanation": "`[5]` → `[5,8]` → `add(1,6)` inserts at index 1 shifting right → `[5,6,8]` → `set(0,9)` replaces index 0 → `[9,6,8]`.",
+    "topic": "4.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q50",
+    "subject": "ap_csa",
+    "number": 50,
+    "label": "Analyze Code · 4.9 remove returns shifted element",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nArrayList<String> a = new ArrayList<String>();\na.add(\"p\"); a.add(\"q\"); a.add(\"r\");\na.remove(1);\nSystem.out.println(a.get(1) + \" \" + a.size());\n```",
+    "options": {
+      "A": "r 2",
+      "B": "q 3",
+      "C": "r 3",
+      "D": "q 2"
+    },
+    "answer": "A",
+    "explanation": "`remove(1)` deletes `\"q\"` and shifts left → `[\"p\",\"r\"]`; `get(1)` is now `\"r\"`, `size()` is 2.",
+    "topic": "4.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q51",
+    "subject": "ap_csa",
+    "number": 51,
+    "label": "Analyze Code · 4.9 remove-while-iterating forward skips",
+    "kind": "mcq",
+    "stem": "After this runs, what does `list` contain? (it intends to remove all `2`s)\n```java\nArrayList<Integer> list = new ArrayList<Integer>();\nlist.add(2); list.add(2); list.add(2); list.add(5);\nfor (int i = 0; i < list.size(); i++) {\n    if (list.get(i) == 2) {\n        list.remove(i);\n    }\n}\nSystem.out.println(list);\n```",
+    "options": {
+      "A": "[5]",
+      "B": "[2, 5]",
+      "C": "[]",
+      "D": "[2, 2, 5]"
+    },
+    "answer": "B",
+    "explanation": "Forward removal with `i++` **skips** the element shifted into the removed slot. Trace from `[2,2,2,5]`: i=0 remove → `[2,2,5]` (i→1); i=1 element is `2` remove → `[2,5]` (i→2); i=2 size is 2 so the loop ends. Left with `[2,5]` — two `2`s survived. (The classic skip bug; reverse iteration would fix it.)",
+    "topic": "4.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q52",
+    "subject": "ap_csa",
+    "number": 52,
+    "label": "Analyze Code · 4.10 ArrayList accumulate / count",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nArrayList<Integer> nums = new ArrayList<Integer>();\nnums.add(4); nums.add(7); nums.add(10); nums.add(3);\nint count = 0;\nfor (int x : nums) {\n    if (x > 5) count++;\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "3",
+      "B": "1",
+      "C": "2",
+      "D": "4"
+    },
+    "answer": "C",
+    "explanation": "Elements > 5: 7 and 10 → count = `2` (4 and 3 are not). Enhanced-for unboxes each `Integer`.",
+    "topic": "4.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q53",
+    "subject": "ap_csa",
+    "number": 53,
+    "label": "Analyze Code · 4.10 multi-structure simultaneous traversal",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] price = {2, 5, 3};\nint[] qty = {4, 1, 2};\nint total = 0;\nfor (int i = 0; i < price.length; i++) {\n    total += price[i] * qty[i];\n}\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "19",
+      "B": "13",
+      "C": "30",
+      "D": "8"
+    },
+    "answer": "A",
+    "explanation": "Pairwise: 2·4 + 5·1 + 3·2 = 8 + 5 + 6 = `19` (parallel traversal of two arrays).",
+    "topic": "4.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q54",
+    "subject": "ap_csa",
+    "number": 54,
+    "label": "Analyze Code · 4.11 rows vs cols",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{1, 2, 3, 4},\n             {5, 6, 7, 8}};\nSystem.out.println(g.length + \" \" + g[0].length);\n```",
+    "options": {
+      "A": "4 2",
+      "B": "8 8",
+      "C": "2 2",
+      "D": "2 4"
+    },
+    "answer": "D",
+    "explanation": "`g.length` = number of **rows** = 2; `g[0].length` = number of **columns** = 4.",
+    "topic": "4.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q55",
+    "subject": "ap_csa",
+    "number": 55,
+    "label": "Analyze Code · 4.12 row-major traversal sum",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{1, 2},\n             {3, 4},\n             {5, 6}};\nint sum = 0;\nfor (int r = 0; r < g.length; r++) {\n    for (int c = 0; c < g[r].length; c++) {\n        sum += g[r][c];\n    }\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "15",
+      "B": "12",
+      "C": "21",
+      "D": "6"
+    },
+    "answer": "C",
+    "explanation": "All six elements: 1+2+3+4+5+6 = `21`.",
+    "topic": "4.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q56",
+    "subject": "ap_csa",
+    "number": 56,
+    "label": "Analyze Code · 4.12 column traversal",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{1, 2, 3},\n             {4, 5, 6}};\nint sum = 0;\nfor (int r = 0; r < g.length; r++) {\n    sum += g[r][2];\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "9",
+      "B": "6",
+      "C": "5",
+      "D": "21"
+    },
+    "answer": "A",
+    "explanation": "Fixes column index 2, walks the rows: `g[0][2] + g[1][2] = 3 + 6 = 9`.",
+    "topic": "4.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q57",
+    "subject": "ap_csa",
+    "number": 57,
+    "label": "Analyze Code · 4.12 enhanced-for outer var is a row",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{2, 4}, {6, 8}, {1, 3}};\nint sum = 0;\nfor (int[] row : g) {\n    sum += row[0];\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "15",
+      "B": "24",
+      "C": "12",
+      "D": "9"
+    },
+    "answer": "D",
+    "explanation": "In a 2D enhanced-for the outer variable is a **1D array (a row)**: `row[0]` of each row = 2 + 6 + 1 = `9`.",
+    "topic": "4.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q58",
+    "subject": "ap_csa",
+    "number": 58,
+    "label": "Analyze Code · 4.13 find max in 2D",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{3, 8, 1},\n             {9, 2, 7}};\nint max = g[0][0];\nfor (int r = 0; r < g.length; r++) {\n    for (int c = 0; c < g[r].length; c++) {\n        if (g[r][c] > max) max = g[r][c];\n    }\n}\nSystem.out.println(max);\n```",
+    "options": {
+      "A": "9",
+      "B": "8",
+      "C": "7",
+      "D": "3"
+    },
+    "answer": "A",
+    "explanation": "Scans every cell, tracking the largest: max = `9`.",
+    "topic": "4.13",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q59",
+    "subject": "ap_csa",
+    "number": 59,
+    "label": "Analyze Code · 4.13 count in a 2D section",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{0, 1, 0},\n             {1, 1, 0},\n             {0, 0, 1}};\nint count = 0;\nfor (int r = 0; r < g.length; r++) {\n    for (int c = 0; c < g[r].length; c++) {\n        if (g[r][c] == 1) count++;\n    }\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "5",
+      "B": "3",
+      "C": "4",
+      "D": "9"
+    },
+    "answer": "C",
+    "explanation": "Count of 1s: row0 has 1, row1 has 2, row2 has 1 → `4`.",
+    "topic": "4.13",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q60",
+    "subject": "ap_csa",
+    "number": 60,
+    "label": "Analyze Code · 1.14 NullPointerException",
+    "kind": "mcq",
+    "stem": "What is the result of running this segment?\n```java\nString s = null;\nSystem.out.println(s.length());\n```",
+    "options": {
+      "A": "0",
+      "B": "An empty line",
+      "C": "A `NullPointerException` is thrown.",
+      "D": "null"
+    },
+    "answer": "C",
+    "explanation": "Calling an instance method (`length()`) on a `null` reference throws `NullPointerException`.",
+    "topic": "1.14",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q61",
+    "subject": "ap_csa",
+    "number": 61,
+    "label": "Analyze Code · 1.9 call-by-value, primitive unchanged",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic static void bump(int v) { v = v + 100; }\n\npublic static void main(String[] args) {\n    int x = 5;\n    bump(x);\n    System.out.println(x);\n}\n```",
+    "options": {
+      "A": "105",
+      "B": "5",
+      "C": "100",
+      "D": "0"
+    },
+    "answer": "B",
+    "explanation": "Primitives are passed **by value** (a copy). `bump` changes its local copy only; `x` in `main` is still `5`.",
+    "topic": "1.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q62",
+    "subject": "ap_csa",
+    "number": 62,
+    "label": "Analyze Code · 3.6 object-reference param aliases the object",
+    "kind": "mcq",
+    "stem": "What is printed? (assume `ArrayList` is imported)\n```java\npublic static void fill(ArrayList<Integer> a) { a.add(99); }\n\npublic static void main(String[] args) {\n    ArrayList<Integer> list = new ArrayList<Integer>();\n    list.add(1);\n    fill(list);\n    System.out.println(list);\n}\n```",
+    "options": {
+      "A": "[1]",
+      "B": "[99]",
+      "C": "[]",
+      "D": "[1, 99]"
+    },
+    "answer": "D",
+    "explanation": "The parameter is an **alias** to the same object. Mutating it (`add(99)`) through the parameter changes the caller's list → `[1, 99]`.",
+    "topic": "3.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q63",
+    "subject": "ap_csa",
+    "number": 63,
+    "label": "Analyze Code · 3.4 defensive copy vs alias",
+    "kind": "mcq",
+    "stem": "A `Team` stores `private int[] scores`. Its constructor does `this.scores = scores;` (no copy). What does this print?\n```java\nint[] arr = {10, 20};\nTeam t = new Team(arr);     // constructor stored the SAME array reference\narr[0] = 999;\nSystem.out.println(t.firstScore());   // returns scores[0]\n```",
+    "options": {
+      "A": "10",
+      "B": "999",
+      "C": "20",
+      "D": "0"
+    },
+    "answer": "B",
+    "explanation": "With **no defensive copy**, the field aliases `arr`; mutating `arr[0]` changes the object's data too → prints `999`. (A defensive copy in the constructor would have printed `10`.)",
+    "topic": "3.4",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q64",
+    "subject": "ap_csa",
+    "number": 64,
+    "label": "Analyze Code · 3.8 shadowing a field",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic class Box {\n    private int size = 10;\n    public void setSize(int size) {\n        size = size;            // assigns the PARAMETER to itself\n    }\n    public int getSize() { return size; }\n}\n// elsewhere:\nBox b = new Box();\nb.setSize(50);\nSystem.out.println(b.getSize());\n```",
+    "options": {
+      "A": "50",
+      "B": "10",
+      "C": "0",
+      "D": "Compile error"
+    },
+    "answer": "B",
+    "explanation": "The local parameter `size` **shadows** the field. `size = size` reassigns the parameter to itself; the field is untouched → still `10`. (`this.size = size` would have fixed it.)",
+    "topic": "3.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q65",
+    "subject": "ap_csa",
+    "number": 65,
+    "label": "Analyze Code · 4.16 recursion trace — sum",
+    "kind": "mcq",
+    "stem": "What does `mystery(4)` return?\n```java\npublic static int mystery(int n) {\n    if (n <= 0) return 0;\n    return n + mystery(n - 1);\n}\n```",
+    "options": {
+      "A": "10",
+      "B": "4",
+      "C": "6",
+      "D": "0"
+    },
+    "answer": "A",
+    "explanation": "`4 + (3 + (2 + (1 + (0)))) = 4+3+2+1 = 10` (base case at n≤0 returns 0).",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q66",
+    "subject": "ap_csa",
+    "number": 66,
+    "label": "Analyze Code · 4.16 recursion trace — countdown print order",
+    "kind": "mcq",
+    "stem": "What is printed by `f(3)`?\n```java\npublic static void f(int n) {\n    if (n == 0) return;\n    System.out.print(n + \" \");\n    f(n - 1);\n}\n```",
+    "options": {
+      "A": "1 2 3",
+      "B": "0 1 2 3",
+      "C": "3 2 1",
+      "D": "3 2 1 0"
+    },
+    "answer": "C",
+    "explanation": "Prints **before** recursing, decreasing: `3 2 1 ` then `f(0)` returns without printing.",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q67",
+    "subject": "ap_csa",
+    "number": 67,
+    "label": "Analyze Code · 4.16 recursion trace — print-after-recurse",
+    "kind": "mcq",
+    "stem": "What is printed by `g(3)`?\n```java\npublic static void g(int n) {\n    if (n == 0) return;\n    g(n - 1);\n    System.out.print(n + \" \");\n}\n```",
+    "options": {
+      "A": "3 2 1",
+      "B": "0 1 2 3",
+      "C": "Nothing.",
+      "D": "1 2 3"
+    },
+    "answer": "D",
+    "explanation": "The recursive call happens **first**, so prints unwind on the way back up: `1 2 3`. (Contrast Q66, where the print is before the call.)",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q68",
+    "subject": "ap_csa",
+    "number": 68,
+    "label": "Analyze Code · 4.16 recursion trace — two base values",
+    "kind": "mcq",
+    "stem": "What does `power(2, 4)` return?\n```java\npublic static int power(int base, int exp) {\n    if (exp == 0) return 1;\n    return base * power(base, exp - 1);\n}\n```",
+    "options": {
+      "A": "16",
+      "B": "8",
+      "C": "6",
+      "D": "4"
+    },
+    "answer": "A",
+    "explanation": "`2 * 2 * 2 * 2 * 1 = 16` (exp counts down to 0, the base case returns 1).",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q69",
+    "subject": "ap_csa",
+    "number": 69,
+    "label": "Analyze Code · 4.16 recursion trace — Fibonacci-style branching",
+    "kind": "mcq",
+    "stem": "What does `t(4)` return?\n```java\npublic static int t(int n) {\n    if (n <= 1) return n;\n    return t(n - 1) + t(n - 2);\n}\n```",
+    "options": {
+      "A": "5",
+      "B": "2",
+      "C": "3",
+      "D": "4"
+    },
+    "answer": "C",
+    "explanation": "`t(4)=t(3)+t(2)`; `t(3)=t(2)+t(1)`; `t(2)=t(1)+t(0)=1+0=1`; so `t(3)=1+1=2`, `t(4)=2+1=3`.",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q70",
+    "subject": "ap_csa",
+    "number": 70,
+    "label": "Analyze Code · 4.17 binary search step count",
+    "kind": "mcq",
+    "stem": "On the sorted array below, binary search for `target = 11` examines which indices, in order? (low/high inclusive, `mid = (low+high)/2`)\n```java\nint[] a = {1, 3, 5, 7, 9, 11, 13};   // indices 0..6\n```",
+    "options": {
+      "A": "3, 5",
+      "B": "3` (found immediately)",
+      "C": "0, 1, 2, 3, 4, 5",
+      "D": "6, 3, 0"
+    },
+    "answer": "A",
+    "explanation": "First `mid = (0+6)/2 = 3`; `a[3] = 7 < 11` → search the right half, `low = 4`. Next `mid = (4+6)/2 = 5`; `a[5] == 11` → found. The probed indices are `3, 5` (two probes). Binary search halves the space each step, not a linear scan.",
+    "topic": "4.17",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q71",
+    "subject": "ap_csa",
+    "number": 71,
+    "label": "Analyze Code · 4.17 binary search not-found path",
+    "kind": "mcq",
+    "stem": "On `{2, 4, 6, 8, 10}` (indices 0..4), how many comparisons does binary search make for `target = 5` before reporting \"not found\"? (`mid = (low+high)/2`)",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "5"
+    },
+    "answer": "C",
+    "explanation": "mid=2 (`a[2]=6`, 5<6 → high=1); mid=0 (`a[0]=2`, 5>2 → low=1); mid=1 (`a[1]=4`, 5>4 → low=2). Now low>high → stop. **3** comparisons.",
+    "topic": "4.17",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q72",
+    "subject": "ap_csa",
+    "number": 72,
+    "label": "Analyze Code · 4.15 selection sort one pass",
+    "kind": "mcq",
+    "stem": "Selection sort puts the **minimum** of the unsorted segment at the front each pass. After the **first** pass on `{5, 2, 9, 1, 7}`, what is the array?",
+    "options": {
+      "A": "{1, 2, 5, 7, 9}",
+      "B": "{2, 5, 9, 1, 7}",
+      "C": "{1, 5, 2, 9, 7}",
+      "D": "{1, 2, 9, 5, 7}"
+    },
+    "answer": "D",
+    "explanation": "Pass 1 finds the min (1 at index 3) and swaps it with index 0: `{1, 2, 9, 5, 7}` (5 and 1 swap; the rest stay).",
+    "topic": "4.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q73",
+    "subject": "ap_csa",
+    "number": 73,
+    "label": "Analyze Code · 4.15 insertion sort one pass",
+    "kind": "mcq",
+    "stem": "Insertion sort inserts each next element into the sorted prefix. Starting from `{4, 3, 5, 1}`, what is the array after the element at **index 1** (`3`) has been inserted?",
+    "options": {
+      "A": "{3, 4, 5, 1}",
+      "B": "{3, 4, 1, 5}",
+      "C": "{1, 3, 4, 5}",
+      "D": "{4, 3, 5, 1}"
+    },
+    "answer": "A",
+    "explanation": "The prefix `{4}` is sorted; insert `3` before `4` → `{3, 4, 5, 1}` (indices 2 and 3 not processed yet).",
+    "topic": "4.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q74",
+    "subject": "ap_csa",
+    "number": 74,
+    "label": "Analyze Code · 4.17 merge sort split structure — describe behavior",
+    "kind": "mcq",
+    "stem": "Merge sort on `{8, 3, 5, 1}` recursively splits, then merges sorted halves. Which sequence of *merged* results is correct?",
+    "options": {
+      "A": "merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}",
+      "B": "{8, 3, 5, 1}` is already returned unchanged",
+      "C": "merge `{3,8}` and `{1,5}` → `{1, 3, 5, 8}",
+      "D": "merge `{1,3}` and `{5,8}` → `{1, 3, 5, 8}"
+    },
+    "answer": "C",
+    "explanation": "Split into `{8,3}`→sorted `{3,8}` and `{5,1}`→sorted `{1,5}`; merging those sorted halves interleaves to `{1,3,5,8}`.",
+    "topic": "4.17",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q75",
+    "subject": "ap_csa",
+    "number": 75,
+    "label": "Analyze Code · 2.9 average integer-vs-double trap",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {1, 2, 4};\nint sum = 0;\nfor (int x : a) sum += x;\ndouble avg = sum / a.length;\nSystem.out.println(avg);\n```",
+    "options": {
+      "A": "2.3333333333333335",
+      "B": "7.0",
+      "C": "2",
+      "D": "2.0"
+    },
+    "answer": "D",
+    "explanation": "`sum = 7`, `a.length = 3`. `sum / a.length` is **integer** division `7/3 = 2` (computed before the assignment to `double`), then widened → `2.0`. (To get 2.33 you would cast first.)",
+    "topic": "2.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q76",
+    "subject": "ap_csa",
+    "number": 76,
+    "label": "Analyze Code · 1.15 immutability — concatenation makes a new String",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"go\";\ns.substring(0, 1);\ns = s + \"!\";\nSystem.out.println(s);\n```",
+    "options": {
+      "A": "g",
+      "B": "go",
+      "C": "g!",
+      "D": "go!"
+    },
+    "answer": "D",
+    "explanation": "Strings are **immutable**; `s.substring(0,1)` returns a new string that is discarded (`s` unchanged). Then `s + \"!\"` builds a new string `\"go!\"` assigned back to `s`.",
+    "topic": "1.15",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q77",
+    "subject": "ap_csa",
+    "number": 77,
+    "label": "Analyze Code · 4.4 enhanced-for object element mutation",
+    "kind": "mcq",
+    "stem": "A `Counter` has a `void inc()` mutator and `int get()`. What is printed?\n```java\nCounter[] cs = {new Counter(), new Counter()};\nfor (Counter c : cs) {\n    c.inc();          // c is a copy of the REFERENCE, same object\n}\nSystem.out.println(cs[0].get() + \" \" + cs[1].get());\n```",
+    "options": {
+      "A": "1 1",
+      "B": "0 0",
+      "C": "2 2",
+      "D": "Compile error"
+    },
+    "answer": "A",
+    "explanation": "The enhanced-for copies the **reference**, not the object. Calling the mutator `inc()` through `c` changes the shared object → each counter is `1`. (Contrast Q42: reassigning a primitive copy does nothing.)",
+    "topic": "4.4",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q78",
+    "subject": "ap_csa",
+    "number": 78,
+    "label": "Analyze Code · 2.10 count substrings via indexOf loop",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"aXbXcXd\";\nint count = 0;\nint i = s.indexOf(\"X\");\nwhile (i != -1) {\n    count++;\n    s = s.substring(i + 1);\n    i = s.indexOf(\"X\");\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "2",
+      "B": "3",
+      "C": "4",
+      "D": "0"
+    },
+    "answer": "B",
+    "explanation": "Finds `X` at 1, chop → `bXcXd`; at 1, chop → `cXd`; at 1, chop → `d`; now `indexOf(\"X\") = -1`, stop. count = `3`.",
+    "topic": "2.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q79",
+    "subject": "ap_csa",
+    "number": 79,
+    "label": "Analyze Code · 4.5 copy array independence",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {1, 2, 3};\nint[] b = new int[a.length];\nfor (int i = 0; i < a.length; i++) b[i] = a[i];\nb[0] = 100;\nSystem.out.println(a[0] + \" \" + b[0]);\n```",
+    "options": {
+      "A": "100 100",
+      "B": "1 1",
+      "C": "100 1",
+      "D": "1 100"
+    },
+    "answer": "D",
+    "explanation": "Element-by-element copy makes `b` independent; changing `b[0]` does not affect `a[0]`. (Contrast `int[] b = a;`, which would alias.)",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q80",
+    "subject": "ap_csa",
+    "number": 80,
+    "label": "Analyze Code · 4.10 insert-in-order behavior — describe",
+    "kind": "mcq",
+    "stem": "A method walks an `ArrayList<Integer>` sorted ascending and uses `add(i, value)` at the first index where `list.get(i) >= value`. For `list = [2, 5, 9]` and `value = 6`, what is the result?",
+    "options": {
+      "A": "[2, 5, 6, 9]",
+      "B": "[2, 5, 9, 6]",
+      "C": "[6, 2, 5, 9]",
+      "D": "[2, 6, 5, 9]"
+    },
+    "answer": "A",
+    "explanation": "`6` is `< 9` and `>= 5`: first index where `get(i) >= 6` is index 2 (the `9`); `add(2, 6)` shifts `9` right → `[2, 5, 6, 9]` (stays sorted).",
+    "topic": "4.10",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q81",
+    "subject": "ap_csa",
+    "number": 81,
+    "label": "Analyze Code · 4.5 fix an off-by-one bound",
+    "kind": "mcq",
+    "stem": "This is intended to set `sum` to the total of all elements of `a`, but it currently throws an `ArrayIndexOutOfBoundsException`. Which single change fixes it?\n```java\nint[] a = {3, 6, 9, 12};\nint sum = 0;\nfor (int i = 0; i <= a.length; i++) {\n    sum += a[i];\n}\n```",
+    "options": {
+      "A": "Change `i = 0` to `i = 1",
+      "B": "Change `sum += a[i]` to `sum += a[i + 1]",
+      "C": "Change the loop condition to `i < a.length",
+      "D": "Change `a.length` to `a.length + 1"
+    },
+    "answer": "C",
+    "explanation": "Valid indices are 0..3; `i <= a.length` lets `i` reach 4 (out of bounds). `i < a.length` stops at index 3. (A) skips index 0; (B) makes the access worse; (D) extends the bound further out.",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q82",
+    "subject": "ap_csa",
+    "number": 82,
+    "label": "Analyze Code · 2.5 fix a condition-order / short-circuit bug",
+    "kind": "mcq",
+    "stem": "This is intended to print `\"long enough\"` only when `s` is non-null **and** has more than 3 characters, never throwing an exception. It currently throws a `NullPointerException` when `s` is `null`. Which change fixes it?\n```java\nString s = null;\nif (s.length() > 3 && s != null) {\n    System.out.println(\"long enough\");\n}\n```",
+    "options": {
+      "A": "Swap the operands to `s != null && s.length() > 3",
+      "B": "Change `&&` to `||",
+      "C": "Change `> 3` to `>= 3",
+      "D": "Change `s.length()` to `s.substring(0)"
+    },
+    "answer": "A",
+    "explanation": "The null check must come **first** so `&&` short-circuits before `s.length()` is called. The original calls `s.length()` on `null`. (B) `||` would still evaluate `s.length()`; (C)/(D) do not avoid the null call.",
+    "topic": "2.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q83",
+    "subject": "ap_csa",
+    "number": 83,
+    "label": "Analyze Code · 4.9 fix remove-while-iterating",
+    "kind": "mcq",
+    "stem": "This is intended to remove **every** `0` from `list`, but with `list = [0, 0, 4]` it leaves a `0` behind. Which change fixes it?\n```java\nfor (int i = 0; i < list.size(); i++) {\n    if (list.get(i) == 0) {\n        list.remove(i);\n    }\n}\n```",
+    "options": {
+      "A": "Change `list.remove(i)` to `list.set(i, 0)",
+      "B": "Change the condition to `i <= list.size()",
+      "C": "Add `i++;` inside the `if",
+      "D": "Iterate backward: `for (int i = list.size() - 1; i >= 0; i--)"
+    },
+    "answer": "D",
+    "explanation": "Forward removal with `i++` skips the element shifted into the removed slot (`[0,0,4]` → remove index 0 → `[0,4]`, `i` advances to 1 and skips the surviving `0`). Iterating **backward** never skips a shifted element. (A) removes nothing; (B) goes out of bounds; (C) skips even more.",
+    "topic": "4.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q84",
+    "subject": "ap_csa",
+    "number": 84,
+    "label": "Analyze Code · 4.14 state the precondition — binary search",
+    "kind": "mcq",
+    "stem": "A method `int bSearch(int[] a, int target)` uses binary search and returns the index of `target` or `-1`. It works correctly only if ___ — which precondition must hold?",
+    "options": {
+      "A": "a` contains no duplicate values",
+      "B": "a` is sorted in ascending order",
+      "C": "target` is positive",
+      "D": "a.length` is a power of 2"
+    },
+    "answer": "B",
+    "explanation": "*Model answer:* Binary search assumes the array is **sorted** (ascending here); it halves the search space by comparing against the middle, which is only valid on ordered data. Duplicates, sign of `target`, and length being a power of 2 are irrelevant to correctness.",
+    "topic": "4.14",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q85",
+    "subject": "ap_csa",
+    "number": 85,
+    "label": "Analyze Code · 2.9 state the precondition — average",
+    "kind": "mcq",
+    "stem": "A method `double average(int[] a)` returns `sum / a.length` cast to a double. It works correctly only if ___ — which precondition must hold?",
+    "options": {
+      "A": "a` is sorted",
+      "B": "a.length > 0` (the array is non-empty)",
+      "C": "every element is positive",
+      "D": "a.length` is even"
+    },
+    "answer": "B",
+    "explanation": "*Model answer:* Dividing by `a.length` throws an `ArithmeticException` (integer divide-by-zero) when the array is **empty**, so the precondition is `a.length > 0`. Order, sign, and parity of the length do not affect correctness.",
+    "topic": "2.9",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q86",
+    "subject": "ap_csa",
+    "number": 86,
+    "label": "Analyze Code · 4.4 describe behavior — enhanced-for on primitives",
+    "kind": "mcq",
+    "stem": "A method receives `int[] a` and runs `for (int x : a) { x = x * 2; }`, then the caller reads `a`. Describe the effect on the caller's array.",
+    "options": {
+      "A": "Every element is doubled.",
+      "B": "The array is unchanged, because `x` is a copy of each primitive element.",
+      "C": "Only the first element changes.",
+      "D": "A `ConcurrentModificationException` is thrown."
+    },
+    "answer": "B",
+    "explanation": "*Model answer:* The enhanced-for variable `x` is a **copy** of each primitive element; reassigning `x` never writes back to the array, so the caller sees the array **unchanged**. (Object elements differ — calling a mutator through the loop variable would affect the shared object.)",
+    "topic": "4.4",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q87",
+    "subject": "ap_csa",
+    "number": 87,
+    "label": "Analyze Code · 3.6 describe behavior — returning a field reference",
+    "kind": "mcq",
+    "stem": "A `Roster` has `private int[] ids` and a method `public int[] getIds() { return ids; }` that returns the field directly (no copy). A caller does `int[] r = roster.getIds(); r[0] = -1;`. Describe the effect.",
+    "options": {
+      "A": "The roster's internal array is unaffected, because arrays are copied on return.",
+      "B": "The roster's internal `ids[0]` becomes `-1`, because the returned reference aliases the field's array.",
+      "C": "A compile error occurs.",
+      "D": "A `NullPointerException` is thrown."
+    },
+    "answer": "B",
+    "explanation": "*Model answer:* Returning the field reference hands the caller an **alias** to the same array; mutating `r[0]` mutates `ids[0]` too. Returning a defensive copy would have protected the object's data.",
+    "topic": "3.6",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q88",
+    "subject": "ap_csa",
+    "number": 88,
+    "label": "Analyze Code · 4.5 set — what does it return",
+    "kind": "mcq",
+    "stem": "For `int[] c = {2, 0, 5, 1};` and `Inventory inv = new Inventory(c);`, what does `inv.total()` return?",
+    "options": {
+      "A": "8",
+      "B": "4",
+      "C": "7",
+      "D": "0"
+    },
+    "answer": "A",
+    "explanation": "`total()` sums every element: 2+0+5+1 = `8`.",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q89",
+    "subject": "ap_csa",
+    "number": 89,
+    "label": "Analyze Code · 3.6 set — describe the aliasing behavior",
+    "kind": "mcq",
+    "stem": "Continuing SET 1: after `c[0] = 100;` is executed (the same `c` passed to the constructor), what does `inv.slot(0)` return?",
+    "options": {
+      "A": "2",
+      "B": "100",
+      "C": "0",
+      "D": "A `NullPointerException` is thrown."
+    },
+    "answer": "B",
+    "explanation": "The constructor stored the **reference**, so the field `counts` aliases `c`; mutating `c[0]` changes the object's data → `slot(0)` returns `100`.",
+    "topic": "3.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q90",
+    "subject": "ap_csa",
+    "number": 90,
+    "label": "Analyze Code · 4.3 set — state the precondition",
+    "kind": "mcq",
+    "stem": "Continuing SET 1: `inv.slot(i)` works correctly only if ___ — which precondition must hold?",
+    "options": {
+      "A": "i` is even",
+      "B": "counts` is sorted",
+      "C": "i` is positive",
+      "D": "0 <= i && i < counts.length"
+    },
+    "answer": "D",
+    "explanation": "*Model answer:* `slot(i)` indexes `counts[i]`; it must be a **valid index** (`0 <= i < counts.length`), or it throws an `ArrayIndexOutOfBoundsException`. Parity, order, and sign are irrelevant.",
+    "topic": "4.3",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q91",
+    "subject": "ap_csa",
+    "number": 91,
+    "label": "Analyze Code · 1.15 set — count matches with .equals",
+    "kind": "mcq",
+    "stem": "How many entries of `words` equal `\"apple\"` (use `.equals`)?\n```java\nint n = 0;\nfor (String w : words) {\n    if (w.equals(\"apple\")) n++;\n}\nSystem.out.println(n);\n```",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "0"
+    },
+    "answer": "B",
+    "explanation": "Two entries (indices 1 and 3) equal `\"apple\"` by contents → `n = 2`. (`.equals` compares contents, the correct String test.)",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q92",
+    "subject": "ap_csa",
+    "number": 92,
+    "label": "Analyze Code · 4.5 set — which change fixes a guard",
+    "kind": "mcq",
+    "stem": "Continuing SET 2: this loop is intended to print the index of the first entry whose length is greater than 4, or `-1` if none. It currently prints the **last** matching index. Which change fixes it?\n```java\nint idx = -1;\nfor (int i = 0; i < words.length; i++) {\n    if (words[i].length() > 4) idx = i;\n}\nSystem.out.println(idx);\n```",
+    "options": {
+      "A": "Change `> 4` to `>= 4",
+      "B": "Change `idx = i` to `idx = words[i].length()",
+      "C": "Add `break;` immediately after `idx = i;",
+      "D": "Start the loop at `i = 1"
+    },
+    "answer": "C",
+    "explanation": "Without stopping, `idx` is overwritten by every match, leaving the **last**. Adding `break;` after the first assignment captures the **first** match. (A) changes the threshold; (B) stores the wrong value; (D) skips index 0.",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q93",
+    "subject": "ap_csa",
+    "number": 93,
+    "label": "Analyze Code · 4.13 + 1.14 + 2.6 — 2D array of objects, null guard, .equals",
+    "kind": "mcq",
+    "stem": "A `String[][] grid` may contain `null` entries. What does this print?\n```java\nString[][] grid = {{\"a\", null}, {\"b\", \"a\"}};\nint count = 0;\nfor (int r = 0; r < grid.length; r++) {\n    for (int c = 0; c < grid[r].length; c++) {\n        if (grid[r][c] != null && grid[r][c].equals(\"a\")) count++;\n    }\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "A `NullPointerException` is thrown."
+    },
+    "answer": "B",
+    "explanation": "The `!= null` guard short-circuits before `.equals`, so the `null` is skipped safely. Entries equal to `\"a\"`: `grid[0][0]` and `grid[1][1]` → `count = 2`.",
+    "topic": "4.13",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q94",
+    "subject": "ap_csa",
+    "number": 94,
+    "label": "Analyze Code · 4.16 + 4.4 — recursion trace over an array",
+    "kind": "mcq",
+    "stem": "What does `sumFrom(a, 0)` return for `int[] a = {4, 2, 7}`?\n```java\npublic static int sumFrom(int[] a, int i) {\n    if (i >= a.length) return 0;\n    return a[i] + sumFrom(a, i + 1);\n}\n```",
+    "options": {
+      "A": "6",
+      "B": "11",
+      "C": "0",
+      "D": "13"
+    },
+    "answer": "D",
+    "explanation": "`sumFrom(a,0) = 4 + (2 + (7 + 0)) = 13` (base case at `i >= length` returns 0). Each call adds one element, then recurses on the next index.",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q95",
+    "subject": "ap_csa",
+    "number": 95,
+    "label": "Analyze Code · 4.10 + 1.15 + 2.10 — ArrayList + String methods",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nArrayList<String> list = new ArrayList<String>();\nlist.add(\"cat,3\");\nlist.add(\"dog,5\");\nint total = 0;\nfor (String s : list) {\n    String[] parts = s.split(\",\");\n    total += Integer.parseInt(parts[1]);\n}\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "8",
+      "B": "35",
+      "C": "2",
+      "D": "53"
+    },
+    "answer": "A",
+    "explanation": "Each element splits on the literal comma; `parts[1]` is the number; `Integer.parseInt` → 3 and 5; total = `8`.",
+    "topic": "4.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q96",
+    "subject": "ap_csa",
+    "number": 96,
+    "label": "Analyze Code · 1.15 compareTo sign",
+    "kind": "mcq",
+    "stem": "Which is true about the sign of `\"apple\".compareTo(\"banana\")`?\n```java\nSystem.out.println(\"apple\".compareTo(\"banana\"));\n```",
+    "options": {
+      "A": "It is **0**, because both have content.",
+      "B": "It is **positive**, because `\"apple\"` is shorter.",
+      "C": "It is **negative**, because `\"apple\"` comes before `\"banana\"` lexicographically.",
+      "D": "It throws an exception."
+    },
+    "answer": "C",
+    "explanation": "`compareTo` returns the difference at the first differing position; `'a'` < `'b'`, so the result is **negative** (`\"apple\"` orders before `\"banana\"`). Equal strings give 0; a later-ordering receiver gives positive.",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q97",
+    "subject": "ap_csa",
+    "number": 97,
+    "label": "Analyze Code · 4.17 merge-sort level trace",
+    "kind": "mcq",
+    "stem": "Merge sort on `{6, 2, 7, 1}` recursively splits into single elements, then merges in pairs. After the **first level of merges** (each adjacent pair merged into a sorted pair), which pair of sub-results is correct?",
+    "options": {
+      "A": "{2, 6}` and `{1, 7}",
+      "B": "{6, 2}` and `{7, 1}",
+      "C": "{2, 7}` and `{1, 6}",
+      "D": "{1, 2}` and `{6, 7}"
+    },
+    "answer": "A",
+    "explanation": "The halves are `{6,2}` and `{7,1}`; merging each sorted pair gives `{2,6}` and `{1,7}`. (The final merge of those two would produce `{1,2,6,7}`, but the question asks for the first level only.)",
+    "topic": "4.17",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q98",
+    "subject": "ap_csa",
+    "number": 98,
+    "label": "Analyze Code · 2.11 + 2.12 inner bound depends on outer index, weighted accumulate",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint sum = 0;\nfor (int i = 1; i <= 3; i++) {\n    for (int j = 1; j <= i; j++) {\n        sum += i * j;\n    }\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "36",
+      "B": "18",
+      "C": "25",
+      "D": "14"
+    },
+    "answer": "C",
+    "explanation": "Inner runs `j = 1..i`. i=1: `1*1=1`. i=2: `2*1 + 2*2 = 2+4=6`. i=3: `3*1+3*2+3*3 = 3+6+9=18`. Total `1+6+18 = 25`. (B) forgets i=1's term region; (D) sums only `i*1` per row; (A) treats the inner bound as a fixed 3.",
+    "topic": "2.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q99",
+    "subject": "ap_csa",
+    "number": 99,
+    "label": "Analyze Code · 3.6 + 1.9 object aliased through TWO method calls, mutation read later",
+    "kind": "mcq",
+    "stem": "What is printed? (assume the `Box` class shown)\n```java\npublic class Box {\n    private int v;\n    public Box(int start) { v = start; }\n    public void add(int n) { v += n; }\n    public int get() { return v; }\n}\n// in another class:\npublic static void grow(Box b) { b.add(10); }\npublic static void shrink(Box b) { b.add(-3); }\n\npublic static void main(String[] args) {\n    Box box = new Box(5);\n    grow(box);\n    shrink(box);\n    System.out.println(box.get());\n}\n```",
+    "options": {
+      "A": "5",
+      "B": "15",
+      "C": "2",
+      "D": "12"
+    },
+    "answer": "D",
+    "explanation": "Each parameter is an **alias** to the same `Box`. `grow` → v = 5+10 = 15; `shrink` → v = 15−3 = 12; `get()` reads `12`. (A) assumes pass-by-value protects the object; (B) misses `shrink`; (C) misses `grow`.",
+    "topic": "3.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q100",
+    "subject": "ap_csa",
+    "number": 100,
+    "label": "Analyze Code · 1.15 + 2.10 build a String across a loop, then re-parse with indexOf/substring",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString csv = \"\";\nfor (int i = 1; i <= 3; i++) {\n    csv = csv + i + \",\";\n}\n// csv is now \"1,2,3,\"\nint firstComma = csv.indexOf(\",\");\nString rest = csv.substring(firstComma + 1);\nSystem.out.println(rest.indexOf(\",\"));\n```",
+    "options": {
+      "A": "0",
+      "B": "1",
+      "C": "2",
+      "D": "3"
+    },
+    "answer": "B",
+    "explanation": "The loop builds `\"1,2,3,\"`. `indexOf(\",\")` = 1; `substring(2)` = `\"2,3,\"`. In `\"2,3,\"` the first comma is at index `1`. (A) reads the original string's comma; (C)/(D) miscount the chopped string.",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q101",
+    "subject": "ap_csa",
+    "number": 101,
+    "label": "Analyze Code · 4.12 + 1.14 + 2.6 column-major traversal + null guard + .equals",
+    "kind": "mcq",
+    "stem": "A `String[][] grid` may contain `null`. What is printed?\n```java\nString[][] grid = {{\"x\", \"y\"},\n                   {null, \"x\"},\n                   {\"x\", \"z\"}};\nint count = 0;\nfor (int c = 0; c < grid[0].length; c++) {\n    for (int r = 0; r < grid.length; r++) {\n        if (grid[r][c] != null && grid[r][c].equals(\"x\")) {\n            count++;\n        }\n    }\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "3",
+      "B": "2",
+      "C": "4",
+      "D": "A `NullPointerException` is thrown."
+    },
+    "answer": "A",
+    "explanation": "Column-major still visits every cell. The `!= null` guard short-circuits before `.equals`, so the `null` at `grid[1][0]` is skipped safely. Cells equal to `\"x\"`: `grid[0][0]`, `grid[1][1]`, `grid[2][0]` → `3`. (B) misses one `\"x\"`; (C) miscounts; (D) ignores the guard.",
+    "topic": "4.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q102",
+    "subject": "ap_csa",
+    "number": 102,
+    "label": "Analyze Code · 4.16 recursion trace — accumulates across calls",
+    "kind": "mcq",
+    "stem": "What does `m(3)` return?\n```java\npublic static int m(int n) {\n    if (n == 0) return 0;\n    return m(n - 1) + n * n;\n}\n```",
+    "options": {
+      "A": "9",
+      "B": "14",
+      "C": "6",
+      "D": "13"
+    },
+    "answer": "B",
+    "explanation": "`m(3) = m(2) + 9 = (m(1) + 4) + 9 = ((m(0) + 1) + 4) + 9 = 0 + 1 + 4 + 9 = 14` (sum of squares 1+4+9). (A) returns only the last term; (C) sums `n` not `n*n`; (D) drops the `1`.",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q103",
+    "subject": "ap_csa",
+    "number": 103,
+    "label": "Analyze Code · 1.9 + 2.9 helper called inside a loop, result feeds an accumulator",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic static int digits(int n) {\n    int d = 0;\n    while (n > 0) { d++; n = n / 10; }\n    return d;\n}\n\npublic static void main(String[] args) {\n    int[] vals = {7, 88, 105, 4};\n    int total = 0;\n    for (int x : vals) {\n        total += digits(x);\n    }\n    System.out.println(total);\n}\n```",
+    "options": {
+      "A": "4",
+      "B": "204",
+      "C": "7",
+      "D": "8"
+    },
+    "answer": "C",
+    "explanation": "`digits` returns the digit count: `digits(7)=1`, `digits(88)=2`, `digits(105)=3`, `digits(4)=1`; accumulated `1+2+3+1 = 7`. (A) counts elements; (B) sums the values; (D) miscounts a digit length.",
+    "topic": "1.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q104",
+    "subject": "ap_csa",
+    "number": 104,
+    "label": "Analyze Code · 2.11 + 1.15 nested loop builds a String, then its length is read",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString out = \"\";\nfor (int r = 1; r <= 4; r++) {\n    for (int c = 1; c <= r; c++) {\n        out = out + \"*\";\n    }\n    out = out + \"|\";\n}\nSystem.out.println(out.length());\n```",
+    "options": {
+      "A": "14",
+      "B": "10",
+      "C": "4",
+      "D": "11"
+    },
+    "answer": "A",
+    "explanation": "Row r appends r stars then one `|`: stars total `1+2+3+4 = 10`, plus `4` bars = `14` characters. (B) counts only stars; (C) counts only bars/rows; (D) drops a bar.",
+    "topic": "2.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q105",
+    "subject": "ap_csa",
+    "number": 105,
+    "label": "Analyze Code · 3.6 + 4.10 ArrayList aliased through a method, then caller mutates and reads",
+    "kind": "mcq",
+    "stem": "What is printed? (assume `ArrayList` imported)\n```java\npublic static void seed(ArrayList<Integer> a) {\n    a.add(1);\n    a.add(2);\n}\n\npublic static void main(String[] args) {\n    ArrayList<Integer> list = new ArrayList<Integer>();\n    seed(list);\n    list.add(0, 9);\n    list.remove(2);\n    System.out.println(list);\n}\n```",
+    "options": {
+      "A": "[9, 1, 2]",
+      "B": "[1, 2]",
+      "C": "[9, 2]",
+      "D": "[9, 1]"
+    },
+    "answer": "D",
+    "explanation": "`seed` mutates the **same** list (alias) → `[1, 2]`. `add(0, 9)` inserts at front → `[9, 1, 2]`. `remove(2)` deletes index 2 (`2`) → `[9, 1]`. (A) misses the remove; (B) assumes pass-by-value; (C) removes the wrong element.",
+    "topic": "3.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q106",
+    "subject": "ap_csa",
+    "number": 106,
+    "label": "Analyze Code · 2.10 + 4.7 split a String, loop the tokens, parse + accumulate under a condition",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString data = \"3,10,2,8,5\";\nString[] parts = data.split(\",\");\nint total = 0;\nfor (int i = 0; i < parts.length; i++) {\n    int n = Integer.parseInt(parts[i]);\n    if (n > 4) {\n        total += n;\n    }\n}\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "28",
+      "B": "15",
+      "C": "23",
+      "D": "5"
+    },
+    "answer": "C",
+    "explanation": "`split(\",\")` → `[\"3\",\"10\",\"2\",\"8\",\"5\"]`. Parse each; keep those `> 4`: 10, 8, 5 → `10+8+5 = 23` (3 and 2 are skipped). (A) sums everything; (B) sums the skipped-plus-one; (D) keeps only the last.",
+    "topic": "2.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q107",
+    "subject": "ap_csa",
+    "number": 107,
+    "label": "Analyze Code · 4.13 sub-region (top-left block, dropping the last row/column) accumulate",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{1, 2, 3},\n             {4, 5, 6},\n             {7, 8, 9}};\nint sum = 0;\nfor (int r = 0; r < g.length - 1; r++) {\n    for (int c = 0; c < g[r].length - 1; c++) {\n        sum += g[r][c];\n    }\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "21",
+      "B": "12",
+      "C": "45",
+      "D": "15"
+    },
+    "answer": "B",
+    "explanation": "The bounds `r < length−1` and `c < length−1` cover only the top-left 2×2 sub-region: `g[0][0..1]` and `g[1][0..1]` = 1+2+4+5 = `12`. (A) adds the third column; (C) sums the whole array; (D) sums one row.",
+    "topic": "4.13",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q108",
+    "subject": "ap_csa",
+    "number": 108,
+    "label": "Analyze Code · 4.16 recursion trace — digit accumulation via `%`/`/`",
+    "kind": "mcq",
+    "stem": "What does `r(4729)` return?\n```java\npublic static int r(int n) {\n    if (n == 0) return 0;\n    return n % 10 + r(n / 10);\n}\n```",
+    "options": {
+      "A": "22",
+      "B": "18",
+      "C": "4729",
+      "D": "9"
+    },
+    "answer": "A",
+    "explanation": "Each call peels the last digit and recurses on the rest: `9 + r(472) = 9 + (2 + r(47)) = 9 + 2 + (7 + r(4)) = 9 + 2 + 7 + (4 + r(0)) = 9+2+7+4 = 22`. (B) drops the `4`; (C) returns the input; (D) returns only the first digit.",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-ac-q109",
+    "subject": "ap_csa",
+    "number": 109,
+    "label": "Analyze Code · 3.5 + 3.6 mutator + accessor of an object called across a loop, conditional state-update",
+    "kind": "mcq",
+    "stem": "What is printed? (assume the `Counter` class shown)\n```java\npublic class Counter {\n    private int count;\n    public Counter() { count = 0; }\n    public void bump() { count++; }\n    public int get() { return count; }\n}\n// in another class:\npublic static void main(String[] args) {\n    Counter c = new Counter();\n    int[] data = {2, 5, 4, 7, 6};\n    for (int x : data) {\n        if (x % 2 == 0) {\n            c.bump();\n        }\n    }\n    System.out.println(c.get() * 10 + data.length);\n}\n```",
+    "options": {
+      "A": "30",
+      "B": "55",
+      "C": "50",
+      "D": "35"
+    },
+    "answer": "D",
+    "explanation": "`bump()` runs once per even value: 2, 4, 6 → count = 3. Then `get() * 10 + data.length = 3*10 + 5 = 35`. (A) drops the `+ data.length`; (C) counts all five values as bumps then drops the length; (B) over-counts the evens.",
+    "topic": "3.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q1",
+    "subject": "ap_csa",
+    "number": 1,
+    "label": "Document Code · 1.1 error types",
+    "kind": "mcq",
+    "stem": "A program compiles and runs, but always reports the area of a circle as twice the correct value because it uses `2 * Math.PI * r * r`. What kind of error is this?",
+    "options": {
+      "A": "Logic error",
+      "B": "Syntax error",
+      "C": "Run-time error / exception",
+      "D": "A `NullPointerException` thrown while running"
+    },
+    "answer": "A",
+    "explanation": "It compiles and runs without crashing but produces wrong output — that is a **logic error**. Syntax errors stop compilation; run-time errors (C, D) throw exceptions during execution.",
+    "topic": "1.1",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q2",
+    "subject": "ap_csa",
+    "number": 2,
+    "label": "Analyze Code · 1.1 error classification",
+    "kind": "mcq",
+    "stem": "Which of these is a **syntax (compile-time)** error?",
+    "options": {
+      "A": "Dividing an `int` by zero at run time",
+      "B": "Forgetting a semicolon at the end of a statement",
+      "C": "A loop that never terminates",
+      "D": "Returning the wrong sum from a method"
+    },
+    "answer": "B",
+    "explanation": "A missing semicolon is caught by the compiler before the program runs — a syntax error. The others are run-time (A) or logic (C, D) errors.",
+    "topic": "1.1",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q3",
+    "subject": "ap_csa",
+    "number": 3,
+    "label": "Analyze Code · 1.2 primitive types & literals",
+    "kind": "mcq",
+    "stem": "Which declaration is **legal** Java in this course?",
+    "options": {
+      "A": "int count = 3.5;",
+      "B": "boolean done = \"true\";",
+      "C": "int 2x = 4;",
+      "D": "double rate = 5;"
+    },
+    "answer": "D",
+    "explanation": "`double rate = 5;` widens the `int` literal `5` to `5.0` — legal. (A) loses precision assigning a `double` to `int`; (B) assigns a String to a boolean; (C) has an illegal identifier (starts with a digit).",
+    "topic": "1.2",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q4",
+    "subject": "ap_csa",
+    "number": 4,
+    "label": "Analyze Code · 1.3 output & escapes",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nSystem.out.println(\"a\\\\b\\\"c\");\n```",
+    "options": {
+      "A": "a\\b\\\"c",
+      "B": "a\\\\b\\\"c",
+      "C": "a\\b\"c",
+      "D": "a\\b\\c"
+    },
+    "answer": "C",
+    "explanation": "`\\\\` is one backslash; `\\\"` is one double quote. So the output is `a\\b\"c`. (A) collapses `\\\\` correctly but leaves `\\\"` unprocessed; (B) processes no escapes at all; (D) drops the quote.",
+    "topic": "1.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q5",
+    "subject": "ap_csa",
+    "number": 5,
+    "label": "Develop Code · 1.4 initialize before use",
+    "kind": "mcq",
+    "stem": "Which line, inserted where marked, makes the segment compile and print `0`?\n```java\nint total;\n// INSERT HERE\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "(leave blank — `int` defaults to 0)",
+      "B": "int total = 0;",
+      "C": "total = 0;",
+      "D": "total = 0.0;"
+    },
+    "answer": "C",
+    "explanation": "A **local** variable must be explicitly initialized before use (no default); `total = 0;` assigns it. (A) won't compile — locals have no default. (B) redeclares (duplicate). (D) assigns a `double` to an `int` — type mismatch.",
+    "topic": "1.4",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q6",
+    "subject": "ap_csa",
+    "number": 6,
+    "label": "Analyze Code · 1.4 null reference",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = null;\nSystem.out.println(s);\n```",
+    "options": {
+      "A": "An empty line",
+      "B": "A `NullPointerException` is thrown.",
+      "C": "Nothing is printed; the call is skipped because `s` is `null`.",
+      "D": "null"
+    },
+    "answer": "D",
+    "explanation": "Printing a `null` reference prints the text `null`; only **calling a method** on `null` would throw `NullPointerException` (B). It does not print an empty line (A), and the call is **not** skipped — `println` runs and emits `null` (C).",
+    "topic": "1.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q7",
+    "subject": "ap_csa",
+    "number": 7,
+    "label": "Analyze Code · 1.5 cast & extreme values",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\ndouble x = 2.999;\nSystem.out.println((int) x + 1);\n```",
+    "options": {
+      "A": "4",
+      "B": "3.999",
+      "C": "4.0",
+      "D": "3"
+    },
+    "answer": "D",
+    "explanation": "`(int)` truncates `2.999 → 2`, then `2 + 1 = 3`. (The cast binds tighter than `+`.)",
+    "topic": "1.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q8",
+    "subject": "ap_csa",
+    "number": 8,
+    "label": "Analyze Code · 1.6 post-decrement in expression",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint x = 10;\nSystem.out.println(x-- + \" \" + x);\n```",
+    "options": {
+      "A": "9 9",
+      "B": "10 9",
+      "C": "10 10",
+      "D": "9 10"
+    },
+    "answer": "B",
+    "explanation": "`x--` yields the **original** 10 first, then decrements `x` to 9. So `\"10\" + \" \" + 9` → `10 9`.",
+    "topic": "1.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q9",
+    "subject": "ap_csa",
+    "number": 9,
+    "label": "Document Code · 1.7 attributes vs behaviors / API",
+    "kind": "mcq",
+    "stem": "In object-oriented terms, a `BankAccount` object's balance and owner name are best described as its ___, and `deposit()` / `withdraw()` are its ___.",
+    "options": {
+      "A": "attributes (state); behaviors (methods)",
+      "B": "behaviors; attributes",
+      "C": "packages; libraries",
+      "D": "constructors; parameters"
+    },
+    "answer": "A",
+    "explanation": "**Attributes** are the object's state (data); **behaviors** are the methods that act on it. An API documents the behaviors a class offers without exposing implementation.",
+    "topic": "1.7",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q10",
+    "subject": "ap_csa",
+    "number": 10,
+    "label": "Document Code · 1.8 precondition vs postcondition",
+    "kind": "mcq",
+    "stem": "A method has the comment `// Precondition: arr.length > 0`. What does this tell the caller?",
+    "options": {
+      "A": "The method guarantees the array will be non-empty when it returns.",
+      "B": "The method will throw an exception if the array is empty.",
+      "C": "The caller must ensure the array is non-empty before calling; the method may misbehave otherwise.",
+      "D": "The array will be sorted after the call."
+    },
+    "answer": "C",
+    "explanation": "A **precondition** is what must be true **on entry** — the caller's responsibility. A postcondition is what the method guarantees on return; throwing is not promised unless stated.",
+    "topic": "1.8",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q11",
+    "subject": "ap_csa",
+    "number": 11,
+    "label": "Analyze Code · 1.9 method overloading resolution",
+    "kind": "mcq",
+    "stem": "Two methods exist: `void show(int n)` and `void show(double d)`. What does `show(7)` call, and `show(7.0)`?",
+    "options": {
+      "A": "Both call `show(double)",
+      "B": "Both call `show(int)",
+      "C": "It is ambiguous and won't compile.",
+      "D": "show(7)` → `show(int)`; `show(7.0)` → `show(double)"
+    },
+    "answer": "D",
+    "explanation": "**Overloading** picks the method whose parameter type matches the argument: an `int` literal matches `show(int)`, a `double` literal matches `show(double)`.",
+    "topic": "1.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q12",
+    "subject": "ap_csa",
+    "number": 12,
+    "label": "Analyze Code · 1.9 void vs non-void / flow of control",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic static int square(int n) { return n * n; }\n\npublic static void main(String[] args) {\n    int r = square(square(3));\n    System.out.println(r);\n}\n```",
+    "options": {
+      "A": "81",
+      "B": "9",
+      "C": "12",
+      "D": "6"
+    },
+    "answer": "A",
+    "explanation": "Inner `square(3) = 9`; outer `square(9) = 81`. Control flows into the inner call first, returns 9, then into the outer call.",
+    "topic": "1.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q13",
+    "subject": "ap_csa",
+    "number": 13,
+    "label": "Analyze Code · 1.10 static method call via class",
+    "kind": "mcq",
+    "stem": "Which call is the correct way to invoke this method from another class?\n```java\npublic class MathUtil {\n    public static int twice(int n) { return 2 * n; }\n}\n```",
+    "options": {
+      "A": "new MathUtil().twice(5)` is required",
+      "B": "twice(5)",
+      "C": "MathUtil.twice(5)",
+      "D": "MathUtil.twice()"
+    },
+    "answer": "C",
+    "explanation": "A `static` method belongs to the **class**, so it is called `ClassName.method(args)` — `MathUtil.twice(5)`. No object is needed (so C, not A). D omits the argument.",
+    "topic": "1.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q14",
+    "subject": "ap_csa",
+    "number": 14,
+    "label": "Analyze Code · 1.11 Math.random scaling",
+    "kind": "mcq",
+    "stem": "What is the range of possible values of `r`?\n```java\nint r = (int)(Math.random() * 4) + 1;\n```",
+    "options": {
+      "A": "0` to `4` inclusive",
+      "B": "1` to `4` inclusive",
+      "C": "1` to `5` inclusive",
+      "D": "0` to `3` inclusive"
+    },
+    "answer": "B",
+    "explanation": "`Math.random()` ∈ [0.0, 1.0); `* 4` ∈ [0.0, 4.0); `(int)` → 0,1,2,3; `+ 1` → 1,2,3,4. Inclusive range **1 to 4**.",
+    "topic": "1.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q15",
+    "subject": "ap_csa",
+    "number": 15,
+    "label": "Document Code · 1.12 object vs class, extends Object",
+    "kind": "mcq",
+    "stem": "Which statement is **true** for every class in this course?",
+    "options": {
+      "A": "A class is the same thing as an object.",
+      "B": "A reference variable stores the object's data directly.",
+      "C": "null` is a valid object.",
+      "D": "Every class implicitly extends `Object`, so it inherits methods like `toString` and `equals`."
+    },
+    "answer": "D",
+    "explanation": "All classes extend `Object` (inheriting `toString`/`equals`). A **class** is the blueprint; an **object** is an instance; a reference variable stores the **address** of an object, and `null` means \"no object\".",
+    "topic": "1.12",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q16",
+    "subject": "ap_csa",
+    "number": 16,
+    "label": "Analyze Code · 1.13 constructor & new",
+    "kind": "mcq",
+    "stem": "Given the class, what does `p.getX()` return after `Point p = new Point(3, 8);`?\n```java\npublic class Point {\n    private int x, y;\n    public Point(int a, int b) { x = a; y = b; }\n    public int getX() { return x; }\n}\n```",
+    "options": {
+      "A": "8",
+      "B": "3",
+      "C": "0",
+      "D": "11"
+    },
+    "answer": "B",
+    "explanation": "`new Point(3, 8)` runs the constructor with `a=3, b=8`, setting `x=3, y=8`. `getX()` returns `x` = `3`.",
+    "topic": "1.13",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q17",
+    "subject": "ap_csa",
+    "number": 17,
+    "label": "Develop Code · 1.13 choose the constructor call",
+    "kind": "mcq",
+    "stem": "A class has overloaded constructors `Dog()` and `Dog(String name)`. Which line creates a `Dog` whose name is `\"Rex\"`?",
+    "options": {
+      "A": "Dog d = new Dog(\"Rex\");",
+      "B": "Dog d = Dog(\"Rex\");",
+      "C": "Dog d = new Dog();",
+      "D": "Dog d = new Dog(Rex);"
+    },
+    "answer": "A",
+    "explanation": "`new` plus the constructor matching a `String` argument: `new Dog(\"Rex\")`. (B) omits `new`; (C) calls the no-arg constructor; (D) treats `Rex` as an undeclared variable.",
+    "topic": "1.13",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q18",
+    "subject": "ap_csa",
+    "number": 18,
+    "label": "Analyze Code · 1.14 NullPointerException on instance method",
+    "kind": "mcq",
+    "stem": "What is the result of running this segment?\n```java\nString[] words = new String[3];\nSystem.out.println(words[0].length());\n```",
+    "options": {
+      "A": "0",
+      "B": "3",
+      "C": "A `NullPointerException` is thrown.",
+      "D": "An empty line"
+    },
+    "answer": "C",
+    "explanation": "A new `String[]` is filled with `null`; `words[0]` is `null`, and calling `.length()` on it throws `NullPointerException`.",
+    "topic": "1.14",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q19",
+    "subject": "ap_csa",
+    "number": 19,
+    "label": "Analyze Code · 1.15 String methods combined",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString s = \"exam-prep\";\nint dash = s.indexOf(\"-\");\nSystem.out.println(s.substring(0, dash) + s.substring(dash + 1));\n```",
+    "options": {
+      "A": "examprep",
+      "B": "exam-prep",
+      "C": "exam prep",
+      "D": "prep"
+    },
+    "answer": "A",
+    "explanation": "`indexOf(\"-\") = 4`; `substring(0,4) = \"exam\"`, `substring(5) = \"prep\"`; concatenated → `examprep` (the dash is removed).",
+    "topic": "1.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q20",
+    "subject": "ap_csa",
+    "number": 20,
+    "label": "Develop Code · 1.15 select correct single-char access",
+    "kind": "mcq",
+    "stem": "Which expression returns the **first character** of a non-empty String `s` as a one-character String, using only the Quick Reference?",
+    "options": {
+      "A": "s.charAt(0)",
+      "B": "s.substring(0, 1)",
+      "C": "s.substring(1)",
+      "D": "s.get(0)"
+    },
+    "answer": "B",
+    "explanation": "`charAt` is **not** on the Quick Reference. The in-syllabus way to get a single character is `s.substring(0, 1)` (indices 0 inclusive, 1 exclusive). (C) drops the first char; (D) is not a String method.",
+    "topic": "1.15",
+    "practice": "P2",
+    "allowOffSyllabus": true
+  },
+  {
+    "id": "csa-u1-q21",
+    "subject": "ap_csa",
+    "number": 21,
+    "label": "Document Code · 1.7 API / libraries / packages — what `import` does",
+    "kind": "mcq",
+    "stem": "A program needs the `ArrayList` class, which lives in the `java.util` package. What is the purpose of the line `import java.util.ArrayList;` at the top of the file?",
+    "options": {
+      "A": "It copies the source code of `ArrayList` into your file so it can be compiled.",
+      "B": "It downloads the `ArrayList` library from the internet at run time.",
+      "C": "It tells the compiler where `ArrayList` lives so you can refer to it by its short name instead of its full package-qualified name.",
+      "D": "It creates a new `ArrayList` object you can immediately use."
+    },
+    "answer": "C",
+    "explanation": "An `import` makes a class from a **package/library** available by its simple name; it does not copy source, download anything, or create an object. The class still has to be instantiated with `new ArrayList<...>()`. (A)/(B) misdescribe how libraries are used; (D) confuses importing with constructing.",
+    "topic": "1.7",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u1-q22",
+    "subject": "ap_csa",
+    "number": 22,
+    "label": "Analyze Code · 1.10 calling static vs instance methods — `ClassName.method()` vs needing an object",
+    "kind": "mcq",
+    "stem": "Given the class below, which call is **correct**?\n```java\npublic class Util {\n    public static int triple(int n) { return 3 * n; }   // static\n    public int label() { return 1; }                     // instance\n}\n// elsewhere:\nUtil u = new Util();\n```",
+    "options": {
+      "A": "Util.label()` calls the instance method directly on the class.",
+      "B": "triple(4)` works from another class without naming `Util`.",
+      "C": "u.triple(4)` is the only legal way to call `triple`.",
+      "D": "Util.triple(4)` calls the static method on the class; `u.label()` calls the instance method on the object."
+    },
+    "answer": "D",
+    "explanation": "A **static** method belongs to the class and is called `ClassName.method(...)` (`Util.triple(4)`); an **instance** method needs an object (`u.label()`). (A) calls an instance method with no object; (B) omits the class name from another class; (C) wrongly claims an object is required for the static call.",
+    "topic": "1.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q1",
+    "subject": "ap_csa",
+    "number": 1,
+    "label": "Document Code · 2.1 control-flow categories",
+    "kind": "mcq",
+    "stem": "The three building blocks of control flow are sequencing, selection, and repetition. Which construct provides **selection**?",
+    "options": {
+      "A": "Statements executed one after another in order",
+      "B": "A `for` loop",
+      "C": "An `if-else` statement",
+      "D": "A method call"
+    },
+    "answer": "C",
+    "explanation": "**Selection** chooses between paths — `if`/`if-else`. Sequencing = straight-line order (A); repetition = loops (B).",
+    "topic": "2.1",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q2",
+    "subject": "ap_csa",
+    "number": 2,
+    "label": "Analyze Code · 2.1 sequential execution",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint x = 2;\nx = x + 5;\nx = x * 2;\nSystem.out.println(x);\n```",
+    "options": {
+      "A": "9",
+      "B": "12",
+      "C": "7",
+      "D": "14"
+    },
+    "answer": "D",
+    "explanation": "Statements run **in sequence**: `2 → 7 → 14`. (C) `7` is the value after only the first assignment — the slip of forgetting that the last line (`x = x * 2`) still runs.",
+    "topic": "2.1",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q3",
+    "subject": "ap_csa",
+    "number": 3,
+    "label": "Analyze Code · 2.2 relational operators",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint a = 6, b = 9;\nSystem.out.println(a < b);\nSystem.out.println(a >= b);\n```",
+    "options": {
+      "A": "true` then `false",
+      "B": "false` then `true",
+      "C": "true` then `true",
+      "D": "false` then `false"
+    },
+    "answer": "A",
+    "explanation": "`6 < 9` is `true`; `6 >= 9` is `false`.",
+    "topic": "2.2",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q4",
+    "subject": "ap_csa",
+    "number": 4,
+    "label": "Analyze Code · 2.2 reference vs value comparison",
+    "kind": "mcq",
+    "stem": "Two `String` variables `x` and `y` both hold the contents `\"hi\"`, but were built so they are **different objects**. What does `x == y` evaluate to, and why?",
+    "options": {
+      "A": "true`, because the contents match",
+      "B": "false`, because `==` on objects compares references, not contents",
+      "C": "Compile error",
+      "D": "true`, because Strings are immutable"
+    },
+    "answer": "B",
+    "explanation": "For objects, `==` compares **references** (addresses). Different objects → `false`, even with equal contents. Use `.equals()` to compare String contents.",
+    "topic": "2.2",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q5",
+    "subject": "ap_csa",
+    "number": 5,
+    "label": "Analyze Code · 2.3 if / if-else",
+    "kind": "mcq",
+    "stem": "What is printed when `n = -4`?\n```java\nint n = -4;\nif (n >= 0) {\n    System.out.println(\"nonneg\");\n} else {\n    System.out.println(\"neg\");\n}\n```",
+    "options": {
+      "A": "nonneg",
+      "B": "Both",
+      "C": "neg",
+      "D": "Nothing"
+    },
+    "answer": "C",
+    "explanation": "`-4 >= 0` is `false`, so the `else` runs → `neg`.",
+    "topic": "2.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q6",
+    "subject": "ap_csa",
+    "number": 6,
+    "label": "Develop Code · 2.3 complete the condition",
+    "kind": "mcq",
+    "stem": "Which boolean test, in the blank, prints `\"even\"` exactly when `n` is even?\n```java\nif ( /* BLANK */ ) System.out.println(\"even\");\n```",
+    "options": {
+      "A": "n / 2 == 0",
+      "B": "n % 2 == 1",
+      "C": "n == 2",
+      "D": "n % 2 == 0"
+    },
+    "answer": "D",
+    "explanation": "`n % 2 == 0` is true iff `n` is divisible by 2 (even). (A) tests `n/2` being 0 (only −1..1); (B) tests odd; (C) only `n` equal to 2.",
+    "topic": "2.3",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q7",
+    "subject": "ap_csa",
+    "number": 7,
+    "label": "Analyze Code · 2.4 if-else-if boundary",
+    "kind": "mcq",
+    "stem": "What is printed when `score = 70`?\n```java\nint score = 70;\nif (score >= 90)      System.out.println(\"A\");\nelse if (score >= 80) System.out.println(\"B\");\nelse if (score >= 70) System.out.println(\"C\");\nelse                  System.out.println(\"F\");\n```",
+    "options": {
+      "A": "C",
+      "B": "B",
+      "C": "F",
+      "D": "A"
+    },
+    "answer": "A",
+    "explanation": "`70 >= 90` false; `70 >= 80` false; `70 >= 70` true → `C` (boundary is inclusive). The chain stops there.",
+    "topic": "2.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q8",
+    "subject": "ap_csa",
+    "number": 8,
+    "label": "Analyze Code · 2.4 nested if",
+    "kind": "mcq",
+    "stem": "What is printed when `x = 6, y = 2`?\n```java\nint x = 6, y = 2;\nif (x > 5) {\n    if (y > 5) System.out.println(\"both\");\n    else       System.out.println(\"x only\");\n} else {\n    System.out.println(\"neither\");\n}\n```",
+    "options": {
+      "A": "both",
+      "B": "x only",
+      "C": "neither",
+      "D": "Nothing"
+    },
+    "answer": "B",
+    "explanation": "`x > 5` true → enter outer; `y > 5` false → inner `else` → `x only`.",
+    "topic": "2.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q9",
+    "subject": "ap_csa",
+    "number": 9,
+    "label": "Analyze Code · 2.5 short-circuit && order",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {};            // length 0\nif (a.length > 0 && a[0] == 5) System.out.println(\"yes\");\nelse System.out.println(\"no\");\n```",
+    "options": {
+      "A": "yes",
+      "B": "An `ArrayIndexOutOfBoundsException` is thrown.",
+      "C": "no",
+      "D": "Nothing"
+    },
+    "answer": "C",
+    "explanation": "`a.length > 0` is `false`, so `&&` short-circuits and `a[0]` is never evaluated — no exception. Prints `no`. (This is the standard guard idiom.)",
+    "topic": "2.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q10",
+    "subject": "ap_csa",
+    "number": 10,
+    "label": "Analyze Code · 2.5 precedence of ! && ||",
+    "kind": "mcq",
+    "stem": "What is the value of `r`?\n```java\nboolean r = !false || false && false;\n```",
+    "options": {
+      "A": "false",
+      "B": "compile error",
+      "C": "It is unspecified — the answer depends on which operator binds first.",
+      "D": "true"
+    },
+    "answer": "D",
+    "explanation": "`!false = true`; `false && false = false`; `true || false = true`. (`!` binds tightest, then `&&`, then `||`.) (A) is the wrong-precedence value from binding left to right as `(!false || false) && false` = `false`; (C) is false — Java fixes this precedence, so the result is fully determinate.",
+    "topic": "2.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q11",
+    "subject": "ap_csa",
+    "number": 11,
+    "label": "Analyze Code · 2.6 De Morgan & equals",
+    "kind": "mcq",
+    "stem": "For `String s`, which is equivalent to `!(s.equals(\"yes\") || s.equals(\"no\"))`?",
+    "options": {
+      "A": "!s.equals(\"yes\") && !s.equals(\"no\")",
+      "B": "!s.equals(\"yes\") || !s.equals(\"no\")",
+      "C": "s.equals(\"yes\") && s.equals(\"no\")",
+      "D": "s == \"yes\" && s == \"no\""
+    },
+    "answer": "A",
+    "explanation": "De Morgan: `!(A || B)` = `!A && !B`. (D) also wrongly uses `==` on Strings.",
+    "topic": "2.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q12",
+    "subject": "ap_csa",
+    "number": 12,
+    "label": "Analyze Code · 2.6 .equals for String content",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nString a = \"dog\";\nString b = \"do\" + \"g\";\nSystem.out.println(a.equals(b));\n```",
+    "options": {
+      "A": "false",
+      "B": "true",
+      "C": "Compile error",
+      "D": "dog"
+    },
+    "answer": "B",
+    "explanation": "`.equals` compares **contents**; both hold `\"dog\"` → `true`. (Regardless of how each was built, contents match.)",
+    "topic": "2.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q13",
+    "subject": "ap_csa",
+    "number": 13,
+    "label": "Analyze Code · 2.7 while off-by-one",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint i = 1, product = 1;\nwhile (i <= 4) {\n    product *= i;\n    i++;\n}\nSystem.out.println(product);\n```",
+    "options": {
+      "A": "6",
+      "B": "120",
+      "C": "24",
+      "D": "10"
+    },
+    "answer": "C",
+    "explanation": "i = 1,2,3,4 → product = 1·1·2·3·4 = `24` (4 factorial). The loop runs while `i <= 4`.",
+    "topic": "2.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q14",
+    "subject": "ap_csa",
+    "number": 14,
+    "label": "Develop Code · 2.7 fix the infinite loop",
+    "kind": "mcq",
+    "stem": "This loop is intended to print `5 4 3 2 1` but currently never terminates. Which change fixes it?\n```java\nint n = 5;\nwhile (n > 0) {\n    System.out.print(n + \" \");\n    // (missing update statement)\n}\n```",
+    "options": {
+      "A": "Add `n++;` in the body",
+      "B": "Change the condition to `n >= 0",
+      "C": "Change `print` to `println",
+      "D": "Add `n--;` in the body"
+    },
+    "answer": "D",
+    "explanation": "The loop variable is never updated, so it spins forever. `n--` counts 5→1, then `n=0` fails `n > 0`, printing `5 4 3 2 1`. (A) increments away from the exit; (B) doesn't stop it.",
+    "topic": "2.7",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q15",
+    "subject": "ap_csa",
+    "number": 15,
+    "label": "Analyze Code · 2.8 for loop with step",
+    "kind": "mcq",
+    "stem": "How many times does the body run?\n```java\nfor (int i = 10; i >= 1; i -= 3) {\n    System.out.println(i);\n}\n```",
+    "options": {
+      "A": "4",
+      "B": "3",
+      "C": "5",
+      "D": "10"
+    },
+    "answer": "A",
+    "explanation": "i = 10, 7, 4, 1 (next would be −2, which fails `i >= 1`). **4** iterations.",
+    "topic": "2.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q16",
+    "subject": "ap_csa",
+    "number": 16,
+    "label": "Develop Code · 2.8 for↔while equivalence",
+    "kind": "mcq",
+    "stem": "Which `for` loop is equivalent to this `while` loop?\n```java\nint i = 0;\nwhile (i < n) {\n    process(i);\n    i++;\n}\n```",
+    "options": {
+      "A": "for (int i = 0; i <= n; i++) process(i);",
+      "B": "for (int i = 0; i < n; i++) process(i);",
+      "C": "for (int i = 1; i < n; i++) process(i);",
+      "D": "for (int i = 0; i < n; i--) process(i);"
+    },
+    "answer": "B",
+    "explanation": "Same init (`i=0`), same condition (`i < n`), same update (`i++`). (A) changes the bound; (C) changes init; (D) changes the update direction.",
+    "topic": "2.8",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q17",
+    "subject": "ap_csa",
+    "number": 17,
+    "label": "Analyze Code · 2.9 accumulate sum & count for average",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {4, 6, 8, 2};\nint sum = 0, count = 0;\nfor (int x : a) {\n    sum += x;\n    count++;\n}\nSystem.out.println(sum + \" \" + count);\n```",
+    "options": {
+      "A": "20 3",
+      "B": "4 20",
+      "C": "20 4",
+      "D": "16 4"
+    },
+    "answer": "C",
+    "explanation": "sum = 4+6+8+2 = 20; count = 4 elements. Output `20 4`.",
+    "topic": "2.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q18",
+    "subject": "ap_csa",
+    "number": 18,
+    "label": "Analyze Code · 2.9 divisibility / digit test",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint n = 1234;\nint last = n % 10;\nboolean evenLast = (last % 2 == 0);\nSystem.out.println(last + \" \" + evenLast);\n```",
+    "options": {
+      "A": "4 false",
+      "B": "1 true",
+      "C": "3 true",
+      "D": "4 true"
+    },
+    "answer": "D",
+    "explanation": "`1234 % 10 = 4` (last digit); `4 % 2 == 0` → `true`. Output `4 true`.",
+    "topic": "2.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q19",
+    "subject": "ap_csa",
+    "number": 19,
+    "label": "Analyze Code · 2.10 String traversal count",
+    "kind": "mcq",
+    "stem": "What is printed? (counts how many `'a'`s)\n```java\nString s = \"banana\";\nint count = 0;\nfor (int i = 0; i < s.length(); i++) {\n    if (s.substring(i, i + 1).equals(\"a\")) count++;\n}\nSystem.out.println(count);\n```",
+    "options": {
+      "A": "3",
+      "B": "2",
+      "C": "1",
+      "D": "6"
+    },
+    "answer": "A",
+    "explanation": "`b a n a n a` → three `a`s at indices 1,3,5. Uses `substring(i,i+1)` (no `charAt`) and `.equals`.",
+    "topic": "2.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q20",
+    "subject": "ap_csa",
+    "number": 20,
+    "label": "Develop Code · 2.10 reverse-string idiom",
+    "kind": "mcq",
+    "stem": "Which loop body, with `String out = \"\"`, correctly **reverses** `s` into `out`?\n```java\nfor (int i = 0; i < s.length(); i++) {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "out = out + s.substring(i, i + 1);",
+      "B": "out = s.substring(i, i + 1) + out;",
+      "C": "out = out + s.substring(i);",
+      "D": "out = s + out;"
+    },
+    "answer": "B",
+    "explanation": "Prepending each character (`char + out`) builds the reversal. (A) copies in order; (C)/(D) are wrong fragments.",
+    "topic": "2.10",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q21",
+    "subject": "ap_csa",
+    "number": 21,
+    "label": "Analyze Code · 2.11 nested loop count",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint n = 0;\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 4; j++) {\n        n++;\n    }\n}\nSystem.out.println(n);\n```",
+    "options": {
+      "A": "7",
+      "B": "9",
+      "C": "12",
+      "D": "16"
+    },
+    "answer": "C",
+    "explanation": "Outer 3 × inner 4 = `12`.",
+    "topic": "2.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q22",
+    "subject": "ap_csa",
+    "number": 22,
+    "label": "Analyze Code · 2.11 nested loop with dependent inner bound",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint sum = 0;\nfor (int i = 1; i <= 3; i++) {\n    for (int j = i; j <= 3; j++) {\n        sum++;\n    }\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "9",
+      "B": "3",
+      "C": "7",
+      "D": "6"
+    },
+    "answer": "D",
+    "explanation": "Inner runs (3−i+1) times: i=1→3, i=2→2, i=3→1 → 3+2+1 = `6`.",
+    "topic": "2.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q23",
+    "subject": "ap_csa",
+    "number": 23,
+    "label": "Analyze Code · 2.12 statement execution count",
+    "kind": "mcq",
+    "stem": "How many times does `count++` execute, in terms of `n`?\n```java\nfor (int i = 0; i < n; i++) {\n    for (int j = 0; j < i; j++) {\n        count++;\n    }\n}\n```",
+    "options": {
+      "A": "n(n−1)/2",
+      "B": "n²",
+      "C": "n",
+      "D": "n²/2 + n"
+    },
+    "answer": "A",
+    "explanation": "Inner runs `i` times for i = 0..n−1: total 0+1+…+(n−1) = `n(n−1)/2`.",
+    "topic": "2.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q24",
+    "subject": "ap_csa",
+    "number": 24,
+    "label": "Document Code · 2.12 compare loop costs",
+    "kind": "mcq",
+    "stem": "Two loops process `n` items. Loop X runs a single `for i in 0..n`; Loop Y has a `for i in 0..n` containing a `for j in 0..n`. Which statement is correct?",
+    "options": {
+      "A": "X and Y run the same number of times.",
+      "B": "Y runs roughly `n` times as often as X (linear vs quadratic growth).",
+      "C": "X runs more often than Y.",
+      "D": "Neither depends on `n`."
+    },
+    "answer": "B",
+    "explanation": "X is linear (`n`), Y is quadratic (`n²`). As `n` grows, Y's count grows about `n` times faster — no Big-O notation needed, just the comparison.",
+    "topic": "2.12",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q25",
+    "subject": "ap_csa",
+    "number": 25,
+    "label": "Develop Code · 2.1/2.5 design a guarded test — P1",
+    "kind": "mcq",
+    "stem": "You must print `\"safe\"` only when `divisor` is nonzero **and** `value / divisor` exceeds 10, without ever throwing an `ArithmeticException`. Which design is correct?",
+    "options": {
+      "A": "if (value / divisor > 10 && divisor != 0)",
+      "B": "if (divisor != 0 || value / divisor > 10)",
+      "C": "if (divisor != 0 && value / divisor > 10)",
+      "D": "if (value / divisor > 10)"
+    },
+    "answer": "C",
+    "explanation": "Put the `divisor != 0` guard **first** so `&&` short-circuits before the division. (A) divides first → can throw; (B) `||` still evaluates the division when divisor is 0; (D) has no guard.",
+    "topic": "2.5",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q26",
+    "subject": "ap_csa",
+    "number": 26,
+    "label": "Develop Code · 2.9 complete the segment — count multiples",
+    "kind": "mcq",
+    "stem": "Fill the blank so `count` ends up holding how many integers in `1..n` are multiples of 3.\n```java\nint count = 0;\nfor (int i = 1; i <= n; i++) {\n    if ( /* BLANK */ ) count++;\n}\n```",
+    "options": {
+      "A": "i % 3 == 0",
+      "B": "i / 3 == 0",
+      "C": "i % 3 == 1",
+      "D": "i * 3 == 0"
+    },
+    "answer": "A",
+    "explanation": "A multiple of 3 leaves remainder 0: `i % 3 == 0`. (B) tests `i/3` being 0 (only `i = 1, 2`); (C) tests remainder 1; (D) is true only for `i = 0`, which the loop never reaches.",
+    "topic": "2.9",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u2-q27",
+    "subject": "ap_csa",
+    "number": 27,
+    "label": "Develop Code · 2.11 complete the segment — inner bound for a triangle",
+    "kind": "mcq",
+    "stem": "This is meant to print a right triangle of stars: row 1 one star, row 2 two stars, …, row `n` `n` stars. Fill the inner-loop condition.\n```java\nfor (int r = 1; r <= n; r++) {\n    for (int c = 1; /* BLANK */; c++) {\n        System.out.print(\"*\");\n    }\n    System.out.println();\n}\n```",
+    "options": {
+      "A": "c <= n",
+      "B": "c <= r",
+      "C": "c < r",
+      "D": "c <= n - r"
+    },
+    "answer": "B",
+    "explanation": "Row `r` should print `r` stars, so the inner loop runs `c = 1..r`: condition `c <= r`. (A) prints `n` stars every row (a rectangle); (C) prints `r−1`; (D) prints a shrinking count.",
+    "topic": "2.11",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q1",
+    "subject": "ap_csa",
+    "number": 1,
+    "label": "Document Code · 3.1 data vs procedural abstraction, code reuse",
+    "kind": "mcq",
+    "stem": "A program needs to compute a rectangle's area in five different places. Writing one `area(int w, int h)` method and calling it five times is an example of:",
+    "options": {
+      "A": "Procedural abstraction / code reuse via a method with parameters",
+      "B": "Data abstraction",
+      "C": "Encapsulation of instance variables",
+      "D": "Overloading"
+    },
+    "answer": "A",
+    "explanation": "Wrapping a repeated computation in a parameterized method is **procedural abstraction**, enabling **code reuse**. Data abstraction hides *data* representation; this hides a *process*.",
+    "topic": "3.1",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q2",
+    "subject": "ap_csa",
+    "number": 2,
+    "label": "Document Code · 3.1 instance var vs class var",
+    "kind": "mcq",
+    "stem": "In a `Student` class, each student has their own `gpa`, but the school's `name` is the same for all students. Which is the correct design?",
+    "options": {
+      "A": "Both `gpa` and `name` are instance variables.",
+      "B": "gpa` is an instance variable; `name` (shared) is a `static` class variable.",
+      "C": "Both are `static`.",
+      "D": "gpa` is `static`; `name` is an instance variable."
+    },
+    "answer": "B",
+    "explanation": "Per-object state → **instance** variable (`gpa`); state shared by all objects of the class → **`static` class** variable (`name`).",
+    "topic": "3.1",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q3",
+    "subject": "ap_csa",
+    "number": 3,
+    "label": "Use Computers Responsibly · 3.2 algorithmic bias / data fitness",
+    "kind": "mcq",
+    "stem": "A résumé-screening program is trained only on the résumés the company hired over the past ten years — a group that was overwhelmingly from one background. What is the **most likely** problem?",
+    "options": {
+      "A": "It is purely a privacy violation, because it stores applicants' personal résumé data.",
+      "B": "It is merely an overfitting/accuracy problem, fixable by feeding it more of the same historical résumés.",
+      "C": "The recommendations may reflect and amplify the bias already present in the historical data.",
+      "D": "The program necessarily violates intellectual-property law by storing résumés."
+    },
+    "answer": "C",
+    "explanation": "Training on a non-representative data set causes **algorithmic bias** — the model learns and amplifies the skew (a data-fitness/ethics issue). (A) misframes it as privacy and (B) as overfitting — but more of the same skewed data deepens the bias; (D) is not the central concern.",
+    "topic": "3.2",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q4",
+    "subject": "ap_csa",
+    "number": 4,
+    "label": "Use Computers Responsibly · 3.2 intellectual property / open source",
+    "kind": "mcq",
+    "stem": "A developer copies a large block of code from an open-source project that is licensed for reuse **only if the original author is credited**, but ships it with no attribution. This is best described as:",
+    "options": {
+      "A": "Acceptable, because once code is published publicly its copyright no longer applies.",
+      "B": "Algorithmic bias.",
+      "C": "An unintended consequence of reusing someone else's code.",
+      "D": "A violation of the software's license / intellectual-property terms."
+    },
+    "answer": "D",
+    "explanation": "Open-source licenses set **conditions** (here, attribution); ignoring them violates the license and the author's **intellectual-property** rights. (A) misstates copyright — public code is still copyrighted; (B)/(C) are unrelated framings. \"Open source\" does not mean \"no rules\".",
+    "topic": "3.2",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q5",
+    "subject": "ap_csa",
+    "number": 5,
+    "label": "Use Computers Responsibly · 3.2 unintended consequences / reliability",
+    "kind": "mcq",
+    "stem": "Which scenario best illustrates an **unintended consequence** of a computing system that programmers should anticipate?",
+    "options": {
+      "A": "A navigation app routes so many drivers down one quiet residential street that the neighborhood becomes congested and unsafe.",
+      "B": "A program that crashes when given malformed input — a plain reliability bug.",
+      "C": "A model trained on a data set that is simply too small to be accurate.",
+      "D": "A spell-checker correctly flags a misspelled word."
+    },
+    "answer": "A",
+    "explanation": "A system can work *as designed* yet cause **harm/unintended consequences** in the wider world (here, residential congestion). (B) is an ordinary reliability defect, (C) is a data-sufficiency issue, and (D) is normal correct behavior — none is an unintended downstream harm.",
+    "topic": "3.2",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q6",
+    "subject": "ap_csa",
+    "number": 6,
+    "label": "Document Code · 3.3 encapsulation conventions",
+    "kind": "mcq",
+    "stem": "Per standard encapsulation conventions in this course, which is correct?",
+    "options": {
+      "A": "Instance variables should be `public` so other classes can read them directly.",
+      "B": "Instance variables should be `private`; classes and constructors should be `public`.",
+      "C": "Everything should be `static`.",
+      "D": "Constructors should be `private`."
+    },
+    "answer": "B",
+    "explanation": "**Encapsulation:** hide data by making instance variables `private`, and expose the type/constructor as `public`. Access to the data goes through accessor/mutator methods.",
+    "topic": "3.3",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q7",
+    "subject": "ap_csa",
+    "number": 7,
+    "label": "Analyze Code · 3.3 private blocks outside access",
+    "kind": "mcq",
+    "stem": "This appears in a class **other than** `Account`. Which line does **not** compile?\n```java\npublic class Account {\n    private double balance;\n    public double getBalance() { return balance; }\n}\n// in another class:\nAccount a = new Account();\n```",
+    "options": {
+      "A": "a.getBalance()",
+      "B": "Account b = new Account();",
+      "C": "double d = a.balance;",
+      "D": "System.out.println(a.getBalance());"
+    },
+    "answer": "C",
+    "explanation": "`balance` is `private`, so `a.balance` is inaccessible **outside** `Account` — compile error. The accessor `getBalance()` is the legal route.",
+    "topic": "3.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q8",
+    "subject": "ap_csa",
+    "number": 8,
+    "label": "Develop Code · 3.4 constructor initializes all fields",
+    "kind": "mcq",
+    "stem": "A `Rectangle` has `private int width, height;`. Which constructor correctly initializes **both** fields?",
+    "options": {
+      "A": "public Rectangle(int w) { width = w; }",
+      "B": "public void Rectangle(int w, int h) { width = w; height = h; }",
+      "C": "public Rectangle(int w, int h) { w = width; h = height; }",
+      "D": "public Rectangle(int w, int h) { width = w; height = h; }"
+    },
+    "answer": "D",
+    "explanation": "A constructor (no return type, class name) must initialize **all** instance variables. (A) leaves `height` at default 0; (B) has `void` so it is a *method*, not a constructor; (C) assigns backwards (fields stay 0).",
+    "topic": "3.4",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q9",
+    "subject": "ap_csa",
+    "number": 9,
+    "label": "Analyze Code · 3.4 default field values",
+    "kind": "mcq",
+    "stem": "A class declares `private int count; private String label; private boolean active;` with **no constructor body assigning them**. After `new`, what are their values?",
+    "options": {
+      "A": "0`, `null`, `false",
+      "B": "0`, `\"\"`, `true",
+      "C": "null`, `null`, `null",
+      "D": "0`, `null`, `true"
+    },
+    "answer": "A",
+    "explanation": "Default values: numeric → `0`, object reference (`String`) → `null`, `boolean` → `false`.",
+    "topic": "3.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q10",
+    "subject": "ap_csa",
+    "number": 10,
+    "label": "Document Code · 3.5 accessor vs mutator",
+    "kind": "mcq",
+    "stem": "Which pair correctly distinguishes an accessor from a mutator?",
+    "options": {
+      "A": "An accessor is `void` and changes state; a mutator returns a value.",
+      "B": "An accessor returns a value without changing state; a mutator (typically `void`) modifies state.",
+      "C": "Both must return a value.",
+      "D": "Both must be `void`."
+    },
+    "answer": "B",
+    "explanation": "**Accessor** = non-`void`, reports state without modifying it; **mutator** = typically `void`, changes state. (A) reverses them.",
+    "topic": "3.5",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q11",
+    "subject": "ap_csa",
+    "number": 11,
+    "label": "Analyze Code · 3.5 primitive arg copied in a method",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic class Box {\n    private int n = 0;\n    public void addTo(int amount) { n = n + amount; amount = 99; }\n    public int getN() { return n; }\n}\n// elsewhere:\nBox b = new Box();\nint a = 5;\nb.addTo(a);\nSystem.out.println(b.getN() + \" \" + a);\n```",
+    "options": {
+      "A": "5 99",
+      "B": "99 99",
+      "C": "5 5",
+      "D": "0 5"
+    },
+    "answer": "C",
+    "explanation": "`addTo` adds 5 to the field `n` (now 5). The parameter `amount` is a **copy** of `a`; setting `amount = 99` doesn't change the caller's `a`. Output `5 5`.",
+    "topic": "3.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q12",
+    "subject": "ap_csa",
+    "number": 12,
+    "label": "Analyze Code · 3.6 object-reference param aliases — return a reference",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic class Bag {\n    private int[] items;\n    public Bag(int[] arr) { items = arr; }   // stores the reference (alias)\n    public int[] getItems() { return items; }  // returns the reference\n}\n// elsewhere:\nint[] data = {1, 2, 3};\nBag bag = new Bag(data);\nint[] ref = bag.getItems();\nref[0] = 50;\nSystem.out.println(data[0]);\n```",
+    "options": {
+      "A": "1",
+      "B": "0",
+      "C": "A `NullPointerException` is thrown.",
+      "D": "50"
+    },
+    "answer": "D",
+    "explanation": "`data`, the field `items`, and `ref` all **alias the same array**. Mutating through `ref` changes the shared array → `data[0]` is `50`. (A defensive copy would have isolated them.)",
+    "topic": "3.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q13",
+    "subject": "ap_csa",
+    "number": 13,
+    "label": "Analyze Code · 3.7 static variable shared across instances",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic class Widget {\n    private static int made = 0;\n    public Widget() { made++; }\n    public static int count() { return made; }\n}\n// elsewhere:\nnew Widget(); new Widget(); new Widget();\nSystem.out.println(Widget.count());\n```",
+    "options": {
+      "A": "3",
+      "B": "1",
+      "C": "0",
+      "D": "Compile error"
+    },
+    "answer": "A",
+    "explanation": "The `static` field `made` is **shared** by the whole class; each constructor call increments it. Three objects → `3`. `count()` is `static`, called on the class.",
+    "topic": "3.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q14",
+    "subject": "ap_csa",
+    "number": 14,
+    "label": "Analyze Code · 3.7 final cannot be reassigned",
+    "kind": "mcq",
+    "stem": "Which line causes a compile error?\n```java\nfinal int LIMIT = 100;     // line 1\nint x = LIMIT + 1;         // line 2\nLIMIT = 200;               // line 3\nSystem.out.println(x);     // line 4\n```",
+    "options": {
+      "A": "line 1",
+      "B": "line 3",
+      "C": "line 2",
+      "D": "line 4"
+    },
+    "answer": "B",
+    "explanation": "A `final` variable cannot be **reassigned** after initialization; `LIMIT = 200;` (line 3) is illegal. Reading it (line 2) is fine.",
+    "topic": "3.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q15",
+    "subject": "ap_csa",
+    "number": 15,
+    "label": "Analyze Code · 3.8 scope / shadowing",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\npublic class Timer {\n    private int seconds = 60;\n    public void reset() {\n        int seconds = 0;        // local shadows the field\n    }\n    public int get() { return seconds; }\n}\n// elsewhere:\nTimer t = new Timer();\nt.reset();\nSystem.out.println(t.get());\n```",
+    "options": {
+      "A": "0",
+      "B": "Compile error",
+      "C": "60",
+      "D": "null"
+    },
+    "answer": "C",
+    "explanation": "The local `seconds` in `reset()` **shadows** the field but is a separate variable; setting it to 0 does not touch the field. `get()` still returns the field `60`.",
+    "topic": "3.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q16",
+    "subject": "ap_csa",
+    "number": 16,
+    "label": "Develop Code · 3.9 this disambiguates a shadowed field",
+    "kind": "mcq",
+    "stem": "A constructor's parameter has the **same name** as the instance variable. Which body correctly sets the field?\n```java\nprivate int size;\npublic Container(int size) {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "size = size;",
+      "B": "size = this.size;",
+      "C": "this.size = this.size;",
+      "D": "this.size = size;"
+    },
+    "answer": "D",
+    "explanation": "`this.size` is the **field**; the bare `size` is the parameter. `this.size = size` copies the parameter into the field. (A) assigns the parameter to itself; (B)/(C) leave the field at default.",
+    "topic": "3.9",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q17",
+    "subject": "ap_csa",
+    "number": 17,
+    "label": "Analyze Code · 3.9 no this in static context",
+    "kind": "mcq",
+    "stem": "Which statement about `this` is correct?",
+    "options": {
+      "A": "this` refers to the current object and cannot be used in a `static` method (which has no `this`).",
+      "B": "this` can be used inside a `static` method to refer to the class.",
+      "C": "this` is required in every method.",
+      "D": "this` refers to the parent class."
+    },
+    "answer": "A",
+    "explanation": "`this` is the **current object** reference; a `static` method belongs to the class, not an object, so it has **no `this`**. It is only needed to disambiguate shadowed members otherwise.",
+    "topic": "3.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q18",
+    "subject": "ap_csa",
+    "number": 18,
+    "label": "Develop Code · 3.1/3.3 choose the right class design — P1",
+    "kind": "mcq",
+    "stem": "You must model a `Temperature` so that, once created, its value can be **read but never changed** from outside, and its raw field is hidden. Which design best fits?",
+    "options": {
+      "A": "public double value;` with no methods",
+      "B": "private double value;` with a public accessor and **no** mutator",
+      "C": "private double value;` with a public mutator and no accessor",
+      "D": "static double value;` shared by all temperatures"
+    },
+    "answer": "B",
+    "explanation": "Read-but-not-changed + hidden field = a **`private`** field with a **public accessor and no mutator** (immutable-from-outside). (A) exposes the field; (C) allows changes but no reads; (D) shares one value across all objects.",
+    "topic": "3.3",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q19",
+    "subject": "ap_csa",
+    "number": 19,
+    "label": "Develop Code · 3.5 complete the segment — accessor body",
+    "kind": "mcq",
+    "stem": "A `BankAccount` has `private double balance;`. Fill the blank so `getBalance` is a correct accessor (reports the balance without changing state).\n```java\npublic double getBalance() {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "balance = 0;",
+      "B": "this.balance = balance;",
+      "C": "return balance;",
+      "D": "System.out.println(balance);"
+    },
+    "answer": "C",
+    "explanation": "An accessor **returns** the field's value and leaves state unchanged: `return balance;`. (A) and (B) modify state (and (A) zeroes it); (D) prints but returns nothing — it won't compile for a `double` return type.",
+    "topic": "3.5",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q20",
+    "subject": "ap_csa",
+    "number": 20,
+    "label": "Develop Code · 3.4 complete the segment — initialize all fields",
+    "kind": "mcq",
+    "stem": "A `Point` has `private int x, y;`. Fill the constructor body so **both** fields are initialized from the parameters.\n```java\npublic Point(int x, int y) {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "x = x; y = y;",
+      "B": "this.x = y; this.y = x;",
+      "C": "x = this.x; y = this.y;",
+      "D": "this.x = x; this.y = y;"
+    },
+    "answer": "D",
+    "explanation": "With parameters shadowing the fields, `this.x`/`this.y` are the fields and the bare names are the parameters: `this.x = x; this.y = y;`. (A) assigns parameters to themselves (fields stay 0); (B) swaps them; (C) copies backward (fields stay 0).",
+    "topic": "3.4",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u3-q21",
+    "subject": "ap_csa",
+    "number": 21,
+    "label": "Design Code · 3.1 decompose a design — P1.A",
+    "kind": "mcq",
+    "stem": "You are designing a program that reads a list of orders, computes each order's tax, prints a receipt, and at the end prints the grand total. Which decomposition **best** applies procedural abstraction and avoids repeated code?",
+    "options": {
+      "A": "Write one long `main` method that inlines the tax math everywhere it is needed.",
+      "B": "Write a `computeTax(double amount)` method and a `printReceipt(Order o)` method, and have `main` loop over the orders calling them, accumulating the total.",
+      "C": "Make `computeTax` a separate program the user runs by hand for each order.",
+      "D": "Copy-paste the tax formula into each branch of an `if-else-if` chain so every case is self-contained."
+    },
+    "answer": "B",
+    "explanation": "Decomposing the repeated work into parameterized methods (`computeTax`, `printReceipt`) and calling them from a loop is **procedural abstraction / code reuse** — the standard design. (A)/(D) duplicate the tax math; (C) is not a single program.",
+    "topic": "3.1",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q1",
+    "subject": "ap_csa",
+    "number": 1,
+    "label": "Use Computers Responsibly · 4.1 privacy / data fitness",
+    "kind": "mcq",
+    "stem": "A fitness app collects users' precise GPS location every minute and stores it indefinitely on a server. Which is the **most significant** responsible-computing concern?",
+    "options": {
+      "A": "Continuously collecting and retaining precise location data creates a serious **privacy** risk if it is exposed or misused.",
+      "B": "It is mainly algorithmic bias against users who move around frequently.",
+      "C": "The only real concern is that the data set is too large to process efficiently.",
+      "D": "It risks a logic error because GPS can return negative coordinates."
+    },
+    "answer": "A",
+    "explanation": "Collecting fine-grained personal data (location) and keeping it indefinitely is a classic **privacy** risk — the central data-collection ethics concern. (B) misframes it as bias, (C) as performance, and (D) as a coding bug — none is the core issue.",
+    "topic": "4.1",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q2",
+    "subject": "ap_csa",
+    "number": 2,
+    "label": "Use Computers Responsibly · 4.1 algorithmic bias / fitness of data",
+    "kind": "mcq",
+    "stem": "A model predicting loan risk is trained on historical approvals from an era with discriminatory lending. Deploying it as-is is risky mainly because:",
+    "options": {
+      "A": "It is purely a privacy issue, since loan records are sensitive.",
+      "B": "The historical data is **not fit for the purpose** — it encodes past bias, which the model will reproduce.",
+      "C": "It will overfit, fixable simply by adding more of the same historical approvals.",
+      "D": "The only real risk is that the model runs too slowly to be useful."
+    },
+    "answer": "B",
+    "explanation": "**Fitness of data for a purpose**: biased historical data makes the model reproduce that bias. (A) misframes it as privacy; (C) as overfitting — but more of the same skewed data deepens the bias; (D) as performance.",
+    "topic": "4.1",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q3",
+    "subject": "ap_csa",
+    "number": 3,
+    "label": "Document Code · 4.2 data set / one-at-a-time access",
+    "kind": "mcq",
+    "stem": "The shared idea behind arrays, `ArrayList`s, and file streams is that they are **data sets** whose elements are accessed:",
+    "options": {
+      "A": "all simultaneously in one operation",
+      "B": "only in reverse order",
+      "C": "one at a time (sequentially or by index)",
+      "D": "only if they are sorted"
+    },
+    "answer": "C",
+    "explanation": "A data set is processed by accessing elements **one at a time** — by index or sequentially. None of the structures require simultaneous, reverse-only, or sorted access.",
+    "topic": "4.2",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q4",
+    "subject": "ap_csa",
+    "number": 4,
+    "label": "Analyze Code · 4.2 sequential access accumulation",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] data = {3, 1, 4, 1, 5};\nint sum = 0;\nfor (int i = 0; i < data.length; i++) {\n    sum += data[i];\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "13",
+      "B": "5",
+      "C": "15",
+      "D": "14"
+    },
+    "answer": "D",
+    "explanation": "Sequential one-at-a-time access summing every element: 3+1+4+1+5 = `14`.",
+    "topic": "4.2",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q5",
+    "subject": "ap_csa",
+    "number": 5,
+    "label": "Analyze Code · 4.3 length attribute, no parens",
+    "kind": "mcq",
+    "stem": "Which expression correctly gives the number of elements in `int[] arr`?",
+    "options": {
+      "A": "arr.length",
+      "B": "arr.length()",
+      "C": "arr.size()",
+      "D": "arr.length() - 1"
+    },
+    "answer": "A",
+    "explanation": "For an **array**, `length` is an **attribute** — no parentheses. (`length()` (B) is a String method; `size()` (C) is an ArrayList method — the classic length/size trap; (D) adds both that confusion and an off-by-one.)",
+    "topic": "4.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q6",
+    "subject": "ap_csa",
+    "number": 6,
+    "label": "Analyze Code · 4.3 ArrayIndexOutOfBounds",
+    "kind": "mcq",
+    "stem": "What is the result of running this segment?\n```java\nint[] a = new int[4];\na[4] = 9;\nSystem.out.println(a[4]);\n```",
+    "options": {
+      "A": "9",
+      "B": "An `ArrayIndexOutOfBoundsException` is thrown.",
+      "C": "0",
+      "D": "null"
+    },
+    "answer": "B",
+    "explanation": "Valid indices for length 4 are 0..3; `a[4]` is out of bounds → `ArrayIndexOutOfBoundsException` at the assignment.",
+    "topic": "4.3",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q7",
+    "subject": "ap_csa",
+    "number": 7,
+    "label": "Analyze Code · 4.4 indexed vs enhanced-for equivalence",
+    "kind": "mcq",
+    "stem": "Which loop prints the same output as `for (int x : a) System.out.print(x);` for `int[] a`?",
+    "options": {
+      "A": "for (int i = 0; i <= a.length; i++) System.out.print(a[i]);",
+      "B": "for (int i = 1; i < a.length; i++) System.out.print(a[i]);",
+      "C": "for (int i = 0; i < a.length; i++) System.out.print(a[i]);",
+      "D": "for (int i = a.length; i > 0; i--) System.out.print(a[i]);"
+    },
+    "answer": "C",
+    "explanation": "Enhanced-for visits every element in order, index 0..length−1 — exactly `i = 0; i < a.length; i++`. (A) goes out of bounds; (B) skips index 0; (D) is reversed and out of bounds.",
+    "topic": "4.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q8",
+    "subject": "ap_csa",
+    "number": 8,
+    "label": "Analyze Code · 4.5 replace elements in place",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[] a = {1, 2, 3, 4, 5};\nfor (int i = 0; i < a.length; i++) {\n    if (a[i] % 2 == 1) a[i] = 0;\n}\nSystem.out.println(a[0] + \"\" + a[1] + a[2] + a[3] + a[4]);\n```",
+    "options": {
+      "A": "10305",
+      "B": "00000",
+      "C": "12345",
+      "D": "02040"
+    },
+    "answer": "D",
+    "explanation": "Odd elements (1,3,5 at indices 0,2,4) replaced with 0 → `{0,2,0,4,0}` → prints `02040`.",
+    "topic": "4.5",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q9",
+    "subject": "ap_csa",
+    "number": 9,
+    "label": "Develop Code · 4.5 select the linear-search snippet — P1",
+    "kind": "mcq",
+    "stem": "Which loop body correctly sets `found = true` if `target` appears anywhere in `int[] a`?\n```java\nboolean found = false;\nfor (int i = 0; i < a.length; i++) {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "if (a[i] == target) found = true;",
+      "B": "if (a[i] == target) found = false;",
+      "C": "found = (a[i] == target);",
+      "D": "if (i == target) found = true;"
+    },
+    "answer": "A",
+    "explanation": "Set `found = true` on a match and never reset it. (B) sets it false; (C) overwrites `found` each pass so only the **last** element decides; (D) compares the index, not the element.",
+    "topic": "4.5",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q10",
+    "subject": "ap_csa",
+    "number": 10,
+    "label": "Analyze Code · 4.6 file Scanner with hasNext + split",
+    "kind": "mcq",
+    "stem": "A file `scores.txt` contains:\n```\nAmy 90\nBo 75\n```\nWhat does this print? (inside a method that `throws IOException`)\n```java\nScanner sc = new Scanner(new File(\"scores.txt\"));\nint total = 0;\nwhile (sc.hasNext()) {\n    String name = sc.next();\n    int score = sc.nextInt();\n    total += score;\n}\nsc.close();\nSystem.out.println(total);\n```",
+    "options": {
+      "A": "90",
+      "B": "165",
+      "C": "75",
+      "D": "2"
+    },
+    "answer": "B",
+    "explanation": "Reads token pairs: (\"Amy\",90), (\"Bo\",75); total = 90 + 75 = `165`. `hasNext()` controls the loop; `close()` at the end. (No `nextLine` mixing.)",
+    "topic": "4.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q11",
+    "subject": "ap_csa",
+    "number": 11,
+    "label": "Analyze Code · 4.7 wrapper immutability + autoboxing/unboxing",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nInteger a = 5;          // autobox\nint b = a + 3;          // unbox, add\nInteger c = b;          // autobox\nSystem.out.println(c);\n```",
+    "options": {
+      "A": "53",
+      "B": "5",
+      "C": "8",
+      "D": "11"
+    },
+    "answer": "C",
+    "explanation": "`a` autoboxes 5; `a + 3` unboxes to 5, adds → `b = 8`; `c` autoboxes 8 → prints `8`. `Integer` is immutable but reassigning `c` is fine. (A) treats `+` as String concatenation; (B) forgets the `+ 3`; (D) adds 3 a second time when reassigning `c`.",
+    "topic": "4.7",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q12",
+    "subject": "ap_csa",
+    "number": 12,
+    "label": "Develop Code · 4.7 parse text to number",
+    "kind": "mcq",
+    "stem": "A file token is the String `\"  -12 \"`'s trimmed form `\"-12\"`. Which converts it to the `int` value `-12`?",
+    "options": {
+      "A": "Integer.parseInt(\"  -12 \")` (the untrimmed token)",
+      "B": "Double.parseDouble(\"-12\")",
+      "C": "(int) \"-12\"",
+      "D": "Integer.parseInt(\"-12\")"
+    },
+    "answer": "D",
+    "explanation": "`Integer.parseInt(String)` parses a signed decimal integer → `-12`. (A) passes the untrimmed token, whose spaces make `parseInt` throw `NumberFormatException`; (B) yields a `double` (`-12.0`), not an `int`; (C) cannot cast a String to `int`.",
+    "topic": "4.7",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q13",
+    "subject": "ap_csa",
+    "number": 13,
+    "label": "Analyze Code · 4.8 ArrayList creation & methods",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nArrayList<String> list = new ArrayList<String>();\nlist.add(\"a\");\nlist.add(\"b\");\nlist.add(\"c\");\nString old = list.set(1, \"z\");\nSystem.out.println(old + \" \" + list.size() + \" \" + list.get(1));\n```",
+    "options": {
+      "A": "b 3 z",
+      "B": "z 3 b",
+      "C": "b 4 z",
+      "D": "a 3 z"
+    },
+    "answer": "A",
+    "explanation": "`set(1,\"z\")` returns the **old** element `\"b\"` and replaces it; size stays 3; `get(1)` is now `\"z\"`. Output `b 3 z`.",
+    "topic": "4.8",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q14",
+    "subject": "ap_csa",
+    "number": 14,
+    "label": "Analyze Code · 4.9 IndexOutOfBounds on ArrayList",
+    "kind": "mcq",
+    "stem": "What is the result of running this segment?\n```java\nArrayList<Integer> list = new ArrayList<Integer>();\nlist.add(10);\nlist.add(20);\nSystem.out.println(list.get(2));\n```",
+    "options": {
+      "A": "20",
+      "B": "An `IndexOutOfBoundsException` is thrown.",
+      "C": "0",
+      "D": "null"
+    },
+    "answer": "B",
+    "explanation": "Size 2 → valid indices 0..1; `get(2)` throws `IndexOutOfBoundsException`.",
+    "topic": "4.9",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q15",
+    "subject": "ap_csa",
+    "number": 15,
+    "label": "Develop Code · 4.9 fix remove-while-iterating — P1",
+    "kind": "mcq",
+    "stem": "You want to remove every `0` from an `ArrayList<Integer>`. Which loop design is **correct** (no skipped elements, no exception)?",
+    "options": {
+      "A": "Enhanced-for: `for (int x : list) if (x == 0) list.remove(...);",
+      "B": "Forward loop with `i++` always: removing at `i` then `i++",
+      "C": "Backward index loop: `for (int i = list.size() - 1; i >= 0; i--) if (list.get(i) == 0) list.remove(i);",
+      "D": "for (int i = 0; i < list.size(); i++) list.remove(i);"
+    },
+    "answer": "C",
+    "explanation": "Iterating **backward** means a left-shift after `remove` never skips an unexamined element. (A) throws `ConcurrentModificationException`; (B) skips the shifted-in element; (D) removes the wrong elements as the list shrinks.",
+    "topic": "4.9",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q16",
+    "subject": "ap_csa",
+    "number": 16,
+    "label": "Analyze Code · 4.10 ArrayList delete-by-condition result",
+    "kind": "mcq",
+    "stem": "What does `list` contain after this runs?\n```java\nArrayList<Integer> list = new ArrayList<Integer>();\nlist.add(4); list.add(7); list.add(2); list.add(9);\nfor (int i = list.size() - 1; i >= 0; i--) {\n    if (list.get(i) < 5) list.remove(i);\n}\nSystem.out.println(list);\n```",
+    "options": {
+      "A": "[4, 2]",
+      "B": "[4, 7, 2, 9]",
+      "C": "[]",
+      "D": "[7, 9]"
+    },
+    "answer": "D",
+    "explanation": "Backward delete-by-condition removes elements < 5 (the 2 and the 4), leaving `[7, 9]` in order. Backward traversal avoids skips.",
+    "topic": "4.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q17",
+    "subject": "ap_csa",
+    "number": 17,
+    "label": "Analyze Code · 4.10 multi-structure simultaneous traversal",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nArrayList<Integer> a = new ArrayList<Integer>();\na.add(1); a.add(2); a.add(3);\nArrayList<Integer> b = new ArrayList<Integer>();\nb.add(10); b.add(20); b.add(30);\nint sum = 0;\nfor (int i = 0; i < a.size(); i++) {\n    sum += a.get(i) * b.get(i);\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "140",
+      "B": "60",
+      "C": "6",
+      "D": "66"
+    },
+    "answer": "A",
+    "explanation": "Parallel traversal: 1·10 + 2·20 + 3·30 = 10 + 40 + 90 = `140`.",
+    "topic": "4.10",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q18",
+    "subject": "ap_csa",
+    "number": 18,
+    "label": "Analyze Code · 4.11 2D structure & indexing",
+    "kind": "mcq",
+    "stem": "For `int[][] m = new int[3][5];`, which is true?",
+    "options": {
+      "A": "m.length` is 5 and `m[0].length` is 3.",
+      "B": "m.length` is 3 (rows) and `m[0].length` is 5 (columns).",
+      "C": "m.length` is 15.",
+      "D": "m` is jagged."
+    },
+    "answer": "B",
+    "explanation": "`new int[3][5]` is 3 rows × 5 columns: `m.length` = rows = 3, `m[0].length` = columns = 5. Rectangular, not jagged.",
+    "topic": "4.11",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q19",
+    "subject": "ap_csa",
+    "number": 19,
+    "label": "Analyze Code · 4.12 column-major traversal",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{1, 2, 3},\n             {4, 5, 6}};\nint sum = 0;\nfor (int c = 0; c < g[0].length; c++) {\n    for (int r = 0; r < g.length; r++) {\n        sum += g[r][c];\n    }\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "6",
+      "B": "12",
+      "C": "21",
+      "D": "15"
+    },
+    "answer": "C",
+    "explanation": "Column-major still visits every cell once: 1+2+3+4+5+6 = `21` (order differs from row-major, total is the same).",
+    "topic": "4.12",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q20",
+    "subject": "ap_csa",
+    "number": 20,
+    "label": "Analyze Code · 4.13 sum a single column of a 2D array",
+    "kind": "mcq",
+    "stem": "What is printed?\n```java\nint[][] g = {{2, 9},\n             {4, 1},\n             {6, 3}};\nint sum = 0;\nfor (int r = 0; r < g.length; r++) {\n    sum += g[r][0];\n}\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "13",
+      "B": "21",
+      "C": "2",
+      "D": "12"
+    },
+    "answer": "D",
+    "explanation": "Sums column 0 down all rows: 2 + 4 + 6 = `12`.",
+    "topic": "4.13",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q21",
+    "subject": "ap_csa",
+    "number": 21,
+    "label": "Document Code · 4.13 describe a 2D algorithm — precondition",
+    "kind": "mcq",
+    "stem": "A method `int countPositive(int[][] g)` returns how many entries of `g` are `> 0`. For it to work without an exception on an empty-row situation, what precondition is most appropriate?",
+    "options": {
+      "A": "g` is a rectangular (non-jagged) array with each row of the same length.",
+      "B": "g` is sorted.",
+      "C": "g` contains only positive numbers.",
+      "D": "g.length == g[0].length`."
+    },
+    "answer": "A",
+    "explanation": "The course assumes **rectangular** 2D arrays; that is the precondition that makes `g[r].length`/`g[0].length` traversal safe. Sorting (B), all-positive (C), and square (D) are not required.",
+    "topic": "4.13",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q22",
+    "subject": "ap_csa",
+    "number": 22,
+    "label": "Analyze Code · 4.14 linear search returns -1 when absent",
+    "kind": "mcq",
+    "stem": "What does this print for `target = 8`?\n```java\nint[] a = {3, 5, 7, 9};\nint target = 8;\nint result = -1;\nfor (int i = 0; i < a.length; i++) {\n    if (a[i] == target) { result = i; }\n}\nSystem.out.println(result);\n```",
+    "options": {
+      "A": "0",
+      "B": "-1",
+      "C": "3",
+      "D": "8"
+    },
+    "answer": "B",
+    "explanation": "`8` is not in the array, so `result` stays `-1` (the standard \"not found\" sentinel from a linear search).",
+    "topic": "4.14",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q23",
+    "subject": "ap_csa",
+    "number": 23,
+    "label": "Analyze Code · 4.15 selection sort after two passes",
+    "kind": "mcq",
+    "stem": "Selection sort places the minimum of the unsorted segment at the front each pass. After **two** passes on `{30, 10, 20, 40}`, what is the array?",
+    "options": {
+      "A": "{10, 20, 40, 30}",
+      "B": "{10, 30, 20, 40}",
+      "C": "{10, 20, 30, 40}",
+      "D": "{20, 10, 30, 40}"
+    },
+    "answer": "C",
+    "explanation": "Pass 1: min 10 → front: `{10, 30, 20, 40}`. Pass 2: min of `{30,20,40}` is 20, swap with index 1: `{10, 20, 30, 40}`. (Here it is fully sorted after two passes.)",
+    "topic": "4.15",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q24",
+    "subject": "ap_csa",
+    "number": 24,
+    "label": "Analyze Code · 4.16 recursion trace",
+    "kind": "mcq",
+    "stem": "What does `f(3)` return?\n```java\npublic static int f(int n) {\n    if (n == 0) return 5;\n    return f(n - 1) + 2;\n}\n```",
+    "options": {
+      "A": "7",
+      "B": "5",
+      "C": "9",
+      "D": "11"
+    },
+    "answer": "D",
+    "explanation": "`f(0)=5`; `f(1)=5+2=7`; `f(2)=7+2=9`; `f(3)=9+2=11`. (A) `7` adds the `+2` only once (no full unrolling); (B) `5` stops at the base case; (C) `9` unrolls one step too few (the value of `f(2)`).",
+    "topic": "4.16",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q25",
+    "subject": "ap_csa",
+    "number": 25,
+    "label": "Analyze Code · 4.17 binary search trace",
+    "kind": "mcq",
+    "stem": "On the sorted array `{2, 5, 8, 11, 14, 17, 20}` (indices 0..6), binary search for `target = 17` first examines index 3 (value 11). Which index does it examine **next**? (`mid = (low+high)/2`)",
+    "options": {
+      "A": "5",
+      "B": "4",
+      "C": "6",
+      "D": "2"
+    },
+    "answer": "A",
+    "explanation": "`17 > 11` → search the upper half: `low = 4, high = 6`, `mid = (4+6)/2 = 5`. Next index examined is `5` (value 17, found).",
+    "topic": "4.17",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q26",
+    "subject": "ap_csa",
+    "number": 26,
+    "label": "Develop Code · 4.3/4.5 design a max-finder initialization — P1",
+    "kind": "mcq",
+    "stem": "You must find the maximum of `int[] a` where every value could be negative. Which initialization of `max` is **safe**?",
+    "options": {
+      "A": "int max = 0;",
+      "B": "int max = a[0];` (then scan from index 1)",
+      "C": "int max = Integer.MIN_VALUE / 2;` but only scan even indices",
+      "D": "int max = a.length;"
+    },
+    "answer": "B",
+    "explanation": "Seed `max` with the **first element**, then compare the rest — correct even if all values are negative. (A) wrongly returns 0 when all values are negative; (C) skips odd indices; (D) uses the length, not an element.",
+    "topic": "4.5",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q27",
+    "subject": "ap_csa",
+    "number": 27,
+    "label": "Analyze Code · 4.4 enhanced-for over objects mutates shared object",
+    "kind": "mcq",
+    "stem": "A `Cell` has a `void light()` mutator and `boolean isOn()`. What is printed?\n```java\nCell[] row = {new Cell(), new Cell(), new Cell()};\nfor (Cell c : row) {\n    c.light();\n}\nSystem.out.println(row[2].isOn());\n```",
+    "options": {
+      "A": "false",
+      "B": "Compile error",
+      "C": "true",
+      "D": "A `NullPointerException` is thrown."
+    },
+    "answer": "C",
+    "explanation": "The enhanced-for copies each **reference**; calling the mutator `light()` changes the shared object. `row[2]` is now on → `true`.",
+    "topic": "4.4",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q28",
+    "subject": "ap_csa",
+    "number": 28,
+    "label": "Develop Code · 4.5 complete the segment — accumulate sum",
+    "kind": "mcq",
+    "stem": "Fill the blank so `sum` ends up holding the total of all elements in `int[] a`.\n```java\nint sum = 0;\nfor (int i = 0; i < a.length; i++) {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "sum = a[i];",
+      "B": "sum += i;",
+      "C": "sum += a[sum];",
+      "D": "sum += a[i];"
+    },
+    "answer": "D",
+    "explanation": "Accumulate by adding each element to the running total: `sum += a[i];`. (A) overwrites, leaving only the last element; (B) adds indices, not values; (C) indexes by the running sum (likely out of bounds).",
+    "topic": "4.5",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q29",
+    "subject": "ap_csa",
+    "number": 29,
+    "label": "Develop Code · 4.13 complete the segment — sum a 2D array",
+    "kind": "mcq",
+    "stem": "Fill the inner-loop body so `total` holds the sum of every element of the rectangular array `int[][] g`.\n```java\nint total = 0;\nfor (int r = 0; r < g.length; r++) {\n    for (int c = 0; c < g[r].length; c++) {\n        // BLANK\n    }\n}\n```",
+    "options": {
+      "A": "total += g[r][c];",
+      "B": "total += g[c][r];",
+      "C": "total += g[r];",
+      "D": "total = g[r][c];"
+    },
+    "answer": "A",
+    "explanation": "Row-major access of every cell uses `g[r][c]` with `r` the row and `c` the column. (B) swaps indices (out of bounds on non-square arrays); (C) adds a row reference (won't compile); (D) overwrites instead of accumulating.",
+    "topic": "4.13",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q30",
+    "subject": "ap_csa",
+    "number": 30,
+    "label": "Develop Code · 4.10 complete the segment — count by condition in an ArrayList",
+    "kind": "mcq",
+    "stem": "Fill the blank so `count` holds how many elements of `ArrayList<Integer> nums` are negative.\n```java\nint count = 0;\nfor (int x : nums) {\n    // BLANK\n}\n```",
+    "options": {
+      "A": "if (x > 0) count++;",
+      "B": "if (x < 0) count++;",
+      "C": "count++;",
+      "D": "if (x < 0) count = 0;"
+    },
+    "answer": "B",
+    "explanation": "Increment only when the element is negative: `if (x < 0) count++;`. (A) counts positives; (C) counts all elements; (D) resets the counter.",
+    "topic": "4.10",
+    "practice": "P2",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q31",
+    "subject": "ap_csa",
+    "number": 31,
+    "label": "Design Code · 4.5/4.10 decompose a design — P1.A",
+    "kind": "mcq",
+    "stem": "You must process a roster of scores to report (1) the average and (2) how many are above that average. Which overall design **best** decomposes the problem?",
+    "options": {
+      "A": "A single loop that tries to compute the average and the above-average count in the same pass, dividing by the count before it is known.",
+      "B": "Sort the scores, then assume the average is the middle element.",
+      "C": "First traverse once to compute the sum and derive the average; then traverse a second time comparing each score to the average and counting those above it.",
+      "D": "Store every score in a separate named variable and compare them by hand with an `if-else-if` chain."
+    },
+    "answer": "C",
+    "explanation": "The average must be **fully known before** any score can be compared to it, so a clean decomposition is **two passes** (compute average, then count above it). (A) compares before the average exists; (B) confuses median with mean; (D) does not generalize to an arbitrary roster size.",
+    "topic": "4.5",
+    "practice": "P1",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q32",
+    "subject": "ap_csa",
+    "number": 32,
+    "label": "Use Computers Responsibly · 4.1 open-source license / IP violation",
+    "kind": "mcq",
+    "stem": "A team ships a product that statically links a library released under a license requiring that **any distributed product including it must publish its own source code**. They distribute the binary but keep all their source closed. This is best described as:",
+    "options": {
+      "A": "Fine, because compiled binaries are exempt from all software licenses.",
+      "B": "An algorithmic-bias problem.",
+      "C": "A runtime exception waiting to happen.",
+      "D": "A violation of the library's license terms (and thus the authors' intellectual-property rights)."
+    },
+    "answer": "D",
+    "explanation": "Open-source licenses impose **conditions**; here the condition (publish source of the combined work) was ignored, violating the license and the authors' **IP** rights. Compiled distribution is still distribution — not exempt (A). (This is a license-obligation scenario, distinct from a plain no-attribution copy.)",
+    "topic": "4.1",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q33",
+    "subject": "ap_csa",
+    "number": 33,
+    "label": "Use Computers Responsibly · 4.1 unintended consequence",
+    "kind": "mcq",
+    "stem": "A social app adds an \"engagement\" feed that always shows whatever keeps users scrolling longest. Months later, users report it mostly surfaces outrage-bait and they feel worse, even though daily-use time rose. Which best describes this?",
+    "options": {
+      "A": "An **unintended consequence**: the system optimized exactly what it was told to (time-on-app) but produced real-world harm the designers did not intend.",
+      "B": "A privacy breach.",
+      "C": "Proof the algorithm is unbiased.",
+      "D": "A syntax error in the ranking code."
+    },
+    "answer": "A",
+    "explanation": "The system worked **as specified** (maximize scrolling) yet caused harm nobody intended — the definition of an **unintended consequence** that responsible designers must anticipate. It is neither a privacy breach (B), evidence of fairness (C), nor a code error (D). (Distinct from the navigation-congestion and training-bias scenarios elsewhere.)",
+    "topic": "4.1",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q34",
+    "subject": "ap_csa",
+    "number": 34,
+    "label": "Use Computers Responsibly · 4.1 data-privacy-vs-utility tradeoff",
+    "kind": "mcq",
+    "stem": "A hospital wants to publish a patient data set so researchers can study a disease, but raw records identify individuals. Which option best balances **research utility against privacy**?",
+    "options": {
+      "A": "Publish the full raw records, since research benefit outweighs everything.",
+      "B": "Release a version with direct identifiers removed/aggregated so trends remain studiable while individuals are not re-identifiable.",
+      "C": "Publish nothing, since any disclosure risk is unacceptable.",
+      "D": "Replace every value with a random number so no real data remains."
+    },
+    "answer": "B",
+    "explanation": "The responsible tradeoff **retains analytic value** while **protecting privacy** by de-identifying/aggregating before release. (A) ignores privacy; (C) ignores utility entirely; (D) destroys the data's usefulness. (A genuine utility-vs-privacy balance, distinct from pure privacy-risk or bias items.)",
+    "topic": "4.1",
+    "practice": "P5",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q35",
+    "subject": "ap_csa",
+    "number": 35,
+    "label": "Analyze Code · 4.6 Scanner nextDouble over a file",
+    "kind": "mcq",
+    "stem": "A file `temps.txt` contains exactly:\n```\n98.6 99.1 100.4\n```\nWhat does this print? (inside a method that `throws IOException`)\n```java\nScanner sc = new Scanner(new File(\"temps.txt\"));\ndouble sum = 0.0;\nwhile (sc.hasNext()) {\n    sum += sc.nextDouble();\n}\nsc.close();\nSystem.out.println(sum);\n```",
+    "options": {
+      "A": "298",
+      "B": "100.4",
+      "C": "298.1",
+      "D": "3"
+    },
+    "answer": "C",
+    "explanation": "`nextDouble()` reads each whitespace-delimited token as a double: 98.6 + 99.1 + 100.4 = `298.1`. The `hasNext()` loop reads to end of file, then `close()`.",
+    "topic": "4.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q36",
+    "subject": "ap_csa",
+    "number": 36,
+    "label": "Analyze Code · 4.6 Scanner nextBoolean over a file",
+    "kind": "mcq",
+    "stem": "A file `flags.txt` contains exactly:\n```\ntrue false true true\n```\nWhat does this print? (inside a method that `throws IOException`)\n```java\nScanner sc = new Scanner(new File(\"flags.txt\"));\nint trues = 0;\nwhile (sc.hasNext()) {\n    if (sc.nextBoolean()) trues++;\n}\nsc.close();\nSystem.out.println(trues);\n```",
+    "options": {
+      "A": "4",
+      "B": "1",
+      "C": "2",
+      "D": "3"
+    },
+    "answer": "D",
+    "explanation": "`nextBoolean()` reads each token as a boolean; three are `true` → `trues = 3`.",
+    "topic": "4.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q37",
+    "subject": "ap_csa",
+    "number": 37,
+    "label": "Analyze Code · 4.6 one nextLine per line",
+    "kind": "mcq",
+    "stem": "A file `names.txt` contains exactly these three lines:\n```\nAda Lovelace\nAlan Turing\nGrace Hopper\n```\nWhat does this print? (inside a method that `throws IOException`)\n```java\nScanner sc = new Scanner(new File(\"names.txt\"));\nint lines = 0;\nwhile (sc.hasNext()) {\n    String whole = sc.nextLine();   // read an entire line, spaces included\n    lines++;\n}\nsc.close();\nSystem.out.println(lines);\n```",
+    "options": {
+      "A": "3",
+      "B": "6",
+      "C": "1",
+      "D": "2"
+    },
+    "answer": "A",
+    "explanation": "Each `nextLine()` consumes one full line (including the internal space), so the loop runs once per line → `lines = 3`. (`nextLine` is used here as the **only** read method on this Scanner — never mixed with token methods.)",
+    "topic": "4.6",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q38",
+    "subject": "ap_csa",
+    "number": 38,
+    "label": "Document Code · 4.2 choosing the right structure — fixed vs growing data set",
+    "kind": "mcq",
+    "stem": "You are collecting an **unknown number** of survey responses one at a time as they arrive, and the count is not known in advance. Which data structure is the **most appropriate** fit, and why?",
+    "options": {
+      "A": "A fixed-size array, because arrays always perform better than any other structure.",
+      "B": "An `ArrayList`, because its size grows as each element is added one at a time, so you need not know the count in advance.",
+      "C": "A single `int` variable, because you only ever need the latest response.",
+      "D": "A 2D array, because all survey data must be rectangular."
+    },
+    "answer": "B",
+    "explanation": "A data set whose size is **not known ahead of time** and grows one element at a time fits an `ArrayList` (mutable size via `add`). A plain array (A) needs its length fixed at creation; a single variable (C) cannot hold many responses; a 2D array (D) imposes an irrelevant rectangular shape.",
+    "topic": "4.2",
+    "practice": "P4",
+    "allowOffSyllabus": false
+  },
+  {
+    "id": "csa-u4-q39",
+    "subject": "ap_csa",
+    "number": 39,
+    "label": "Analyze Code · 4.2 one-at-a-time access — find the single largest value",
+    "kind": "mcq",
+    "stem": "What is printed? (a data set scanned one element at a time)\n```java\nint[] readings = {12, 7, 25, 19, 25, 4};\nint best = readings[0];\nfor (int i = 1; i < readings.length; i++) {\n    if (readings[i] > best) {\n        best = readings[i];\n    }\n}\nSystem.out.println(best);\n```",
+    "options": {
+      "A": "25",
+      "B": "12",
+      "C": "4",
+      "D": "92"
+    },
+    "answer": "A",
+    "explanation": "Accessing the data set one element at a time and keeping the largest seen so far: `best` rises 12 → 25 and stays (the second 25 is not strictly greater) → `25`. (B) is only the seed; (C) is the last element; (D) is the sum, not the max.",
+    "topic": "4.2",
+    "practice": "P3",
+    "allowOffSyllabus": false
+  }
+]

@@ -1,0 +1,479 @@
+[
+  {
+    "topic": "1.1",
+    "subject": "ap_csa",
+    "plain_idea": "Types of errors: syntax (compile-time), logic, run-time, exception; algorithms as step-by-step instructions",
+    "worked_example": "It compiles and runs without crashing but produces wrong output — that is a **logic error**. Syntax errors stop compilation; run-time errors (C, D) throw exceptions during execution.",
+    "common_mistake": "A missing semicolon is caught by the compiler before the program runs — a syntax error. The others are run-time (A) or logic (C, D) errors.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.2",
+    "subject": "ap_csa",
+    "plain_idea": "Three primitive types; variable declaration and assignment; literals; naming rules",
+    "worked_example": "`double rate = 5;` widens the `int` literal `5` to `5.0` — legal. (A) loses precision assigning a `double` to `int`; (B) assigns a String to a boolean; (C) has an illegal identifier (starts with a digit).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.3",
+    "subject": "ap_csa",
+    "plain_idea": "Output with `System.out.print`/`println`; string/char literals and escapes (`\\\"` `\\\\` `\\n`); `+ - * / %`; **integer division truncates**; **modulo** semantics; operator precedence; `int ÷ 0` → `ArithmeticException`",
+    "worked_example": "Integer division `17 / 5 = 3`; `17 % 5 = 2`; concatenated with `\".\"` (string mode once a String appears) → `\"3.2\"`.",
+    "common_mistake": "`*` and `/` bind first: `3*4 = 12`, `10/3 = 3` (integer). Then `2 + 12 - 3 = 11`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.4",
+    "subject": "ap_csa",
+    "plain_idea": "`=` assignment; variable must be initialized before use; `null` as reference literal",
+    "worked_example": "A **local** variable must be explicitly initialized before use (no default); `total = 0;` assigns it. (A) won't compile — locals have no default. (B) redeclares (duplicate). (D) assigns a `double` to an `int` — type mismatch.",
+    "common_mistake": "Printing a `null` reference prints the text `null`; only **calling a method** on `null` would throw `NullPointerException` (B). It does not print an empty line (A), and the call is **not** skipped — `println` runs and emits `null` (C).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.5",
+    "subject": "ap_csa",
+    "plain_idea": "`(int)` / `(double)` casts; truncation vs rounding `(int)(x + 0.5)`; `Integer.MIN_VALUE` / `Integer.MAX_VALUE`; **integer overflow** wrap-around",
+    "worked_example": "`(int)` **truncates** toward zero (it does not round): `9.99 → 9`.",
+    "common_mistake": "`4.5 + 0.5 = 5.0`; `(int)` truncates `5.0 → 5`. The `+0.5`-then-truncate idiom rounds to nearest; the result is an `int`, so no decimal point.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.6",
+    "subject": "ap_csa",
+    "plain_idea": "`+= -= *= /= %=`; post-increment `x++` / post-decrement `x--`; value returned is original",
+    "worked_example": "`x++` returns the **original** value (5) to `y`, then increments `x` to 6. So `x` is 6, `y` is 5.",
+    "common_mistake": "`20 - 3 = 17`; `17 * 2 = 34`; `34 % 7 = 6` (34 = 4·7 + 6).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.7",
+    "subject": "ap_csa",
+    "plain_idea": "Concept of API; library/package import; attributes (state) vs behaviors (methods)",
+    "worked_example": "**Attributes** are the object's state (data); **behaviors** are the methods that act on it. An API documents the behaviors a class offers without exposing implementation.",
+    "common_mistake": "An `import` makes a class from a **package/library** available by its simple name; it does not copy source, download anything, or create an object. The class still has to be instantiated with `new ArrayList<...>()`. (A)/(B) misdescribe how libraries are used; (D) confuses importing with constructing.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.8",
+    "subject": "ap_csa",
+    "plain_idea": "`//`, `/* */`, `/** */`; **preconditions** (assumed true on entry) and **postconditions** (guaranteed on return)",
+    "worked_example": "A **precondition** is what must be true **on entry** — the caller's responsibility. A postcondition is what the method guarantees on return; throwing is not promised unless stated.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.9",
+    "subject": "ap_csa",
+    "plain_idea": "Method signature (name + param types); void vs return-type; args passed **by value** (copy); **overloading** = same name, different params; flow of control through method calls",
+    "worked_example": "Primitives are passed **by value** (a copy). `bump` changes its local copy only; `x` in `main` is still `5`.",
+    "common_mistake": "`digits` returns the digit count: `digits(7)=1`, `digits(88)=2`, `digits(105)=3`, `digits(4)=1`; accumulated `1+2+3+1 = 7`. (A) counts elements; (B) sums the values; (D) miscounts a digit length.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.10",
+    "subject": "ap_csa",
+    "plain_idea": "`static` methods belong to class not instance; call via `ClassName.method()`; dot operator",
+    "worked_example": "A `static` method belongs to the **class**, so it is called `ClassName.method(args)` — `MathUtil.twice(5)`. No object is needed (so C, not A). D omits the argument.",
+    "common_mistake": "A **static** method belongs to the class and is called `ClassName.method(...)` (`Util.triple(4)`); an **instance** method needs an object (`u.label()`). (A) calls an instance method with no object; (B) omits the class name from another class; (C) wrongly claims an object is required for the static call.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.11",
+    "subject": "ap_csa",
+    "plain_idea": "`Math.abs`, `Math.pow`, `Math.sqrt`, `Math.random` [0.0, 1.0); range manipulation: `(int)(Math.random() * n)` → [0, n−1]",
+    "worked_example": "`Math.pow(2, 5)` returns a **double**, `2^5 = 32.0` (printed with the decimal point).",
+    "common_mistake": "`Math.abs(-9) = 9` (int overload). `Math.sqrt(20) ≈ 4.47`, cast to `int` truncates to `4`. `9 + 4 = 13`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.12",
+    "subject": "ap_csa",
+    "plain_idea": "Object vs class distinction; reference variables; **all classes extend `Object`** (inherit `toString`, `equals`)",
+    "worked_example": "All classes extend `Object` (inheriting `toString`/`equals`). A **class** is the blueprint; an **object** is an instance; a reference variable stores the **address** of an object, and `null` means \"no object\".",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.13",
+    "subject": "ap_csa",
+    "plain_idea": "Constructor syntax; `new`; overloaded constructors; object initialization",
+    "worked_example": "`new Point(3, 8)` runs the constructor with `a=3, b=8`, setting `x=3, y=8`. `getX()` returns `x` = `3`.",
+    "common_mistake": "`new` plus the constructor matching a `String` argument: `new Dog(\"Rex\")`. (B) omits `new`; (C) calls the no-arg constructor; (D) treats `Rex` as an undeclared variable.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.14",
+    "subject": "ap_csa",
+    "plain_idea": "Calling instance methods; **`NullPointerException`** when method called on `null` reference",
+    "worked_example": "Calling an instance method (`length()`) on a `null` reference throws `NullPointerException`.",
+    "common_mistake": "A new `String[]` is filled with `null`; `words[0]` is `null`, and calling `.length()` on it throws `NullPointerException`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.15",
+    "subject": "ap_csa",
+    "plain_idea": "Immutable; `+` concatenation; 0-based indexing; `StringIndexOutOfBoundsException`; 8 String methods (see §2)",
+    "worked_example": "Indices 3,4,5,6 (the `to` index 7 is **excluded**). `p(0)r(1)o(2)g(3)r(4)a(5)m(6)` → `gram` (length = 7−3 = 4).",
+    "common_mistake": "`substring(4)` returns from index 4 to the end: characters at 4 (`e`) and 5 (`f`) → `ef`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.1",
+    "subject": "ap_csa",
+    "plain_idea": "Three control flow categories; sequential execution",
+    "worked_example": "**Selection** chooses between paths — `if`/`if-else`. Sequencing = straight-line order (A); repetition = loops (B).",
+    "common_mistake": "Statements run **in sequence**: `2 → 7 → 14`. (C) `7` is the value after only the first assignment — the slip of forgetting that the last line (`x = x * 2`) still runs.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.2",
+    "subject": "ap_csa",
+    "plain_idea": "`== != < > <= >=`; comparing **primitives** (value) vs **references** (address); do not use `==` on Strings",
+    "worked_example": "For **primitives**, `==` compares values; `3 == 3` is `true`. (`==` is the value test for primitives — only for *objects* does it compare references.)",
+    "common_mistake": "`6 < 9` is `true`; `6 >= 9` is `false`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.3",
+    "subject": "ap_csa",
+    "plain_idea": "Syntax; one- and two-way selection; boolean test",
+    "worked_example": "`-4 >= 0` is `false`, so the `else` runs → `neg`.",
+    "common_mistake": "`n % 2 == 0` is true iff `n` is divisible by 2 (even). (A) tests `n/2` being 0 (only −1..1); (B) tests odd; (C) only `n` equal to 2.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.4",
+    "subject": "ap_csa",
+    "plain_idea": "Multi-way selection; boundary conditions; nested `if` inside `if-else`",
+    "worked_example": "`5 > 10` false; `5 > 3` true → prints `mid` and the chain **stops** (later branches are skipped even though `5 > 0` is also true).",
+    "common_mistake": "The `else` binds to the **nearest** `if` (`x > 10`). `x > 5` true, enter; `x > 10` false → the inner `else` runs → `mid`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.5",
+    "subject": "ap_csa",
+    "plain_idea": "Logical NOT/AND/OR; precedence (`!` > `&&` > `||`); **short-circuit evaluation** stops early",
+    "worked_example": "`y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.",
+    "common_mistake": "`true || ...` short-circuits — once the left side is `true`, the right operand `check()` is **never called**. (A) is the count if you think `||` always evaluates the right side; (B) double-counts a re-evaluation when the body runs; (C) imagines the `if` re-polls `check()` until it settles.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.6",
+    "subject": "ap_csa",
+    "plain_idea": "Truth tables; **De Morgan's laws** (`!(A&&B)` = `(!A||!B)`); `==` compares references; use `.equals()` for String/object content; `null` check",
+    "worked_example": "De Morgan: `!(A && B)` = `!A || !B`. `!(x>0)` = `x<=0`, `!(x<10)` = `x>=10`, joined by `||`.",
+    "common_mistake": "`.equals` compares **contents** → `true`; `==` compares **references**, and `new String(...)` is a distinct object → `false`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.7",
+    "subject": "ap_csa",
+    "plain_idea": "`while` syntax; loop body; infinite loop risk; **off-by-one** boundary errors",
+    "worked_example": "n: 1→2→4→8→16→32→64→128, one `count++` per step. The loop multiplies 7 times (128 is the first value ≥ 100). `count = 7`.",
+    "common_mistake": "`i` takes 0,1,2,3,4,5 (six values) before `i = 6` fails `i <= 5`. Six stars. (Using `<` would give 5 — the classic off-by-one.)",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.8",
+    "subject": "ap_csa",
+    "plain_idea": "`for` loop anatomy; converting `for` ↔ `while`; loop variable scope",
+    "worked_example": "i = 2,4,6,8,10; sum = 2+4+6+8+10 = `30`.",
+    "common_mistake": "k = 5,4,3,2,1; total = 5+4+3+2+1 = `15`. The decrementing `for` is equivalent to a `while` with `k--` at the bottom.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.9",
+    "subject": "ap_csa",
+    "plain_idea": "Divisibility test, digit extraction, count occurrences, find min/max, accumulate sum/average",
+    "worked_example": "Peels off last digits: 9, 2, 7, 4 → sum = 9+2+7+4 = `22`.",
+    "common_mistake": "Multiples of 4 in 1..30: 4,8,12,16,20,24,28 → `7`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.10",
+    "subject": "ap_csa",
+    "plain_idea": "Traverse with `substring`; count substrings; reverse a string; **substring property** (len = to − from)",
+    "worked_example": "Each char (`s.substring(i, i+1)`) is prepended, reversing the string: `olleh`. (This is the in-syllabus reverse algorithm; there is no `charAt`.)",
+    "common_mistake": "`s` has length 3 (valid indices 0..2). `substring(2, 4)` needs index up to 3, which is out of range → `StringIndexOutOfBoundsException`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.11",
+    "subject": "ap_csa",
+    "plain_idea": "Nested iteration over 2D-like structures; tracing row-column patterns",
+    "worked_example": "Inner runs i+1 times: 1+2+3+4+5 = `15` (the inner condition is `j <= i`).",
+    "common_mistake": "Row r prints `1..r`: row1 `1`, row2 `12`, row3 `123` (each on its own line).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.12",
+    "subject": "ap_csa",
+    "plain_idea": "Count how many times a statement executes; compare loop structures (linear vs quadratic); no Big-O notation required",
+    "worked_example": "Outer 6 × inner 6 = `36` executions (quadratic — n²). No Big-O needed, just the count.",
+    "common_mistake": "Loop A runs `step()` `n` times (linear); loop B runs it `n × n = n²` times (quadratic). Sequential blocks add: `n + n²`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.1",
+    "subject": "ap_csa",
+    "plain_idea": "Data abstraction vs procedural abstraction; instance var vs class var; **code reuse via methods + parameters**",
+    "worked_example": "Wrapping a repeated computation in a parameterized method is **procedural abstraction**, enabling **code reuse**. Data abstraction hides *data* representation; this hides a *process*.",
+    "common_mistake": "Per-object state → **instance** variable (`gpa`); state shared by all objects of the class → **`static` class** variable (`name`).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.2",
+    "subject": "ap_csa",
+    "plain_idea": "**Reliability, unintended consequences, harm**; intellectual property; open-source permissions",
+    "worked_example": "Training on a non-representative data set causes **algorithmic bias** — the model learns and amplifies the skew (a data-fitness/ethics issue). (A) misframes it as privacy and (B) as overfitting — but more of the same skewed data deepens the bias; (D) is not the central concern.",
+    "common_mistake": "Open-source licenses set **conditions** (here, attribution); ignoring them violates the license and the author's **intellectual-property** rights. (A) misstates copyright — public code is still copyrighted; (B)/(C) are unrelated framings. \"Open source\" does not mean \"no rules\".",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.3",
+    "subject": "ap_csa",
+    "plain_idea": "Classes and constructors always `public`; instance variables `private`; hiding implementation details",
+    "worked_example": "**Encapsulation:** hide data by making instance variables `private`, and expose the type/constructor as `public`. Access to the data goes through accessor/mutator methods.",
+    "common_mistake": "`balance` is `private`, so `a.balance` is inaccessible **outside** `Account` — compile error. The accessor `getBalance()` is the legal route.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.4",
+    "subject": "ap_csa",
+    "plain_idea": "Constructors initialize **all** instance vars; **defensive copy of mutable parameters**; default constructor; default values (`0`, `0.0`, `false`, `null`)",
+    "worked_example": "With **no defensive copy**, the field aliases `arr`; mutating `arr[0]` changes the object's data too → prints `999`. (A defensive copy in the constructor would have printed `10`.)",
+    "common_mistake": "A constructor (no return type, class name) must initialize **all** instance variables. (A) leaves `height` at default 0; (B) has `void` so it is a *method*, not a constructor; (C) assigns backwards (fields stay 0).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.5",
+    "subject": "ap_csa",
+    "plain_idea": "Return-by-value; **accessor** = non-void (returns a value without changing state); **mutator** = void (modifies state); primitive args copied",
+    "worked_example": "`bump()` runs once per even value: 2, 4, 6 → count = 3. Then `get() * 10 + data.length = 3*10 + 5 = 35`. (A) drops the `+ data.length`; (C) counts all five values as bumps then drops the length; (B) over-counts the evens.",
+    "common_mistake": "**Accessor** = non-`void`, reports state without modifying it; **mutator** = typically `void`, changes state. (A) reverses them.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.6",
+    "subject": "ap_csa",
+    "plain_idea": "**Object-reference params create aliases**; mutating through a parameter changes the original; returning a reference; **`private` members accessible only within the same class**",
+    "worked_example": "The parameter is an **alias** to the same object. Mutating it (`add(99)`) through the parameter changes the caller's list → `[1, 99]`.",
+    "common_mistake": "*Model answer:* Returning the field reference hands the caller an **alias** to the same array; mutating `r[0]` mutates `ids[0]` too. Returning a defensive copy would have protected the object's data.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.7",
+    "subject": "ap_csa",
+    "plain_idea": "Class (static) vars/methods vs instance; rules for calling static from instance and vice versa; `final` = cannot reassign",
+    "worked_example": "The `static` field `made` is **shared** by the whole class; each constructor call increments it. Three objects → `3`. `count()` is `static`, called on the class.",
+    "common_mistake": "A `final` variable cannot be **reassigned** after initialization; `LIMIT = 200;` (line 3) is illegal. Reading it (line 2) is fine.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.8",
+    "subject": "ap_csa",
+    "plain_idea": "Local vars and params have no access modifier; **shadowing** when a local name matches an instance var",
+    "worked_example": "The local parameter `size` **shadows** the field. `size = size` reassigns the parameter to itself; the field is untouched → still `10`. (`this.size = size` would have fixed it.)",
+    "common_mistake": "The local `seconds` in `reset()` **shadows** the field but is a separate variable; setting it to 0 does not touch the field. `get()` still returns the field `60`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.9",
+    "subject": "ap_csa",
+    "plain_idea": "`this` refers to the current object; disambiguation from shadowed fields; **no `this` in static context**",
+    "worked_example": "`this.size` is the **field**; the bare `size` is the parameter. `this.size = size` copies the parameter into the field. (A) assigns the parameter to itself; (B)/(C) leave the field at default.",
+    "common_mistake": "`this` is the **current object** reference; a `static` method belongs to the class, not an object, so it has **no `this`**. It is only needed to disambiguate shadowed members otherwise.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.1",
+    "subject": "ap_csa",
+    "plain_idea": "Privacy risks of data collection; **algorithmic bias**; fitness of data for a purpose",
+    "worked_example": "Collecting fine-grained personal data (location) and keeping it indefinitely is a classic **privacy** risk — the central data-collection ethics concern. (B) misframes it as bias, (C) as performance, and (D) as a coding bug — none is the core issue.",
+    "common_mistake": "**Fitness of data for a purpose**: biased historical data makes the model reproduce that bias. (A) misframes it as privacy; (C) as overfitting — but more of the same skewed data deepens the bias; (D) as performance.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.2",
+    "subject": "ap_csa",
+    "plain_idea": "Concept of a data set; accessing elements sequentially",
+    "worked_example": "A data set is processed by accessing elements **one at a time** — by index or sequentially. None of the structures require simultaneous, reverse-only, or sorted access.",
+    "common_mistake": "Sequential one-at-a-time access summing every element: 3+1+4+1+5 = `14`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.3",
+    "subject": "ap_csa",
+    "plain_idea": "`new type[n]`; **`arr.length` is an attribute (not a method)**; default values; initializer list `{...}`; `[]` syntax; valid indices 0..length−1; `ArrayIndexOutOfBoundsException`",
+    "worked_example": "Valid indices are 0..3, but `i <= arr.length` lets `i` reach 4, so `arr[4]` throws `ArrayIndexOutOfBoundsException` (off-by-one). Note `arr.length` is an **attribute** — no parentheses.",
+    "common_mistake": "`new` zero-fills arrays with type defaults: `int` → `0`, `boolean` → `false`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.4",
+    "subject": "ap_csa",
+    "plain_idea": "Index-based `for`; **enhanced-for copies the element (primitive copy; object reference copy)**; method call on an object element mutates the object",
+    "worked_example": "Even elements: 4, 8, 16, 42 → 4+8+16+42 = `70` (15 and 23 are odd, skipped).",
+    "common_mistake": "The enhanced-for variable `x` is a **copy** of each primitive element; reassigning `x` does **not** change the array. Output unchanged: `1 2 3`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.5",
+    "subject": "ap_csa",
+    "plain_idea": "Max/min, sum/average, count, linear search, reverse in place, shift elements, copy array, replace elements, sort",
+    "worked_example": "Swaps ends inward (i = 0,1; the middle element index 2 stays): `{5,4,3,2,1}` → prints `54321`.",
+    "common_mistake": "Each element copies the one to its right; the last element is never overwritten, so it duplicates: `{20,30,40,40}`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.6",
+    "subject": "ap_csa",
+    "plain_idea": "`File(String)` + `Scanner(File)`; `throws IOException`; `java.io` import; **`hasNext()` loop**; `split(String del)` to parse columns; `close()`; no keyboard `Scanner`; no `nextLine` mixed with token methods; no regex in `split`",
+    "worked_example": "Two tokens `Ann,17` and `Ben,16`; `split(\",\")[1]` is the age; `Integer.parseInt` → 17 and 16; total = `33`. The `hasNext()` loop reads to end of file, then `close()`.",
+    "common_mistake": "Reads token pairs: (\"Amy\",90), (\"Bo\",75); total = 90 + 75 = `165`. `hasNext()` controls the loop; `close()` at the end. (No `nextLine` mixing.)",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.7",
+    "subject": "ap_csa",
+    "plain_idea": "`Integer` / `Double` are **immutable**; **autoboxing** (primitive → wrapper) / **unboxing** (wrapper → primitive); `Integer.parseInt(String)`, `Double.parseDouble(String)`",
+    "worked_example": "`parseInt(\"42\") = 42`; `42 + 8 = 50`; the `int` 50 **autoboxes** into the `Integer boxed`, printed as `50`.",
+    "common_mistake": "`3.5 + 1.5 = 5.0`, printed as a double with the decimal point.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.8",
+    "subject": "ap_csa",
+    "plain_idea": "`ArrayList<E>`; mutable size; `java.util` import; 6 methods (see §2); valid indices 0..size−1",
+    "worked_example": "`[5]` → `[5,8]` → `add(1,6)` inserts at index 1 shifting right → `[5,6,8]` → `set(0,9)` replaces index 0 → `[9,6,8]`.",
+    "common_mistake": "`set(1,\"z\")` returns the **old** element `\"b\"` and replaces it; size stays 3; `get(1)` is now `\"z\"`. Output `b 3 z`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.9",
+    "subject": "ap_csa",
+    "plain_idea": "Index-based and enhanced-for traversal; **delete-while-traversing: iterate backwards or use index adjustment**; `IndexOutOfBoundsException`; **enhanced-for + structural modify → `ConcurrentModificationException`**",
+    "worked_example": "`remove(1)` deletes `\"q\"` and shifts left → `[\"p\",\"r\"]`; `get(1)` is now `\"r\"`, `size()` is 2.",
+    "common_mistake": "Forward removal with `i++` **skips** the element shifted into the removed slot. Trace from `[2,2,2,5]`: i=0 remove → `[2,2,5]` (i→1); i=1 element is `2` remove → `[2,5]` (i→2); i=2 size is 2 so the loop ends. Left with `[2,5]` — two `2`s survived. (The classic skip bug; reverse iteration would fix it.)",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.10",
+    "subject": "ap_csa",
+    "plain_idea": "9 standard algorithms + insert-in-order + delete-by-condition; multi-structure simultaneous traversal",
+    "worked_example": "Elements > 5: 7 and 10 → count = `2` (4 and 3 are not). Enhanced-for unboxes each `Integer`.",
+    "common_mistake": "Pairwise: 2·4 + 5·1 + 3·2 = 8 + 5 + 6 = `19` (parallel traversal of two arrays).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.11",
+    "subject": "ap_csa",
+    "plain_idea": "Array-of-arrays; `[row][col]` syntax; `a.length` = number of rows; `a[0].length` = number of columns; **no jagged arrays**",
+    "worked_example": "`g.length` = number of **rows** = 2; `g[0].length` = number of **columns** = 4.",
+    "common_mistake": "`new int[3][5]` is 3 rows × 5 columns: `m.length` = rows = 3, `m[0].length` = columns = 5. Rectangular, not jagged.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.12",
+    "subject": "ap_csa",
+    "plain_idea": "Nested loops for row-major / col-major / custom order; **enhanced-for outer variable = a 1D array (one row)**",
+    "worked_example": "All six elements: 1+2+3+4+5+6 = `21`.",
+    "common_mistake": "Fixes column index 2, walks the rows: `g[0][2] + g[1][2] = 3 + 6 = 9`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.13",
+    "subject": "ap_csa",
+    "plain_idea": "Over whole array, individual row, individual column, or sub-section; sum, count, find max/min in 2D",
+    "worked_example": "Scans every cell, tracking the largest: max = `9`.",
+    "common_mistake": "Count of 1s: row0 has 1, row1 has 2, row2 has 1 → `4`.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.14",
+    "subject": "ap_csa",
+    "plain_idea": "Sequential scan from either end; returning index or -1 / element; 2D = linear search per row",
+    "worked_example": "Linear search from the front stops at the **first** match: `a[1] == 3` → returns index `1`.",
+    "common_mistake": "*Model answer:* Binary search assumes the array is **sorted** (ascending here); it halves the search space by comparing against the middle, which is only valid on ordered data. Duplicates, sign of `target`, and length being a power of 2 are irrelevant to correctness.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.15",
+    "subject": "ap_csa",
+    "plain_idea": "Selection: find min of unsorted segment, swap to front; insertion: insert next element into sorted prefix; **trace-only — writing sort code is out of scope**",
+    "worked_example": "Pass 1 finds the min (1 at index 3) and swaps it with index 0: `{1, 2, 9, 5, 7}` (5 and 1 swap; the rest stay).",
+    "common_mistake": "The prefix `{4}` is sorted; insert `3` before `4` → `{3, 4, 5, 1}` (indices 2 and 3 not processed yet).",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.16",
+    "subject": "ap_csa",
+    "plain_idea": "Base case; recursive case; each call has its own local variables; trace the call stack; **writing recursive code is out of scope**",
+    "worked_example": "`4 + (3 + (2 + (1 + (0)))) = 4+3+2+1 = 10` (base case at n≤0 returns 0).",
+    "common_mistake": "Prints **before** recursing, decreasing: `3 2 1 ` then `f(0)` returns without printing.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.17",
+    "subject": "ap_csa",
+    "plain_idea": "Binary search: sorted array, halve the search space each step; merge sort: recursive divide-and-merge; both **trace-only**",
+    "worked_example": "First `mid = (0+6)/2 = 3`; `a[3] = 7 < 11` → search the right half, `low = 4`. Next `mid = (4+6)/2 = 5`; `a[5] == 11` → found. The probed indices are `3, 5` (two probes). Binary search halves the space each step, not a linear scan.",
+    "common_mistake": "mid=2 (`a[2]=6`, 5<6 → high=1); mid=0 (`a[0]=2`, 5>2 → low=1); mid=1 (`a[1]=4`, 5>4 → low=2). Now low>high → stop. **3** comparisons.",
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "name": "ai-tutor-content",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Compiles the Markdown question banks into validated JSON for the tutor Worker.",
+  "scripts": {
+    "build": "node tools/build/build.js",
+    "test": "node --test tools/build/tests/*.test.js"
+  }
+}
