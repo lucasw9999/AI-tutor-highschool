@@ -21,8 +21,15 @@ export const GAP_THRESHOLD = 2
  *
  * Counts DISTINCT items missed, not total misses, so failing the same question
  * three times in a row does not look like broader confusion than it is.
+ *
+ * `since` is a per-topic resolution timestamp (topic -> ISO string): misses at or
+ * before it have already been taught, re-tested cold and cleared, so they are
+ * spent evidence. Without it, scoring the whole history re-opens a gap the moment
+ * it closes and re-delivers the identical lesson forever, and the student never
+ * gets another question on the topic he just proved he understood.
  */
-export function detectGaps(attempts, { threshold = GAP_THRESHOLD } = {}) {
+export function detectGaps(attempts, { threshold = GAP_THRESHOLD, since = null } = {}) {
+  const resolvedAt = (topic) => since?.get?.(topic) ?? since?.[topic] ?? null
   const missedItems = new Map()
   const hinted = new Map()
   for (const a of attempts) {
@@ -30,6 +37,8 @@ export function detectGaps(attempts, { threshold = GAP_THRESHOLD } = {}) {
     // An ungraded attempt is not a miss. Treating one as evidence of confusion
     // would open a concept gap the student never demonstrated.
     if (!isServerGraded(a)) continue
+    const resolved = resolvedAt(a.topic)
+    if (resolved && new Date(a.ts) <= new Date(resolved)) continue
     if (!missedItems.has(a.topic)) missedItems.set(a.topic, new Set())
     if (!a.correct) missedItems.get(a.topic).add(a.item_id)
     if (a.hints_used) hinted.set(a.topic, (hinted.get(a.topic) ?? 0) + 1)
