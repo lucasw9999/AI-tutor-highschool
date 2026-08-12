@@ -54,7 +54,7 @@ in this repo), or **judgement** (my choice — a reasonable one, but move it if 
 | Date | Milestone | Derived / fact / judgement |
 |---|---|---|
 | **Sat 15 Aug 2026** | **Phase 0 — sit `diagnostic.md`.** ~30 min. Sets your starting unit in `mastery-tracker.md`. | judgement |
-| **Fri 2 Oct 2026** | Registration **preferred** deadline. +$40 per exam after this. | fact (verified 12 Aug 2026) |
+| **Fri 2 Oct 2026** | Registration **preferred** deadline. **Missing it costs nothing** — the $40/exam late fee starts only after 13 Nov. | fact (verified 12 Aug 2026) |
 | First week of school, **Sept 2026** | **Get the AP Classroom join code** from the Precalc teacher. Non-compressible — see the hard-deadline table. | derived + fact |
 | **Fri 13 Nov 2026** | Registration **final** deadline, 11:59 PM ET. One order must cover **both** Precalc and CSA. | fact (verified 12 Aug 2026) |
 | **Fri 22 Jan 2027** | Accommodations deadline, if ever needed. | fact (verified 12 Aug 2026) |
@@ -354,7 +354,7 @@ Missing any of these is not fixable by studying. Each one needs an adult, a scho
 | Deadline | Date | Why it's hard |
 |---|---|---|
 | **AP Classroom join code** | First week of school, **Sept 2026** | `require_official_mock: true`, and the only **full-length** official Precalc paper is the AP Classroom Practice Exam, which is gated to authorized educators. The released 2024/2025/2026 materials are **Section II only** — real, useful, and unable to produce a composite. **No join code → no official mock → no qualifying window → readiness pinned at 0 regardless of every score.** Get the code from the AP Precalc teacher or the AP Coordinator. |
-| **Register to sit the exam** | Preferred **Fri 2 Oct 2026**; final **Fri 13 Nov 2026, 11:59 PM ET** (+$40/exam after 2 Oct) | Only a school's AP Coordinator can order. **One order must cover both AP Precalculus and AP CSA — confirm both are on it.** Schools set earlier local deadlines. |
+| **Register to sit the exam** | Preferred **Fri 2 Oct 2026**; final **Fri 13 Nov 2026, 11:59 PM ET** (+$40/exam only *after 13 Nov*, not after 2 Oct) | Only a school's AP Coordinator can order. **One order must cover both AP Precalculus and AP CSA — confirm both are on it.** Schools set earlier local deadlines. |
 | **Precalc item bank complete** | Target **Sun 31 Jan 2027** (judgement) · **hard Mon 15 Mar 2027** (derived) | See the top of this file. Past 15 March, coverage of 36 topics plus a fourth logged sitting no longer fits before the 26 April window start. |
 | **Accommodations request** | **Fri 22 Jan 2027** | Only if ever needed. |
 | **SAT registration** | **Fri 19 Feb 2027** for the Sat 6 Mar 2027 sitting | Not a Precalc deadline, but it sits in the same calendar and the May SAT is unusable — it lands 10 days before Precalc. |

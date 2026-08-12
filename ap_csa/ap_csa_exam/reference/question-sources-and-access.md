@@ -130,11 +130,11 @@ Sitting the AP exam requires being registered through an AP-administering school
 
 > **The real May 2027 deadline structure** (College Board AP school-year timeline, verified 12 August 2026):
 > - **October 2, 2026** — *preferred* deadline to submit AP exam orders.
-> - **November 13, 2026, 11:59 PM ET** — **final** deadline. Orders after October 2 carry **an additional $40 per exam late order fee**.
+> - **November 13, 2026, 11:59 PM ET** — **final** deadline. Ordering any time up to here carries **no extra charge**. The **$40 per exam late order fee** (on top of the base fee) applies only to exams ordered **between November 14, 2026 and March 12, 2027, 11:59 p.m. ET**.
 > - **January 22, 2027** — deadline for the school's SSD coordinator to submit accommodations requests (only if accommodations are ever needed).
 > - **March 12, 2027, 11:59 PM ET** — deadline to submit spring course orders and *fall order changes*.
 >
-> **So missing October 2 is not fatal — there is a late path, at $40 per exam.** (An earlier version of this line claimed there was none; that was wrong.) The one thing to do: **before Oct 2, 2026, confirm with your school's AP Coordinator that BOTH exams — AP Computer Science A *and* AP Precalculus — are on the school's order.** Schools set their own earlier local deadlines, so ask in the first week of school. See `../README.md` for the exam-only-section path if the school does not administer AP CSA.
+> **So missing October 2 costs nothing — the entire Oct 2 → Nov 13 window is free.** (Two earlier versions of this line were wrong in opposite directions: the first said there was no late path at all; the second priced the free window at $40 per exam. Both were wrong. The late fee begins November 14.) The one thing to do: **before Oct 2, 2026, confirm with your school's AP Coordinator that BOTH exams — AP Computer Science A *and* AP Precalculus — are on the school's order.** Schools set their own earlier local deadlines, so ask in the first week of school. See `../README.md` for the exam-only-section path if the school does not administer AP CSA.
 >
 > **Exam dates and sessions** (verified 12 August 2026): College Board now labels sittings **Session 1 / Session 2**, "replacing the former morning and afternoon designations," "to prevent the disclosure of secure exam content across time zones." In the lower 48 the start times are unchanged: **Session 1 = 8 a.m. local, Session 2 = 12 p.m. local.** AP Precalculus is **Session 1, Tuesday 11 May 2027**; AP CSA is **Session 2, Wednesday 12 May 2027** — about **30 hours apart, not the ~24 a "back-to-back" reading implies.** Confirm the exact per-school start time with the AP Coordinator (College Board says a per-school start-time lookup tool is "coming this fall").
 
