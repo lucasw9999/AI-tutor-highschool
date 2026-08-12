@@ -20,16 +20,33 @@ const SUBJECTS = ['ap_csa', 'ap_precalc']
 
 /**
  * Precalc practice items live in a trailing "practice set" section, outside any
- * concept section, so the markdown does not say which topic each one tests.
- * Rather than guess a mapping and present it as fact, each item is bucketed at
- * `<unit>.0` — an explicit "unit level, not yet topic-tagged" marker. Per-unit
- * readiness works immediately; topic-level teaching for Precalc waits for real
- * tagging, and the build reports exactly how many items are waiting.
+ * concept section, so the markdown need not say which topic each one tests.
+ * Rather than guess a mapping and present it as fact, an item with no `topic:`
+ * tag is bucketed at `<unit>.0` — an explicit "unit level, not yet topic-tagged"
+ * marker. Per-unit readiness works immediately; topic-level teaching for that
+ * item waits for real tagging, and the build reports how many are waiting.
  */
 const UNTAGGED = (unit) => `${unit}.0`
 
+/**
+ * A bucket topic for each unit that still has an item sitting in one — and for no
+ * other unit.
+ *
+ * The "and for no other unit" is the whole point, and its absence was a permanent
+ * cap on Precalc coverage. This used to declare a bucket for every unit that had
+ * ANY item, whether or not an item still landed in the bucket, and mark the units
+ * 1-3 buckets tested_on_exam. That was invisible while every Precalc item was
+ * untagged. Once the packs carried real topic tags the buckets emptied, and 1.0,
+ * 2.0 and 3.0 became three exam-tested topics that NO item could ever reach —
+ * while the coverage criterion requires every exam-tested topic to have been
+ * attempted. Precalc coverage was capped below 100% by construction, forever, and
+ * the build blamed the cap on missing content when it had minted the gap itself.
+ *
+ * A bucket that does hold items is unchanged: same id, same name, same exam
+ * flag, so an untagged item still gets a unit-level home that counts.
+ */
 function precalcUnitBuckets(items) {
-  const units = [...new Set(items.map((i) => i.unit))].sort()
+  const units = [...new Set(items.filter((i) => i.topic === UNTAGGED(i.unit)).map((i) => i.unit))].sort()
   return units.map((unit) => ({
     id: UNTAGGED(unit),
     subject: 'ap_precalc',
