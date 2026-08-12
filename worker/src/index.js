@@ -1,5 +1,9 @@
 // Worker entry point: routing, auth, and JSON shaping. All logic lives in the
 // modules this imports, so it can be tested without a network or a database.
+//
+// Every route is a GET and none reads a request body. ChatGPT prompts once per
+// domain and then honours "Always allow" — see the note in api.js for what was
+// actually measured versus what was originally assumed.
 
 import { makeDb } from './db.js'
 import {
