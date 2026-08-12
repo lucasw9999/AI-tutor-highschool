@@ -1,6 +1,6 @@
 # Grammar & Mechanics — for the cumulative grammar exams + clean essays
 
-**Why this matters for your grade:** In Mrs. Pagtakhan's class, the cumulative grammar exams test these exact rules directly, and every analytical essay (Caesar eulogy, *Night*, *Book Thief*, *Kite Runner*, *Life of Pi*) loses easy points to comma splices, wordiness, and apostrophe slips. Master the ten things below and you protect your grade on two fronts at once: you ace the grammar tests *and* your essays read clean, which nudges borderline grades up.
+**Why this matters for your grade:** In Mrs. Pagtakhan's class, the cumulative grammar exams test these exact rules directly, and every analytical essay (Caesar eulogy, *Night*, *Book Thief*, *Kite Runner*, *Life of Pi*) loses easy points to comma splices, wordiness, and apostrophe slips. Master the twelve things below and you protect your grade on two fronts at once: you ace the grammar tests *and* your essays read clean, which nudges borderline grades up.
 
 **How to use this:** Don't read it like a textbook. Cover the answers, hit the practice items, then check yourself. Re-drill anything you miss the night before an exam. Each section = the rule, the traps, wrong-vs-right examples, then drills with answers.
 
@@ -383,7 +383,106 @@ Before any essay goes in, do one editing pass where you **R**emove, **I**mprove,
 
 ---
 
-## 10. Final Mixed Drill (exam simulation)
+## 10. Subject–Verb Agreement
+
+**The rule:** A verb must match its subject in number — singular subject → singular verb, plural subject → plural verb. The trap is almost never the obvious case; it's what sits *between* the subject and the verb.
+
+**Common errors**
+- **Prepositional-phrase distractor:** the noun right before the verb isn't the real subject. *Each of the senators* **were** *afraid.* ✗ → "each" is singular, not "senators" → **was**.
+- **Compound subject with "and":** normally plural. *Brutus and Cassius* **plans** *the murder.* ✗ → **plan**.
+- **"Or"/"nor" subjects:** the verb agrees with the subject **closer to it**. *Neither the soldiers nor Brutus* **know** *the outcome.* ✗ → agree with "Brutus" (closer) → **knows**.
+- **Collective nouns:** singular when acting as one unit. *The crowd* **were** *chanting.* ✗ (one crowd, one action) → **was** *chanting.*
+- **Indefinite pronouns that are ALWAYS singular:** *each, either, neither, everyone, everybody, someone, nobody, anyone.* → *Everyone* **have** *a theory.* ✗ → **has**.
+
+**Examples**
+- Wrong: *The list of conspirators **were** long.* → Right: *The list of conspirators **was** long.* ("list" is the subject, not "conspirators")
+- Wrong: *Neither Portia nor the servants **knows** the truth.* → Right: *Neither Portia nor the servants **know** the truth.* ("servants," the closer noun, is plural)
+- Right: *The senate **votes** as one body on the matter.* (collective noun, singular verb)
+
+**Practice (choose the correct verb):**
+1. Each of the conspirators (has / have) a reason to fear Caesar.
+2. Brutus, along with Cassius, (plan / plans) the assassination. *(tricky — "along with" is not "and")*
+3. Either the omens or Calpurnia's dream (convinces / convince) Caesar to almost stay home.
+4. The audience (watches / watch) as one when Antony reveals the will.
+5. Everybody in the crowd (believe / believes) Antony by the end of the speech.
+
+<details><summary>Answers</summary>
+
+1. **has** ("each" is singular; "of the conspirators" is a distractor phrase)
+2. **plans** ("along with Cassius" is a parenthetical, not a true compound subject — the true subject is singular "Brutus")
+3. **convinces** (with "either/or," the verb agrees with the closer subject — "Calpurnia's dream," singular)
+4. **watches** ("audience" is a collective noun acting as one unit)
+5. **believes** ("everybody" is always singular)
+</details>
+
+---
+
+## 11. Pronoun–Antecedent Agreement
+
+**The rule:** A pronoun (he, she, it, they, their, its...) must match its **antecedent** (the noun it replaces) in number *and* — for people — logically in the way it refers to them. The most common essay trap is a **singular indefinite antecedent paired with a plural pronoun.**
+
+**Common errors**
+- **Singular indefinite antecedents treated as plural:** *everyone, each, either, neither, a person, the reader, the author* are singular — pairing them with "they/their" is the #1 trap in analytical writing. *Each character reveals **their** flaw.* (Traditionally singular-required: **his or her** flaw, or better, rewrite the sentence to avoid the issue: *The characters reveal their flaws.*)
+- **Ambiguous antecedent:** the pronoun could point to more than one noun. *When Brutus met Cassius, **he** already suspected treachery.* ✗ (who suspected — Brutus or Cassius?) → name the person: *When Brutus met Cassius, Cassius already suspected treachery.*
+- **Collective noun mismatch:** *The senate raised **their** hands.* ✗ (one body) → **its** hands (or rewrite: *The senators raised their hands.*)
+- **"Which/who/that" trap:** use *who* for people, *which/that* for things. *The soldier which died* ✗ → *The soldier **who** died.*
+
+**The cleanest fix for the #1 trap:** don't force "he/she" or clunky "he or she" — instead make the antecedent **plural** so "they" is correct, or rewrite around the pronoun entirely.
+
+**Examples**
+- Wrong: *Every senator feared for **their** life.* → Right (plural fix): *All the senators feared for **their** lives.* → Right (singular fix): *Every senator feared for **his** life.* (only if the group is known to be all male, as in the play's senate)
+- Wrong: *The reader forms **their** own opinion of Brutus.* → Right: *Readers form **their** own opinions of Brutus.*
+- Ambiguous: *Antony told Octavius **he** would rule Rome.* → Clear: *Antony told Octavius that Octavius would rule Rome.*
+
+**Practice (fix the agreement or ambiguity error):**
+1. Each of the wives senses danger, but their husbands ignore it.
+2. Cassius is the conspirator which convinces Brutus to join the plot.
+3. When Amir betrays Hassan, he never fully recovers. *(who is "he"? fix the ambiguity)*
+4. A tragic hero is undone by their own flaw.
+5. The crew debated among themselves before it made a decision. *(collective noun check)*
+
+<details><summary>Answers</summary>
+
+1. *Each of the wives senses danger, but **her husband** ignores it.* (keep it singular to match "each" — or rewrite: *The wives sense danger, but their husbands ignore it.*)
+2. *Cassius is the conspirator **who** convinces Brutus to join the plot.* ("who" for a person, not "which")
+3. *When Amir betrays Hassan, **Amir** never fully recovers.* (name the subject — "he" was ambiguous)
+4. *A tragic hero is undone by **his or her** own flaw.* (or rewrite plural: *Tragic heroes are undone by their own flaws.*)
+5. *The crew debated among themselves before **the crew** made a decision.* (collective noun acting as one unit takes a singular pronoun — "it" is already correct; the fix is on the verb form if anything, not the pronoun)
+</details>
+
+---
+
+## 12. Verb-Tense Consistency
+
+**The rule:** Pick one tense for your analysis — literary analysis is conventionally written in the **literary present** (Brutus *kills* Caesar, not *killed*) — and stay in it. Don't drift between past and present within the same discussion unless the timeline genuinely requires it (e.g., describing something that happened *before* the main story's "present").
+
+**Common errors**
+- **Random tense-shifting inside one sentence/paragraph:** *Brutus **kills** Caesar and then **fled** to his tent.* ✗ (present → past for no reason) → *Brutus **kills** Caesar and then **flees** to his tent.*
+- **Summarizing the plot in past tense, then shifting to present for analysis** without a clear reason. Pick present for both, or be deliberate: past tense is fine for a true narrative retelling, but literary analysis essays should default to **present tense** throughout.
+- **Real exception — flashbacks/backstory:** if the text itself moves backward in time (e.g., a character remembering an earlier event), the earlier event can correctly stay in **past tense** while the frame narrative stays present. *Amir **recalls** how he **had run** from the alley.* (present frame + past-perfect memory is correct, not an error)
+
+**Examples**
+- Wrong: *Liesel steals the book, and later she **returned** it.* → Right: *Liesel steals the book, and later she **returns** it.*
+- Wrong (drifting): *Pi prays daily. He **prayed** because faith **keeps** him sane.* → Right: *Pi **prays** daily. He **prays** because faith **keeps** him sane.*
+- Right (legitimate past-inside-present): *Amir **confesses** that he **had watched** Hassan's attack without acting.* (the attack is backstory to the confession — past-perfect is correct here)
+
+**Practice (fix the tense inconsistency; note if a sentence is already correct):**
+1. Caesar ignores the soothsayer and later paid for it with his life.
+2. Antony delivers his eulogy, and the crowd rioted.
+3. Wiesel remembers how his father had once seemed invincible to him. *(check this one carefully)*
+4. Brutus reasons through the murder, but he chose wrong.
+
+<details><summary>Answers</summary>
+
+1. *Caesar ignores the soothsayer and later **pays** for it with his life.* (stay present)
+2. *Antony delivers his eulogy, and the crowd **riots**.* (stay present)
+3. **Correct as written** — "remembers" (present, frame) + "had once seemed" (past perfect, the earlier memory) is the legitimate exception, not an error.
+4. *Brutus reasons through the murder, but he **chooses** wrong.* (stay present)
+</details>
+
+---
+
+## 13. Final Mixed Drill (exam simulation)
 
 Edit each sentence. There may be **more than one error** (comma splice, apostrophe, affect/effect, lie/lay, parallelism, passive, wordiness, run-on). Then check.
 
@@ -418,4 +517,7 @@ Edit each sentence. There may be **more than one error** (comma splice, apostrop
 - **Parallel:** all items same form (nouns with nouns, *-ing* with *-ing*, infinitives with infinitives).
 - **Semicolon:** complete sentence on BOTH sides. **Colon:** complete sentence BEFORE it.
 - **Run-on:** two sentences fused. Opening modifier must describe the subject right after the comma.
+- **Subject-verb agreement:** ignore distractor phrases between subject and verb; "each/either/neither/everyone" are always singular; or/nor agrees with the closer noun.
+- **Pronoun-antecedent agreement:** watch singular indefinites ("everyone," "each") paired with "their" — fix by pluralizing the antecedent or naming the noun instead of the pronoun.
+- **Verb tense:** literary analysis defaults to **present tense** throughout; don't drift to past mid-paragraph (backstory/flashback in past tense is a legitimate exception).
 - **RIP pass:** Remove filler, Improve vague words, Power-up dead verbs. Read it aloud.

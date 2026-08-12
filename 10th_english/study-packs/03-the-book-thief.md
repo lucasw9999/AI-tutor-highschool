@@ -1,6 +1,6 @@
 # The Book Thief — Study Pack
 
-> **How to use this (don't read every page).** Work it backwards: skim the **Structure walk-through** once to own the arc, then live in the **Themes**, **Key quotes bank**, and **Essay practice** sections. Those three are what win the fishbowl and the essay. The reading exam is mostly checkable facts — the **Unit-exam practice** covers those. Memorize ~8 quotes from the bank cold and you can write the whole essay from memory.
+> **How to use this (don't read every page).** Work it backwards: skim the **Structure walk-through** once to own the arc, then live in the **Themes**, **Key quotes bank**, and **Essay practice** sections. Those three are what win the fishbowl (see `coverage-map.md` for what a fishbowl is) and the essay. The reading exam is mostly checkable facts — the **Unit-exam practice** covers those. Memorize ~8 quotes from the bank cold and you can write the whole essay from memory.
 
 ---
 

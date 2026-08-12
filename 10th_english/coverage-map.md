@@ -4,6 +4,10 @@
 
 > The 5 login-walled docs (Sept + Mar agendas, Reading Schedule, Life-of-Pi Socratic FRQs, removed Narrative prompt) were reconstructed from the surrounding weeks — ask Dad to drop them in if you want them verbatim.
 
+> **Two files in this folder are real class material, not reconstructions — upload them (see `chatgpt-setup.md`):**
+> - **`Caesar Essay Topics.txt`** — Mrs. P's actual 10-topic list for the Julius Caesar essay. All 10 are now worked into `study-packs/01-julius-caesar.md` §10 (Essay Practice).
+> - **`sample_omm_essay_short.txt`** — a real, heavily-annotated *Of Mice and Men* essay from one of Mrs. Pagtakhan's classes (not Julius Caesar, and possibly a different grade level — her margin notes don't specify). It's not a Lucas assignment, but it's the clearest ground-truth example anywhere in this project of what actually earns her A-range marks vs. B/C-range on the same paragraph. Read it alongside `guides/essay-writing.md`.
+
 ---
 
 ## How the grade is actually made (where points live)
@@ -13,8 +17,8 @@
 | **Vocabulary** (SAT, 10 words/week × 24) | weekly quiz + 2 finals | Easy, reliable points if you keep up. Don't let these slip. |
 | **Unit / reading exams** (Night, Book Thief, Kite Runner, Life of Pi) | per text | Tests whether you read + understood. Study packs make these easy. |
 | **Grammar exams** + Grammar/Writing/Lit-Terms final | cumulative | Steady points; also makes essays cleaner. |
-| **Socratic seminars / fishbowls + FRQ questions** | per text | Participation + written responses; needs quotes ready. |
-| **Projects/presentations** (Ancient Rome, Speeches, Poetry Project) | a few | Speaking + creativity points. |
+| **Socratic seminars / fishbowls + FRQ questions** | per text | Participation + written responses; needs quotes ready. *(**Fishbowl**: a small inner group sits and discusses out loud while everyone else observes silently from the outside — usually taking notes or scoring — and groups may rotate. Exact group size/rotation/grading rules aren't in the source material — confirm with Mrs. P.)* |
+| **Projects/presentations** (Ancient Rome, Speeches, Poetry Project) | a few | Speaking + creativity points. Defensible structures (not her rubric — confirm the real one with her) for Ancient Rome + Speeches/Eulogy live in `study-packs/01-julius-caesar.md` §12–13; Poetry Project in `guides/literary-devices.md`. |
 | **Study-guide questions / homework** | ongoing | Completion points — never zero these. |
 
 **Takeaway:** keep vocab + homework airtight (free points), crush the unit exams with the study packs, and pour real effort into the **essays** — that's the difference between a B and an A.
@@ -38,7 +42,7 @@ Each pack has: snapshot, structure walk-through, characters, themes (as arguable
 |---|---|---|
 | **essay-writing.md** 🔥 | Mrs. P's exact A-essay rubric: intro triangle, thematic thesis, body-paragraph engine, the **"black out the quote"** commentary test, embedding quotes, RIP-words, the brainstorm→outline→draft→edit process, self-grading checklist + drills | **Every essay** (the A-maker) |
 | **literary-devices.md** | ethos/pathos/logos, irony, soliloquy, foil, metonymy, scansion, enjambment, characterization, diction/syntax, + ~30 more, with examples + a recognition quiz | Lit-Terms final, essays, Socratic |
-| **grammar.md** | comma rules/splices, semicolons/colons, active/passive, lie vs lay, parallel structure, apostrophes, wordiness + drills | Grammar exams, clean essays |
+| **grammar.md** | comma rules/splices, semicolons/colons, active/passive, lie vs lay, parallel structure, apostrophes, wordiness, subject-verb agreement, pronoun-antecedent agreement, verb-tense consistency + drills | Grammar exams, clean essays |
 | **vocabulary.md** | the most efficient way to learn 10 SAT words/week (spaced repetition, roots, mnemonics) + a modeled week | Vocab quizzes + finals |
 | **research-mla.md** | sources, in-text citations, Works Cited formatting, thesis-driven research, integrating quotes, avoiding plagiarism | The Partner Research Essay |
 
