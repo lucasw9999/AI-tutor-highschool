@@ -90,8 +90,15 @@ export function makeDb(D1) {
      * Two attempt rows for one question under one mock are not two questions of
      * evidence: a duplicate buys a 37-of-42 sitting past MIN_MOCK_COVERAGE
      * (ceil(0.9 * 42) = 38), and since the denominator is
-     * max(scored, expected - ungraded) a duplicated CORRECT answer adds to the
+     * max(scored, scorable - ungraded) a duplicated CORRECT answer adds to the
      * numerator without adding to the denominator.
+     *
+     * This guard is the CONCURRENT half only, and it keys on `logged = 0`, so it
+     * does not cover the window handleLog opens between spending the serve and
+     * inserting the attempt — by then the serve is logged and this NOT EXISTS
+     * matches nothing. openServeItems below is what closes that, by not filtering
+     * on `logged` at all, so the selector never asks for the item in the first
+     * place.
      *
      * OUTSIDE a sitting the insert is deliberately unconditional. There is no
      * paper for a duplicate to inflate, and a serve abandoned mid-question is
@@ -128,25 +135,58 @@ export function makeDb(D1) {
     },
 
     /**
-     * The items this sitting has handed out and not yet seen answered.
+     * The items this sitting has handed out, answered or not.
      *
-     * The questions in flight. select.js judges a repeat from attempt rows, which
-     * do not exist until /log, so between /next and /log a question is servable
-     * again as far as the selector can see — and two /next calls inside one
-     * sitting handed out the same one. handleNext passes these back as
-     * `excludeItemIds` so they are removed from every pool.
+     * This paper's questions. select.js judges a repeat from attempt rows, and an
+     * attempt row does not exist until /log has finished writing it, so without
+     * this a question is servable again the moment it leaves the server — and two
+     * /next calls inside one sitting handed out the same one. handleNext passes
+     * these back as `excludeItemIds` so they are removed from every pool.
      *
-     * Scoped to ONE sitting on purpose. Serves outside a sitting are never
-     * cleaned up, so excluding them subject-wide would shrink the drillable bank
-     * by one item for every question ever abandoned mid-answer, permanently.
-     * Inside a sitting the set dies with the paper.
+     * DELIBERATELY NOT FILTERED ON `logged`. It used to be, and that left the
+     * defect open through a narrower door: handleLog spends the serve FIRST
+     * (claimServe flips `logged`) and inserts the attempt SECOND, so in between
+     * the question belonged to no no-repeat list at all — `logged = 1` hid it from
+     * this query, no attempt row existed for select.js's this-paper set, and
+     * recordServe's NOT EXISTS guard keys on `logged = 0` too, so nothing refused
+     * the re-serve. Measured at that park point: a 37-distinct paper came back as
+     * 38 answers, cleared MIN_MOCK_COVERAGE and scored 90.5 instead of being
+     * recorded as too short to count. An item this sitting has served is on this
+     * paper whether or not its answer has landed yet.
      *
-     * Reads on the (subject, logged, id) prefix of idx_serves_open.
+     * The cost of dropping it, taken deliberately: if a /log dies between spending
+     * the serve and inserting the attempt — the lost-answer trade-off handleLog
+     * takes on purpose — that question cannot be re-asked for the rest of the
+     * sitting. The paper is one question shorter, which understates coverage. The
+     * alternative overstates it.
+     *
+     * Scoped to ONE sitting on purpose, and that scope is now the only thing
+     * bounding the query. Serves are never cleaned up, so excluding them
+     * subject-wide would shrink the drillable bank by one item for every question
+     * ever abandoned mid-answer, permanently — and, with the selector still free to
+     * pick it, every later /next on it would be refused. Inside a sitting the set
+     * dies with the paper. Ordinary practice never calls this at all: handleNext
+     * only asks when there is a mockId.
+     *
+     * THE QUERY PLAN, since the previous note here described one the query never
+     * had. idx_serves_open is (subject, logged, id) and nothing else on this table
+     * is indexed, so this is `SEARCH serves USING INDEX idx_serves_open
+     * (subject=?)` plus `USE TEMP B-TREE FOR DISTINCT`, with mock_id as an
+     * UNINDEXED residual filter over every serve row for the subject — not just
+     * the unlogged ones, and never narrowed to the sitting. Since serves are never
+     * deleted that slice only grows: measured 0.56ms at 20,000 serve rows, against
+     * a 10ms CPU budget, on /next inside a mock only. Fine now, linear in the
+     * subject's whole serve history, and an index on (subject, mock_id) is what
+     * fixes it when it stops being fine.
+     *
+     * The NAME is a leftover: nothing here is about a serve still being open any
+     * more. Renaming it means touching api.js, its only caller, so it is left for
+     * a change that owns both files — read it as "this paper's item ids".
      */
     async openServeItems({ subject, mockId }) {
       const rows = await all(
         `SELECT DISTINCT item_id FROM serves
-          WHERE subject = ? AND logged = 0 AND mock_id = ?`,
+          WHERE subject = ? AND mock_id = ?`,
         subject, Number(mockId),
       )
       return rows.map((r) => r.item_id)

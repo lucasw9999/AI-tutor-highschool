@@ -648,3 +648,156 @@ test('two concurrent /next calls in one sitting cannot hand out the same questio
     assert.equal(paper.distinct.size, paper.rows.length, `round ${round}: ${paper.items.join(', ')}`)
   }
 })
+
+// ---------------------------------------------------------------------------
+// The window /log itself opens, between spending the serve and filing the answer
+//
+// handleLog spends the serve FIRST (claimServe flips serves.logged) and inserts
+// the attempt SECOND, deliberately: a crash between them loses one answer rather
+// than double-counting it. But that ordering opens a window in which a question
+// belongs to NO no-repeat list at all — the serve is logged, so a `logged = 0`
+// projection cannot see it, and no attempt row exists yet, so select.js's
+// this-paper set cannot either. A /next arriving inside that window was handed
+// the SAME question again, and recordServe's NOT EXISTS guard did not refuse it
+// because that too keys on `logged = 0`.
+//
+// This is the duplicate-serve defect above, reopened through a narrower door, and
+// it buys exactly the same thing: a 37-distinct sitting reads as 38 answers,
+// clears MIN_MOCK_COVERAGE (ceil(0.9 * 42) = 38), and is scored 90.5 instead of
+// being recorded as too short to count.
+//
+// So an item this sitting has served is on this paper whether or not its answer
+// has landed yet, and openServeItems returns it either way. The interleaving is
+// SCHEDULED at the attempt INSERT — a window that narrow will not be caught by
+// hoping for it.
+// ---------------------------------------------------------------------------
+
+test('a /next inside /log’s own write window cannot re-serve the question being answered', async () => {
+  const floor = Math.ceil(CSA.exam.mcq_count * MIN_MOCK_COVERAGE)
+  const race = scheduled(/INSERT INTO\s+attempts/i)
+  const { db, sqlite } = freshDb({ hold: race.hold })
+  // Exactly one sitting's worth of coverage short of the gate: `floor - 1` items,
+  // so once every one of them has been served there is honestly nothing left to
+  // ask. A duplicate is then the ONLY way this paper can reach 38 answers.
+  seedSection(sqlite, floor - 1)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  await sitSection(db, m.mock, floor - 2)
+
+  // The last question of the bank is on screen. His answer to it is in flight —
+  // past the point where the serve was spent, before the attempt row exists.
+  const last = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at((floor - 2) * 60), mockId: m.mock })
+  assert.equal(last.type, 'question')
+  const inFlight = (await db.serve(last.serve)).item_id
+
+  race.arm()
+  const logging = handleLog({ db, serveId: last.serve, response: 'B', config: CSA, now: at((floor - 2) * 60 + 30) })
+  await race.reached
+  assert.equal(
+    (await db.serve(last.serve)).logged, 1,
+    'the fixture must genuinely park inside the window: the serve is spent and the attempt row is not written yet',
+  )
+  assert.equal(
+    (await db.attempts('ap_csa')).length, floor - 2,
+    'and the answer in flight must not be on the record yet, or there is no window to test',
+  )
+
+  // ChatGPT asks for the next question while that answer is still in flight —
+  // a retried Action, or a student who tapped twice.
+  const raced = await Promise.allSettled([
+    handleNext({ db, subject: 'ap_csa', config: CSA, now: at((floor - 2) * 60 + 31), mockId: m.mock }),
+  ])
+  race.release()
+  await logging
+
+  for (const r of raced) {
+    if (r.status === 'rejected') {
+      assert.ok(r.reason instanceof ApiError, `a refused serve must be an ApiError, got ${r.reason}`)
+      assert.equal(r.reason.status, 409, 'and a retryable one — the bank really has nothing left to ask')
+      continue
+    }
+    assert.equal(r.value.type, 'question')
+    const servedAgain = (await db.serve(r.value.serve)).item_id
+    assert.notEqual(
+      servedAgain, inFlight,
+      'the question whose answer is mid-write is still a question this paper has asked; handing it out again makes ' +
+      'one keystroke into two questions of evidence',
+    )
+    await handleLog({ db, serveId: r.value.serve, response: 'B', config: CSA, now: at((floor - 1) * 60 + 30) })
+  }
+
+  const paper = await paperOf(db, 'ap_csa', m.mock)
+  assert.equal(
+    paper.distinct.size, paper.rows.length,
+    `one sitting must never hold two answers to one question: ${paper.items.join(', ')}`,
+  )
+
+  // And the harm, measured on the number the student is shown: a bank of 37 can
+  // only ever produce a 37-answer paper, which is short of the gate, recorded and
+  // NOT scored. A duplicate makes it 38, counted, and worth 90.5.
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(floor * 60) })
+  assert.equal(r.answered, floor - 1, 'the paper holds one answer per distinct question the bank could supply')
+  assert.equal(r.counted, false, `${floor - 1} of ${CSA.exam.mcq_count} is short of the coverage gate`)
+  assert.equal(r.composite_pct, null, 'a sitting too short to count may not be scored at all')
+})
+
+test('an item abandoned mid-question in one sitting is still servable in the next', async () => {
+  // The other half of the invariant, and the reason both serve primitives are
+  // scoped to ONE sitting: a serve is never cleaned up, so a question abandoned
+  // mid-answer leaves an unlogged row behind forever. If either scope goes —
+  // openServeItems' `mock_id = ?`, or recordServe's `mock_id = ?` inside the NOT
+  // EXISTS — that row makes the item permanently unservable, and the drillable
+  // bank shrinks by one item for every question ever left on screen.
+  //
+  // Held on a two-item bank so no assertion can pass by luck: once one question
+  // has been answered, the abandoned one is the only question left to ask, so
+  // every later call either hands out that exact item or 409s.
+  const { db, sqlite } = freshDb()
+  seedSection(sqlite, 2)
+  const m1 = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const done = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(0), mockId: m1.mock })
+  await handleLog({ db, serveId: done.serve, response: 'B', config: CSA, now: at(30) })
+
+  // The second question goes up, and he closes the laptop with it on screen.
+  const abandoned = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(60), mockId: m1.mock })
+  assert.equal(abandoned.type, 'question')
+  const item = (await db.serve(abandoned.serve)).item_id
+  await handleMockSubmit({ db, mockId: m1.mock, config: CSA, now: at(120) })
+  assert.equal(
+    (await db.serve(abandoned.serve)).logged, 0,
+    'the fixture must genuinely leave a stranded unlogged serve behind — nothing cleans these up',
+  )
+  assert.equal((await db.attempts('ap_csa')).length, 1, 'and no answer was ever given to the abandoned question')
+
+  // Ordinary practice is outside every sitting, so it must be able to ask it —
+  // and this drill is abandoned too, stranding a second serve on the same item.
+  const drill = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(600) })
+  assert.equal(drill.type, 'question', 'ordinary practice can still reach a question abandoned inside a sitting')
+  assert.equal(
+    (await db.serve(drill.serve)).item_id, item,
+    'and it is the question practice must reach for: the only item in this bank nobody has ever answered, on the ' +
+    'only topic that has never been attempted',
+  )
+
+  // And a later sitting must still be able to ask it, both stranded serves and all.
+  // Asserted by drawing the whole two-question bank rather than by expecting it
+  // first, so this holds whatever order the selector apportions units in: if either
+  // serve scope leaks past the sitting, the abandoned item is unservable, and the
+  // second /next has nothing left to hand out at all.
+  const m2 = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(900) })
+  const served = []
+  for (let i = 0; i < 2; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(960 + i * 60), mockId: m2.mock })
+    assert.equal(q.type, 'question', `the new sitting must be able to ask question ${i + 1} of a two-item bank`)
+    served.push((await db.serve(q.serve)).item_id)
+    await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(990 + i * 60) })
+  }
+  assert.ok(
+    served.includes(item),
+    `a question abandoned in an earlier sitting is not spent forever — the new paper asked ${served.join(', ')} and ` +
+    `never reached ${item}. A serve scope wider than one sitting makes every abandoned question permanently ` +
+    `unservable, and nothing cleans stranded serves up`,
+  )
+  const paper = await paperOf(db, 'ap_csa', m2.mock)
+  assert.equal(paper.rows.length, 2, 'and both count as evidence in the new sitting')
+  assert.equal(paper.distinct.size, 2, `one row per question: ${paper.items.join(', ')}`)
+})
