@@ -253,11 +253,13 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
   // the stored composite cannot: readiness reads the judged window's evidence
   // as `attempts.filter((a) => ids.has(a.mock_id))`, so one untimed keystroke
   // hours later moved mcq_overall and a per-unit floor on a closed sitting.
-  const sitting = serve.mock_id == null ? null : await db.mock(serve.mock_id)
-  const closed = sitting?.ended_at ? sitting : null
-  const mockId = closed ? null : serve.mock_id
-  const conditions = mockId ? 'proctored_mock' : hints ? 'tutored' : 'cold'
-
+  //
+  // The decision is NOT made here. Reading the sitting and then inserting is a
+  // read-then-write, and a first-time /log racing /mock/submit read the sitting
+  // as open, filed its answer under the mock, and had it counted against a
+  // composite that was already frozen — the same defect through a narrow window.
+  // db.recordAttemptUnderOpenMock decides inside the INSERT, so the row can only
+  // carry a mock id if the sitting was open at the instant it landed.
   const verdict = grade(item, response)
   const seconds = Math.max(0, Math.round((new Date(now) - new Date(serve.served_at)) / 1000))
 
@@ -280,7 +282,7 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     throw new ApiError(409, `serve ${serveId} was already logged`)
   }
 
-  await db.recordAttempt({
+  const attempt = {
     ts: now,
     subject: serve.subject,
     item_id: item.id,
@@ -292,9 +294,21 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
     graded_by: verdict.graded_by,
     seconds,
     hints_used: hints ? 1 : 0,
-    conditions,
-    mock_id: mockId,
-  })
+  }
+
+  let mockId = null
+  if (serve.mock_id == null) {
+    await db.recordAttempt({ ...attempt, conditions: hints ? 'tutored' : 'cold', mock_id: null })
+  } else {
+    mockId = await db.recordAttemptUnderOpenMock({
+      ...attempt, conditions_if_closed: hints ? 'tutored' : 'cold', mock_id: serve.mock_id,
+    })
+  }
+  const conditions = mockId ? 'proctored_mock' : hints ? 'tutored' : 'cold'
+
+  // Read the sitting only when it turned out to be closed, and only to tell him
+  // when it was submitted. The row is what happened; this is the explanation.
+  const closed = serve.mock_id != null && mockId == null ? await db.mock(serve.mock_id) : null
 
   // A cold, unaided correct answer after the lesson is what closes a gap.
   const gaps = await db.gaps(serve.subject)
@@ -313,9 +327,10 @@ export async function handleLog({ db, serveId, response, hints = 0, config, conf
   // on a model-graded item needs to say both things. Assembling them by
   // overwriting one `note` key silently dropped whichever came first.
   const notes = []
-  if (closed) {
+  if (serve.mock_id != null && mockId == null) {
     notes.push(
-      `This question was handed out inside mock ${closed.id}, which was submitted at ${closed.ended_at}. ` +
+      `This question was handed out inside mock ${serve.mock_id}, which was submitted` +
+      `${closed?.ended_at ? ` at ${closed.ended_at}` : ''}. ` +
       `Your answer is recorded and graded as ordinary practice, NOT as part of that sitting: work done after ` +
       `the timer stops is not proctored evidence, so the mock's score stays exactly as it was sat.`,
     )
@@ -543,13 +558,37 @@ function expectedQuestions(section, exam = {}) {
 export async function handleMockSubmit({ db, mockId, config, configs = null, now }) {
   const m = await db.mock(mockId)
   if (!m) throw new ApiError(404, `unknown mock ${mockId}`)
+  // Cheap early refusal for the ordinary replay. It is NOT the guard that makes
+  // this safe — see the claim below.
   if (m.ended_at) throw new ApiError(409, `mock ${mockId} is already submitted`)
 
   // The sitting's own subject decides which standards apply, not the caller's `s`.
   const cfg = configFor({ subject: m.subject, config, configs })
 
-  const attempts = (await db.attempts(m.subject)).filter((a) => a.mock_id === Number(mockId))
-  if (!attempts.length) throw new ApiError(409, `mock ${mockId} has no logged answers`)
+  const ofThisMock = (rows) => rows.filter((a) => a.mock_id === Number(mockId))
+  // Refused BEFORE the sitting is closed, so a mistaken submit on a sitting with
+  // nothing in it leaves it open to be sat, rather than stranding it closed and
+  // unscorable.
+  if (!ofThisMock(await db.attempts(m.subject)).length) {
+    throw new ApiError(409, `mock ${mockId} has no logged answers`)
+  }
+
+  // Close the sitting BEFORE reading the answers to be scored, with a conditional
+  // UPDATE that reports whether it was this call that closed it.
+  //
+  // Both halves matter. The `if (m.ended_at)` above is a read-then-write with no
+  // transaction available, so two concurrent submits both read the sitting as open
+  // and both score it. And the close is what tells a concurrent /log that the
+  // paper is in: reading the answers first left a window in which a first-time
+  // /log filed an answer under a sitting whose composite had already been
+  // computed, so readiness counted evidence the stored score never saw. Closing
+  // first inverts that — an answer can only be filed under the mock while it is
+  // open, so anything filed under it is already in the read below.
+  if (!(await db.closeMock({ id: mockId, ended_at: now }))) {
+    throw new ApiError(409, `mock ${mockId} is already submitted`)
+  }
+
+  const attempts = ofThisMock(await db.attempts(m.subject))
 
   // Composite counts only mechanically graded answers. Including model-graded or
   // unkeyed items would fold an ungraded zero into the score and understate it.
@@ -630,7 +669,7 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     basis.push('Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.')
   }
 
-  await db.endMock({ id: mockId, ended_at: now, composite_pct: composite, blanks })
+  await db.scoreMock({ id: mockId, composite_pct: composite, blanks })
   const ctx = await loadContext(db, m.subject, cfg)
   return {
     mock: Number(mockId),
