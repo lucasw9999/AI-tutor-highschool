@@ -152,8 +152,16 @@ maybe('a proctored mock scores itself and is the only thing that moves the needl
   }
   const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(2000) })
 
-  assert.ok(r.composite_pct >= 0 && r.composite_pct <= 100)
-  assert.ok(r.answered > 0)
+  // 10 logged answers is far short of the 90%-of-42 coverage floor api.js
+  // requires before it will produce a composite at all, so this sitting is
+  // recorded but NOT scored: composite_pct is null (not "some number in
+  // range", which null would also satisfy), counted is false, and basis
+  // explains why.
+  assert.ok(r.answered > 0, 'the loop must actually log some answers')
+  assert.ok(r.answered < 38, 'this fixture answers far fewer than the 90% coverage floor requires')
+  assert.equal(r.composite_pct, null, 'a sitting this far under the coverage floor must not receive a composite')
+  assert.equal(r.counted, false, 'an uncovered sitting must not count toward readiness')
+  assert.match(r.basis, /recorded but NOT scored/, 'the basis string must explain why no composite was produced')
   // One mock is nowhere near the six-mock requirement, so readiness stays 0.
   assert.equal(r.status.readiness_pct, 0)
   assert.match(r.status.next_thing_blocking, /mock|topic/i)

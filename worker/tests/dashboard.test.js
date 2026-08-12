@@ -114,7 +114,10 @@ test('a ready subject renders as ready, with no blocker box', () => {
     subject: 'ap_csa',
     started_at: new Date(new Date(NOW).getTime() - (40 - i * 7) * 86400000).toISOString(),
     proctored: 1,
-    source: i === 0 ? 'official' : 'bank',
+    // The official anchor must fall INSIDE the judged window (the most recent
+    // 3 mocks, i.e. indices 3-5) — an official sitting outside that window
+    // anchors nothing under the corrected readiness contract.
+    source: i === 4 ? 'official' : 'bank',
     composite_pct: c,
     blanks: 0,
   }))
@@ -166,7 +169,9 @@ test('an advisory is surfaced without changing the number', () => {
     id: i + 1,
     started_at: new Date(new Date(NOW).getTime() - (40 - i * 7) * 86400000).toISOString(),
     proctored: 1,
-    source: i === 0 ? 'official' : 'bank',
+    // Official anchor inside the judged window (indices 3-5) — see the "ready
+    // subject" fixture above for why.
+    source: i === 4 ? 'official' : 'bank',
     composite_pct: c,
     blanks: 0,
   }))
