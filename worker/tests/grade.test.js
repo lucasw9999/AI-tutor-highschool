@@ -752,6 +752,59 @@ test('Q4-G4: across the whole shipped bank, a label over another option text dec
   }
 })
 
+// ---------------------------------------------------------------------------
+// Q4-G5 — the guards in the matcher, one assertion each
+// ---------------------------------------------------------------------------
+
+test('Q4-G5: a fragment two options share resolves to neither', () => {
+  // csa-ac-q17 offers 'x <= 0 && x >= 10' and 'x <= 0 || x >= 10'. A student who
+  // types only the part they have in common has not chosen between them, and
+  // handing back the first hit would book a verdict he did not earn.
+  for (const raw of ['x <=', 'x <= 0', 'x >= 10']) {
+    const r = grade(byId('csa-ac-q17'), raw)
+    assert.equal(r.graded_by, 'unparsed', `${JSON.stringify(raw)} resolved to ${r.picked}`)
+  }
+  // '20 30' opens three of csa-ac-q44's four options.
+  assert.equal(grade(byId('csa-ac-q44'), '20 30').graded_by, 'unparsed')
+})
+
+test('Q4-G5: the words of an option have to appear in order and together', () => {
+  // Option C of csa-ac-q81 is 'Change the loop condition to `i < a.length`'.
+  // Matching on set inclusion instead of a contiguous run would accept any
+  // scramble of its words, which is not what the student wrote.
+  const q81 = byId('csa-ac-q81')
+  assert.equal(grade(q81, 'the loop condition').correct, 1, 'a run of whole tokens, in order')
+  for (const raw of ['condition the loop', 'loop the', 'change condition']) {
+    assert.equal(grade(q81, raw).graded_by, 'unparsed', `${JSON.stringify(raw)} was read as an option`)
+  }
+  assert.equal(grade(byId('csa-ac-q86'), 'copy of each').correct, 1)
+  assert.equal(grade(byId('csa-ac-q86'), 'each copy').graded_by, 'unparsed', 'the same words, reordered')
+})
+
+test('Q4-G5: a stopword is never an answer, on any item in the bank', () => {
+  for (const item of SHIPPED_MCQ) {
+    for (const raw of ['the', 'and', 'not', 'but', 'its', 'is not', 'it is', 'and the', 'the and']) {
+      const r = grade(item, raw)
+      assert.equal(r.graded_by, 'unparsed', `${item.id} ${JSON.stringify(raw)} read as ${r.picked}`)
+    }
+  }
+})
+
+test('Q4-G5: the fragment floor keeps operators out and lets a real short answer in', () => {
+  // csa-u4-q13 prints 'b 3 z', which is option A. 'b 3' is three characters, a
+  // run of whole tokens in exactly one option, and a real if partial answer.
+  assert.equal(grade(byId('csa-u4-q13'), 'b 3').correct, 1)
+  assert.equal(grade(byId('csa-u4-q13'), 'z 3').picked, 'B', 'the same shape, naming a wrong option')
+  // Two characters is one number out of a printed list, or an operator.
+  for (const [id, raw] of [
+    ['csa-ac-q44', '10'],
+    ['csa-ac-q42', '20'],
+    ['csa-ac-q38', '2n'],
+  ]) {
+    assert.equal(grade(byId(id), raw).graded_by, 'unparsed', `${id} ${JSON.stringify(raw)} was read as an option`)
+  }
+})
+
 test('G7: no shipped mcq is keyed with something the grader cannot use', () => {
   for (const item of SHIPPED_MCQ) {
     const keyed = normalizeChoice(item.answer)
