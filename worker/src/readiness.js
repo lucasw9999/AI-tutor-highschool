@@ -118,6 +118,23 @@ function ageOf(m, now) {
 }
 
 /**
+ * The consecutive runs inside a set of sittings: a new run starts wherever two
+ * neighbours are further apart than a single window may span.
+ *
+ * Same rule the window search uses to cut the logbook into blocks, so the runs
+ * described in a disclosure are the runs that were actually passed over.
+ */
+function runsOf(sittings, maxSpan) {
+  const runs = []
+  for (const m of sittings) {
+    const last = runs[runs.length - 1]
+    if (last && daysBetween(last[last.length - 1].started_at, m.started_at) <= maxSpan) last.push(m)
+    else runs.push([m])
+  }
+  return runs
+}
+
+/**
  * The newer sittings a judged window leaves out, spelled out with their scores —
  * or '' when it leaves none out.
  *
@@ -127,18 +144,30 @@ function ageOf(m, now) {
  * evidence, and it is the most recent evidence there is. Left undisclosed, the
  * report printed a 106-day age and a three-mock window beside a mock-history chip
  * dated yesterday, and yesterday's score appeared in no number at all.
+ *
+ * The explanation is a fact about the RUNS, not about the count. The excluded set
+ * can span several passed-over blocks, and a single hard-coded "too few
+ * consecutive sittings to form a window of N" then told the student that N
+ * sittings were too few to make N — self-contradictory, and false as to the
+ * cause: they were stepped over because each run is shorter than N, not because
+ * there are fewer than N of them.
  */
-function excludedNote(excluded, need, now) {
+function excludedNote(excluded, r, now) {
   if (!excluded.length) return ''
+  const need = r.consecutive_qualifying_mocks
   const each = excluded
     .map((m) => {
       const age = ageOf(m, now)
       return `${age} day${age === 1 ? '' : 's'} ago at ${roundDown(m.composite_pct).toFixed(1)}%`
     })
     .join(', ')
+  const runs = runsOf(excluded, r.window_span_days_max)
+  const longest = Math.max(...runs.map((run) => run.length))
+  const shape =
+    runs.length === 1 ? `a single run of ${longest}` : `${runs.length} separate runs, the longest ${longest}`
   return (
     `${excluded.length} newer sitting${excluded.length === 1 ? '' : 's'} not measured here (${each})` +
-    ` — too few consecutive sittings to form a window of ${need}`
+    ` — ${shape}, where a window needs ${need} consecutive sittings`
   )
 }
 
@@ -227,10 +256,20 @@ export function qualifyingWindow({ config, mocks, now }) {
         end === scored.length - 1
           ? `the last ${need} mocks`
           : `the ${need} mocks ending ${ageOf(win[win.length - 1], now)} days ago`
+      const excluded = scored.slice(end + 1)
       const why = disqualify(win, r, label)
-      return why
-        ? { window: null, reason: why, excluded: [] }
-        : { window: win, reason: null, excluded: scored.slice(end + 1) }
+      if (!why) return { window: win, reason: null, excluded }
+      // The candidate failed, so nothing is measured — but this run still stepped
+      // over the same newer sittings, and they are still the student's most recent
+      // evidence. Returning an empty set here disclosed them NOWHERE: on a record
+      // of 95s at 130/118/86 days (candidate rejected for a 44-day span) plus a
+      // 45% yesterday, every criterion read pending, readiness was 0, and the 45%
+      // appeared in no field at all. The GPT then told him to fix his spacing on
+      // three-month-old 95s while his newest evidence sat at 45%. So the
+      // disclosure travels with the rejection, appended to its own reason —
+      // computeReadiness prints `reason` verbatim when there is no window.
+      const note = excludedNote(excluded, r, now)
+      return { window: null, reason: note ? `${why}; ${note}` : why, excluded }
     }
     end = start - 1
   }
@@ -297,7 +336,7 @@ function evaluateChecks({ config, window, attempts, calibrated, excluded, now })
   const r = config.readiness
   const ids = new Set(window.map((m) => m.id))
   const inWindow = attempts.filter((a) => ids.has(a.mock_id))
-  const note = excludedNote(excluded, r.consecutive_qualifying_mocks, now)
+  const note = excludedNote(excluded, r, now)
 
   // Only mechanically graded evidence can move a mechanical floor. Model-graded
   // work is quarantined until calibration, and an attempt on an item with no
@@ -494,7 +533,7 @@ export function computeReadiness({ config, mocks = [], attempts = [], coverage =
   // A window that leaves newer sittings out says so, with their scores. "3 mocks
   // in window" beside a mock-history chip dated yesterday read as though the
   // window were the whole record.
-  const windowNote = excludedNote(excluded, r.consecutive_qualifying_mocks, now)
+  const windowNote = excludedNote(excluded, r, now)
   criteria.push({
     id: 'mock_window',
     label: `${r.consecutive_qualifying_mocks} consecutive qualifying proctored mocks`,

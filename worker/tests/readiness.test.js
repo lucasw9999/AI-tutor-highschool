@@ -1062,6 +1062,210 @@ test('a printed percentage is never a point below the measured one', async (t) =
 })
 
 // ---------------------------------------------------------------------------
+// Q6-R1: the disclosure explains the pass-over per RUN, because the excluded
+// sittings can span several of them
+// ---------------------------------------------------------------------------
+
+test('the excluded-sittings disclosure states a fact about the runs, not about the count', async (t) => {
+  // ap_precalc, so four logged mocks are enough. A judgeable block of three 95s
+  // at 200/190/180 days with the official anchor inside it, then three LONE
+  // sittings at 130, 80 and 20 days, each separated from its neighbours by more
+  // than window_span_days_max. The 180-day block is judged and all three lone
+  // sittings are excluded.
+  const mocks = record([200, 190, 180, 130, 80, 20], { official: 2, composites: [95, 95, 95, 60, 55, 50] })
+  const judged = () =>
+    computeReadiness({
+      config: PRECALC, mocks, attempts: passingAttempts([1, 2, 3], PRECALC),
+      coverage: { topics_total: 10, topics_drilled: 10 }, calibrated: false, now: NOW,
+    })
+
+  await t.test('three excluded sittings are never described as too few to form a window of three', () => {
+    const q = qualifyingWindow({ config: PRECALC, mocks, now: NOW })
+    assert.deepEqual(q.window?.map((m) => m.id), [1, 2, 3])
+    assert.deepEqual(q.excluded.map((m) => m.id), [4, 5, 6])
+    for (const id of ['mock_window', 'freshness']) {
+      const d = criterion(judged(), id).detail
+      // The old string hard-coded one explanation for the whole excluded set:
+      // "3 newer sittings ... — too few consecutive sittings to form a window of
+      // 3". Three sittings are not too few to be three; they were passed over
+      // because each RUN is shorter than three, which is a different fact.
+      assert.match(d, /3 newer sittings not measured here/, `${id}: ${d}`)
+      assert.ok(
+        !/too few/.test(d),
+        `${id} tells him 3 sittings are too few to make 3: ${d}`,
+      )
+      assert.match(d, /3 separate runs/, `${id} must say how the sittings fall: ${d}`)
+      assert.match(d, /longest 1/, `${id} must name the run length that fell short: ${d}`)
+      assert.match(d, /3 consecutive sittings/, `${id} must still name the requirement: ${d}`)
+      // The scores themselves are unchanged: this is his most recent evidence.
+      assert.match(d, /130 days ago at 60\.0%/, d)
+      assert.match(d, /20 days ago at 50\.0%/, d)
+    }
+  })
+
+  await t.test('a pair among the excluded sittings is reported as a run of two', () => {
+    // 130 and 100 days ago are 30 days apart, so they are ONE run of two — still
+    // short of three, and the disclosure has to say two rather than repeating a
+    // count of the whole set.
+    const paired = record([200, 190, 180, 130, 100, 20], { official: 2, composites: [95, 95, 95, 60, 58, 50] })
+    const q = qualifyingWindow({ config: PRECALC, mocks: paired, now: NOW })
+    assert.deepEqual(q.window?.map((m) => m.id), [1, 2, 3])
+    const d = criterion(
+      computeReadiness({
+        config: PRECALC, mocks: paired, attempts: passingAttempts([1, 2, 3], PRECALC),
+        coverage: { topics_total: 10, topics_drilled: 10 }, calibrated: false, now: NOW,
+      }),
+      'mock_window',
+    ).detail
+    assert.match(d, /3 newer sittings not measured here/, d)
+    assert.match(d, /2 separate runs/, d)
+    assert.match(d, /longest 2/, d)
+    assert.ok(!/too few/.test(d), d)
+  })
+
+  await t.test('four excluded sittings in four runs say the same true thing', () => {
+    const four = record([200, 190, 180, 130, 86, 43, 0], { official: 2, composites: [95, 95, 95, 60, 55, 50, 45] })
+    const q = qualifyingWindow({ config: PRECALC, mocks: four, now: NOW })
+    assert.deepEqual(q.excluded.map((m) => m.id), [4, 5, 6, 7])
+    const d = criterion(
+      computeReadiness({
+        config: PRECALC, mocks: four, attempts: passingAttempts([1, 2, 3], PRECALC),
+        coverage: { topics_total: 10, topics_drilled: 10 }, calibrated: false, now: NOW,
+      }),
+      'mock_window',
+    ).detail
+    assert.match(d, /4 newer sittings not measured here/, d)
+    assert.match(d, /4 separate runs/, d)
+    assert.match(d, /longest 1/, d)
+    assert.ok(!/too few/.test(d), d)
+  })
+
+  await t.test('one excluded sitting is still described as one run, grammatically', () => {
+    const one = record([200, 190, 180, 1], { official: 2, composites: [95, 95, 95, 45] })
+    const d = criterion(
+      computeReadiness({
+        config: PRECALC, mocks: one, attempts: passingAttempts([1, 2, 3], PRECALC),
+        coverage: { topics_total: 10, topics_drilled: 10 }, calibrated: false, now: NOW,
+      }),
+      'mock_window',
+    ).detail
+    assert.match(d, /1 newer sitting not measured here/, d)
+    assert.match(d, /a single run of 1/, d)
+    assert.match(d, /1 day ago at 45\.0%/, d)
+  })
+
+  await t.test('disclosing them still cannot raise the number', () => {
+    const r = judged()
+    assert.equal(r.ready, false)
+    assert.ok(r.readiness_pct <= 99, `got ${r.readiness_pct}`)
+    assert.equal(r.first_unmet, 'freshness', 'a 180-day-old window is stale, whatever it discloses')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Q6-R2: a DISQUALIFIED candidate stepped over the same newer sittings, and
+// they have to be disclosed there too
+// ---------------------------------------------------------------------------
+
+test('a rejected candidate discloses the newer sittings it stepped over', async (t) => {
+  // ap_precalc. Three 95s at 130/118/86 days with the official anchor inside,
+  // and a 45% YESTERDAY. The lone recent sitting is too short to judge, so the
+  // older run is the candidate — and it is disqualified for spanning 44 days.
+  // The excluded set came back EMPTY on that branch, so yesterday's 45% appeared
+  // in no criterion and in no summary field: the GPT told him to fix his spacing
+  // on 95s from three months ago while his newest evidence was a 45%.
+  const mocks = record([130, 118, 86, 1], { official: 0, composites: [95, 95, 95, 45] })
+
+  await t.test('the search returns them alongside the rejection', () => {
+    const q = qualifyingWindow({ config: PRECALC, mocks, now: NOW })
+    assert.equal(q.window, null)
+    assert.deepEqual(q.excluded.map((m) => m.id), [4], 'the stepped-over sitting is reported, not dropped')
+    assert.match(q.reason, /span 44\.0 days/, `the judged run's own failure is still stated: ${q.reason}`)
+    assert.match(q.reason, /stale beyond 42/, q.reason)
+    assert.match(q.reason, /1 newer sitting not measured here/, `yesterday's sitting is invisible: ${q.reason}`)
+    assert.match(q.reason, /1 day ago at 45\.0%/, `his newest score must appear: ${q.reason}`)
+  })
+
+  await t.test('the report he reads names his most recent score', () => {
+    const r = computeReadiness({
+      config: PRECALC, mocks, attempts: passingAttempts([1, 2, 3], PRECALC),
+      coverage: { topics_total: 10, topics_drilled: 10 }, calibrated: false, now: NOW,
+    })
+    const mw = criterion(r, 'mock_window')
+    assert.equal(mw.met, false)
+    assert.match(mw.detail, /45\.0%/, `his newest evidence appears nowhere: ${mw.detail}`)
+    assert.match(mw.detail, /1 day ago/, mw.detail)
+    assert.ok(
+      JSON.stringify(r.criteria).includes('45.0%'),
+      'the 45% he scored yesterday must appear somewhere in the criteria he is shown',
+    )
+    // Disclosure is not measurement: nothing was judged, so nothing is measured.
+    assert.equal(r.readiness_pct, 0)
+    assert.equal(r.first_unmet, 'mock_window')
+    assert.equal(criterion(r, 'composite_mean').pending, true)
+    assert.ok(!/95/.test(criterion(r, 'composite_mean').detail), 'the stale 95s are not this window')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Q6-R3: one unscored rubric row is one unmeasured attempt, not zero attempts
+// ---------------------------------------------------------------------------
+
+test('a window holding exactly one unscored rubric row is pending, not "no FRQ attempts"', () => {
+  // The singular branch was unpinned: requiring MORE than one unscored row left
+  // every test green, and a window with exactly one unscored row then reported
+  // 'no FRQ attempts in window' — a false statement (there IS one attempt) that
+  // converts a measurement gap into a shortfall the student is told to close.
+  const attempts = [...passingAttempts([4, 5, 6]), ...ungradedFrqRun({ mock_id: 4, total: 1 })]
+  const r = assess({ composites: [90, 90, 90, 92, 93, 94], attempts })
+  const c = criterion(r, 'frq')
+  assert.equal(c.met, false)
+  assert.equal(c.pending, true, 'one unscored row is unmeasured, not a shortfall')
+  assert.match(c.detail, /^1 free-response attempt in window/, `the singular wording is the point: ${c.detail}`)
+  assert.ok(!/attempts in window/.test(c.detail), `one attempt is not "attempts": ${c.detail}`)
+  assert.ok(!/no FRQ attempts/.test(c.detail), `there is one attempt, so this is false: ${c.detail}`)
+  assert.match(c.detail, /none .*scored/, c.detail)
+  assert.equal(r.ready, false)
+})
+
+// ---------------------------------------------------------------------------
+// Q6-R4: when no block can form a candidate at all, the reason is the newest
+// three sittings' own disqualification
+// ---------------------------------------------------------------------------
+
+test('a logbook where every block is too short still gets a reason, about the newest three', () => {
+  // Five ap_precalc sittings, every one of them separated from its neighbours by
+  // more than window_span_days_max: every block holds ONE sitting, so no block
+  // can offer a candidate and the loop falls through. This is the only path to
+  // the final fallback, and nothing in the suite reached it — so both the
+  // documented "the reason is never null" invariant and the choice of WHICH
+  // sittings it names rested on a line that never ran.
+  const mocks = record([400, 350, 200, 150, 10], { official: 4, composites: [95, 95, 95, 95, 95] })
+  for (let i = 1; i < mocks.length; i++) {
+    assert.ok(
+      daysBetween(mocks[i - 1].started_at, mocks[i].started_at) > PRECALC.readiness.window_span_days_max,
+      `sittings ${i} and ${i + 1} share a block, so this fixture does not reach the fallback`,
+    )
+  }
+  const { window, reason, excluded } = qualifyingWindow({ config: PRECALC, mocks, now: NOW })
+  assert.equal(window, null)
+  assert.ok(reason, 'the reason is never null — a run straddling a block boundary is over-long by construction')
+  assert.deepEqual(excluded, [], 'no run was judged, so no run stepped over anything')
+  assert.match(reason, /the last 3 mocks/, `the reason is about what he would have to turn into a window: ${reason}`)
+  // The newest three are 200, 150 and 10 days ago: a span of 190. The OLDEST
+  // three span 200, and naming those would describe a run nothing judged.
+  assert.match(reason, /span 190\.0 days/, reason)
+  assert.ok(!/200\.0/.test(reason), `a span of 200 belongs to the oldest three: ${reason}`)
+  assert.match(reason, /stale beyond 42/, reason)
+
+  const r = computeReadiness({
+    config: PRECALC, mocks, attempts: [], coverage: { topics_total: 10, topics_drilled: 10 }, calibrated: false, now: NOW,
+  })
+  assert.equal(r.readiness_pct, 0)
+  assert.equal(criterion(r, 'mock_window').detail, reason)
+})
+
+// ---------------------------------------------------------------------------
 // R5: frq_calibrated is documented exactly as accurately as it is wired
 // ---------------------------------------------------------------------------
 
