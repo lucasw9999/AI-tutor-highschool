@@ -669,11 +669,20 @@ test('sampling: mock skips the remediation priorities', async (t) => {
 // A sitting that shuts a unit out, or over-serves a unit because it happens to
 // carry more topic rows, produces a score about a different exam.
 //
-// The papers below are 42 questions, which is what api.js requires of a section
-// 'full' sitting: ceil((mcq_count + frq_count) * 0.9) = ceil(46 * 0.9).
+// The papers below are 42 questions — a full sitting's mcq_count. That used to
+// be exactly what api.js required of a section 'full' sitting:
+// ceil((mcq_count + frq_count) * 0.9) = ceil(46 * 0.9) = 42. Since 18add4f,
+// coverage is measured against `scorable`, not that raw exam-table total: CSA's
+// frq half is rubric-scored (MODEL_GRADED), so it contributes nothing to
+// `scorable`, leaving scorable = mcq_count = 42 and a real requirement of
+// ceil(42 * 0.9) = 38. 42 is still used here because it is a whole, realistic
+// full sitting to sample from — comfortably above the 38 now required, not
+// pinned to it.
 // ---------------------------------------------------------------------------
 
-/** ceil((mcq_count + frq_count) * 0.9) — a full-paper sitting, per api.js. */
+/** ceil((mcq_count + frq_count) * 0.9) — a whole full-paper sitting's worth of
+ *  questions, no longer the exact figure api.js requires (see the comment
+ *  above); it is comfortably above that lower, scorable-based bar. */
 function fullPaperLength(config) {
   return Math.ceil((config.exam.mcq_count + config.exam.frq_count) * MIN_MOCK_COVERAGE)
 }

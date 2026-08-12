@@ -26,6 +26,7 @@ import { grade, MODEL_GRADED } from '../src/grade.js'
 
 const SPEC = JSON.parse(readFileSync(new URL('../openapi.json', import.meta.url), 'utf8'))
 const ROUTER = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
+const API_SRC = readFileSync(new URL('../src/api.js', import.meta.url), 'utf8')
 const INSTRUCTIONS = readFileSync(new URL('../gpt-instructions.md', import.meta.url), 'utf8')
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url), 'utf8'))
 const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', import.meta.url), 'utf8'))
@@ -611,22 +612,68 @@ withSeed('the Precalculus warning in the instructions matches what the bank can 
 // gpt-instructions.md used to say a sitting goes unscored for "either" of two
 // reasons — too little of the section reached, or nothing gradeable — in both
 // the advisories bullet and the mock-exam walkthrough (Q4-X1). handleMockSubmit
-// has a THIRD, textually distinct branch: a sitting whose clock ran past
+// then grew a THIRD, textually distinct branch: a sitting whose clock ran past
 // MOCK_TIME_SLACK, or that spent too long on one item. Reproduced live: 40 of 42
 // CSA answers, all correct, all reached, fully gradeable, spanning 245 minutes
 // against a 90-minute budget — `counted:false` with a basis about the clock,
-// matching neither reason the doc enumerated. A model paraphrasing the doc's
-// "either X or Y" would tell that student he "didn't reach enough of the
-// section" — false, he reached and answered every one of them correctly.
+// matching neither reason the doc enumerated at the time.
 //
-// Three scenarios are driven through the REAL handler, not three strings
-// invented here, so a future branch merge or rename breaks this test instead of
-// leaving the doc quietly wrong again the way it did the first time.
+// Commit 18add4f then added a FOURTH: a section the bank cannot supply at all
+// (sec=II on a bank holding zero free-response items) also leaves a sitting
+// recorded but unscored, through its own `supplied` guard and its own basis
+// text (Q4-X5). The THIRD-branch fix above still passed after that commit only
+// because none of its three scenarios happened to exercise section II — proof
+// that a hardcoded scenario/marker count cannot catch the next branch either.
+//
+// So the count this test requires is no longer typed in by hand: it is read
+// out of handleMockSubmit's own source, one entry per `if (...) { ...
+// basis.push(` inside the `composite == null` block. If a fifth branch lands
+// there without a matching marker, scenario and doc update, the comparison
+// below fails immediately, rather than the doc quietly falling behind a third
+// time.
+function unscoredBranchCount(src) {
+  const start = src.indexOf('if (composite == null) {')
+  const end = src.indexOf('} else {', start)
+  assert.ok(start >= 0 && end > start, "handleMockSubmit's unscored-reason block moved or was renamed; update this derivation")
+  const block = src.slice(start, end)
+  return [...block.matchAll(/if\s*\([^){]*\)\s*\{\s*basis\.push\(/g)].length
+}
+
+// Four scenarios are driven through the REAL handler, not strings invented
+// here, so a future branch merge or rename breaks this test instead of leaving
+// the doc quietly wrong again the way it did twice already. Matched against the
+// server's own `basis` text.
 const UNSCORED_BRANCH_MARKERS = {
   short: /short of the \d+% of the section/i,
   untimed: /run against a clock/i,
   ungraded: /graded mechanically/i,
+  unsupplied: /cannot be scored from this question bank at all/i,
 }
+
+// The same four reasons, matched against gpt-instructions.md's own wording
+// instead — a different audience (a fifteen-year-old, not the server's basis
+// string), so the phrasing differs, but the SET has to be the same size as
+// UNSCORED_BRANCH_MARKERS, enforced below.
+const INSTRUCTIONS_REASON_MARKERS = {
+  short: /reach(ed)?[^.]*section/i,
+  untimed: /clock|too long|overran|ran past|slack/i,
+  ungraded: /graded mechanically/i,
+  unsupplied: /bank\s+cannot\s+supply/i,
+}
+
+test('the number of reasons api.js can leave a sitting unscored matches what this file checks for', () => {
+  const found = unscoredBranchCount(API_SRC)
+  assert.equal(
+    found, Object.keys(UNSCORED_BRANCH_MARKERS).length,
+    `handleMockSubmit now has ${found} branch(es) that leave a sitting unscored, but this file only names ` +
+      `${Object.keys(UNSCORED_BRANCH_MARKERS).length} (${Object.keys(UNSCORED_BRANCH_MARKERS).join(', ')}). Add a ` +
+      'marker here, a scenario below, and a matching update to gpt-instructions.md before this can pass again.',
+  )
+  assert.equal(
+    Object.keys(INSTRUCTIONS_REASON_MARKERS).length, Object.keys(UNSCORED_BRANCH_MARKERS).length,
+    'UNSCORED_BRANCH_MARKERS and INSTRUCTIONS_REASON_MARKERS must name the same set of reasons',
+  )
+})
 
 withSeed('every real reason a mock sitting can go unscored is named in gpt-instructions.md', async () => {
   const env = freshEnv()
@@ -637,8 +684,8 @@ withSeed('every real reason a mock sitting can go unscored is named in gpt-instr
   const coveredCount = Math.ceil(expected * MIN_MOCK_COVERAGE)
 
   /** Log `n` mechanically-uniform attempts, evenly spanning `minutes`, under one fresh mock. */
-  async function sit({ n, minutes, gradedBy }) {
-    const mock = await db.startMock({ subject: 'ap_csa', section: 'I', started_at: now, proctored: 1, source: 'bank' })
+  async function sit({ section = 'I', n, minutes, gradedBy }) {
+    const mock = await db.startMock({ subject: 'ap_csa', section, started_at: now, proctored: 1, source: 'bank' })
     const start = new Date(now).getTime()
     for (let i = 0; i < n; i++) {
       const ts = new Date(start + (minutes * 60000 * i) / Math.max(n - 1, 1)).toISOString()
@@ -659,8 +706,11 @@ withSeed('every real reason a mock sitting can go unscored is named in gpt-instr
   const untimed = await sit({ n: coveredCount + 2, minutes: CSA.exam.mcq_minutes * MOCK_TIME_SLACK + 20, gradedBy: 'server' })
   // Covers the WHOLE section inside budget, but nothing on the paper was mechanically graded.
   const ungraded = await sit({ n: expected, minutes: 5, gradedBy: 'model' })
+  // Section II: the CSA bank holds zero free-response items, so this section can
+  // never be scored at all, whatever it answers or how fast (Q4-X5).
+  const unsupplied = await sit({ section: 'II', n: 1, minutes: 5, gradedBy: 'server' })
 
-  const bases = { short, untimed, ungraded }
+  const bases = { short, untimed, ungraded, unsupplied }
   for (const [name, text] of Object.entries(bases)) {
     for (const [branch, marker] of Object.entries(UNSCORED_BRANCH_MARKERS)) {
       assert.equal(
@@ -671,8 +721,8 @@ withSeed('every real reason a mock sitting can go unscored is named in gpt-instr
     }
   }
 
-  // Three real, pairwise-distinct reasons exist today. Both places
-  // gpt-instructions.md enumerates them have to name all three, not two.
+  // Four real, pairwise-distinct reasons exist today. Both places
+  // gpt-instructions.md enumerates them have to name all four, not fewer.
   for (const [where, needle] of [
     ['the advisories bullet', 'A proctored sitting was recorded but not scored.'],
     ['the mock-exam walkthrough', '**If `counted` is false:**'],
@@ -683,14 +733,9 @@ withSeed('every real reason a mock sitting can go unscored is named in gpt-instr
     const end = rest.search(/\n- \*\*|\n\n/)
     const paragraph = end === -1 ? rest : rest.slice(0, end)
 
-    assert.match(paragraph, /reach(ed)?[^.]*section/i, `${where} must name the coverage reason`)
-    assert.match(paragraph, /graded mechanically/i, `${where} must name the ungradeable reason`)
-    assert.match(
-      paragraph, /clock|too long|overran|ran past|slack/i,
-      `${where} must ALSO name the timing reason — a sitting can go unscored for running past its time ` +
-        'budget, which is neither of the other two (Q4-X1: 40/42 correct, fully reached, over 245 minutes ' +
-        'on a 90-minute section, reported with a basis about the clock).',
-    )
+    for (const [name, marker] of Object.entries(INSTRUCTIONS_REASON_MARKERS)) {
+      assert.match(paragraph, marker, `${where} must name the "${name}" reason`)
+    }
   }
 })
 
