@@ -31,6 +31,34 @@ const SCHEMA = new URL('../schema.sql', import.meta.url)
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
 
 /**
+ * How the two drivers db.js runs against report a changed-row count.
+ *
+ * Cloudflare's D1 `run()` resolves to `{success, meta: {changes, ...}}` with NO
+ * top-level `changes`; node:sqlite's returns `{changes, lastInsertRowid}`. db.js
+ * reads either, and the tests below drive the D1 shape by default — because
+ * while this shim returned node:sqlite's, claimServe, closeMock, markTaught and
+ * scoreMock were only ever exercised through the fallback branch and the one
+ * production actually takes had zero coverage. The direction was at least
+ * fail-closed (an unrecognised shape reads as 0, i.e. "already claimed", so it
+ * refuses rather than double-counting) — but a guard that always fails closed
+ * refuses every /log there is.
+ */
+const D1_ENVELOPE = (r) => ({
+  success: true,
+  results: [],
+  meta: {
+    changes: r.changes,
+    last_row_id: Number(r.lastInsertRowid),
+    changed_db: r.changes > 0,
+    duration: 0.1,
+    served_by: 'test',
+  },
+})
+
+/** The raw node:sqlite result, kept so the fallback branch stays covered too. */
+const NODE_SQLITE_RESULT = (r) => r
+
+/**
  * Minimal D1-compatible wrapper over node:sqlite, matching the subset of the
  * binding that db.js actually uses: prepare().bind().all()/.first()/.run().
  *
@@ -38,8 +66,10 @@ const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta
  * test can park one request mid-flight and let another overtake it. Promise.all
  * only interleaves at the awaits the code happens to have; a race that has to be
  * caught at ONE statement needs to be scheduled, not hoped for.
+ *
+ * `envelope` shapes what run() resolves to — see D1_ENVELOPE.
  */
-function d1(sqlite, hold = null) {
+function d1(sqlite, hold = null, envelope = D1_ENVELOPE) {
   return {
     prepare(sql) {
       const stmt = sqlite.prepare(sql)
@@ -55,17 +85,17 @@ function d1(sqlite, hold = null) {
         },
         all: async () => { await pause(); return { results: stmt.all(...args) } },
         first: async () => { await pause(); return stmt.all(...args)[0] ?? null },
-        run: async () => { await pause(); return stmt.run(...args) },
+        run: async () => { await pause(); return envelope(stmt.run(...args)) },
       }
       return api
     },
   }
 }
 
-function freshDb({ hold = null } = {}) {
+function freshDb({ hold = null, envelope = D1_ENVELOPE } = {}) {
   const sqlite = new DatabaseSync(':memory:')
   sqlite.exec(readFileSync(SCHEMA, 'utf8'))
-  return { db: makeDb(d1(sqlite, hold)), sqlite }
+  return { db: makeDb(d1(sqlite, hold, envelope)), sqlite }
 }
 
 /** One keyed CSA item and its topic row, so a real /log call has something to grade. */
@@ -194,6 +224,41 @@ test('closeMock reports whether THIS call was the one that closed the sitting', 
   assert.equal((await db.mock(id)).ended_at, at(60))
   assert.equal(await db.closeMock({ id, ended_at: at(999) }), 0, 'and a later close on a closed sitting changes nothing')
   assert.equal((await db.mock(id)).ended_at, at(60), 'without moving the time the paper was handed in')
+})
+
+test('every conditional write reads its changed-row count out of BOTH drivers', async () => {
+  // Four writes decide something from the count of rows they changed — whether
+  // this caller spent the serve, closed the sitting, stored the score, or marked
+  // the lesson delivered — and each reports 0 as "someone else got there first".
+  // The count sits in a different place in the two drivers this code runs
+  // against: D1 puts it in meta.changes and has no top-level `changes` at all,
+  // node:sqlite the other way round. A shape that reads as 0 everywhere refuses
+  // every /log, every submit and every /taught, so both shapes are driven here.
+  for (const [driver, envelope] of [['D1', D1_ENVELOPE], ['node:sqlite', NODE_SQLITE_RESULT]]) {
+    const { db, sqlite } = freshDb({ envelope })
+    seedOneItem(sqlite)
+
+    const serve = await db.recordServe({ subject: 'ap_csa', item_id: 'csa-1', served_at: T0 })
+    assert.equal(await db.claimServe(serve), 1, `${driver}: claimServe must see the row it changed`)
+    assert.equal(await db.claimServe(serve), 0, `${driver}: and see that a second claim changed nothing`)
+
+    const id = await db.startMock({ subject: 'ap_csa', section: 'I', started_at: T0, proctored: 1, source: 'bank' })
+    assert.equal(await db.closeMock({ id, ended_at: at(60) }), 1, `${driver}: closeMock must see the row it changed`)
+    assert.equal(await db.closeMock({ id, ended_at: at(90) }), 0, `${driver}: and refuse a second close`)
+    assert.equal(await db.scoreMock({ id, composite_pct: 50, blanks: 0 }), 1, `${driver}: scoreMock must see its write`)
+    assert.equal(await db.scoreMock({ id, composite_pct: 90, blanks: 3 }), 0, `${driver}: and refuse a second score`)
+    assert.equal((await db.mock(id)).composite_pct, 50, `${driver}: the refused score may not overwrite the stored one`)
+
+    await db.openGap({ subject: 'ap_csa', topic: '1.3', opened_at: T0 })
+    assert.equal(
+      await db.markTaught({ subject: 'ap_csa', topic: '1.3', taught_at: at(10) }), 1,
+      `${driver}: markTaught must see the row it changed`,
+    )
+    assert.equal(
+      await db.markTaught({ subject: 'ap_csa', topic: 'Loops and Arrays', taught_at: at(10) }), 0,
+      `${driver}: and report 0 for a topic with no open gap`,
+    )
+  }
 })
 
 test('two concurrent /mock/submit calls close and score one sitting exactly once', async () => {
