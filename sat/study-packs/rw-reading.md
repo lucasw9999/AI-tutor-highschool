@@ -49,9 +49,9 @@
 
 *Q: Main idea?*
 - (A) The lined seahorse uses brown and red coloring. → **too narrow** (a detail).
-- (B) Reyes's work shows the seahorse's coloring serves communication, not only camouflage. → **correct** (covers the whole arc: old assumption → finding).
-- (C) Reyes is the leading expert on seahorses. → **over-reach** (text never ranks her).
-- (D) Seahorse coloring is purely camouflage. → **reversal** (text overturns this).
+- (B) Reyes is the leading expert on seahorses. → **over-reach** (text never ranks her).
+- (C) Seahorse coloring is purely camouflage. → **reversal** (text overturns this).
+- (D) Reyes's work shows the seahorse's coloring serves communication, not only camouflage. → **correct** (covers the whole arc: old assumption → finding).
 
 ---
 
@@ -72,8 +72,8 @@
 > The Antikythera mechanism, recovered from a Roman-era shipwreck, is an ancient Greek geared device that modeled the positions of the sun and moon. Its complexity was not matched again for over a thousand years.
 
 *Q: According to the text, the Antikythera mechanism...*
-- (A) was built by the Romans. → **reversal/out of scope** (Greek; found in a Roman-era wreck).
-- (B) modeled the positions of the sun and moon. → **correct** (stated).
+- (A) modeled the positions of the sun and moon. → **correct** (stated).
+- (B) was built by the Romans. → **reversal/out of scope** (Greek; found in a Roman-era wreck).
 - (C) is the oldest known machine. → **unsupported** (never claimed).
 - (D) took a thousand years to build. → **out of scope** (the thousand years is about *matching its complexity*, not building it).
 
@@ -121,9 +121,9 @@
 
 *Q: Which choice uses data from the table to support the claim?*
 - (A) City A residents averaged 6,200 steps. → **accurate but irrelevant** (A isn't the most).
-- (B) City B residents averaged 9,400 steps, more than 2,000 above the next-highest city. → **correct** (true AND supports "most + well above": 9,400 vs 7,100).
-- (C) City C residents averaged the most steps. → **misread** (C isn't the most).
-- (D) City B residents walked fewer steps than City C. → **reversal**.
+- (B) City B residents walked fewer steps than City C. → **reversal**.
+- (C) City B residents averaged 9,400 steps, more than 2,000 above the next-highest city. → **correct** (true AND supports "most + well above": 9,400 vs 7,100).
+- (D) City C residents averaged the most steps. → **misread** (C isn't the most).
 
 ---
 
@@ -196,9 +196,9 @@
 
 *Q: Function of the bracketed sentence in the text as a whole?*
 - (A) It states the author's final conclusion. → **wrong** (the "However" sentence is the conclusion).
-- (B) It concedes a point that seems to support the claim before the author challenges it. → **correct** (it's a concession set up to be rebutted).
-- (C) It provides statistical proof that attention spans are shrinking. → **over-reach / wrong verb** (it's conceded, then undercut).
-- (D) It defines social media. → **out of scope**.
+- (B) It provides statistical proof that attention spans are shrinking. → **over-reach / wrong verb** (it's conceded, then undercut).
+- (C) It defines social media. → **out of scope**.
+- (D) It concedes a point that seems to support the claim before the author challenges it. → **correct** (it's a concession set up to be rebutted).
 
 ---
 
@@ -231,11 +231,13 @@
 
 *Do all 12, then check. For every miss, re-read the trap rule above it. Answers + reasoning at the very bottom — don't peek.*
 
+> **Note on the letters:** the correct answers below are spread across A, B, C and D on purpose. The real SAT has no answer-letter pattern, so "when in doubt, pick B" is a habit that will cost you marks. Work the text, not the letters.
+
 **Q1.** Octopuses can solve mazes and open jars, tasks that require remembering a sequence of steps. Yet each of an octopus's eight arms also contains clusters of neurons that can react to touch without input from the central brain. Researchers now suspect that octopus intelligence is distributed across the body, not concentrated in the brain alone.
 
 Which choice best states the main idea of the text?
-- (A) Octopuses can open jars.
-- (B) Octopus intelligence may be spread throughout the body rather than centralized in the brain.
+- (A) Octopus intelligence may be spread throughout the body rather than centralized in the brain.
+- (B) Each octopus arm contains clusters of neurons that react to touch.
 - (C) Octopuses are the most intelligent invertebrates.
 - (D) Octopus arms cannot function without the central brain.
 
@@ -243,25 +245,25 @@ Which choice best states the main idea of the text?
 
 According to the text, the Franklin expedition's ships were
 - (A) found by the expedition members themselves.
-- (B) located by search teams in 2014 and 2016.
+- (B) discovered on land rather than underwater.
 - (C) never recovered.
-- (D) destroyed in 1845.
+- (D) located by search teams in 2014 and 2016.
 
 **Q3.** Botanist Lena Okafor proposed that a certain desert shrub survives drought by shedding its leaves early to conserve water, rather than by storing water in its roots.
 
 Which finding, if true, would most strongly support Okafor's hypothesis?
 - (A) The shrub's roots hold more water than those of nearby plants.
-- (B) Shrubs that dropped their leaves earliest survived the longest droughts, while root water content varied randomly.
-- (C) The shrub grows faster in wet years.
-- (D) The shrub's leaves are unusually large.
+- (B) The shrub's leaves are unusually large.
+- (C) Shrubs that dropped their leaves earliest survived the longest droughts, while root water content varied randomly.
+- (D) The shrub is found only in deserts receiving less than 100 mm of rain a year.
 
 **Q4.** A line graph shows a region's wildfires per decade: 1980s = 12; 1990s = 18; 2000s = 26; 2010s = 41. *Claim: the regional wildfire rate has risen sharply over the four decades, with the steepest jump in the most recent decade.*
 
 Which choice most effectively uses data from the graph to support the claim?
 - (A) The region had 12 wildfires in the 1980s.
-- (B) The number rose from 26 in the 2000s to 41 in the 2010s, a larger increase than in any previous decade.
-- (C) Wildfires decreased in the 2010s.
-- (D) The 1990s saw the largest jump.
+- (B) Wildfires decreased in the 2010s.
+- (C) The number rose from 12 in the 1980s to 18 in the 1990s.
+- (D) The number rose from 26 in the 2000s to 41 in the 2010s, a larger increase than in any previous decade.
 
 **Q5.** Most batteries lose capacity as they are charged and discharged repeatedly. A new electrode coating, however, keeps the battery's internal structure from cracking during charging. As a result, batteries with this coating ____
 
@@ -275,9 +277,9 @@ Which choice most logically completes the text?
 
 Which choice completes the text with the most logical and precise word?
 - (A) ornate
-- (B) spare
-- (C) confusing
-- (D) lengthy
+- (B) lengthy
+- (C) spare
+- (D) hesitant
 
 **Q7.** Some historians argue that the printing press alone democratized knowledge in Europe. [Literacy rates did rise in the century after its invention.] But other factors — rising urban schooling and cheaper paper — were just as decisive, and the press's effect is hard to isolate.
 
@@ -293,9 +295,9 @@ What is the function of the bracketed sentence in the text as a whole?
 
 Based on the texts, how would Park (Text 2) most likely respond to Mendez's (Text 1) claim?
 - (A) By agreeing that remote work permanently raises productivity.
-- (B) By noting the productivity gains are real early on but tend to diminish over time.
-- (C) By arguing remote work always reduces productivity.
-- (D) By denying that commutes affect productivity.
+- (B) By arguing remote work always reduces productivity.
+- (C) By attributing the early gains entirely to shorter commutes.
+- (D) By noting the productivity gains are real early on but tend to diminish over time.
 
 **Q9.** A naturalist's field notes describe a bird that builds an elaborate, decorated nest not to house eggs but solely to attract a mate; once mating occurs, the structure is abandoned.
 
@@ -316,46 +318,46 @@ Which choice completes the text with the most logical and precise word?
 **Q11.** Coral reefs occupy less than 1% of the ocean floor, yet they shelter roughly a quarter of all marine species. Scientists warn that as warming seas cause corals to expel the algae that feed them — an event called bleaching — the loss of reef habitat could ripple far beyond the reefs themselves.
 
 Which choice most reasonably completes the inference that bleaching is concerning because
-- (A) coral reefs cover most of the ocean floor.
-- (B) the species that depend on reefs could be widely affected even though reefs are small.
-- (C) algae are harmful to coral.
-- (D) warming seas have no effect on marine life.
+- (A) the species that depend on reefs could be widely affected even though reefs are small.
+- (B) algae are harmful to coral.
+- (C) coral reefs cover most of the ocean floor.
+- (D) bleaching will drive a quarter of all marine species to extinction.
 
 **Q12.** A table shows recycling rates: Town X = 31%; Town Y = 54%; Town Z = 47%. *Claim: the town with the highest recycling rate exceeded the lowest by more than 20 percentage points.*
 
 Which choice most effectively uses data from the table to support the claim?
 - (A) Town X recycled 31% of its waste.
-- (B) Town Y, at 54%, exceeded Town X's 31% by 23 percentage points.
-- (C) Town Z had the highest recycling rate.
-- (D) Town Y exceeded Town Z by more than 20 points.
+- (B) Town Z had the highest recycling rate.
+- (C) Town Y exceeded Town Z by 7 percentage points.
+- (D) Town Y, at 54%, exceeded Town X's 31% by 23 percentage points.
 
 ---
 
 ## ANSWER KEY + REASONING
 
-**Q1 — B.** *(Central Ideas)* Covers the whole arc: brain-based tasks → arm neurons → distributed-intelligence conclusion. (A) too narrow (one detail). (C) over-reach ("most intelligent" — never claimed). (D) reversal (arms can react *without* the central brain).
+**Q1 — A.** *(Central Ideas)* Covers the whole arc: brain-based tasks → arm neurons → distributed-intelligence conclusion. (B) is too narrow — a true detail, but it's one step in the argument, not the point. (C) over-reach ("most intelligent" — never claimed). (D) reversal (arms react *without* the central brain).
 
-**Q2 — B.** *(Detail)* Directly stated: "search teams using sonar located both wrecks" in 2014/2016. (A) reversal (the original members vanished). (C) reversal (they *were* found). (D) out of scope (the *expedition* vanished in 1845; the ships weren't said to be destroyed then).
+**Q2 — D.** *(Detail)* Directly stated: "search teams using sonar located both wrecks" in 2014/2016. (A) reversal (the original members vanished). (B) misread — the text says "on the Arctic seafloor," i.e. underwater. (C) reversal (they *were* found).
 
-**Q3 — B.** *(Textual Evidence)* The hypothesis is leaf-shedding (not root storage) drives survival. (B) hits both halves exactly: leaf-droppers survived longest AND root water didn't matter. (A) supports the *rejected* explanation. (C)/(D) out of scope (growth rate, leaf size aren't the claim).
+**Q3 — C.** *(Textual Evidence)* The hypothesis is that leaf-shedding, *not* root storage, drives survival. (C) hits both halves exactly: leaf-droppers survived longest AND root water didn't matter. (A) supports the *rejected* explanation. (B) leaf size and (D) habitat are out of scope — neither tests the mechanism.
 
-**Q4 — B.** *(Quantitative)* The claim has two parts: sharp overall rise + steepest jump in the most recent decade. (B) cites the 26→41 jump (15) being the largest — satisfies both. (A) accurate but irrelevant (no rise shown). (C) reversal (it rose). (D) misread (the biggest jump is the 2010s, not the 1990s).
+**Q4 — D.** *(Quantitative)* The claim has two parts: sharp overall rise + steepest jump in the most recent decade. (D) cites the 26→41 jump of 15, larger than the earlier jumps of 6 and 8 — satisfies both. (A) accurate but irrelevant (shows no rise). (B) reversal (it rose). (C) is the sneaky one: 12→18 is a perfectly accurate reading, but +6 is the *smallest* jump, so it argues against the "steepest in the most recent decade" half.
 
-**Q5 — A.** *(Inference)* Coating prevents cracking → less degradation → keeps capacity longer. Smallest forced step. (B) reversal. (C) over-reach ("identical in every way"). (D) over-reach ("never... under any conditions" — unearned absolute).
+**Q5 — A.** *(Inference)* Coating prevents cracking → less degradation → keeps capacity longer. Smallest forced step. (B) reversal. (C) over-reach ("identical in every way"). (D) over-reach ("never… under any conditions" — unearned absolute).
 
-**Q6 — B.** *(Words in Context)* Clue: early sentences "sprawled," final works used "a handful of clipped words" → predict "lean/minimal" → **spare**. (A) ornate and (D) lengthy are reversals; (C) confusing is unsupported (clipped ≠ confusing).
+**Q6 — C.** *(Words in Context)* Clue: early sentences "sprawled," final works used "a handful of clipped words" → predict "lean/minimal" → **spare**. (A) ornate and (B) lengthy are reversals; (D) hesitant is unsupported (clipped ≠ hesitant — brevity here is control, not nerves).
 
 **Q7 — B.** *(Text Structure & Purpose / Function)* The bracketed fact (literacy rose) is *consistent with* the press-did-it claim — but the author then complicates it ("But other factors..."). It's a concession. (A) wrong (the "But" sentence carries the author's view). (C) over-reach / wrong verb ("proves... sole cause"). (D) out of scope.
 
-**Q8 — B.** *(Cross-Text)* Park's stated view: gains are real early, fade over time, rarely negative. (B) maps exactly. (A) reversal ("permanently"). (C) overstated disagreement ("always reduces" — Park says rarely negative). (D) misattributed (Park never addresses commutes).
+**Q8 — D.** *(Cross-Text)* Park's stated view: gains are real early, fade over time, rarely negative. (D) maps exactly. (A) reversal ("permanently"). (B) overstated disagreement ("always reduces" — Park says rarely negative). (C) misattributed — Park measures *when* the gains appear, never says commutes explain them; that's Mendez's mechanism, not Park's.
 
 **Q9 — B.** *(Text Structure & Purpose / Purpose)* The text's job is to describe a courtship nest (built to attract a mate, not house eggs). (A) reversal (not for eggs). (C) over-reach ("most skilled"). (D) too narrow (materials aren't the focus).
 
 **Q10 — C.** *(Words in Context)* Clue: only four minutes yet captured everything in a few lines → predict "brief but effective" → **succinct**. (A) tedious, (B) trivial, (D) rambling are all reversals of the praise + brevity.
 
-**Q11 — B.** *(Inference)* Reefs are tiny (<1%) but host ~25% of marine species, so losing them ripples outward → the dependent species are widely affected despite small reef size. (A) reversal (reefs are <1%). (C) out of scope / distorts (algae *feed* coral). (D) reversal.
+**Q11 — A.** *(Inference)* Reefs are tiny (<1%) but host ~25% of marine species, so losing them ripples outward → the dependent species are widely affected despite small reef size. (B) out of scope / distorts (algae *feed* the coral). (C) reversal (reefs are <1%). (D) over-reach — the text says the loss "could ripple," which is a long way from predicting extinction.
 
-**Q12 — B.** *(Quantitative)* Claim = highest minus lowest > 20 points. Highest = Y (54), lowest = X (31); 54−31 = 23 > 20. (B) is true AND on-target. (A) accurate but irrelevant. (C) misread (Y is highest). (D) true number-wise (54−47=7) but doesn't address highest-vs-*lowest*, so it fails the claim.
+**Q12 — D.** *(Quantitative)* Claim = highest minus lowest > 20 points. Highest = Y (54), lowest = X (31); 54−31 = 23 > 20. (D) is true AND on-target. (A) accurate but irrelevant. (B) misread (Y is highest, not Z). (C) is true number-wise (54−47 = 7) but compares the highest with the *middle* town, so it never addresses highest-vs-**lowest** — and 7 wouldn't clear 20 anyway.
 
 ---
 

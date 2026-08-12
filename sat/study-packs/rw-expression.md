@@ -45,10 +45,10 @@ The relationship is always one of **six categories**. Learn the category, not 50
 
 > Sodium-ion batteries are cheaper to produce than the lithium-ion batteries that dominate the market. ______ they store less energy per kilogram, which has slowed their adoption in electric vehicles.
 
-**A)** For example  **B)** Therefore  **C)** However  **D)** In addition
+**A)** However  **B)** Therefore  **C)** In addition  **D)** For example
 
 **Think:** Sentence 1 = a *plus* for sodium-ion (cheaper). Sentence 2 = a *minus* (stores less). Plus → minus = **contrast/turn.**
-**Answer: C) However.** *Therefore* (B) would mean the price *causes* lower energy density — false. *In addition* (D) and *For example* (A) ignore the flip.
+**Answer: A) However.** *Therefore* (B) would mean the price *causes* lower energy density — false. *In addition* (C) and *For example* (D) ignore the flip.
 
 ## Worked Example B (Cause/Effect)
 
@@ -70,7 +70,7 @@ A) Therefore  B) Yet  C) For example  D) Likewise
 A) However  B) In addition  C) For instance  D) Similarly
 
 **T3.** Honeybees communicate the location of food through a "waggle dance." ______ the angle of the dance signals the direction relative to the sun.
-A) Nevertheless  B) Specifically  C) In contrast  D) Instead
+A) Nevertheless  B) Therefore  C) In contrast  D) Specifically
 
 **T4.** The film was shot entirely on handheld cameras, giving it a shaky, documentary feel. ______ the director hired no professional actors, casting residents of the town instead.
 A) Furthermore  B) However  C) Therefore  D) For example
@@ -85,7 +85,7 @@ A) Indeed  B) Therefore  C) However  D) For example
 A) Subsequently  B) Nevertheless  C) For instance  D) In contrast
 
 **T8.** The treaty did not end the conflict outright. ______ it created the first formal channel for negotiation between the two sides.
-A) Therefore  B) For example  C) Still  D) Likewise
+A) Therefore  B) For example  C) In other words  D) Still
 
 ### Transitions — Worked Answers
 
@@ -95,7 +95,7 @@ A) Therefore  B) For example  C) Still  D) Likewise
 **T2 — A) However.** Rejected three / approved the fourth = reversal. *In addition* would wrongly continue the "rejecting" idea.
 *RULE: when the action reverses (reject → approve), you need a turn word.*
 
-**T3 — B) Specifically.** Sentence 2 zooms into one detail of the waggle dance (the angle) — that's an example/specification of the general claim.
+**T3 — D) Specifically.** Sentence 2 zooms into one detail of the waggle dance (the angle) — that's an example/specification of the general claim. (A) and (C) are contrast words, but nothing reverses. (B) *Therefore* is the fake-cause trap: the dance doesn't *cause* the angle to mean something, the angle is *part of* the dance.
 *RULE: general statement → concrete detail = example/specifically, even when "for example" isn't the option offered.*
 
 **T4 — A) Furthermore.** Both sentences list unconventional choices (handheld cameras; non-actors), same direction = addition.
@@ -110,7 +110,7 @@ A) Therefore  B) For example  C) Still  D) Likewise
 **T7 — A) Subsequently.** Launched in one city, then expanded — a time sequence.
 *RULE: chronological steps (test first → then expand) = sequence/time.*
 
-**T8 — C) Still.** "Didn't end it outright, **still** it created a channel" = concession/contrast (something positive despite the limitation). *Therefore* would falsely make the non-ending *cause* the channel.
+**T8 — D) Still.** "Didn't end it outright, **still** it created a channel" = concession/contrast (something positive despite the limitation). (A) *Therefore* would falsely make the non-ending *cause* the channel. (B) the channel isn't an instance of the treaty failing. (C) *In other words* would mean sentence 2 restates sentence 1, but it says something new and opposite in charge.
 *RULE: "didn't fully do X, but still achieved Y" = contrast/concession.*
 
 ---
@@ -145,11 +145,11 @@ These give you **bullet-point notes** a student took, then ask which sentence be
 
 **A)** The Western honeybee builds large perennial colonies that can hold 50,000 bees.
 **B)** Two bee species are the Western honeybee and the red mason bee, which is solitary.
-**C)** Unlike the social Western honeybee, whose colonies can hold 50,000 bees, the red mason bee is solitary, nesting alone and laying only 10–20 eggs.
-**D)** Both the Western honeybee and the red mason bee are types of bee found in many regions.
+**C)** Both the Western honeybee and the red mason bee are types of bee found in many regions.
+**D)** Unlike the social Western honeybee, whose colonies can hold 50,000 bees, the red mason bee is solitary, nesting alone and laying only 10–20 eggs.
 
 **Think:** Goal = a *difference*. Need ONE sentence that puts the two species side by side and contrasts them.
-**Answer: C.** "Unlike… social… colonies of 50,000… solitary… 10–20 eggs" directly contrasts. A mentions only one species (no comparison). B names both but states no real difference. D emphasizes a *similarity* — wrong goal.
+**Answer: D.** "Unlike… social… colonies of 50,000… solitary… 10–20 eggs" directly contrasts. A mentions only one species (no comparison). B names both but states no real difference. C emphasizes a *similarity* — wrong goal.
 
 ## Worked Example D (goal = introduce to an unfamiliar audience)
 
@@ -173,6 +173,8 @@ These give you **bullet-point notes** a student took, then ask which sentence be
 
 ## Rhetorical Synthesis Practice Set (5 questions)
 
+> Every answer in this set used to be C. It isn't any more — the letters are spread on purpose, because pattern-matching the letter is exactly the habit that costs marks on test day.
+
 **S1. Notes:**
 - The Great Barrier Reef is off the coast of Queensland, Australia.
 - It stretches over 2,300 km.
@@ -180,10 +182,10 @@ These give you **bullet-point notes** a student took, then ask which sentence be
 - It can be seen from space.
 
 **Goal:** *Emphasize the reef's size to a reader unfamiliar with it.*
-A) The Great Barrier Reef is located off the coast of Queensland, Australia.
-B) The Great Barrier Reef is a coral reef system in Australia that can be seen from space.
-C) The world's largest coral reef system, the Great Barrier Reef stretches over 2,300 km — so vast it can be seen from space.
-D) Coral reef systems, including the Great Barrier Reef, exist in many oceans.
+A) The world's largest coral reef system, the Great Barrier Reef stretches over 2,300 km — so vast it can be seen from space.
+B) The Great Barrier Reef is located off the coast of Queensland, Australia.
+C) The Great Barrier Reef is a coral reef system in Australia that can be seen from space.
+D) The Great Barrier Reef is a well-known destination for divers from around the world.
 
 **S2. Notes:**
 - Study A found that urban gardens increased local bee populations.
@@ -194,8 +196,8 @@ D) Coral reef systems, including the Great Barrier Reef, exist in many oceans.
 **Goal:** *Generalize a shared finding of the two studies.*
 A) Study A, conducted in 2021, found that urban gardens increased bee populations.
 B) Two 2021 studies used the same monitoring method to observe pollinators.
-C) Two 2021 studies found that urban gardens increased local populations of pollinators — bees in one study and butterflies in the other.
-D) Study B found that urban gardens increased local butterfly populations.
+C) Bees and butterflies are both pollinators found in urban gardens.
+D) Two 2021 studies found that urban gardens increased local populations of pollinators — bees in one study and butterflies in the other.
 
 **S3. Notes:**
 - Maria Tallchief was born in Oklahoma in 1925.
@@ -205,8 +207,8 @@ D) Study B found that urban gardens increased local butterfly populations.
 
 **Goal:** *Introduce Maria Tallchief and her main historical significance.*
 A) Maria Tallchief, born in Oklahoma in 1925, was of Osage heritage.
-B) Maria Tallchief danced lead roles for the New York City Ballet.
-C) Maria Tallchief, an Osage dancer born in 1925, was the first Native American to become a prima ballerina.
+B) Maria Tallchief, an Osage dancer born in 1925, was the first Native American to become a prima ballerina.
+C) Maria Tallchief was one of several celebrated American ballerinas of the twentieth century.
 D) Many dancers performed with the New York City Ballet, including Maria Tallchief.
 
 **S4. Notes:**
@@ -217,9 +219,9 @@ D) Many dancers performed with the New York City Ballet, including Maria Tallchi
 
 **Goal:** *Explain the cause-and-effect link between the eruption and the crop failures.*
 A) Mount Tambora erupted in 1815, and 1816 was called "the Year Without a Summer."
-B) The 1815 Tambora eruption released ash that blocked global sunlight, cooling the climate so severely that crops failed across Europe and North America in 1816.
-C) Crops failed in Europe and North America in 1816.
-D) The eruption of Mount Tambora released a large amount of ash in 1815.
+B) The eruption of Mount Tambora released a large amount of ash in 1815.
+C) The 1815 Tambora eruption released ash that blocked global sunlight, cooling the climate so severely that crops failed across Europe and North America in 1816.
+D) Crops failed across Europe and North America in 1816, the year after Mount Tambora erupted.
 
 **S5. Notes:**
 - Jupiter is the largest planet in the solar system.
@@ -235,17 +237,17 @@ D) Jupiter is a gas giant in the solar system.
 
 ### Rhetorical Synthesis — Worked Answers
 
-**S1 — C.** Goal = emphasize *size*. C stacks "largest… 2,300 km… seen from space" — all scale. A (location) and D (general existence) ignore size; B mentions "seen from space" but buries the scale and adds location.
+**S1 — A.** Goal = emphasize *size*. A stacks "largest… 2,300 km… seen from space" — all scale. B (location) and D (popularity with divers) ignore size entirely; C mentions "seen from space" but buries the scale and leads with location and category instead.
 *RULE: when the goal is one attribute (size), pick the choice loaded with THAT attribute.*
 
-**S2 — C.** Goal = *generalize a shared finding.* C combines both into one statement about "pollinators" while preserving each result. A and D each report only ONE study (no generalization); B reports the *method*, not the *finding*.
+**S2 — D.** Goal = *generalize a shared finding.* D combines both into one statement about "pollinators" while preserving each result. A reports only ONE study (no generalization); B reports the *method*, not the *finding*; C is the trap — it generalizes about bees and butterflies but states no **finding** at all, just a category fact the studies didn't need to discover.
 *RULE: "generalize a shared finding" = the umbrella sentence covering both, stating the result, not the setup.*
 
-**S3 — C.** Goal = introduce + *main significance.* C gives identity (Osage, 1925) AND the headline: first Native American prima ballerina. A omits the significance; B states a lesser fact; D buries her among "many dancers."
+**S3 — B.** Goal = introduce + *main significance.* B gives identity (Osage, 1925) AND the headline: first Native American prima ballerina. A omits the significance; C actively erases it by making her "one of several"; D buries her among "many dancers."
 *RULE: "main significance" = the most historically important fact, not just any true detail.*
 
-**S4 — B.** Goal = the *cause-and-effect chain.* B walks the full causal path: ash → blocked sunlight → cooling → crop failure. A just pairs two facts with "and" (no mechanism); C and D give only one end of the chain.
-*RULE: cause/effect goal = pick the choice that actually links the steps, not the one that lists endpoints.*
+**S4 — C.** Goal = the *cause-and-effect chain.* C walks the full causal path: ash → blocked sunlight → cooling → crop failure. A just pairs two facts with "and" (no mechanism); B gives only the first link; D is the sneaky one — it puts the events in the right *order* ("the year after"), but sequence is not causation, and it never mentions the ash or the blocked sunlight that does the explaining.
+*RULE: cause/effect goal = pick the choice that actually links the steps, not the one that lists endpoints or merely orders them in time.*
 
 **S5 — C.** Goal = *convey scale.* C ("a storm larger than the entire planet Earth") is the vivid size fact. A (composition) and D (category) aren't about scale; B (95 moons) hints at scale but is less directly about Jupiter's own size than "bigger than Earth."
 *RULE: when asked for ONE fact serving a goal, pick the most vivid, on-target single fact — don't combine.*
