@@ -2,6 +2,8 @@
 
 **Why this matters:** practicing on *real* released items + rehearsing the actual exam mechanics is the highest-fidelity prep. Here's exactly where to get authentic material and what exam day looks like.
 
+> 📥 **For a parent doing one download pass:** the consolidated, priority-ordered **download list for both subjects** is in [`../README.md`](../README.md) under "**THE DOWNLOAD LIST**". This file is the detail and the reasoning behind it.
+
 ## Best official practice items (free)
 **AP Central — Past Free-Response Questions** (search "AP Precalculus past exam questions"):
 - Posts the **3 most recent years only** (currently **2024, 2025, 2026**). **2024 & 2025 = the FULL package** — questions + **scoring guidelines** + **sample student responses (Q1–Q4)** + **scoring statistics** + **Chief Reader Report**. **2026 = questions only** (so far).
@@ -37,6 +39,12 @@
 - `ap24-sg-precalculus.pdf` (scoring guidelines) · `ap24-precalculus-scoring-statistics.pdf` (per-question means) · `ap24-cr-report-precalculus.pdf` (Chief Reader Report).
 
 **Why the correction matters:** it **doubles the calibration material from one year to two.** Each `ap24-precalculus-student-samples-frq-N.pdf` is a self-contained rubric-plus-official-award pair, so there are **8 scored sets** to grade blind against (4 from 2024, 4 from 2025) instead of 4 — and the 2024 files are the ones on the rolling window's edge, so fetch them first.
+
+### Score distributions — an artifact class this repo never mentioned
+
+**`ap25-precalculus-score-distributions.pdf`** (verified 12 August 2026 — HTTP 200, ~93 KB, titled **"2025 Student Score Distributions – AP® Precalculus"**). Posted **per subject, per year**; the CSA twin is `ap25-computer-science-a-score-distributions.pdf`.
+
+**What it is and why to keep it:** the **official 1–5 distribution** — what fraction of students actually earned each score. It is not practice material, so it doesn't go in a study session; its job is to tell you **what score a given level of performance really converts to**, which is the thing every readiness threshold in this project is ultimately guessing at. Pull the 2025 pair as the baseline, then watch for the 2026 and 2027 editions. For Lucas the useful reading is narrow but honest: **Precalculus content did not change for 2027, so the Precalc curve is comparatively stable year to year** — unlike CSA, where the redesign resets it. Use it to sanity-check that a 4–5 target is realistic, not to lower a practice bar.
 
 - ✅ **These are fully aligned — no filtering needed.** College Board states the course content has not changed, so every 2024/2025 question and rubric still applies (for May 2027 only the question counts and timing changed — see `2027-exam-changes.md`).
 - **So you can calibrate your own FRQ grading against official awards today:** grade a response blind against `ap25-sg-precalculus.pdf`, then compare with the matching `ap25-apc-precalculus-q*.pdf` award — **or** do the whole loop inside a single 2024 file, since each `ap24-precalculus-student-samples-frq-N.pdf` carries the rubric and the official awards together. Nothing here waits on an unposted document. *(AP CSA is the opposite case — its 2023–25 materials need a filter; see `../../ap_csa/ap_csa_exam/reference/frq-rubric-and-penalties.md` §8.)*
