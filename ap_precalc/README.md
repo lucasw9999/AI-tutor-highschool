@@ -3,11 +3,13 @@
 A **condensed, exam-driven, question-first** catch-up system for AP Precalculus. **Goal: be confident for the class (A) and the AP exam (4–5, May 2027)** — fast, without reading a textbook cover to cover. Same architecture as `../ap_csa/` and `../10th_english/`, tuned for math: **do a problem → learn the piece you're missing → repeat.**
 
 ## What's here
+> ⚠️ **For the parent — the deadline (College Board timeline, verified 12 August 2026):** only a school's **AP Coordinator** can order the exam. **Preferred deadline Oct 2, 2026; final deadline Nov 13, 2026, 11:59 PM ET (+$40 per exam late order fee after Oct 2).** One order covers **both** AP Precalculus and AP CSA — confirm both are on it. Accommodations, if ever needed: **Jan 22, 2027**. Details in `reference/practice-resources-and-exam-day.md`.
+
 | Path | What it is |
 |---|---|
 | **`coverage-map.md`** | The 4 units, exam format/weights, what's tested, and the express crunch order. The backbone. |
 | **`study-packs/`** | One condensed pack per unit (Polynomial/Rational, Exponential/Log, Trig/Polar, Parameters/Vectors/Matrices): must-know concepts + worked examples + graduated practice *with solutions* + exam traps. |
-| **`reference/`** | `formula-and-identity-sheet.md` (must-memorize), `graphing-calculator-skills.md`, `exam-strategy-and-scoring.md`. |
+| **`reference/`** | `formula-and-identity-sheet.md` (must-memorize), `graphing-calculator-skills.md`, `exam-strategy-and-scoring.md`, `practice-resources-and-exam-day.md` (official practice PDFs, exam-day mechanics, **registration deadlines**). |
 | **`tutor-prompt.md`** | The AI tutor's instructions (paste into a ChatGPT Custom GPT or Claude Project). |
 | **`mastery-tracker.md`** | Persistent progress memory. |
 | **`how-to-use.md`** / **`chatgpt-setup.md`** / **`diagnostic.md`** | Day-to-day instructions, setup steps, Day-1 placement check. |
@@ -21,4 +23,4 @@ A **condensed, exam-driven, question-first** catch-up system for AP Precalculus.
 **Memorize the formula/identity sheet first**, then work **Units 1 → 2 → 3 in order** (the exam-tested ones, ~equal weight), practicing **both** calculator and no-calculator style and the **4 FRQ types**; do Unit 4 last (class-only). The tutor makes him *do* the math and **coaches — it doesn't hand him answers.**
 
 ## How it was built
-Grounded in the official College Board **CED (Fall 2023)** + AP Central exam page (units, weights, format verified directly), then built exam-driven from a deep-research pass on the **2024 & 2025 exams** (released FRQs, Chief Reader feedback, scoring, per-unit emphasis). Exam tests **Units 1–3**; Unit 4 is class-only.
+Grounded in the official College Board **CED (October 2025 version) plus the "CED Clarification and Guidance — Effective Fall 2026" PDF** + AP Central exam page (units, weights, format verified directly), then built exam-driven from a deep-research pass on the **2024 & 2025 exams** (released FRQs, Chief Reader feedback, scoring, per-unit emphasis). Exam tests **Units 1–3**; Unit 4 is class-only.

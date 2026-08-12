@@ -17,7 +17,7 @@
 | | **42 MC + 4 FRQ** | | **~2 hr 55 min** | MC ~62.5% / FRQ ~37.5% |
 
 - **Format:** Hybrid digital — MC answered in **Bluebook** app; FRQs **handwritten** in a paper booklet. You cannot flag-and-return across sections once time is called.
-- **Calculator:** an approved **physical graphing calculator** is permitted, **and** a **built-in Desmos** is available in Bluebook for the calculator parts (use either/both). Required for nothing, available on I-B and II-A; not available on I-A, II-B. Work in **radians**.
+- **Calculator:** a graphing calculator is **REQUIRED** — College Board's graphing-calculators page (verified 12 August 2026) says the exam "requires using a graphing calculator on Part B of Section I... and Part A of Section II." You satisfy that requirement with **either** an approved **handheld** graphing calculator **or** Bluebook's built-in Desmos ("A built-in Desmos graphing calculator is available through Bluebook"; "Only the built-in... can be used during an AP Exam" — i.e., not the Desmos website or phone app). Available on **I-B and II-A**; **not** available on I-A or II-B. Work in **radians**.
 
 **Pacing math (memorize this):**
 - **MC Part A:** 65 min / 29 Q ≈ **2.2 min/Q** — *tighter than the old format; don't linger.*

@@ -107,9 +107,15 @@ FRQ code is typed in a **plain text editor** in Bluebook — no compiler, no aut
 
 **FRQ self-scores do not count toward readiness until this gate is passed.** Strict grading requires a calibrated grader — otherwise scores are presumed inflated.
 
+> **This gate is passable today.** It does **not** wait on the 2026 Scoring Guidelines: officially scored sample responses with published point awards are already live on AP Central (verified 12 August 2026).
+
 **Protocol:**
 
-1. **Blind-grade an officially-scored sample response** before your FRQ self-scores feed the readiness bar. Use a CED sample-FRQ response (MessageBuilder Q1, CupcakeMachine Q2, ItemInventory Q3, Schedule Q4 — official point awards are in the CED) or, once posted, a 2026 Scoring-Guidelines sample.
+1. **Blind-grade an officially-scored sample response** before your FRQ self-scores feed the readiness bar. Use either:
+   - a **CED sample-FRQ response** (MessageBuilder Q1, CupcakeMachine Q2, ItemInventory Q3, Schedule Q4 — official point awards are in the CED); **or**
+   - a **2025 officially scored sample** — `ap25-apc-computer-science-a-q1.pdf` through `-q4.pdf` (real student responses with the official awards and reader commentary), graded against `ap25-sg-computer-science-a.pdf`; `ap25-cr-report-computer-science-a.pdf` and `ap25-computer-science-a-scoring-statistics.pdf` add context. **2024 and 2023 packages are posted too.**
+     - ⚠️ **Apply the Q1/Q3/Q4 filter.** AP Central notes that after the 2025–26 revisions the 2023–25 materials **"do not completely align with the current AP CSA Exam"** — so calibrate on **Q1, Q3, Q4** and **skip Q2** (pre-redesign Q2 is inheritance-shaped). Old questions were 9 points each; score against **that year's own scoring guidelines** and run the ±1-point check against the award for the sample you actually graded.
+   - a 2026 Scoring-Guidelines sample once posted (an upgrade, not a prerequisite).
 2. **Grade it entirely before looking at the official award.** Then compare your score to the official award **on each FRQ individually**.
 3. **Pass criterion:** your award must be **within ±1 point** of the official award on each FRQ. Landing off by 2 or more on any FRQ = gate not passed.
 4. **If you are off by >1 point:** subtract the measured bias from your past self-scores and **do not count FRQ toward readiness** until you re-calibrate and pass.
@@ -122,7 +128,7 @@ Failing twice in a row does not block FRQ readiness permanently. Instead:
 - **Adopt bias correction:** subtract the measured bias from every FRQ self-score. The bias-corrected score is the score that counts going forward.
 - **Accelerated re-test:** switch from the 8-week cycle to **every 4 weeks** until the gate passes.
 - **Unstable bias:** if the bias differs substantially across FRQ types (e.g., over-awards Q2 but accurate on Q1/Q3/Q4), seek **one externally-graded FRQ** (AP teacher or vetted online provider) as a tiebreak, then apply per-type corrections.
-- **Calibration standard:** the **CED sample rubrics are the calibration standard until the 2026 Scoring Guidelines post.** Do NOT calibrate against the 2026 released FRQs (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4) while they lack official scoring guidelines — they are valid practice but their point awards are unverified.
+- **Calibration standard:** the **CED sample rubrics and the 2025 scoring guidelines + officially scored samples** (`ap25-sg-*` graded with `ap25-apc-*`, **Q1/Q3/Q4 only**) are the calibration standards until the 2026 Scoring Guidelines post. Do NOT calibrate against the 2026 released FRQs (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4) while they lack official scoring guidelines — they are valid practice but their point awards are unverified.
 - Once the gate passes (bias ≤ ±1 pt), resume the standard 8-week cadence.
 
 Full gate-B logic and the authority to declare readiness live in `../exam-skill-tracker.md` §(f).
@@ -139,10 +145,10 @@ Full gate-B logic and the authority to declare readiness live in `../exam-skill-
 
 ## 9. Monitor: 2026 Scoring Guidelines
 
-The official College Board 2026 Scoring Guidelines have not been published as of 2026-06-27 (the URL returns 404). When they are posted — expected approximately fall 2026 — fold the exact rubric rows and penalty language from that document into this file.
+The official College Board 2026 Scoring Guidelines are still unpublished as of **12 August 2026** (the URL returns 404). When they are posted — expected approximately fall 2026 — fold the exact rubric rows and penalty language from that document into this file. **This is an upgrade, not a blocker:** the 2025 scoring guidelines (`ap25-sg-computer-science-a.pdf`) plus the scored samples (`ap25-apc-*`) are already an official rubric-and-award pair, so §8's calibration gate runs now.
 
 **Watch URL:** `https://apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf`
 
-Until then, this file reflects the rubric structure from the CED sample FRQ rubrics (MessageBuilder Q1, CupcakeMachine Q2, ItemInventory Q3, Schedule Q4) and the 2026 released FRQs (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4), which are the best available rubric sources for the redesigned exam.
+Until then, this file reflects the rubric structure from the CED sample FRQ rubrics (MessageBuilder Q1, CupcakeMachine Q2, ItemInventory Q3, Schedule Q4), the **2025 scoring guidelines and scored samples** (Q1/Q3/Q4 — with AP Central's caveat that the 2023–25 materials "do not completely align with the current AP CSA Exam"), and the 2026 released FRQs (Account Q1, Bottle Q2, Attendance Q3, GameBoard Q4), which together are the best available rubric sources for the redesigned exam.
 
 Also watch for the 2026 Chief Reader Report at: `https://apcentral.collegeboard.org/media/pdf/ap26-cr-report-computer-science-a.pdf`
