@@ -316,6 +316,16 @@ test('/mock/start validates its inputs and states the rules', async () => {
   await assert.rejects(() => handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'guess', config: CSA, now: T0 }), ApiError)
 })
 
+test('/mock/start states the real time budget for the section it opened', async () => {
+  const db = ctx()
+  const timing = async (section) =>
+    (await handleMockStart({ db, subject: 'ap_csa', section, source: 'bank', config: CSA, now: T0 })).timing
+  assert.equal(await timing('I'), '90 minutes')
+  assert.equal(await timing('II'), '90 minutes')
+  // Under-timing a full sitting halves it, and a half-sat mock is not scored.
+  assert.equal(await timing('full'), '180 minutes', 'a full sitting is both sections, not the multiple choice alone')
+})
+
 test('a full mock scores itself from its own logged answers', async () => {
   const db = ctxFullBank()
   const expected = CSA.exam.mcq_count
