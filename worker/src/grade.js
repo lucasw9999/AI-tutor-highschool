@@ -212,6 +212,48 @@ function valueReading(response, index, letter) {
 }
 
 /**
+ * A label with its own text after it, which is how the options are PRINTED:
+ * 'C. 3.2', '(C) 3.2', 'C) 3.2', 'C - 3.2', 'C: 3.2'. The separator has to be
+ * there — a bare space would make the article in 'a NullPointerException' a
+ * label prefix.
+ */
+const LABEL_THEN_TEXT = /^["'“‘([\s]*([a-e])(?:[)\]]|\s*[.:,;]|\s*[-–—])\s+(\S.*)$/i
+
+/** The same pairing, label last: '3.2 (C)'. */
+const TEXT_THEN_LABEL = /^(\S.*?)[\s,]*[([]([a-e])[)\]][\s.!?]*$/i
+
+/**
+ * The option he named by giving BOTH halves of it — the label and the text
+ * printed next to it. Neither single reading sees this: LETTER_ONLY needs the
+ * letter to be the whole response, and the label prefix stops the text matching
+ * any option, so all 218 shipped items declined 'C. 3.2' with reason no_letter.
+ * api.js has already spent the serve by the time the grader says so and states
+ * that the attempt cannot be re-graded, so a right answer in the most natural
+ * possible format produced no evidence at all, permanently, on every item.
+ *
+ * `agrees` is false when the two halves name different options — 'C. 3.4' where
+ * 3.4 is option A. That is the same standoff as any other double reading and is
+ * reported unparsed rather than resolved to whichever half is checked first.
+ */
+function labelWithText(response, index) {
+  const raw = String(response)
+  for (const [pattern, letterAt, textAt] of [
+    [LABEL_THEN_TEXT, 1, 2],
+    [TEXT_THEN_LABEL, 2, 1],
+  ]) {
+    const split = raw.match(pattern)
+    if (!split) continue
+    const letter = split[letterAt].toUpperCase()
+    // 'E. 3.2' on a four-option item names nothing, so it is not this shape.
+    if (!index.has(letter)) continue
+    const value = valueReading(split[textAt], index, null)
+    if (!value) continue
+    return { letter, agrees: value.letter === letter }
+  }
+  return null
+}
+
+/**
  * Read a response as one of `options`, reporting why when it cannot be read.
  *
  * Two readings compete: the LABEL he named, and the option VALUE he stated. When
@@ -234,7 +276,14 @@ function readChoice(response, options) {
   const candidate = label && !label.strong ? label.letter.toLowerCase() : null
   const value = index ? valueReading(response, index, candidate) : null
 
-  if (!label && !value) return { letter: null, reason: 'no_letter' }
+  if (!label && !value) {
+    // Neither half of the response is a reading on its own. It may still be a
+    // whole printed option: both halves, which have to agree.
+    const printed = index ? labelWithText(response, index) : null
+    if (printed?.agrees) return { letter: printed.letter, reason: 'labelled_value' }
+    return { letter: null, reason: printed ? 'ambiguous_choice' : 'no_letter' }
+  }
+
   if (!value) return { letter: label.letter, reason: 'label' }
   if (!label) return { letter: value.letter, reason: 'value' }
   if (label.letter === value.letter) return { letter: label.letter, reason: 'label' }

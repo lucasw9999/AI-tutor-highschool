@@ -657,6 +657,101 @@ test('Q4-G3: the word that carries the option keeps its verdict', () => {
   }
 })
 
+// ---------------------------------------------------------------------------
+// Q4-G4 — the form the options are PRINTED in
+// ---------------------------------------------------------------------------
+
+/** A label and its own text together, the way the student sees the option. */
+const printedForms = (label, text) => [
+  `${label}. ${text}`,
+  `(${label}) ${text}`,
+  `${label}) ${text}`,
+  `${label} - ${text}`,
+  `${label}: ${text}`,
+  `${text} (${label})`,
+]
+
+test('Q4-G4: a label with its own text is the most natural answer there is', () => {
+  // The options are printed 'C. 3.2', so that is what a student types when he
+  // answers by copying one. LETTER_ONLY needs the letter to BE the whole
+  // response and the label prefix stops the text matching any option, so every
+  // one of the 218 shipped items declined this with reason 'no_letter' — and
+  // api.js has already spent the serve by then and cannot re-grade it. A right
+  // answer in the most natural possible format produced no evidence, ever.
+  const item = byId('csa-ac-q1') // key C, option C is '3.2'
+  for (const raw of printedForms('C', '3.2')) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'server', `${JSON.stringify(raw)} was declined (${r.detail})`)
+    assert.equal(r.correct, 1, `${JSON.stringify(raw)} was scored wrong (picked ${r.picked})`)
+  }
+  // A wrong option, printed the same way, is a real miss.
+  for (const raw of printedForms('A', '3.4')) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'server', `${JSON.stringify(raw)} was declined (${r.detail})`)
+    assert.equal(r.picked, 'A', `${JSON.stringify(raw)} read as ${r.picked}`)
+    assert.equal(r.correct, 0)
+  }
+})
+
+test('Q4-G4: a label and a text that disagree are as unreadable as any collision', () => {
+  // 'C. 3.4' says option C and prints option A's value. Nothing can tell which
+  // half he meant, so nothing is booked — the same answer the grader gives any
+  // other response with two live readings.
+  const item = byId('csa-ac-q1')
+  for (const raw of ['C. 3.4', '(C) 3.4', 'C) 3.4', 'C - 3.4', '3.4 (C)', 'A. 3.2', 'D) 3.2']) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'unparsed', `${JSON.stringify(raw)} was graded (picked ${r.picked})`)
+    assert.equal(r.detail, 'ambiguous_choice', `${JSON.stringify(raw)} declined for the wrong reason`)
+    assert.equal(isServerGraded(r), false)
+  }
+})
+
+test('Q4-G4: the printed form disambiguates the items whose option text is a letter', () => {
+  // csa-u2-q7's bare 'A' cannot be read: label A, or option D's text 'A'. Print
+  // the whole option — 'A. C', the label and the character the program prints —
+  // and both halves say A. Giving more of the answer must not be punished.
+  assert.equal(grade(byId('csa-u2-q7'), 'A. C').correct, 1)
+  assert.equal(grade(byId('csa-u2-q7'), '(A) C').correct, 1)
+  assert.equal(grade(byId('csa-u2-q7'), 'D. A').picked, 'D')
+  assert.equal(grade(byId('csa-ac-q14'), 'C. B').correct, 1)
+  assert.equal(grade(byId('csa-ac-q14'), 'C) B').correct, 1)
+})
+
+test('Q4-G4: across the whole shipped bank, the printed form of the key resolves', () => {
+  let resolved = 0
+  for (const item of SHIPPED_MCQ) {
+    const keyed = normalizeChoice(item.answer)
+    for (const [label, text] of Object.entries(item.options)) {
+      for (const raw of printedForms(label, text)) {
+        const r = grade(item, raw)
+        assert.equal(r.graded_by, 'server', `${item.id} ${JSON.stringify(raw)} => ${r.graded_by} (${r.detail})`)
+        assert.equal(r.picked, label, `${item.id} ${JSON.stringify(raw)} read as ${r.picked}`)
+        assert.equal(r.correct, label === keyed ? 1 : 0, `${item.id} ${JSON.stringify(raw)}`)
+        resolved++
+      }
+    }
+  }
+  assert.ok(resolved > 5000, `only ${resolved} printed options resolved`)
+})
+
+test('Q4-G4: across the whole shipped bank, a label over another option text declines', () => {
+  for (const item of SHIPPED_MCQ) {
+    for (const [label, text] of Object.entries(item.options)) {
+      for (const other of Object.keys(item.options).filter((l) => l !== label)) {
+        // Unless the bank made the two halves genuinely agree: on csa-u2-q7
+        // option A's text is 'C', so 'C. C' is option C's label over option A's
+        // text and only the letter A can be meant by neither.
+        const r = grade(item, `${other}. ${text}`)
+        assert.equal(
+          r.graded_by,
+          'unparsed',
+          `${item.id} ${JSON.stringify(`${other}. ${text}`)} was graded as ${r.picked}`,
+        )
+      }
+    }
+  }
+})
+
 test('G7: no shipped mcq is keyed with something the grader cannot use', () => {
   for (const item of SHIPPED_MCQ) {
     const keyed = normalizeChoice(item.answer)
