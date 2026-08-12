@@ -1,5 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { pickNext, topicStats, reviewInterval } from '../src/select.js'
 import { detectGaps, reconcileGaps, clearsGap, buildLesson } from '../src/teaching.js'
 
@@ -122,10 +123,14 @@ test('selection priority', async (t) => {
     assert.match(r.reason, /missed it before/)
   })
 
-  await t.test('a recently answered item is never re-served inside the reuse window', () => {
-    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 3))
+  await t.test('a recently answered item is not served while ANY item is outside the window', () => {
+    // Eight of the nine were answered three days ago. The ninth must be the pick:
+    // an item inside the no-repeat window is never preferred over a fresh one.
+    const attempts = ITEMS.filter((it) => it.id !== 'b3').map((it) => attempt(it.id, it.topic, 1, 3))
     const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
-    assert.equal(r, null, 'bank exhausted rather than recycling a 3-day-old question')
+    assert.equal(r.item.id, 'b3', 'the one never-asked item beats eight three-day-old ones')
+    assert.notEqual(r.repeat, true)
+    assert.doesNotMatch(r.reason, /answered this exact question/)
   })
 
   // Rewritten from an earlier version that called pickNext five times with the
@@ -311,6 +316,164 @@ test('selection on a partially consumed bank', async (t) => {
     assert.equal(r.priority, 'gap_retest')
     assert.equal(r.item.id, 'd3')
   })
+})
+
+// ---------------------------------------------------------------------------
+// An EXHAUSTED bank. The bank is finite and the no-repeat window is long, so
+// this state is reached in the first week of ordinary use, not in some corner
+// case: 218 CSA items at 50 answers a day is four days of unique questions.
+// Refusing to serve anything is the one response the student cannot use, so the
+// selector degrades to the least-recently-seen item and SAYS it is a repeat.
+// ---------------------------------------------------------------------------
+
+test('an exhausted bank degrades to a labelled repeat instead of refusing to work', async (t) => {
+  await t.test('every item inside the window still yields a question, never null', () => {
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 3))
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
+    assert.notEqual(r, null, 'a student who has answered everything recently still needs practice')
+    assert.ok(r.item, 'a real item, not an empty shell')
+  })
+
+  await t.test('the repeat is labelled in the reason, so a remembered answer is not sold as fresh evidence', () => {
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 3))
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
+    assert.equal(r.repeat, true)
+    assert.match(r.reason, /answered this exact question before/i)
+    assert.match(r.reason, /memory check|not fresh evidence/i)
+  })
+
+  await t.test('the least-recently-seen item is the one served', () => {
+    // Staggered ages, all inside a 56-day window. b2 is the most forgotten.
+    const ages = { a1: 1, a2: 2, a3: 3, b1: 10, b2: 40, b3: 20, c1: 5, c2: 6, c3: 7 }
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, ages[it.id]))
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
+    assert.equal(r.item.id, 'b2', `expected the 40-day-old question, got ${r.item.id}`)
+  })
+
+  await t.test('the degraded pick is deterministic however the bank is ordered', () => {
+    const ages = { a1: 1, a2: 2, a3: 3, b1: 10, b2: 40, b3: 20, c1: 5, c2: 6, c3: 7 }
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, ages[it.id]))
+    const picks = [ITEMS, [...ITEMS].reverse(), [...ITEMS.slice(4), ...ITEMS.slice(0, 4)]].map(
+      (order) => pickNext({ items: order, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 }).item.id,
+    )
+    assert.equal(new Set(picks).size, 1, `order-dependent: ${picks.join(', ')}`)
+  })
+
+  await t.test('the no-repeat window is read from config, not hardcoded', () => {
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 4))
+    const short = { readiness: { per_unit_min: 75, reuse_days: 3 } }
+    const long = { readiness: { per_unit_min: 75, reuse_days: 56 } }
+    assert.notEqual(
+      pickNext({ items: ITEMS, attempts, topicMeta: META, config: short, now: NOW }).repeat, true,
+      'a 3-day window makes a 4-day-old question fresh again',
+    )
+    assert.equal(
+      pickNext({ items: ITEMS, attempts, topicMeta: META, config: long, now: NOW }).repeat, true,
+      'a 56-day window does not',
+    )
+  })
+
+  await t.test('an explicit reuseDays argument still overrides the config', () => {
+    const attempts = ITEMS.map((it) => attempt(it.id, it.topic, 1, 4))
+    const cfg = { readiness: { per_unit_min: 75, reuse_days: 56 } }
+    assert.notEqual(pickNext({ items: ITEMS, attempts, topicMeta: META, config: cfg, now: NOW, reuseDays: 3 }).repeat, true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The whole real bank, served the way the student will actually serve it.
+//
+// These two run over content/items.json rather than a fixture, because the
+// defect they pin is a property of the SIZE of the shipped bank against the
+// shipped standards, and a three-item fixture cannot express it.
+// ---------------------------------------------------------------------------
+
+const ROOT = new URL('../../', import.meta.url)
+const ALL_ITEMS = JSON.parse(readFileSync(new URL('content/items.json', ROOT), 'utf8'))
+const ALL_TOPICS = JSON.parse(readFileSync(new URL('content/topics.json', ROOT), 'utf8'))
+const CONFIG = {
+  ap_csa: JSON.parse(readFileSync(new URL('worker/config/ap_csa.json', ROOT), 'utf8')),
+  ap_precalc: JSON.parse(readFileSync(new URL('worker/config/ap_precalc.json', ROOT), 'utf8')),
+}
+/** The share of a section a sitting has to cover before api.js will score it. */
+const MIN_MOCK_COVERAGE = 0.9
+
+function bankOf(subject) {
+  return {
+    items: ALL_ITEMS.filter((i) => i.subject === subject),
+    topicMeta: new Map(ALL_TOPICS.filter((t) => t.subject === subject).map((t) => [t.id, t])),
+    config: CONFIG[subject],
+  }
+}
+
+const DAY_MS = 86400000
+
+test('the real bank keeps serving after it has been worked through', async (t) => {
+  for (const subject of ['ap_csa', 'ap_precalc']) {
+    await t.test(`${subject}: 20 answers a day for 21 days never runs out of questions`, () => {
+      const { items, topicMeta, config } = bankOf(subject)
+      const start = new Date('2026-09-01T12:00:00Z').getTime()
+      const attempts = []
+      let repeats = 0
+      for (let day = 0; day < 21; day++) {
+        for (let n = 0; n < 20; n++) {
+          const now = new Date(start + day * DAY_MS + n * 60000).toISOString()
+          const r = pickNext({ items, attempts, gaps: [], topicMeta, config, now })
+          assert.notEqual(
+            r, null,
+            `${subject} bricked on day ${day} after ${attempts.length} answers — api.js turns this into a 409 for ` +
+              'every drill AND every mock until the window passes',
+          )
+          if (r.repeat) {
+            repeats++
+            assert.match(r.reason, /answered this exact question before/i, 'a repeat must say so')
+          }
+          attempts.push({
+            item_id: r.item.id, topic: r.item.topic, unit: r.item.unit, response: 'A',
+            correct: attempts.length % 5 !== 0, ts: now, hints_used: 0, conditions: 'cold',
+            graded_by: 'server', kind: r.item.kind,
+          })
+        }
+      }
+      assert.equal(attempts.length, 420)
+      assert.ok(repeats > 0, 'precondition: this volume must actually exhaust the bank, or the test proves nothing')
+    })
+  }
+})
+
+test('every mock the readiness config requires can actually be sat', async (t) => {
+  // total_logged_mocks_min sittings, each needing ceil(mcq_count * 0.9) answers
+  // before api.js will score it, one a week. CSA demanded 6 x 38 = 228 distinct
+  // servings from a 218-item bank, so the sixth sitting used to die at question
+  // 29 — no composite, and total_logged_mocks_min unreachable forever.
+  for (const subject of ['ap_csa', 'ap_precalc']) {
+    await t.test(`${subject}: all ${CONFIG[subject].readiness.total_logged_mocks_min} sittings reach a scorable length`, () => {
+      const { items, topicMeta, config } = bankOf(subject)
+      const needed = Math.ceil(config.exam.mcq_count * MIN_MOCK_COVERAGE)
+      const start = new Date('2026-09-01T12:00:00Z').getTime()
+      const attempts = []
+      for (let mock = 1; mock <= config.readiness.total_logged_mocks_min; mock++) {
+        const paper = []
+        for (let q = 0; q < needed; q++) {
+          const now = new Date(start + mock * 7 * DAY_MS + q * 120000).toISOString()
+          const r = pickNext({
+            items, attempts, gaps: [], topicMeta, config, now, sampling: 'mock', mockId: mock,
+          })
+          assert.notEqual(r, null, `${subject} sitting ${mock} died at question ${q + 1} of ${needed}`)
+          paper.push(r.item.id)
+          attempts.push({
+            item_id: r.item.id, topic: r.item.topic, unit: r.item.unit, response: 'A',
+            correct: q % 5 !== 0, ts: now, hints_used: 0, conditions: 'proctored_mock',
+            graded_by: 'server', kind: r.item.kind, mock_id: mock,
+          })
+        }
+        assert.equal(
+          new Set(paper).size, needed,
+          `sitting ${mock} asked a question twice — the same item twice is not two questions of evidence`,
+        )
+      }
+    })
+  }
 })
 
 // ---------------------------------------------------------------------------

@@ -43,6 +43,8 @@
     "total_logged_mocks_min": 4,
     "window_span_days_min": 10,
     "window_span_days_max": 42,
+    "reuse_days": 14,
+    "reuse_days_note": "How long a question stays 'already answered' before it counts as evidence again, read by select.js. Sized to THIS bank, which is tiny: 48 items, while one full sitting needs 42 of them (90% of 46). At ~4 answers a day of ordinary drilling the whole bank is worked through in under a fortnight, and anything above 21 days — window_span_days_max / (consecutive_qualifying_mocks - 1) — would require the three qualifying sittings to be question-disjoint, i.e. 84 distinct items from a bank of 48. So 14. This is a symptom, not a solution: the real fix is more Precalc items (33 exam-tested topics still have none, which the build already reports as an error). Beyond the window select.js still serves the least-recently-seen question rather than refusing, and labels it a repeat.",
     "freshness_days": 42,
     "burnout_drop_points": 8,
     "require_official_mock": true
