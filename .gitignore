@@ -5,3 +5,6 @@ __pycache__/
 # Local worker secrets — never commit
 worker/.dev.vars
 worker/.wrangler/
+
+# Just-in-time deploy credential — never commit
+.secrets/
