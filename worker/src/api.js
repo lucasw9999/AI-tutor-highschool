@@ -616,12 +616,30 @@ function sectionMinutes(section, e = {}) {
  * section" runs past its allowance whether the time went into one question or
  * forty-two.
  *
- * WHAT THAT DELIBERATELY LETS THROUGH: the one question the forgiven break was
- * spent on may have been looked up rather than thought about — about 2.4 points
- * of a 42-question composite. Taken knowingly, because the alternative was
- * discarding a whole 42-of-42 afternoon on evidence that cannot tell a dinner
- * break from a lookup, and because the total-time bar still bounds it: the
- * sitting, break included, has to fit inside 1.5x of the real budget.
+ * WHAT THAT DELIBERATELY LETS THROUGH, at the size it actually is: the question
+ * the forgiven break was spent on may have been looked up rather than thought
+ * about — and it is not only that one question. The cap on the interval that
+ * follows is HALF the section's budget while the total-time bar allows one and a
+ * half times it, so intervals at the cap stack MOCK_TIME_SLACK /
+ * MAX_ITEM_SHARE_OF_BUDGET deep before anything refuses the sitting: at most 3
+ * such intervals as these two constants stand, i.e. about 7.1 points of a
+ * 42-question composite, not the 2.4 an earlier version of this comment claimed.
+ * Measured: [45, 45, 45] minutes is 135 minutes exactly and is COUNTED, while a
+ * fourth such interval runs the total past its allowance and is refused.
+ * Intervals shorter than the cap are bounded by the total-time bar alone.
+ *
+ * WHY THE BARS STAY THERE ANYWAY, with the alternative measured rather than
+ * assumed: capping the SUM of the non-forgiven intervals is what would make a
+ * one-question claim true, and it throws out the honest sittings first. At the
+ * real exam pace this config already states — 129 seconds a question on CSA — 42
+ * questions of genuine work sum to 90 minutes of serve-to-answer intervals,
+ * twice the cap, so every properly paced paper would be refused as untimed.
+ * Discarding real work is the failure this campaign has hit three times, so the
+ * exposure is disclosed instead of paid for that way. What still bounds it is the
+ * total: the sitting, breaks included, has to fit inside 1.5x of the real budget.
+ * worker/tests/api.test.js pins both the permitted run and the refused one
+ * against these two constants, so this paragraph cannot drift from the
+ * arithmetic.
  *
  * WHAT HAPPENS THEN — disclosed, never discarded. The answers stay on the
  * record and still count as practice; the sitting is stored with no composite,
@@ -672,9 +690,14 @@ function sittingTiming({ section, exam = {}, attempts = [] }) {
   const break_seconds = spans[0] ?? 0
   const longest_item_seconds = spans[1] ?? 0
   const over_item = longest_item_seconds > item_cap_seconds
+  // EVERY interval past the cap, not just the two longest. The pace clause named
+  // spans[0] and spans[1] and then asserted "so the paper was put down twice",
+  // which on [200, 60, 55] minutes is a count it had not measured: the paper was
+  // put down at least three times.
+  const long_item_seconds = spans.filter((s) => s > item_cap_seconds)
   return {
     budget_minutes, allowed_minutes, elapsed_minutes,
-    break_seconds, longest_item_seconds, item_cap_seconds,
+    break_seconds, longest_item_seconds, long_item_seconds, item_cap_seconds,
     over_total, over_item, untimed: over_total || over_item,
   }
 }
@@ -700,10 +723,16 @@ function timingClauses(t) {
     )
   }
   if (t.over_item) {
+    // The count and the intervals behind it are the MEASURED ones — every span
+    // past the cap — because "the paper was put down twice" was a claim about a
+    // number this function had not counted.
+    const minutes = (t.long_item_seconds ?? []).map((s) => Math.round(s / 60))
+    const n = minutes.length
+    const list = n > 1 ? `${minutes.slice(0, -1).join(', ')} and ${minutes.at(-1)}` : `${minutes[0]}`
     out.push(
-      `two of its questions sat unanswered for ${Math.round(t.break_seconds / 60)} and ` +
-      `${Math.round(t.longest_item_seconds / 60)} minutes — one break is forgiven, and the second of those alone is ` +
-      `more than half the ${t.budget_minutes} minutes the whole section gets, so the paper was put down twice`,
+      `${n} of its questions sat unanswered for ${list} minutes — one break is forgiven, and ` +
+      `${n === 2 ? 'the one interval left after that is' : `each of the ${n - 1} intervals left after that is`} more ` +
+      `than half the ${t.budget_minutes} minutes the whole section gets, so the paper was put down at least ${n} times`,
     )
   }
   return out
@@ -959,7 +988,17 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // unkeyed items would fold an ungraded zero into the score and understate it.
   const scored = attempts.filter((a) => a.graded_by === 'server')
   const right = scored.filter((a) => a.correct).length
-  const ungraded = attempts.length - scored.length
+  // Two different things used to be told as one. `ungraded` is everything the
+  // composite cannot include, and the basis described the whole of it as needing
+  // "human or model grading" — including the responses grade.js could not read as
+  // one answer, which NO grader will ever look at: the serve is spent, the question
+  // is gone, and /log has already told him the opposite ("I could not read that as
+  // one answer ... send just the letter"). Two surfaces, the same two rows,
+  // contradictory statements. The total is unchanged, so the divisor below is too.
+  const unparsed = attempts.filter((a) => a.graded_by === 'unparsed').length
+  const awaitingGrader = attempts.length - scored.length - unparsed
+  const ungraded = awaitingGrader + unparsed
+
 
   // What this section can actually be asked and marked from, read off the bank
   // rather than off the exam table alone. `expected` is what the real section
@@ -1043,9 +1082,16 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
         + `${fill.parts.map((p) => `${p.credited} of its ${p.count} ${PART_NAME[p.kind] ?? p.kind}`).join(' and ')}.`)
   }
 
-  if (ungraded) {
-    basis.push(`${ungraded} response(s) need human or model grading and are excluded from the composite.`)
+  if (awaitingGrader) {
+    basis.push(`${awaitingGrader} response(s) need human or model grading and are excluded from the composite.`)
   }
+  if (unparsed) {
+    basis.push(
+      `${unparsed} response(s) could not be read as one answer, so nothing was graded on them and no grader is coming `
+      + `for them either — they are excluded from the composite, and they were not counted wrong.`,
+    )
+  }
+
   if (unreached) {
     const split = left ? ` (${left} left empty, ${unreached} never reached)` : ''
     // Only claim they counted as wrong when something was actually scored. On an
@@ -1173,6 +1219,24 @@ function unscoredSittings(ctx) {
     // A section the bank cannot supply was never scorable, whatever the clock or
     // the count says, so it is reported ahead of both.
     const unsupplied = !unscored_write && scorable === 0 ? obstacles : null
+    // What a verdict WOULD say about the sitting that has not reached one.
+    //
+    // This is the one branch with no established verdict, and it used to sign off
+    // with "Nothing is wrong with the sitting itself" — without consulting the
+    // sectionScoring and sittingTiming results computed three lines above. A
+    // stranded 10-of-42 sitting was therefore told to re-submit and that nothing
+    // was wrong with it, and the advisory after the re-submit said "#7 reached 10
+    // of 42 — under the 90%": two surfaces, one sitting, one call apart. The
+    // unfinished write is still the state to report, and re-submitting is still
+    // the way out, but what will happen then has to be said in the same breath.
+    const still_fails = !unscored_write ? [] : [
+      ...(scorable === 0 ? [`section ${m.section} cannot be scored from this question bank at all`] : []),
+      ...(scorable > 0 && rows.length < Math.ceil(scorable * MIN_MOCK_COVERAGE)
+        ? [`it covers ${rows.length} of ${scorable}, under the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a `
+          + `scored sitting has to reach`]
+        : []),
+      ...(timing?.untimed ? ['its clock does not read as exam conditions'] : []),
+    ]
     out.push({
       id: m.id,
       section: m.section,
@@ -1180,6 +1244,7 @@ function unscoredSittings(ctx) {
       gradeable: rows.filter((a) => a.graded_by === 'server').length,
       expected,
       scorable,
+      still_fails,
       // Five different reasons produce a null composite, and each has its own
       // thing to fix. `unscored_write` and `unsupplied` are reported ALONE and
       // ahead of the rest: a sitting that was never scored has no established
@@ -1213,13 +1278,21 @@ function unscoredAdvisory(unscored) {
   ]
   const unscored_write = unscored.filter((u) => u.unscored_write)
   if (unscored_write.length) {
+    // "Nothing is wrong with the sitting itself" is claimed only when the gates it
+    // has not been judged against yet would actually pass it. See `still_fails`.
+    const doomed = unscored_write.filter((u) => u.still_fails?.length)
     parts.push(
       `${unscored_write.map((u) => `#${u.id} (${u.answered} answered, ${u.gradeable} of them mechanically gradeable) ` +
-        `was closed but never scored — the scoring step did not finish`).join('. ')}. Nothing is wrong with the ` +
-      `sitting itself and no answer was lost: submit it again with submitMock and the same mock id, and it will be ` +
-      `scored from the answers already on it.`,
+        `was closed but never scored — the scoring step did not finish`).join('. ')}. No answer was lost: submit it ` +
+      `again with submitMock and the same mock id, and it will be scored from the answers already on it.` +
+      (doomed.length
+        ? ` That will not produce a composite, though: ${doomed.map((u) => `#${u.id} because ${u.still_fails.join(', and ')}`).join('; ')}. ` +
+          `Submitting it again records that verdict rather than changing it — nothing is thrown away, and the answers ` +
+          `stand as practice.`
+        : ` Nothing is wrong with the sitting itself.`),
     )
   }
+
   const unsupplied = unscored.filter((u) => u.unsupplied)
   if (unsupplied.length) {
     parts.push(

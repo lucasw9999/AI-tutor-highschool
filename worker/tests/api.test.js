@@ -1531,6 +1531,247 @@ withSeed('a divisor pulled below the markable half says what pulled it there', a
   )
 })
 
+// ---------------------------------------------------------------------------
+// What the forgiven break actually lets through, and what it is disclosed as
+//
+// The per-question rule forgives the single longest interval and caps the next
+// one at half the section's budget, and the comment above MOCK_TIME_SLACK
+// disclosed the cost of that as "the one question ... about 2.4 points". It is
+// not one question: the cap is half the budget and the total-time bar allows
+// 1.5x of it, so intervals at the cap fit three deep inside a sitting that is
+// never refused. The disclosure has to state the exposure the two constants
+// really permit, and this test is what keeps the two in step — tighten the rule
+// and the first half fails; change either constant and the arithmetic below
+// moves with it.
+// ---------------------------------------------------------------------------
+
+const API_SRC = readFileSync(new URL('../src/api.js', import.meta.url), 'utf8')
+
+/**
+ * The disclosure paragraph above MOCK_TIME_SLACK, unwrapped onto one line.
+ *
+ * Sliced rather than searched whole-file so a failure prints the paragraph at
+ * issue, and unwrapped so re-flowing the comment cannot break the match while
+ * leaving the claim wrong.
+ */
+function timingDisclosure(src) {
+  const start = src.indexOf('WHAT THAT DELIBERATELY LETS THROUGH')
+  const end = src.indexOf('export const MOCK_TIME_SLACK', start)
+  assert.ok(start >= 0 && end > start, 'the disclosure above MOCK_TIME_SLACK moved or was renamed; update this test')
+  return src.slice(start, end).replace(/\n\s*\*\s?/g, ' ')
+}
+
+withSeed('the forgiven break is disclosed at the exposure the two bars actually permit', async () => {
+  const budget = CSA.exam.mcq_minutes
+  const cap = budget * MAX_ITEM_SHARE_OF_BUDGET
+  const allowance = budget * MOCK_TIME_SLACK
+  const covered = Math.ceil(CSA.exam.mcq_count * MIN_MOCK_COVERAGE)
+  // How many intervals at the per-question cap the total-time bar leaves room for.
+  const permitted = Math.floor(MOCK_TIME_SLACK / MAX_ITEM_SHARE_OF_BUDGET)
+  assert.ok(permitted >= 2, `the cap only bites past the forgiven break, so this test needs at least 2: ${permitted}`)
+
+  /** Sit a covered section with `n` intervals at the cap and the rest instant. */
+  const sitWithLongIntervals = async (n) => {
+    const { db } = realDb()
+    const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+    const spans = [...Array(n).fill(cap * 60), ...Array(covered - n).fill(0)]
+    const elapsed = await sitPaced({ db, mock: m.mock, spans })
+    return { elapsed, r: await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(elapsed + 300) }) }
+  }
+
+  // Three questions left sitting for 45 minutes each is 135 minutes, exactly the
+  // allowance, and the second-longest interval is exactly at the cap — so this
+  // sitting is COUNTED. That is the real exposure of the forgiven break.
+  const permittedRun = await sitWithLongIntervals(permitted)
+  assert.equal(permittedRun.elapsed / 60, allowance, 'the fixture must land exactly on the total-time bar')
+  assert.equal(
+    permittedRun.r.counted, true,
+    `${permitted} intervals of ${cap} minutes inside the ${allowance}-minute allowance are permitted today, which is ` +
+      `what the disclosure has to admit to: ${permittedRun.r.basis}`,
+  )
+
+  // A fourth cannot fit: the total-time bar is what bounds the exposure.
+  const refused = await sitWithLongIntervals(permitted + 1)
+  assert.equal(refused.r.counted, false, 'one more such interval must push the sitting past its allowance')
+  assert.match(refused.r.basis, /answers span \d+ minutes/, 'and the total-time bar is what refuses it')
+
+  // So the disclosed cost is `permitted` questions of the composite, not one.
+  const points = ((permitted / CSA.exam.mcq_count) * 100).toFixed(1)
+  const disclosed = timingDisclosure(API_SRC)
+  assert.doesNotMatch(
+    disclosed, /about 2\.4 points/,
+    `the disclosure claimed one question of a 42-question composite; the bars permit ${permitted}: ${disclosed}`,
+  )
+  assert.match(
+    disclosed, new RegExp(`at most ${permitted} such intervals`),
+    `the disclosure has to name how many long intervals the two bars really permit: ${disclosed}`,
+  )
+  assert.match(
+    disclosed, new RegExp(`${points} points`),
+    `and what that costs: ${permitted} of ${CSA.exam.mcq_count} questions is ${points} points — ${disclosed}`,
+  )
+})
+
+withSeed('the pace clause counts the intervals it actually measured', async () => {
+  const { db } = realDb()
+  const covered = Math.ceil(CSA.exam.mcq_count * MIN_MOCK_COVERAGE)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  // Three questions left sitting for 200, 60 and 55 minutes: the paper was put
+  // down at least three times, and the clause named only the two longest and then
+  // asserted "so the paper was put down twice" — a count it had not measured.
+  const spans = [200 * 60, 60 * 60, 55 * 60, ...Array(covered - 3).fill(0)]
+  const elapsed = await sitPaced({ db, mock: m.mock, spans })
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(elapsed + 300) })
+
+  assert.equal(r.counted, false)
+  assert.doesNotMatch(r.basis, /put down twice/, `three intervals past the cap is not twice: ${r.basis}`)
+  assert.match(r.basis, /3 of its questions sat unanswered/, `state the count that was measured: ${r.basis}`)
+  assert.match(r.basis, /200, 60 and 55 minutes/, `and the intervals behind it: ${r.basis}`)
+
+  // The advisory rides on every later response and is built from the same clause.
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(elapsed + 900) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `the sitting must stay visible: ${JSON.stringify(s.advisories)}`)
+  assert.doesNotMatch(adv, /put down twice/, `and it cannot state a different count either: ${adv}`)
+  assert.match(adv, /3 of its questions sat unanswered/, adv)
+})
+
+// ---------------------------------------------------------------------------
+// The fifth state is "no verdict yet", not "nothing is wrong"
+// ---------------------------------------------------------------------------
+
+withSeed('a stranded sitting that will still fail a gate is not advertised as fine', async () => {
+  const { db } = realDb()
+  const floor = Math.round(MIN_MOCK_COVERAGE * 100)
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+  // 10 of 42, timed: the scoring write dies, so no verdict was ever reached — but
+  // the coverage gate is going to refuse this sitting the moment one is.
+  await sitMock({ db, mock: m.mock, n: 10, spacing: 60 })
+  const killed = { ...db, scoreMock: async () => { throw new Error('Worker exceeded CPU time limit') } }
+  await assert.rejects(() => handleMockSubmit({ db: killed, mockId: m.mock, config: CSA, now: at(1200) }), /CPU/)
+
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(1500) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `a closed sitting with no composite must stay visible: ${JSON.stringify(s.advisories)}`)
+  assert.match(adv, /never scored/, 'the unfinished write is still the state to report')
+  assert.match(adv, /submit/i, 'and re-submitting is still the way out')
+  assert.doesNotMatch(
+    adv, /Nothing is wrong with the sitting itself/,
+    `something IS wrong with it: it covers 10 of 42, and the very next advisory says so: ${adv}`,
+  )
+  assert.match(adv, /10 of 42/, `so the gate it will still fail has to be named here: ${adv}`)
+  assert.match(adv, new RegExp(`${floor}%`), adv)
+
+  // One call later, the same sitting, the other surface — which must not
+  // contradict what the advisory just promised.
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(1800) })
+  assert.equal(r.counted, false, 'a 10-of-42 sitting does not become a score by being submitted again')
+  assert.match(r.basis, new RegExp(`short of the ${floor}% of the section`))
+})
+
+withSeed('a stranded sitting that would score is still reported as sound', async () => {
+  const { db } = realDb()
+  const expected = CSA.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+  await sitMock({ db, mock: m.mock, n: expected, spacing: 60 })
+  const killed = { ...db, scoreMock: async () => { throw new Error('Worker exceeded CPU time limit') } }
+  await assert.rejects(() => handleMockSubmit({ db: killed, mockId: m.mock, config: CSA, now: at(9000) }), /CPU/)
+
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(9300) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  // The qualification must be earned, not blanket: a full, timed, markable
+  // sitting really has nothing wrong with it beyond the unfinished write.
+  assert.match(adv, /Nothing is wrong with the sitting itself/, adv)
+  assert.equal((await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(9600) })).counted, true)
+})
+
+// ---------------------------------------------------------------------------
+// An exhausted paper: the real condition, and no remedy that cannot work
+// ---------------------------------------------------------------------------
+
+withSeed('the refusal on an exhausted paper names the real condition, and offers no remedy that cannot work', async () => {
+  const { db, sqlite } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: T0 })
+  const tested = sqlite.prepare(
+    `SELECT count(*) n FROM items i
+      JOIN topics t ON t.id = i.topic AND t.subject = i.subject
+     WHERE i.subject = 'ap_precalc' AND t.tested_on_exam <> 0`,
+  ).get().n
+  assert.ok(
+    tested > 0 && tested < PRECALC.exam.mcq_count,
+    `this test needs a bank smaller than one section, which the Precalc bank is: ${tested}`,
+  )
+
+  // A fresh database, the first sitting anyone has ever sat: every exam-tested
+  // item is served once, and then there is nothing left this paper may ask.
+  const { answered, refusal } = await sitUntilRefused({
+    db, mock: m.mock, subject: 'ap_precalc', config: PRECALC, limit: PRECALC.exam.mcq_count,
+  })
+  assert.equal(answered, tested, 'a question may not appear twice on one paper, so the bank is the bound')
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `the next serve must be refused: ${refusal}`)
+  assert.match(refusal.message, /already/i, `name what actually happened: ${refusal.message}`)
+  assert.match(refusal.message, new RegExp(String(tested)), `in numbers: ${refusal.message}`)
+  assert.doesNotMatch(
+    refusal.message, /no.repeat window|reuse window/i,
+    `that state cannot produce this refusal — the selector serves a labelled repeat instead: ${refusal.message}`,
+  )
+  assert.doesNotMatch(
+    refusal.message, /wait/i,
+    `and waiting is not a remedy the student can act on: ${refusal.message}`,
+  )
+
+  // Which the clock proves: the same call is refused a day, a fortnight, two
+  // months and a year later, because the this-paper exclusion is unconditional.
+  for (const days of [1, 15, 60, 365]) {
+    await assert.rejects(
+      () => handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(days * 86400), mockId: m.mock }),
+      (e) => e instanceof ApiError && e.status === 409,
+      `waiting ${days} days cannot change the answer, so nothing may suggest that it does`,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// An answer nobody will ever grade is not an answer awaiting a grader
+// ---------------------------------------------------------------------------
+
+withSeed('an answer the grader could not read is not reported as waiting for a grader', async () => {
+  const { db } = realDb()
+  const expected = CSA.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  const notes = []
+  for (let i = 0; i < expected; i++) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 60), mockId: m.mock })
+    assert.equal(q.type, 'question')
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    // Two answers that name no single choice, and 40 right off the real key.
+    const unreadable = i < 2
+    const logged = await handleLog({
+      db, serveId: q.serve, response: unreadable ? 'B or C' : item.answer, config: CSA, now: at(i * 60 + 30),
+    })
+    if (!unreadable) continue
+    assert.equal(logged.graded_by, 'unparsed')
+    notes.push(logged.note)
+  }
+
+  assert.equal(notes.length, 2)
+  for (const note of notes) {
+    assert.match(note, /letter/i, '/log tells him to send just the letter, i.e. no grader is coming for this one')
+  }
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(4000) })
+  assert.equal(r.ungraded, 2, 'both are still excluded from the composite')
+  assert.doesNotMatch(
+    r.basis, /need human or model grading/,
+    `no human or model will ever look at an answer that could not be read — /log said as much: ${r.basis}`,
+  )
+  assert.match(r.basis, /could not be read/i, `so the basis has to say what really happened to them: ${r.basis}`)
+  assert.equal(r.scored_out_of, expected - 2, 'the two unreadable answers came off the divisor')
+  assert.equal(r.composite_pct, 100, '40 right of the 40 that could be marked')
+})
+
 test('days_to_exam counts calendar days in one fixed zone', async () => {
   const db = ctx()
   const days = async (now) => (await handleStatus({ db, subject: 'ap_csa', config: CSA, now })).days_to_exam
