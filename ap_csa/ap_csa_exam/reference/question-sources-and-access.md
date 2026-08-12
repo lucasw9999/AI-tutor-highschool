@@ -15,7 +15,7 @@
 | **AP Central — Past FRQs** | Free | Several years of prior FRQs + scoring guidelines + Chief Reader Reports | apcentral.collegeboard.org → AP Computer Science A → Exam Questions |
 | **CED Clarifications and Corrections** | Free | The companion errata sheet to the CSA CED — what changed in the CED since publication | [ap-computer-science-a-course-and-exam-description-clarification.pdf](https://apcentral.collegeboard.org/media/pdf/ap-computer-science-a-course-and-exam-description-clarification.pdf) |
 | **Bluebook practice** | Free — **student-accessible, NOT gated** | A **test preview** for the digital AP Exams: a short question set that lets you experience digital testing and try every tool. No score, no timer — **interface rehearsal, not a mock** | [bluebook.collegeboard.org/students/practice](https://bluebook.collegeboard.org/students/practice) — log in with **your own College Board account**; no join code |
-| **AP Classroom** (the real item bank) | Free — **teacher-gated** | The authoritative secure bank: Progress Checks, Question Bank, **Bluebook-Style Assessments**, full **Practice Exams**, and **AP Videos** (the current name for what used to be "AP Daily") | See access section below — **requires a join code from an AP-authorized teacher** |
+| **AP Classroom** (the real item bank) | Free — **teacher-gated** | The authoritative secure bank: Progress Checks, Question Bank, **Bluebook-Style Assessments**, full **Practice Exams**, and **AP Videos** (the current name for what used to be "AP Daily") | See access section below — **requires a class-section join code from an AP-Course-Audit-authorized teacher**. An exam-only registration gets AP Videos and *"some high-level course resources,"* **not** the bank |
 
 ### The CSA CED Clarifications and Corrections sheet — read it once, for the reassurance
 
@@ -105,7 +105,7 @@ All under `https://apcentral.collegeboard.org/media/pdf/`. **2023, 2024 and 2025
 - What it **does** do: it satisfies the Bluebook-realism requirement in `frq-rubric-and-penalties.md` §7 — CSA free-response answers are **typed** into Bluebook with **no compiler, no autocomplete, no run button**, and this is the way to make sure exam day isn't the first time he types Java into that editor.
 
 
-**Why the join code matters for readiness (verified 12 August 2026):** AP Classroom now carries **Bluebook-Style Assessments** and full **Practice Exams**. **That Practice Exam is the official full-length mock the readiness bar asks for** (`../exam-skill-tracker.md` §(f) criterion C, "≥1 mock from official material") — and it arrives with the teacher's join code. Getting the code is therefore not a nice-to-have; it is the cheapest way to satisfy the official-material requirement. Without it, fall back to the official-anchor path in the tracker.
+**Why the join code matters for readiness (verified 12 August 2026):** AP Classroom now carries **Bluebook-Style Assessments** and full **Practice Exams**. **That Practice Exam is the official full-length mock the readiness bar asks for** (`../exam-skill-tracker.md` §(f) criterion C, "≥1 mock from official material") — and it arrives only with a **class-section** join code from an audit-authorized teacher. An **exam-only registration does not carry it** (see "Exam-only registration gets him a SEAT, not the official mock" below — the manual says so in as many words). Getting the class-section code is therefore not a nice-to-have; it is the cheapest way to satisfy the official-material requirement. Without it, fall back to the official-anchor path in the tracker.
 
 **Do this once, early — a Bluebook test-preview run:** target the **first week of school, September 2026**, and in any case **before the first full timed mock**. **This does not wait on the join code** — the preview is student-accessible with his own College Board account (see the section above), so run it the week school starts whether or not AP Classroom has come through. On AP CSA, free-response answers are **typed** into Bluebook with **no compiler, no autocomplete, no run button** — exam day should not be the first time you type Java into that editor. (See `frq-rubric-and-penalties.md` §7.)
 
@@ -152,6 +152,33 @@ Do this **early** either way — AP Classroom access is tied to one specific tea
 | **UC Scout "Basic" ($29) tier** | *"the Basic plan does not include an instructor."* No teacher means no join code means no item bank — a cheap tier that buys none of the thing we are buying. | ❌ Trap — instructor-led enrolment only |
 
 **Why this section was rewritten (recorded so the mistake isn't repeated):** this file previously answered the single most consequential open risk in the project — "how does he ever get an official full-length mock?" — by naming **two providers that had never been checked**, one of which sells a **half-course** and the other of which requires **Virginia residency**. Both are silent on AP Classroom. **A provider that does not deliver a join code does not solve the problem it was named to solve.** Everything above is quoted from the providers' own pages, and where nothing could be confirmed the table says **SILENT** rather than assuming.
+
+### ⚠️ Exam-only registration gets him a SEAT, not the official mock
+
+**This is the single fact that determines whether readiness can ever be *measured*, so it is stated plainly rather than hedged.** This repo used to guess at the mechanism; it is now verified (12 August 2026). An **exam-only** registration — the kind a school gives a student who sits an exam it does not teach — does **not** unlock the secure item bank or the full Practice Exam. Verbatim from the **2026-27 AP Coordinator's Manual Part 1**:
+
+> "All students—including those in exam only sections—can access AP videos and some high-level course resources … They also must be enrolled in class sections to access the available AP Classroom resources for every AP class they're taking."
+
+And from the **AP Course Audit's "how it works"** page: an authorized teacher *"is granted access to AP Classroom and online student score reports and secure documents including practice exams"* — with practice exams *"only available to teachers; students can't access them."*
+
+**So there are two different codes, from two different people.** Conflating them is the trap:
+
+| What he needs | Who issues it | What it actually buys |
+|---|---|---|
+| **Class-section join code** | The **AP-Course-Audit-authorized teacher** of a class section he is **enrolled in** | AP Classroom proper: Progress Checks, the Question Bank, Bluebook-Style Assessments, and the **full Practice Exam** — the official full-length paper `../exam-skill-tracker.md` §(f) criterion C asks for |
+| **Exam-only registration** | The **AP Coordinator** of whichever school agrees to host him | A **seat on exam day** — which he needs regardless. Plus AP videos and "some high-level course resources." **Not** the item bank; **not** the Practice Exam |
+
+He needs **both**, and neither substitutes for the other: **enrolment in an audit-authorized class section is the only thing that produces an official mock, and only an AP Coordinator can put him on an exam order.** Corroborated by an authorized provider's own handbook (**PA Homeschoolers**), which numbers them as two separate errands with two separate people: *"Registration step #1: Join your online class on AP Classroom."* … *"the class 'join code' … will be provided by your teacher."* / *"Registration step #2: Find a local school to administer your exam."* … *"Not every school will say yes, and schools are allowed to charge you an extra administrative fee if they wish."*
+
+**Consequence for this project, in one line:** if he ends up with an exam-only seat and no class section, **criterion C cannot be met from AP Classroom at all** — fall back to the official-anchor path in `../exam-skill-tracker.md` §(f) and stop treating the join code as pending.
+
+### The free route — real, partial, and one variant this repo deliberately rejects
+
+**No free curricular package can ever issue a join code, by rule.** College Board is explicit: *"Online content providers, such as makers of virtual labs or curricular packages, cannot participate in the AP Course Audit."* **Codio and CSAwesome are endorsed *curricula*, which is a different thing** — College Board *"has endorsed innovative curricula that come with preapproved syllabi that can be adopted through the AP Course Audit"*, but **a teacher still has to pass the audit.** Adopting an endorsed curriculum is not being authorized, and no amount of CSAwesome work produces a join code.
+
+**What free access does get him, and it is worth stating:** *"Self-study students can still access AP Classroom resources, including instructional videos, without being enrolled in a class section."* **Videos yes; secure item bank and full Practice Exams no.** That is precisely the gap the ungated Bluebook test preview above and the public PDFs in this file exist to cover.
+
+**❌ Considered and REJECTED — the parent-as-authorized-teacher route.** Recorded with its reason so nobody later "discovers" it and assumes it was missed. There genuinely is one free path to the official Practice Exam: **a parent becomes the authorized AP teacher** by adopting the free endorsed **CSAwesome** syllabus, which grants *"free, downloadable AP Practice Exams."* **This repo does not recommend it and it should not be attempted.** It runs through the **homeschool-provider** audit path, which requires *"documentation verifying your homeschool provider status on file with your local, state, or federal education agency."* **Lucas attends a brick-and-mortar public high school (Foothill HS, Pleasanton USD), so a parent cannot satisfy that requirement — and attempting it would misrepresent his enrolment.** Rejected on **eligibility**, not on difficulty: it is closed to this family, not merely hard.
 
 ---
 
