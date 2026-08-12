@@ -1,16 +1,18 @@
 # Inheritance & HashMap — School-Class Safety Supplement
 
-> ## ⚠️ NOT on the AP CSA exam. For your SCHOOL class only.
+> ## ⚠️ The code on this page is NOT AP CSA exam content. For your SCHOOL class only.
 >
-> The College Board **explicitly removed** inheritance, polymorphism, interfaces, abstract classes, and HashMap from the redesigned AP CSA exam (CED effective Fall 2025). None of these topics appear anywhere in the 53 testable topics (Units 1–4) or on the Java Quick Reference sheet. **Do not study this file to prepare for the AP exam.**
+> `HashMap`/`HashSet`, polymorphism, abstract classes and the Java `interface` construct have **zero occurrences** in the official CED (*AP Computer Science A*, Effective Fall 2025) — they are on neither the 53-topic list (Units 1–4) nor the Java Quick Reference sheet. *(Verified 12 August 2026. The word "interface" is in the CED only as "Application Program **Interface** (API)", topic 1.7.)*
 >
-> This file exists as a hedge for Lucas's school class, which may still test these topics. Keep it light — it is an overview, not a full tutorial. If the school exam goes deeper than what is covered here, this file can be expanded at that point.
+> **Inheritance is the one exception, and the line is narrower than it looks.** Topic 1.12 *requires* the vocabulary — superclass, subclass, class hierarchy, and the fact that every class in Java is a subclass of `Object`. What the CED excludes is the *writing*: **"Designing and implementing inheritance relationships are outside the scope of the AP Computer Science A course and exam."** Everything below is that excluded writing half — `extends`, `super`, overriding — so **studying this file will not earn a single AP point.** For the in-scope 1.12 words, use [`../../csa-coverage-map.md`](../../csa-coverage-map.md) → **Inheritance** and the items in [`../question-bank/mcq-unit-1.md`](../question-bank/mcq-unit-1.md) (Q15, Q23–Q25).
+>
+> This file exists as a hedge for Lucas's school class, which may still test these topics — and teach them by writing them. Keep it light — it is an overview, not a full tutorial. If the school exam goes deeper than what is covered here, this file can be expanded at that point.
 
 ---
 
 ## 1. Inheritance
 
-> ⚠️ NOT on the AP CSA exam. School class only.
+> ⚠️ **Writing** inheritance is NOT on the AP CSA exam — school class only. The *words* (superclass, subclass, class hierarchy, every class is a subclass of `Object`) **are** required Unit 1 content, topic 1.12; see the header.
 
 **What it is:** Inheritance lets one class (the subclass) build on another class (the superclass), reusing its fields and methods while adding or changing behavior.
 
