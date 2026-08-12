@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS attempts (
                                          -- that may treat one of these as a countable verdict
   seconds    INTEGER,                   -- server measured
   hints_used INTEGER NOT NULL DEFAULT 0,
-  conditions TEXT NOT NULL,             -- cold | tutored | timed | proctored_mock
+  conditions TEXT NOT NULL,             -- cold | tutored | proctored_mock
   mock_id    INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_attempts_subject ON attempts(subject, ts);

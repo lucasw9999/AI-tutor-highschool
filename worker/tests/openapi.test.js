@@ -20,7 +20,7 @@ import assert from 'node:assert/strict'
 import { readFileSync, existsSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import worker from '../src/index.js'
-import { handleMockStart } from '../src/api.js'
+import { handleMockStart, handleMockSubmit, MIN_MOCK_COVERAGE, MOCK_TIME_SLACK } from '../src/api.js'
 import { makeDb } from '../src/db.js'
 import { grade, MODEL_GRADED } from '../src/grade.js'
 
@@ -606,6 +606,93 @@ withSeed('the Precalculus warning in the instructions matches what the bank can 
   }
 })
 
+// --- the unscored-mock reasons the instructions enumerate, against the real branches --
+//
+// gpt-instructions.md used to say a sitting goes unscored for "either" of two
+// reasons — too little of the section reached, or nothing gradeable — in both
+// the advisories bullet and the mock-exam walkthrough (Q4-X1). handleMockSubmit
+// has a THIRD, textually distinct branch: a sitting whose clock ran past
+// MOCK_TIME_SLACK, or that spent too long on one item. Reproduced live: 40 of 42
+// CSA answers, all correct, all reached, fully gradeable, spanning 245 minutes
+// against a 90-minute budget — `counted:false` with a basis about the clock,
+// matching neither reason the doc enumerated. A model paraphrasing the doc's
+// "either X or Y" would tell that student he "didn't reach enough of the
+// section" — false, he reached and answered every one of them correctly.
+//
+// Three scenarios are driven through the REAL handler, not three strings
+// invented here, so a future branch merge or rename breaks this test instead of
+// leaving the doc quietly wrong again the way it did the first time.
+const UNSCORED_BRANCH_MARKERS = {
+  short: /short of the \d+% of the section/i,
+  untimed: /run against a clock/i,
+  ungraded: /graded mechanically/i,
+}
+
+withSeed('every real reason a mock sitting can go unscored is named in gpt-instructions.md', async () => {
+  const env = freshEnv()
+  const db = makeDb(env.DB)
+  const now = '2027-03-01T12:00:00Z'
+  const anyItemId = (await db.items('ap_csa'))[0].id
+  const expected = CSA.exam.mcq_count // section I, this subject's own count
+  const coveredCount = Math.ceil(expected * MIN_MOCK_COVERAGE)
+
+  /** Log `n` mechanically-uniform attempts, evenly spanning `minutes`, under one fresh mock. */
+  async function sit({ n, minutes, gradedBy }) {
+    const mock = await db.startMock({ subject: 'ap_csa', section: 'I', started_at: now, proctored: 1, source: 'bank' })
+    const start = new Date(now).getTime()
+    for (let i = 0; i < n; i++) {
+      const ts = new Date(start + (minutes * 60000 * i) / Math.max(n - 1, 1)).toISOString()
+      await db.recordAttempt({
+        ts, subject: 'ap_csa', item_id: anyItemId, topic: 'unit1', unit: '1', practice: 'P1',
+        response: 'A', correct: 1, graded_by: gradedBy, seconds: 5, hints_used: 0,
+        conditions: 'proctored_mock', mock_id: mock,
+      })
+    }
+    const submitted = await handleMockSubmit({ db, mockId: mock, config: CSA, now })
+    assert.equal(submitted.counted, false, `scenario should be unscored: ${JSON.stringify(submitted)}`)
+    return submitted.basis
+  }
+
+  // Under coverage, fast: only the "short" branch can fire.
+  const short = await sit({ n: Math.max(1, coveredCount - 1), minutes: 5, gradedBy: 'server' })
+  // Covers the section, but the sitting's clock ran past MOCK_TIME_SLACK.
+  const untimed = await sit({ n: coveredCount + 2, minutes: CSA.exam.mcq_minutes * MOCK_TIME_SLACK + 20, gradedBy: 'server' })
+  // Covers the WHOLE section inside budget, but nothing on the paper was mechanically graded.
+  const ungraded = await sit({ n: expected, minutes: 5, gradedBy: 'model' })
+
+  const bases = { short, untimed, ungraded }
+  for (const [name, text] of Object.entries(bases)) {
+    for (const [branch, marker] of Object.entries(UNSCORED_BRANCH_MARKERS)) {
+      assert.equal(
+        marker.test(text), branch === name,
+        `the "${name}" scenario's basis ${marker.test(text) ? 'unexpectedly matches' : 'should match'} ` +
+          `the "${branch}" branch:\n${text}`,
+      )
+    }
+  }
+
+  // Three real, pairwise-distinct reasons exist today. Both places
+  // gpt-instructions.md enumerates them have to name all three, not two.
+  for (const [where, needle] of [
+    ['the advisories bullet', 'A proctored sitting was recorded but not scored.'],
+    ['the mock-exam walkthrough', '**If `counted` is false:**'],
+  ]) {
+    const at = INSTRUCTIONS.indexOf(needle)
+    assert.ok(at >= 0, `gpt-instructions.md no longer has ${where} ("${needle}")`)
+    const rest = INSTRUCTIONS.slice(at + 1)
+    const end = rest.search(/\n- \*\*|\n\n/)
+    const paragraph = end === -1 ? rest : rest.slice(0, end)
+
+    assert.match(paragraph, /reach(ed)?[^.]*section/i, `${where} must name the coverage reason`)
+    assert.match(paragraph, /graded mechanically/i, `${where} must name the ungradeable reason`)
+    assert.match(
+      paragraph, /clock|too long|overran|ran past|slack/i,
+      `${where} must ALSO name the timing reason — a sitting can go unscored for running past its time ` +
+        'budget, which is neither of the other two (Q4-X1: 40/42 correct, fully reached, over 245 minutes ' +
+        'on a 90-minute section, reported with a basis about the clock).',
+    )
+  }
+})
 
 withSeed('every lesson field the bank can leave empty is declared nullable', () => {
   // buildLesson serves a PARTIALLY filled teaching row from whatever fields it

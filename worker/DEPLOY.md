@@ -36,8 +36,33 @@ originate inside the page.
 ## Re-deploying after a code change
 
 ```bash
-npm test && npm run build && npm run seed:sql && npm run worker:check
+npm test && { npm run build -- --write-despite-incomplete; npm run seed:sql && npm run worker:check; }
 ```
+
+**`npm run build` with no flag exits 1 and writes nothing today, by design.**
+Content validation gates the build on completeness, and ap_precalc is not
+complete: 33 of its 36 exam-tested topics have no items at all, none of its 48
+items can be graded mechanically, four topics have items but no teaching row,
+one teaching row (1.11) is entirely blank, and three CSA items (csa-ac-q14,
+csa-ac-q33, csa-u2-q7) have an option whose text collides with another
+option's label. Run `npm run build` alone to see the current, authoritative
+list under "INCOMPLETE CONTENT" — it is generated from the content itself, so
+it will not go stale the way a hand-written list here would.
+
+`--write-despite-incomplete` writes `content/items.json`, `topics.json` and
+`teaching.json` from the markdown anyway, so a real fix elsewhere in the
+content is not stranded behind an unrelated gap (see the flag's own comment in
+`tools/build/build.js`). **It still exits 1 and prints "Build FAILED"** — the
+flag changes what gets written, not the exit code — so the command above
+deliberately runs it inside `{ ; }` rather than chaining it with `&&`. A bare
+`&&` here stops before `seed:sql` and `worker:check` ever run, which is exactly
+what the literal old command did: silently skip both with no error at all.
+
+Shipping on these artifacts means ap_precalc readiness stays effectively
+unreachable (see "Still not done" below), which is the same thing
+gpt-instructions.md already discloses to the student for the Precalc mock
+specifically. Re-run `npm run build` with no flag after any content fix — once
+these gaps are closed it exits 0, and the flag above can come out again.
 
 Then, from an ego-browser session logged into Cloudflare, upload
 `/tmp/ap-tutor-build/index.js` with `PUT /api/v4/accounts/{acc}/workers/scripts/ap-tutor`
@@ -59,11 +84,16 @@ database with real evidence in it, and a test asserts that property.
 end in `;` corrupts the payload: the CSA stems contain Java, so
 `String csv = "red,green,blue,yellow";` ends a line with a semicolon *inside* a
 SQL string literal. Track single-quote state and treat `''` as an escaped quote.
-Group into ~40 KiB requests; the 209 KiB seed becomes 5 calls.
+Group into ~40 KiB requests to keep the call count low — recompute how many
+that is for whatever `seed.sql` weighs today (currently ~205 KiB; it changes
+every time content is regenerated, so do not assume a fixed call count).
 
 ## Verified live
 
-Every one of these was exercised against the deployed Worker and real D1:
+Every one of these was exercised against the deployed Worker and real D1, on
+the code deployed at the time (before the mock coverage and timing gates
+below existed — re-verify the mock-scoring line after this deploy, since it no
+longer matches what current code would do):
 
 - `/health` with no key → 200
 - missing key → 401, wrong key → 401, unknown subject → 400
@@ -74,7 +104,14 @@ Every one of these was exercised against the deployed Worker and real D1:
 - replaying a serve id → 409; fabricated serve id → 404
 - blank answer → `blank: true`, distinct from a wrong answer
 - Precalc → `graded_by: model`, `correct: null`, worked solution returned
-- `/mock/start` → `/next?m=` ×3 → `/mock/submit` → composite 66.7%, resubmit 409
+- `/mock/start` → `/next?m=` ×3 → `/mock/submit` → composite 66.7%, resubmit
+  409 — **stale as of this deploy**: `MIN_MOCK_COVERAGE` (worker/src/api.js)
+  now requires ~90% of the section answered before any composite is computed,
+  so 3 of a 42-question section comes back `counted:false` with a `basis`
+  explaining the shortfall, not a percentage. `MOCK_TIME_SLACK` adds a second
+  way a sitting can come back unscored even when it is fully answered: running
+  the sitting's own clock past 1.5x the section's real time budget. Resubmit
+  still 409 either way.
 - readiness stayed **0** throughout, correctly blocked on coverage
 - `/dash` with the student key → 403; with the parent key → 200 HTML
 
@@ -125,7 +162,19 @@ access key**. Treat any screenshot or transcript of that prompt as exposing the
 key. The first student key was rotated for exactly this reason.
 
 ## Still not done
-- 48 Precalc items are model-graded and bucketed at `<unit>.0`; they need topic
-  tags and, where an unambiguous answer exists, real keys.
+- ap_precalc content is the real blocker on readiness: 33 of its 36
+  exam-tested topics have no items at all, and none of its 48 items
+  (`constructed_model_graded` throughout, all bucketed at `<unit>.0` rather
+  than tagged to a real topic) can be graded mechanically, so no Precalc mock
+  can ever produce a composite until items are tagged and, where an
+  unambiguous answer exists, keyed. Four topics (1.0, 2.0, 3.0, 4.0) have
+  items but no teaching row, and one teaching row (1.11) is entirely blank.
+  `npm run build` regenerates this exact list under "INCOMPLETE CONTENT" from
+  the content itself — read it there rather than trusting this paragraph,
+  which will drift the way it already did once.
+- Three CSA items (csa-ac-q14, csa-ac-q33, csa-u2-q7) have an option whose
+  text is itself another option's label. grade.js and gpt-instructions.md
+  handle the ambiguity at answer time (ask for "choice B", not a bare letter);
+  the content fix is to reword those options so the collision stops existing.
 - FRQ grading stays quarantined until calibrated against an officially scored
   College Board response. Until then 100% readiness is unreachable by design.
