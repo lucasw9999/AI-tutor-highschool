@@ -418,6 +418,17 @@ export function makeDb(D1) {
      * unearned claims. Answers already on the abandoned paper are not lost: they
      * are attempts, and submitting it scores whatever is on it, with the reason.
      *
+     * ONLY A SITTING THAT HOLDS AN ANSWER BLOCKS A NEW ONE, and that condition is
+     * load-bearing rather than lenient. handleMockSubmit deliberately refuses a
+     * sitting with no logged answers and leaves it OPEN, so that a mistaken submit
+     * does not strand a paper that can still be sat. Blocking on every open sitting
+     * would therefore deadlock the subject permanently the first time a /mock/start
+     * went unanswered: it could not be submitted, and no new sitting could be
+     * opened — proctored evidence unreachable for good, which is a worse failure
+     * than the one being closed. An empty paper also has nothing to discard: what
+     * walking away hides is ANSWERS, and a sitting with none has none. Empty or
+     * not, the abandoned sitting is still reported (see unfinishedSittings).
+     *
      * WHY THE GUARD IS IN THE STATEMENT, like recordServe's and claimServe's.
      * Reading the mocks table and then inserting is a read-then-write, and D1
      * offers no transaction: two concurrent /mock/start calls would both see no
@@ -433,7 +444,11 @@ export function makeDb(D1) {
       const r = await one(
         `INSERT INTO mocks (subject, section, started_at, proctored, source)
          SELECT ?,?,?,?,?
-          WHERE NOT EXISTS (SELECT 1 FROM mocks WHERE subject = ? AND ended_at IS NULL)
+          WHERE NOT EXISTS (
+            SELECT 1 FROM mocks m
+             WHERE m.subject = ? AND m.ended_at IS NULL
+               AND EXISTS (SELECT 1 FROM attempts a WHERE a.mock_id = m.id)
+          )
          RETURNING id`,
         subject, section, started_at, proctored, source, subject,
       )

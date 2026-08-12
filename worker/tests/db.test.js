@@ -892,32 +892,45 @@ test('an item abandoned mid-question in one sitting is still servable in the nex
   assert.equal(paper.distinct.size, 2, `one row per question: ${paper.items.join(', ')}`)
 })
 
-test('two concurrent /mock/start calls cannot both open a sitting on one subject', async () => {
+test('no start, however it interleaves, can open a second paper while one holds an answer', async () => {
   // The read-then-write this closes: handleMockStart could read the mocks table,
-  // see nothing open, and insert — twice, concurrently — which is exactly the
-  // state the guard exists to refuse. Held at the statement, like claimServe's and
-  // recordServe's, so no interleaving can produce two open papers.
+  // see nothing blocking, and insert — twice, concurrently — so a sitting with
+  // real answers on it would be walked away from with a fresh paper opened over
+  // the top of it. Held at the statement, like claimServe's and recordServe's, so
+  // no interleaving can produce it. Scheduled rather than hoped for: the first
+  // INSERT is parked until the second request has been through its own.
   //
-  // Scheduled rather than hoped for: the first INSERT is parked until the second
-  // request has been through its own, so both are in flight at once.
+  // What is NOT the invariant: "exactly one of two concurrent starts wins". An
+  // open sitting with NO answers on it deliberately blocks nothing — submit
+  // refuses an empty paper and leaves it open, so blocking on it would deadlock
+  // the subject forever (see db.startMock). Two empty papers can therefore
+  // coexist; both are reported as unfinished, and neither hides an answer.
   const race = scheduled(/INSERT INTO mocks/i)
   const { db, sqlite } = freshDb({ hold: race.hold })
-  seedSection(sqlite, 2)
+  seedSection(sqlite, 4)
+
+  const sat = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(30), mockId: sat.mock })
+  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(60) })
 
   race.arm()
-  const first = handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
-  await race.reached // parked with its INSERT in flight, having seen nothing open
-  const second = handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(1) })
+  const first = handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(90) })
+  await race.reached // parked with its INSERT in flight, having read the mocks table
+  const second = handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(91) })
   race.release()
   const results = await Promise.allSettled([first, second])
-  const opened = sqlite.prepare(`SELECT COUNT(*) n FROM mocks WHERE ended_at IS NULL`).get().n
-  assert.equal(opened, 1, `one subject may have exactly one open sitting, found ${opened}`)
-  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1, 'exactly one caller may be given a paper')
 
-  const refused = results.find((r) => r.status === 'rejected')
-  assert.ok(refused.reason instanceof ApiError, `the loser must be refused, got ${refused.reason}`)
-  assert.equal(refused.reason.status, 409)
-  assert.match(refused.reason.message, /never submitted/, 'and told what is in the way')
+  assert.equal(
+    sqlite.prepare(`SELECT COUNT(*) n FROM mocks`).get().n, 1,
+    'no second paper may be opened over a sitting that holds an answer, whatever the interleaving',
+  )
+  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 0, 'both callers have to be refused')
+  for (const r of results) {
+    assert.ok(r.reason instanceof ApiError, `the refusal must be a client error, got ${r.reason}`)
+    assert.equal(r.reason.status, 409)
+    assert.match(r.reason.message, /never submitted/, 'and it has to say what is in the way')
+    assert.match(r.reason.message, /1 answer/, 'and how much is on the paper being protected')
+  }
 })
 
 test('a subject with an open sitting does not block the other subject', async () => {
