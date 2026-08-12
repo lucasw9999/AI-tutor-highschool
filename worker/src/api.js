@@ -1787,7 +1787,15 @@ export async function handleDashboard({ db, configs, now }) {
       pace: signals.pace,
       open_gaps: signals.open_gaps,
       unfinished_sittings: signals.unfinished,
-      readiness: { ...readiness, advisories: [...readiness.advisories, ...signalAdvisories(signals)] },
+      readiness: {
+        ...readiness,
+        // Every advisory is passed through verbatim so the two surfaces cannot word
+        // the same judgement differently — EXCEPT the unfinished sitting, which this
+        // card renders as a fact line of its own with the numbers laid out. The same
+        // sitting stated twice on one page is noise, and the paragraph is written for
+        // the student ("submit it with submitMock"), not for the parent reading a card.
+        advisories: [...readiness.advisories, ...signalAdvisories({ ...signals, unfinished: [] })],
+      },
     })
   }
   return { subjects, now }

@@ -2224,3 +2224,28 @@ withSeed('an unfinished sitting with no answers on it is reported as what it is'
     'submitMock refuses an empty sitting, so the advisory must not send him to a call that cannot work',
   )
 })
+
+withSeed('the parent page states an unfinished sitting once, not twice', async () => {
+  // handleDashboard passes every advisory through verbatim so the student and the
+  // parent cannot be told the same judgement in different words — but the card
+  // renders the unfinished sitting itself, with its numbers, so the paragraph
+  // written for the student would be the same sitting stated twice on one page.
+  const { db } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(30), mockId: m.mock })
+  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(60) })
+
+  const now = at((CSA.exam.mcq_minutes + 1) * 60)
+  const student = await handleStatus({ db, subject: 'ap_csa', config: CSA, now })
+  assert.ok(advisory(student, /never submitted/i), 'the student is still told, in words')
+
+  const data = await handleDashboard({ db, configs: CONFIGS, now })
+  const csa = data.subjects.find((s) => s.config.subject === 'ap_csa')
+  assert.equal(
+    csa.readiness.advisories.find((a) => /never submitted/i.test(a)), undefined,
+    'and the parent gets it as the card’s own fact line instead of the same paragraph again',
+  )
+  assert.equal(csa.unfinished_sittings.length, 1, 'which means the card has to actually be handed the sitting')
+  assert.equal(csa.unfinished_sittings[0].id, m.mock)
+  assert.equal(csa.unfinished_sittings[0].answered, 1)
+})
