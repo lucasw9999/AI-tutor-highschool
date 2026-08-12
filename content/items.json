@@ -371,7 +371,7 @@
       "A": "big",
       "B": "mid",
       "C": "small",
-      "D": "mid` and `small"
+      "D": "`mid` and `small`"
     },
     "answer": "B",
     "explanation": "`5 > 10` false; `5 > 3` true → prints `mid` and the chain **stops** (later branches are skipped even though `5 > 0` is also true).",
@@ -389,7 +389,7 @@
     "options": {
       "A": "high",
       "B": "Nothing.",
-      "C": "high` then `mid",
+      "C": "`high` then `mid`",
       "D": "mid"
     },
     "answer": "D",
@@ -672,10 +672,10 @@
     "kind": "mcq",
     "stem": "What is printed?\n```java\nfor (int r = 1; r <= 3; r++) {\n    for (int c = 1; c <= r; c++) {\n        System.out.print(c);\n    }\n    System.out.println();\n}\n```",
     "options": {
-      "A": "1` / `12` / `123",
-      "B": "1` / `11` / `111",
-      "C": "123` / `12` / `1",
-      "D": "111` / `22` / `3"
+      "A": "`1` / `12` / `123`",
+      "B": "`1` / `11` / `111`",
+      "C": "`123` / `12` / `1`",
+      "D": "`111` / `22` / `3`"
     },
     "answer": "A",
     "explanation": "Row r prints `1..r`: row1 `1`, row2 `12`, row3 `123` (each on its own line).",
@@ -710,7 +710,7 @@
     "kind": "mcq",
     "stem": "For input size `n`, how many times does `step()` run?\n```java\nfor (int i = 0; i < n; i++) {\n    step();           // loop A\n}\nfor (int i = 0; i < n; i++) {\n    for (int j = 0; j < n; j++) {\n        step();       // loop B\n    }\n}\n```",
     "options": {
-      "A": "n + n` = `2n",
+      "A": "`n + n` = `2n`",
       "B": "n + n²",
       "C": "n²",
       "D": "2n²"
@@ -1319,7 +1319,7 @@
     "stem": "On the sorted array below, binary search for `target = 11` examines which indices, in order? (low/high inclusive, `mid = (low+high)/2`)\n```java\nint[] a = {1, 3, 5, 7, 9, 11, 13};   // indices 0..6\n```",
     "options": {
       "A": "3, 5",
-      "B": "3` (found immediately)",
+      "B": "`3` (found immediately)",
       "C": "0, 1, 2, 3, 4, 5",
       "D": "6, 3, 0"
     },
@@ -1394,10 +1394,10 @@
     "kind": "mcq",
     "stem": "Merge sort on `{8, 3, 5, 1}` recursively splits, then merges sorted halves. Which sequence of *merged* results is correct?",
     "options": {
-      "A": "merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}",
-      "B": "{8, 3, 5, 1}` is already returned unchanged",
-      "C": "merge `{3,8}` and `{1,5}` → `{1, 3, 5, 8}",
-      "D": "merge `{1,3}` and `{5,8}` → `{1, 3, 5, 8}"
+      "A": "merge `{8,3}` and `{5,1}` → `{8, 5, 3, 1}`",
+      "B": "`{8, 3, 5, 1}` is already returned unchanged",
+      "C": "merge `{3,8}` and `{1,5}` → `{1, 3, 5, 8}`",
+      "D": "merge `{1,3}` and `{5,8}` → `{1, 3, 5, 8}`"
     },
     "answer": "C",
     "explanation": "Split into `{8,3}`→sorted `{3,8}` and `{5,1}`→sorted `{1,5}`; merging those sorted halves interleaves to `{1,3,5,8}`.",
@@ -1527,10 +1527,10 @@
     "kind": "mcq",
     "stem": "This is intended to set `sum` to the total of all elements of `a`, but it currently throws an `ArrayIndexOutOfBoundsException`. Which single change fixes it?\n```java\nint[] a = {3, 6, 9, 12};\nint sum = 0;\nfor (int i = 0; i <= a.length; i++) {\n    sum += a[i];\n}\n```",
     "options": {
-      "A": "Change `i = 0` to `i = 1",
-      "B": "Change `sum += a[i]` to `sum += a[i + 1]",
-      "C": "Change the loop condition to `i < a.length",
-      "D": "Change `a.length` to `a.length + 1"
+      "A": "Change `i = 0` to `i = 1`",
+      "B": "Change `sum += a[i]` to `sum += a[i + 1]`",
+      "C": "Change the loop condition to `i < a.length`",
+      "D": "Change `a.length` to `a.length + 1`"
     },
     "answer": "C",
     "explanation": "Valid indices are 0..3; `i <= a.length` lets `i` reach 4 (out of bounds). `i < a.length` stops at index 3. (A) skips index 0; (B) makes the access worse; (D) extends the bound further out.",
@@ -1546,10 +1546,10 @@
     "kind": "mcq",
     "stem": "This is intended to print `\"long enough\"` only when `s` is non-null **and** has more than 3 characters, never throwing an exception. It currently throws a `NullPointerException` when `s` is `null`. Which change fixes it?\n```java\nString s = null;\nif (s.length() > 3 && s != null) {\n    System.out.println(\"long enough\");\n}\n```",
     "options": {
-      "A": "Swap the operands to `s != null && s.length() > 3",
-      "B": "Change `&&` to `||",
-      "C": "Change `> 3` to `>= 3",
-      "D": "Change `s.length()` to `s.substring(0)"
+      "A": "Swap the operands to `s != null && s.length() > 3`",
+      "B": "Change `&&` to `||`",
+      "C": "Change `> 3` to `>= 3`",
+      "D": "Change `s.length()` to `s.substring(0)`"
     },
     "answer": "A",
     "explanation": "The null check must come **first** so `&&` short-circuits before `s.length()` is called. The original calls `s.length()` on `null`. (B) `||` would still evaluate `s.length()`; (C)/(D) do not avoid the null call.",
@@ -1565,10 +1565,10 @@
     "kind": "mcq",
     "stem": "This is intended to remove **every** `0` from `list`, but with `list = [0, 0, 4]` it leaves a `0` behind. Which change fixes it?\n```java\nfor (int i = 0; i < list.size(); i++) {\n    if (list.get(i) == 0) {\n        list.remove(i);\n    }\n}\n```",
     "options": {
-      "A": "Change `list.remove(i)` to `list.set(i, 0)",
-      "B": "Change the condition to `i <= list.size()",
-      "C": "Add `i++;` inside the `if",
-      "D": "Iterate backward: `for (int i = list.size() - 1; i >= 0; i--)"
+      "A": "Change `list.remove(i)` to `list.set(i, 0)`",
+      "B": "Change the condition to `i <= list.size()`",
+      "C": "Add `i++;` inside the `if`",
+      "D": "Iterate backward: `for (int i = list.size() - 1; i >= 0; i--)`"
     },
     "answer": "D",
     "explanation": "Forward removal with `i++` skips the element shifted into the removed slot (`[0,0,4]` → remove index 0 → `[0,4]`, `i` advances to 1 and skips the surviving `0`). Iterating **backward** never skips a shifted element. (A) removes nothing; (B) goes out of bounds; (C) skips even more.",
@@ -1584,10 +1584,10 @@
     "kind": "mcq",
     "stem": "A method `int bSearch(int[] a, int target)` uses binary search and returns the index of `target` or `-1`. It works correctly only if ___ — which precondition must hold?",
     "options": {
-      "A": "a` contains no duplicate values",
-      "B": "a` is sorted in ascending order",
-      "C": "target` is positive",
-      "D": "a.length` is a power of 2"
+      "A": "`a` contains no duplicate values",
+      "B": "`a` is sorted in ascending order",
+      "C": "`target` is positive",
+      "D": "`a.length` is a power of 2"
     },
     "answer": "B",
     "explanation": "*Model answer:* Binary search assumes the array is **sorted** (ascending here); it halves the search space by comparing against the middle, which is only valid on ordered data. Duplicates, sign of `target`, and length being a power of 2 are irrelevant to correctness.",
@@ -1603,10 +1603,10 @@
     "kind": "mcq",
     "stem": "A method `double average(int[] a)` returns `sum / a.length` cast to a double. It works correctly only if ___ — which precondition must hold?",
     "options": {
-      "A": "a` is sorted",
-      "B": "a.length > 0` (the array is non-empty)",
+      "A": "`a` is sorted",
+      "B": "`a.length > 0` (the array is non-empty)",
       "C": "every element is positive",
-      "D": "a.length` is even"
+      "D": "`a.length` is even"
     },
     "answer": "B",
     "explanation": "*Model answer:* Dividing by `a.length` throws an `ArithmeticException` (integer divide-by-zero) when the array is **empty**, so the precondition is `a.length > 0`. Order, sign, and parity of the length do not affect correctness.",
@@ -1698,9 +1698,9 @@
     "kind": "mcq",
     "stem": "Continuing SET 1: `inv.slot(i)` works correctly only if ___ — which precondition must hold?",
     "options": {
-      "A": "i` is even",
-      "B": "counts` is sorted",
-      "C": "i` is positive",
+      "A": "`i` is even",
+      "B": "`counts` is sorted",
+      "C": "`i` is positive",
       "D": "0 <= i && i < counts.length"
     },
     "answer": "D",
@@ -1736,10 +1736,10 @@
     "kind": "mcq",
     "stem": "Continuing SET 2: this loop is intended to print the index of the first entry whose length is greater than 4, or `-1` if none. It currently prints the **last** matching index. Which change fixes it?\n```java\nint idx = -1;\nfor (int i = 0; i < words.length; i++) {\n    if (words[i].length() > 4) idx = i;\n}\nSystem.out.println(idx);\n```",
     "options": {
-      "A": "Change `> 4` to `>= 4",
-      "B": "Change `idx = i` to `idx = words[i].length()",
-      "C": "Add `break;` immediately after `idx = i;",
-      "D": "Start the loop at `i = 1"
+      "A": "Change `> 4` to `>= 4`",
+      "B": "Change `idx = i` to `idx = words[i].length()`",
+      "C": "Add `break;` immediately after `idx = i;`",
+      "D": "Start the loop at `i = 1`"
     },
     "answer": "C",
     "explanation": "Without stopping, `idx` is overwritten by every match, leaving the **last**. Adding `break;` after the first assignment captures the **first** match. (A) changes the threshold; (B) stores the wrong value; (D) skips index 0.",
@@ -1831,10 +1831,10 @@
     "kind": "mcq",
     "stem": "Merge sort on `{6, 2, 7, 1}` recursively splits into single elements, then merges in pairs. After the **first level of merges** (each adjacent pair merged into a sorted pair), which pair of sub-results is correct?",
     "options": {
-      "A": "{2, 6}` and `{1, 7}",
-      "B": "{6, 2}` and `{7, 1}",
-      "C": "{2, 7}` and `{1, 6}",
-      "D": "{1, 2}` and `{6, 7}"
+      "A": "`{2, 6}` and `{1, 7}`",
+      "B": "`{6, 2}` and `{7, 1}`",
+      "C": "`{2, 7}` and `{1, 6}`",
+      "D": "`{1, 2}` and `{6, 7}`"
     },
     "answer": "A",
     "explanation": "The halves are `{6,2}` and `{7,1}`; merging each sorted pair gives `{2,6}` and `{1,7}`. (The final merge of those two would produce `{1,2,6,7}`, but the question asks for the first level only.)",
@@ -2268,10 +2268,10 @@
     "kind": "mcq",
     "stem": "Two methods exist: `void show(int n)` and `void show(double d)`. What does `show(7)` call, and `show(7.0)`?",
     "options": {
-      "A": "Both call `show(double)",
-      "B": "Both call `show(int)",
+      "A": "Both call `show(double)`",
+      "B": "Both call `show(int)`",
       "C": "It is ambiguous and won't compile.",
-      "D": "show(7)` → `show(int)`; `show(7.0)` → `show(double)"
+      "D": "`show(7)` → `show(int)`; `show(7.0)` → `show(double)`"
     },
     "answer": "D",
     "explanation": "**Overloading** picks the method whose parameter type matches the argument: an `int` literal matches `show(int)`, a `double` literal matches `show(double)`.",
@@ -2306,7 +2306,7 @@
     "kind": "mcq",
     "stem": "Which call is the correct way to invoke this method from another class?\n```java\npublic class MathUtil {\n    public static int twice(int n) { return 2 * n; }\n}\n```",
     "options": {
-      "A": "new MathUtil().twice(5)` is required",
+      "A": "`new MathUtil().twice(5)` is required",
       "B": "twice(5)",
       "C": "MathUtil.twice(5)",
       "D": "MathUtil.twice()"
@@ -2325,10 +2325,10 @@
     "kind": "mcq",
     "stem": "What is the range of possible values of `r`?\n```java\nint r = (int)(Math.random() * 4) + 1;\n```",
     "options": {
-      "A": "0` to `4` inclusive",
-      "B": "1` to `4` inclusive",
-      "C": "1` to `5` inclusive",
-      "D": "0` to `3` inclusive"
+      "A": "`0` to `4` inclusive",
+      "B": "`1` to `4` inclusive",
+      "C": "`1` to `5` inclusive",
+      "D": "`0` to `3` inclusive"
     },
     "answer": "B",
     "explanation": "`Math.random()` ∈ [0.0, 1.0); `* 4` ∈ [0.0, 4.0); `(int)` → 0,1,2,3; `+ 1` → 1,2,3,4. Inclusive range **1 to 4**.",
@@ -2346,7 +2346,7 @@
     "options": {
       "A": "A class is the same thing as an object.",
       "B": "A reference variable stores the object's data directly.",
-      "C": "null` is a valid object.",
+      "C": "`null` is a valid object.",
       "D": "Every class implicitly extends `Object`, so it inherits methods like `toString` and `equals`."
     },
     "answer": "D",
@@ -2477,10 +2477,10 @@
     "kind": "mcq",
     "stem": "Given the class below, which call is **correct**?\n```java\npublic class Util {\n    public static int triple(int n) { return 3 * n; }   // static\n    public int label() { return 1; }                     // instance\n}\n// elsewhere:\nUtil u = new Util();\n```",
     "options": {
-      "A": "Util.label()` calls the instance method directly on the class.",
-      "B": "triple(4)` works from another class without naming `Util`.",
-      "C": "u.triple(4)` is the only legal way to call `triple`.",
-      "D": "Util.triple(4)` calls the static method on the class; `u.label()` calls the instance method on the object."
+      "A": "`Util.label()` calls the instance method directly on the class.",
+      "B": "`triple(4)` works from another class without naming `Util`.",
+      "C": "`u.triple(4)` is the only legal way to call `triple`.",
+      "D": "`Util.triple(4)` calls the static method on the class; `u.label()` calls the instance method on the object."
     },
     "answer": "D",
     "explanation": "A **static** method belongs to the class and is called `ClassName.method(...)` (`Util.triple(4)`); an **instance** method needs an object (`u.label()`). (A) calls an instance method with no object; (B) omits the class name from another class; (C) wrongly claims an object is required for the static call.",
@@ -2534,10 +2534,10 @@
     "kind": "mcq",
     "stem": "What is printed?\n```java\nint a = 6, b = 9;\nSystem.out.println(a < b);\nSystem.out.println(a >= b);\n```",
     "options": {
-      "A": "true` then `false",
-      "B": "false` then `true",
-      "C": "true` then `true",
-      "D": "false` then `false"
+      "A": "`true` then `false`",
+      "B": "`false` then `true`",
+      "C": "`true` then `true`",
+      "D": "`false` then `false`"
     },
     "answer": "A",
     "explanation": "`6 < 9` is `true`; `6 >= 9` is `false`.",
@@ -2553,10 +2553,10 @@
     "kind": "mcq",
     "stem": "Two `String` variables `x` and `y` both hold the contents `\"hi\"`, but were built so they are **different objects**. What does `x == y` evaluate to, and why?",
     "options": {
-      "A": "true`, because the contents match",
-      "B": "false`, because `==` on objects compares references, not contents",
+      "A": "`true`, because the contents match",
+      "B": "`false`, because `==` on objects compares references, not contents",
       "C": "Compile error",
-      "D": "true`, because Strings are immutable"
+      "D": "`true`, because Strings are immutable"
     },
     "answer": "B",
     "explanation": "For objects, `==` compares **references** (addresses). Different objects → `false`, even with equal contents. Use `.equals()` to compare String contents.",
@@ -2744,8 +2744,8 @@
     "stem": "This loop is intended to print `5 4 3 2 1` but currently never terminates. Which change fixes it?\n```java\nint n = 5;\nwhile (n > 0) {\n    System.out.print(n + \" \");\n    // (missing update statement)\n}\n```",
     "options": {
       "A": "Add `n++;` in the body",
-      "B": "Change the condition to `n >= 0",
-      "C": "Change `print` to `println",
+      "B": "Change the condition to `n >= 0`",
+      "C": "Change `print` to `println`",
       "D": "Add `n--;` in the body"
     },
     "answer": "D",
@@ -3029,9 +3029,9 @@
     "stem": "In a `Student` class, each student has their own `gpa`, but the school's `name` is the same for all students. Which is the correct design?",
     "options": {
       "A": "Both `gpa` and `name` are instance variables.",
-      "B": "gpa` is an instance variable; `name` (shared) is a `static` class variable.",
+      "B": "`gpa` is an instance variable; `name` (shared) is a `static` class variable.",
       "C": "Both are `static`.",
-      "D": "gpa` is `static`; `name` is an instance variable."
+      "D": "`gpa` is `static`; `name` is an instance variable."
     },
     "answer": "B",
     "explanation": "Per-object state → **instance** variable (`gpa`); state shared by all objects of the class → **`static` class** variable (`name`).",
@@ -3161,10 +3161,10 @@
     "kind": "mcq",
     "stem": "A class declares `private int count; private String label; private boolean active;` with **no constructor body assigning them**. After `new`, what are their values?",
     "options": {
-      "A": "0`, `null`, `false",
-      "B": "0`, `\"\"`, `true",
-      "C": "null`, `null`, `null",
-      "D": "0`, `null`, `true"
+      "A": "`0`, `null`, `false`",
+      "B": "`0`, `\"\"`, `true`",
+      "C": "`null`, `null`, `null`",
+      "D": "`0`, `null`, `true`"
     },
     "answer": "A",
     "explanation": "Default values: numeric → `0`, object reference (`String`) → `null`, `boolean` → `false`.",
@@ -3313,10 +3313,10 @@
     "kind": "mcq",
     "stem": "Which statement about `this` is correct?",
     "options": {
-      "A": "this` refers to the current object and cannot be used in a `static` method (which has no `this`).",
-      "B": "this` can be used inside a `static` method to refer to the class.",
-      "C": "this` is required in every method.",
-      "D": "this` refers to the parent class."
+      "A": "`this` refers to the current object and cannot be used in a `static` method (which has no `this`).",
+      "B": "`this` can be used inside a `static` method to refer to the class.",
+      "C": "`this` is required in every method.",
+      "D": "`this` refers to the parent class."
     },
     "answer": "A",
     "explanation": "`this` is the **current object** reference; a `static` method belongs to the class, not an object, so it has **no `this`**. It is only needed to disambiguate shadowed members otherwise.",
@@ -3332,10 +3332,10 @@
     "kind": "mcq",
     "stem": "You must model a `Temperature` so that, once created, its value can be **read but never changed** from outside, and its raw field is hidden. Which design best fits?",
     "options": {
-      "A": "public double value;` with no methods",
-      "B": "private double value;` with a public accessor and **no** mutator",
-      "C": "private double value;` with a public mutator and no accessor",
-      "D": "static double value;` shared by all temperatures"
+      "A": "`public double value;` with no methods",
+      "B": "`private double value;` with a public accessor and **no** mutator",
+      "C": "`private double value;` with a public mutator and no accessor",
+      "D": "`static double value;` shared by all temperatures"
     },
     "answer": "B",
     "explanation": "Read-but-not-changed + hidden field = a **`private`** field with a **public accessor and no mutator** (immutable-from-outside). (A) exposes the field; (C) allows changes but no reads; (D) shares one value across all objects.",
@@ -3617,7 +3617,7 @@
     "kind": "mcq",
     "stem": "A file token is the String `\"  -12 \"`'s trimmed form `\"-12\"`. Which converts it to the `int` value `-12`?",
     "options": {
-      "A": "Integer.parseInt(\"  -12 \")` (the untrimmed token)",
+      "A": "`Integer.parseInt(\"  -12 \")` (the untrimmed token)",
       "B": "Double.parseDouble(\"-12\")",
       "C": "(int) \"-12\"",
       "D": "Integer.parseInt(\"-12\")"
@@ -3674,9 +3674,9 @@
     "kind": "mcq",
     "stem": "You want to remove every `0` from an `ArrayList<Integer>`. Which loop design is **correct** (no skipped elements, no exception)?",
     "options": {
-      "A": "Enhanced-for: `for (int x : list) if (x == 0) list.remove(...);",
-      "B": "Forward loop with `i++` always: removing at `i` then `i++",
-      "C": "Backward index loop: `for (int i = list.size() - 1; i >= 0; i--) if (list.get(i) == 0) list.remove(i);",
+      "A": "Enhanced-for: `for (int x : list) if (x == 0) list.remove(...);`",
+      "B": "Forward loop with `i++` always: removing at `i` then `i++`",
+      "C": "Backward index loop: `for (int i = list.size() - 1; i >= 0; i--) if (list.get(i) == 0) list.remove(i);`",
       "D": "for (int i = 0; i < list.size(); i++) list.remove(i);"
     },
     "answer": "C",
@@ -3731,10 +3731,10 @@
     "kind": "mcq",
     "stem": "For `int[][] m = new int[3][5];`, which is true?",
     "options": {
-      "A": "m.length` is 5 and `m[0].length` is 3.",
-      "B": "m.length` is 3 (rows) and `m[0].length` is 5 (columns).",
-      "C": "m.length` is 15.",
-      "D": "m` is jagged."
+      "A": "`m.length` is 5 and `m[0].length` is 3.",
+      "B": "`m.length` is 3 (rows) and `m[0].length` is 5 (columns).",
+      "C": "`m.length` is 15.",
+      "D": "`m` is jagged."
     },
     "answer": "B",
     "explanation": "`new int[3][5]` is 3 rows × 5 columns: `m.length` = rows = 3, `m[0].length` = columns = 5. Rectangular, not jagged.",
@@ -3788,10 +3788,10 @@
     "kind": "mcq",
     "stem": "A method `int countPositive(int[][] g)` returns how many entries of `g` are `> 0`. For it to work without an exception on an empty-row situation, what precondition is most appropriate?",
     "options": {
-      "A": "g` is a rectangular (non-jagged) array with each row of the same length.",
-      "B": "g` is sorted.",
-      "C": "g` contains only positive numbers.",
-      "D": "g.length == g[0].length`."
+      "A": "`g` is a rectangular (non-jagged) array with each row of the same length.",
+      "B": "`g` is sorted.",
+      "C": "`g` contains only positive numbers.",
+      "D": "`g.length == g[0].length`."
     },
     "answer": "A",
     "explanation": "The course assumes **rectangular** 2D arrays; that is the precondition that makes `g[r].length`/`g[0].length` traversal safe. Sorting (B), all-positive (C), and square (D) are not required.",
@@ -3884,8 +3884,8 @@
     "stem": "You must find the maximum of `int[] a` where every value could be negative. Which initialization of `max` is **safe**?",
     "options": {
       "A": "int max = 0;",
-      "B": "int max = a[0];` (then scan from index 1)",
-      "C": "int max = Integer.MIN_VALUE / 2;` but only scan even indices",
+      "B": "`int max = a[0];` (then scan from index 1)",
+      "C": "`int max = Integer.MIN_VALUE / 2;` but only scan even indices",
       "D": "int max = a.length;"
     },
     "answer": "B",
@@ -4279,8 +4279,8 @@
     "calc_allowed": true,
     "tested_on_exam": true,
     "stem": "Population model $P(t)=a+b\\ln(t+1)$ thousand, with $P(0)=12$ and $P(40)=58$. Find $a$ and $b$ (3 decimals), then find $P(20)$.",
-    "solution": "$P(0)=a+b\\ln(1)=a=12$. $P(40)=12+b\\ln(41)=58\\Rightarrow b\\ln(41)=46\\Rightarrow b=\\frac{46}{\\ln 41}=\\frac{46}{3.7136}\\approx\\mathbf{12.387}$. Then $P(20)=12+12.387\\ln(21)=12+12.387(3.0445)\\approx12+37.713=\\mathbf{49.713}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)",
-    "explanation": "$P(0)=a+b\\ln(1)=a=12$. $P(40)=12+b\\ln(41)=58\\Rightarrow b\\ln(41)=46\\Rightarrow b=\\frac{46}{\\ln 41}=\\frac{46}{3.7136}\\approx\\mathbf{12.387}$. Then $P(20)=12+12.387\\ln(21)=12+12.387(3.0445)\\approx12+37.713=\\mathbf{49.713}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)",
+    "solution": "$P(0)=a+b\\ln(1)=a=12$. $P(40)=12+b\\ln(41)=58\\Rightarrow b\\ln(41)=46\\Rightarrow b=\\frac{46}{\\ln 41}=\\frac{46}{3.7136}\\approx\\mathbf{12.387}$. Then $P(20)=12+12.387\\ln(21)=12+12.387(3.0445)\\approx12+37.712=\\mathbf{49.712}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)",
+    "explanation": "$P(0)=a+b\\ln(1)=a=12$. $P(40)=12+b\\ln(41)=58\\Rightarrow b\\ln(41)=46\\Rightarrow b=\\frac{46}{\\ln 41}=\\frac{46}{3.7136}\\approx\\mathbf{12.387}$. Then $P(20)=12+12.387\\ln(21)=12+12.387(3.0445)\\approx12+37.712=\\mathbf{49.712}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)",
     "answer": null,
     "answer_variants": [],
     "topic": "1.0"
@@ -4327,8 +4327,8 @@
     "calc_allowed": true,
     "tested_on_exam": true,
     "stem": "For $f(x)=0.5x^3-2x^2-x+3$, use a graphing calculator to find all real zeros to 3 decimals, and state the end behavior in limit notation.",
-    "solution": "Graph/solve: zeros ≈ **$x\\approx-1.273,\\ 1.140,\\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\\frac{b}{a}=-\\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)=-6.000$, which must equal $-\\frac{d}{a}=-\\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\\displaystyle\\lim_{x\\to\\infty}f(x)=\\infty,\\ \\displaystyle\\lim_{x\\to-\\infty}f(x)=-\\infty$.",
-    "explanation": "Graph/solve: zeros ≈ **$x\\approx-1.273,\\ 1.140,\\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\\frac{b}{a}=-\\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)=-6.000$, which must equal $-\\frac{d}{a}=-\\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\\displaystyle\\lim_{x\\to\\infty}f(x)=\\infty,\\ \\displaystyle\\lim_{x\\to-\\infty}f(x)=-\\infty$.",
+    "solution": "Graph/solve: zeros ≈ **$x\\approx-1.273,\\ 1.140,\\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\\frac{b}{a}=-\\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)\\approx-5.998\\approx-6$, which must equal $-\\frac{d}{a}=-\\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\\displaystyle\\lim_{x\\to\\infty}f(x)=\\infty,\\ \\displaystyle\\lim_{x\\to-\\infty}f(x)=-\\infty$.",
+    "explanation": "Graph/solve: zeros ≈ **$x\\approx-1.273,\\ 1.140,\\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\\frac{b}{a}=-\\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)\\approx-5.998\\approx-6$, which must equal $-\\frac{d}{a}=-\\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\\displaystyle\\lim_{x\\to\\infty}f(x)=\\infty,\\ \\displaystyle\\lim_{x\\to-\\infty}f(x)=-\\infty$.",
     "answer": null,
     "answer_variants": [],
     "topic": "1.0"

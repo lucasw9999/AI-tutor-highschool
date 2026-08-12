@@ -642,7 +642,7 @@
     "topic": "2.8",
     "subject": "ap_precalc",
     "plain_idea": "To solve for a variable in an exponent, take a log of both sides. To solve a log equation, exponentiate (rewrite in exponential form) — then **check for extraneous solutions** (domain!).",
-    "worked_example": "Solve $5\\cdot 3^{x}=45$.\n- $3^x = 9 = 3^2 \\Rightarrow x = 2$.",
+    "worked_example": "A (no calc)\nSolve $5\\cdot 3^{x}=45$.\n- $3^x = 9 = 3^2 \\Rightarrow x = 2$.\n\n**Worked example B (calc, 3 decimals):** Solve $4^{x}=20$.\n- $x = \\dfrac{\\ln 20}{\\ln 4} = \\dfrac{2.9957}{1.3863} \\approx 2.161$.\n\n**Worked example C (quadratic-in-disguise — this was 2025 FRQ Q4):** Solve $e^{2x}-e^{x}-12=0$.\n- Let $u=e^x$: $u^2-u-12=0 \\Rightarrow (u-4)(u+3)=0 \\Rightarrow u=4$ or $u=-3$.\n- $e^x = 4 \\Rightarrow x=\\ln 4$. ($e^x=-3$ is **rejected** — $e^x$ is never negative.)",
     "common_mistake": "Not checking domain after solving log equations — solutions that make any log's argument $\\le 0$ must be thrown out. And on Part A, leave exact ($\\ln 4$, not 1.386).",
     "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
     "complete": true
@@ -651,7 +651,7 @@
     "topic": "2.9",
     "subject": "ap_precalc",
     "plain_idea": "Fit a model to data/context, then use it to predict or interpret. **Exponential model** $y=ab^t$ when there's a constant percent rate. **Logarithmic model** $y=a+b\\ln(t+c)$ when growth is fast-then-leveling. This is FRQ Q2 territory (the second-hardest FRQ).",
-    "worked_example": "$G(t)=a+b\\ln(t+1)$ with $G(0)=40$ and $G(91)=76$.\n- $t=0$: $a + b\\ln(1) = a + 0 = 40 \\Rightarrow a=40$.\n- $t=91$: $40 + b\\ln(92) = 76 \\Rightarrow b = \\dfrac{36}{\\ln 92} \\approx \\dfrac{36}{4.5218} \\approx 7.961$.\n- Model: $G(t)=40+7.961\\ln(t+1)$.",
+    "worked_example": "(log model, like 2024 FRQ Q2)\n$G(t)=a+b\\ln(t+1)$ with $G(0)=40$ and $G(91)=76$.\n- $t=0$: $a + b\\ln(1) = a + 0 = 40 \\Rightarrow a=40$.\n- $t=91$: $40 + b\\ln(92) = 76 \\Rightarrow b = \\dfrac{36}{\\ln 92} \\approx \\dfrac{36}{4.5218} \\approx 7.961$.\n- Model: $G(t)=40+7.961\\ln(t+1)$.",
     "common_mistake": "Failing to **explain reasoning** about concavity / model limits. E.g., \"the average rate of change estimate is *less than* the true value because the graph is **concave down**, so the secant line lies below the curve.\" Memorize this concavity-vs-secant argument — it's near-zero-scoring on the exam, so it's free points if you nail it.",
     "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
     "complete": true
@@ -678,7 +678,7 @@
     "topic": "3.1",
     "subject": "ap_precalc",
     "plain_idea": "A radian measures angle by arc length on a circle of radius 1. Once around = 2π radians = 360°. On the unit circle, the point at angle θ is **(cos θ, sin θ)**.",
-    "worked_example": "5π/6 is in QII (between π/2 and π). Reference angle = π − 5π/6 = π/6. cos is **negative** in QII. cos(π/6) = √3/2 → **cos(5π/6) = −√3/2.**",
+    "worked_example": "exact value of cos(5π/6)\n5π/6 is in QII (between π/2 and π). Reference angle = π − 5π/6 = π/6. cos is **negative** in QII. cos(π/6) = √3/2 → **cos(5π/6) = −√3/2.**",
     "common_mistake": "Wrong sign because you skipped the quadrant check. Always do **reference angle first, then slap on the quadrant sign.**",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -687,7 +687,7 @@
     "topic": "3.2",
     "subject": "ap_precalc",
     "plain_idea": "Sine and cosine make repeating \"waves.\" Four numbers fully describe any wave.",
-    "worked_example": "Max 18, min 0, one full cycle every 2 units, max occurs at x = 1.\n- d = (18+0)/2 = **9**; a = (18−0)/2 = **9**; b = 2π/2 = **π**.\n- Cosine peaks at its shift, and the max is at x = 1, so **f(x) = 9 cos(π(x − 1)) + 9.**",
+    "worked_example": "build the sinusoid\nMax 18, min 0, one full cycle every 2 units, max occurs at x = 1.\n- d = (18+0)/2 = **9**; a = (18−0)/2 = **9**; b = 2π/2 = **π**.\n- Cosine peaks at its shift, and the max is at x = 1, so **f(x) = 9 cos(π(x − 1)) + 9.**",
     "common_mistake": "Forgetting to **factor b out** before reading the phase shift. In sin(πx − π) the shift is c where πx − π = π(x − 1) → shift = 1, not π.",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -714,7 +714,7 @@
     "topic": "3.5",
     "subject": "ap_precalc",
     "plain_idea": "tan θ = sin θ/cos θ. It has **no amplitude**, repeats every **π** (not 2π), and shoots to ±∞ (vertical asymptotes) where cos = 0.",
-    "worked_example": "period = π/|2| = **π/2.** Asymptotes where 2x = π/2 + πk → x = π/4 + πk/2.",
+    "worked_example": "period of y = tan(2x)\nperiod = π/|2| = **π/2.** Asymptotes where 2x = π/2 + πk → x = π/4 + πk/2.",
     "common_mistake": "Using 2π/b (the sine rule) for tangent's period. Tangent's base period is **π.**",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -723,7 +723,7 @@
     "topic": "3.6",
     "subject": "ap_precalc",
     "plain_idea": "arcsin/arccos/arctan undo trig, but only on a restricted piece so the answer is unique. **The range restriction is the whole game.**",
-    "worked_example": "Need an angle in [−π/2, π/2] with sine −1/2. That's **−π/6.** (Not 7π/6 — out of range.)",
+    "worked_example": "exact value of arcsin(−1/2)\nNeed an angle in [−π/2, π/2] with sine −1/2. That's **−π/6.** (Not 7π/6 — out of range.)",
     "common_mistake": "Giving an answer outside the inverse function's range (e.g., arccos returning a negative angle). arccos output is **never negative.**",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -732,7 +732,7 @@
     "topic": "3.7",
     "subject": "ap_precalc",
     "plain_idea": "Find ALL angles that work, not just the one the calculator/unit circle hands you. Sine/cosine repeat every 2π; tangent every π.",
-    "worked_example": "sin x = √3/2 → in [0, 2π): x = **π/3** and x = **2π/3** (sine positive in QI and QII).\nAll solutions: **x = π/3 + 2πk** and **x = 2π/3 + 2πk.**",
+    "worked_example": "solve 2 sin x = √3 (all solutions)\nsin x = √3/2 → in [0, 2π): x = **π/3** and x = **2π/3** (sine positive in QI and QII).\nAll solutions: **x = π/3 + 2πk** and **x = 2π/3 + 2πk.**",
     "common_mistake": "Reporting only one solution. sin x = √3/2 has **two** per cycle. Forgetting the \"+2πk / +πk\" loses the generality point.",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -741,7 +741,7 @@
     "topic": "3.8",
     "subject": "ap_precalc",
     "plain_idea": "Just flips. **sec = 1/cos, csc = 1/sin, cot = 1/tan = cos/sin.**",
-    "worked_example": "sec = 1/cos. cos(π/3) = 1/2 → **sec(π/3) = 2.**",
+    "worked_example": "sec(π/3)\nsec = 1/cos. cos(π/3) = 1/2 → **sec(π/3) = 2.**",
     "common_mistake": "Mixing up the pairs — **sec goes with cos** (both start with the \"co\"-cross-up rule: se**c**↔**c**os... easiest is just memorize sec=1/cos, csc=1/sin).",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -750,16 +750,16 @@
     "topic": "3.9",
     "subject": "ap_precalc",
     "plain_idea": "Algebra rewrite rules. The exam's #1 use: simplify a messy expression to \"a single term\" or solve an equation by substituting an identity.",
-    "worked_example": null,
+    "worked_example": "simplify k(x) = [(1 − sin²x)/sin x]·sec x to a single term in tan x\n1 − sin²x = cos²x, and sec x = 1/cos x.\n→ (cos²x / sin x)·(1/cos x) = cos x / sin x = **1/tan x** (= cot x). *(This is the actual 2024 FRQ Q4B answer.)*",
     "common_mistake": "Reaching for sum/double-angle when a **Pythagorean swap** (1 − sin²x = cos²x) is what's needed. Look for \"1 ± (squared trig)\" patterns first.",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "3.10",
     "subject": "ap_precalc",
     "plain_idea": "Locate a point by **distance r from origin and angle θ**, instead of (x, y). A polar function r = f(θ) traces a curve as θ sweeps around.",
-    "worked_example": "x = 4 cos(2π/3) = 4·(−1/2) = **−2**; y = 4 sin(2π/3) = 4·(√3/2) = **2√3.** Point: **(−2, 2√3).**",
+    "worked_example": "convert (r, θ) = (4, 2π/3) to rectangular\nx = 4 cos(2π/3) = 4·(−1/2) = **−2**; y = 4 sin(2π/3) = 4·(√3/2) = **2√3.** Point: **(−2, 2√3).**",
     "common_mistake": "Letting the calculator drift into **degree mode** — every polar/trig value comes out wrong. Lock RADIAN mode.",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
     "complete": true
@@ -768,10 +768,10 @@
     "topic": "3.11",
     "subject": "ap_precalc",
     "plain_idea": "As θ increases, watch whether **r (distance from origin) grows or shrinks**, and how fast. The exam asks this verbally — \"is the distance from the origin increasing?\" — and via average rate of change of r.",
-    "worked_example": null,
+    "worked_example": "for r = 3 + 2cos θ, is the distance from origin increasing on (0, π)?\nr(0) = 3 + 2(1) = 5; r(π) = 3 + 2(−1) = 1. As θ goes 0 → π, cos θ decreases from 1 to −1, so r **decreases** from 5 to 1 → the point moves **toward** the origin. Average rate of change = (1 − 5)/(π − 0) = **−4/π ≈ −1.27.**",
     "common_mistake": "Confusing \"r increasing\" with \"the curve moving up.\" In polar, increasing r means moving **away from the origin**, regardless of direction.",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "4.1",
@@ -813,7 +813,7 @@
     "topic": "4.5",
     "subject": "ap_precalc",
     "plain_idea": "Curves you get from slicing a cone: circle, ellipse, parabola, hyperbola. You identify them from their standard-form equations.\n\n| Conic | Standard form (centered at `(h,k)`) | Tell-tale sign |\n|---|---|---|\n| **Circle** | `(x−h)² + (y−k)² = r²` | both squared, **same coeff**, `+` |\n| **Ellipse** | `(x−h)²/a² + (y−k)²/b² = 1` | both squared, **different** coeffs, **same sign**, `+` |\n| **Parabola** | `y = a(x−h)² + k` (or `x = a(y−k)²+h`) | **only one** variable squared |\n| **Hyperbola** | `(x−h)²/a² − (y−k)²/b² = 1` | both squared, **opposite signs** (a `−`) |",
-    "worked_example": "`x² + y² − 6x + 4y − 12 = 0`.\n- Group: `(x² − 6x) + (y² + 4y) = 12`.\n- Complete squares: `(x² − 6x + 9) + (y² + 4y + 4) = 12 + 9 + 4`.\n- → `(x − 3)² + (y + 2)² = 25`. **Circle**, center `(3, −2)`, radius `5`.",
+    "worked_example": "complete the square\n`x² + y² − 6x + 4y − 12 = 0`.\n- Group: `(x² − 6x) + (y² + 4y) = 12`.\n- Complete squares: `(x² − 6x + 9) + (y² + 4y + 4) = 12 + 9 + 4`.\n- → `(x − 3)² + (y + 2)² = 25`. **Circle**, center `(3, −2)`, radius `5`.",
     "common_mistake": "When completing the square, forgetting to **add the same number to the right side**. And missing that **equal coefficients = circle** vs. unequal = ellipse.",
     "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
     "complete": true
