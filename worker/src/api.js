@@ -281,8 +281,8 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
       409,
       `mock ${mockId} already holds all ${paper.expected} question(s) a section ${sitting.section} sitting contains, so ` +
         `there is no further question to hand out: a paper cannot be longer than the section it is a sitting of, and an ` +
-        `extra answer is not an extra question of evidence — it would be scored against a section that does not have it. ` +
-        `Nothing was recorded. Submit it with submitMock to score what is on it.`,
+        `extra answer is not an extra question of evidence — it would be counted against a section that does not have ` +
+        `it. Nothing was recorded. Submit it with submitMock to score what is on it.`,
     )
   }
 
@@ -1079,7 +1079,7 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
       ? `Answered ${attempts.length} of the ${expected} questions a section ${m.section} sitting is expected to contain.`
       : `Answered ${attempts.length} question(s) against the ${expected} a section ${m.section} sitting is expected to `
         + `contain, which fill it as `
-        + `${fill.parts.map((p) => `${p.credited} of its ${p.count} ${PART_NAME[p.kind] ?? p.kind}`).join(' and ')}.`)
+        + `${fill.parts.map((p) => `${p.credited} of its ${p.count} ${PART_NAME[p.kind] ?? p.kind} question(s)`).join(' and ')}.`)
   }
 
   if (awaitingGrader) {
