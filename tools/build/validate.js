@@ -94,15 +94,41 @@ export function feasibility(bank, config) {
   if (!bank.length) return { errors, warnings }
 
   const subject = config?.subject ?? '?'
-  const e = config?.exam ?? {}
-  const r = config?.readiness ?? {}
+  const examBlock = config?.exam
+  const readinessBlock = config?.readiness
+  const e = examBlock ?? {}
+  const r = readinessBlock ?? {}
 
   // The longest sitting /mock/start accepts is 'full' — the whole paper — so that
   // is what the bank has to be able to assemble.
   const mcq = e.mcq_count ?? ((e.mcq_no_calc_count ?? 0) + (e.mcq_calc_count ?? 0) || null)
   const frq = e.frq_count ?? null
   const questions = (mcq ?? 0) + (frq ?? 0)
-  if (!questions) return { errors, warnings }
+
+  // A missing/misnamed "exam" block resolves `questions` to 0 exactly like a
+  // healthy one that legitimately has nothing to check — the two shipped configs
+  // already use two different exam-count shapes (mcq_count vs mcq_no_calc_count +
+  // mcq_calc_count), so a third subject getting the shape wrong is plausible, and
+  // nothing else validates a readiness config's shape. Silently returning here
+  // would be a gate that quietly stops gating, which is worse than no gate — so
+  // say so instead, whenever there is any indication this config meant to be
+  // checked (the exam block is absent entirely, or a readiness block is present
+  // expecting to be judged against it).
+  if (!questions) {
+    if (examBlock == null) {
+      errors.push(
+        `${subject}: readiness config has no "exam" block, so feasibility cannot be checked — expected ` +
+          `exam.mcq_count (or exam.mcq_no_calc_count + exam.mcq_calc_count), plus optional exam.frq_count`,
+      )
+    } else if (readinessBlock != null) {
+      errors.push(
+        `${subject}: readiness config's "exam" block does not resolve to any questions (checked exam.mcq_count, ` +
+          `exam.mcq_no_calc_count + exam.mcq_calc_count, and exam.frq_count — all missing or zero), so ` +
+          `feasibility cannot be checked against readiness.total_logged_mocks_min`,
+      )
+    }
+    return { errors, warnings }
+  }
 
   const perSitting = Math.ceil(questions * MIN_MOCK_COVERAGE)
   const mocks = r.total_logged_mocks_min ?? 0
@@ -270,7 +296,17 @@ export function validate(items, topics, configs = readinessConfigs()) {
     }
   }
 
+  const seenTopics = new Set()
   for (const t of topics) {
+    const tKey = topicKey(t.subject, t.id)
+    // Mirrors the item-id duplicate check above: topics has PRIMARY KEY (subject,
+    // id) and to-sql.js emits INSERT OR REPLACE for topics exactly as it does for
+    // items, so a copy-pasted row here means D1 receives one row fewer than the
+    // build reports writing — keyed on subject, since a topic id is only unique
+    // within its own subject.
+    if (seenTopics.has(tKey)) errors.push(`topic ${t.id}: duplicate topic id for subject ${t.subject}`)
+    seenTopics.add(tKey)
+
     if (t.malformed) {
       errors.push(
         `topic ${t.id}: malformed table row (${t.cell_count} content cells, expected 3) — unescaped pipe in the source? Write a literal pipe as \\|`,
