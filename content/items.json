@@ -4142,6 +4142,1544 @@
     "allowOffSyllabus": false
   },
   {
+    "id": "csa-frq-q1-p1",
+    "subject": "ap_csa",
+    "number": 1,
+    "question_type": "Q1",
+    "label": "Q1 Methods & Control Structures · TripLog",
+    "name": "TripLog",
+    "aside": null,
+    "kind": "frq",
+    "stem": "A `TripLog` class records the distances (in whole miles) of trips. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:\n\n```java\n/** Returns the distance in miles of the trip with the given id.\n *  Precondition: 1 <= id <= tripCount().\n */\npublic static int distanceOf(int id) { /* implementation not shown */ }\n\n/** Returns the total number of trips recorded (>= 0). */\npublic static int tripCount() { /* implementation not shown */ }\n```\n\n**Part A (4 points).** Write `countLongTrips`, which returns how many recorded trips have a distance **strictly greater than** `minMiles`. Trips are numbered `1` through `tripCount()` inclusive. Use the provided methods.\n\n```java\n/** Returns the number of trips whose distance is strictly greater than minMiles.\n *  Precondition: minMiles >= 0.\n */\npublic static int countLongTrips(int minMiles) {\n    /* to be implemented in Part A */\n}\n```\n\nFor example, if there are 4 trips with distances 12, 5, 30, 8 and `minMiles` is `10`, then `countLongTrips(10)` returns `2` (the 12 and the 30).\n\n**Part B (3 points).** A trip label has the form `\"CODE:miles\"` — a route code, a colon, then the miles, for example `\"NORTH:42\"`. Write `routeCode`, which returns the portion **before the first colon**. If the label contains no colon, return the label unchanged. You may assume `label` is not `null`.\n\n```java\n/** Returns the substring of label before the first ':' , or all of label if there is no ':' .\n *  Precondition: label is not null.\n */\npublic static String routeCode(String label) {\n    /* to be implemented in Part B */\n}\n```\n\nFor example, `routeCode(\"NORTH:42\")` returns `\"NORTH\"`, and `routeCode(\"LOCAL\")` returns `\"LOCAL\"`.",
+    "provided": [
+      "/** Returns the distance in miles of the trip with the given id.\n *  Precondition: 1 <= id <= tripCount().\n */\npublic static int distanceOf(int id) { /* implementation not shown */ }\n\n/** Returns the total number of trips recorded (>= 0). */\npublic static int tripCount() { /* implementation not shown */ }"
+    ],
+    "skeleton": [
+      "/** Returns the number of trips whose distance is strictly greater than minMiles.\n *  Precondition: minMiles >= 0.\n */\npublic static int countLongTrips(int minMiles) {\n    /* to be implemented in Part A */\n}",
+      "/** Returns the substring of label before the first ':' , or all of label if there is no ':' .\n *  Precondition: label is not null.\n */\npublic static String routeCode(String label) {\n    /* to be implemented in Part B */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q1",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [
+        {
+          "label": "Part A",
+          "method": "countLongTrips",
+          "points": 4
+        },
+        {
+          "label": "Part B",
+          "method": "routeCode",
+          "points": 3
+        }
+      ],
+      "criteria": [
+        {
+          "point": 1,
+          "part": "Part A",
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": "Part A",
+          "criterion": "Loops over trip ids `1` through `tripCount()` **inclusive** (correct bounds: `id <= tripCount()`)"
+        },
+        {
+          "point": 3,
+          "part": "Part A",
+          "criterion": "Calls the provided `distanceOf(id)` and tests it **strictly greater than** `minMiles` (`> minMiles`, not `>=`) — does not re-implement distance lookup"
+        },
+        {
+          "point": 4,
+          "part": "Part A",
+          "criterion": "Increments the counter on a match and returns the count"
+        },
+        {
+          "point": 5,
+          "part": "Part B",
+          "criterion": "Finds the first colon with `indexOf(\":\")` and stores/uses the result"
+        },
+        {
+          "point": 6,
+          "part": "Part B",
+          "criterion": "Handles \"no colon\" (`indexOf` returns `-1`) by returning `label` unchanged"
+        },
+        {
+          "point": 7,
+          "part": "Part B",
+          "criterion": "When a colon exists, returns `label.substring(0, colon)` with correct bounds"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int countLongTrips(int minMiles) {\n    int count = 0;\n    for (int id = 1; id <= tripCount(); id++) {\n        if (distanceOf(id) > minMiles) {\n            count++;\n        }\n    }\n    return count;\n}\n\npublic static String routeCode(String label) {\n    int colon = label.indexOf(\":\");\n    if (colon == -1) {\n        return label;\n    }\n    return label.substring(0, colon);\n}\n```",
+    "explanation": "```java\npublic static int countLongTrips(int minMiles) {\n    int count = 0;\n    for (int id = 1; id <= tripCount(); id++) {\n        if (distanceOf(id) > minMiles) {\n            count++;\n        }\n    }\n    return count;\n}\n\npublic static String routeCode(String label) {\n    int colon = label.indexOf(\":\");\n    if (colon == -1) {\n        return label;\n    }\n    return label.substring(0, colon);\n}\n```\n\n**Trace check.** Part A: distances 12,5,30,8, `minMiles=10` → ids 1..4; `12>10` ✔ (count 1), `5>10` ✘, `30>10` ✔ (count 2), `8>10` ✘ → returns **2**. ✓ Part B: `\"NORTH:42\"` → `indexOf(\":\")=5`, `substring(0,5)=\"NORTH\"` ✓; `\"LOCAL\"` → `indexOf(\":\")=-1` → returns `\"LOCAL\"` ✓. Points sum **4 + 3 = 7**. Every rubric line is satisfied by the sample (helpers are *called*, bounds inclusive, `>` strict, `-1` guard present, `substring` bounds correct).",
+    "trace_check": "Part A: distances 12,5,30,8, `minMiles=10` → ids 1..4; `12>10` ✔ (count 1), `5>10` ✘, `30>10` ✔ (count 2), `8>10` ✘ → returns **2**. ✓ Part B: `\"NORTH:42\"` → `indexOf(\":\")=5`, `substring(0,5)=\"NORTH\"` ✓; `\"LOCAL\"` → `indexOf(\":\")=-1` → returns `\"LOCAL\"` ✓. Points sum **4 + 3 = 7**. Every rubric line is satisfied by the sample (helpers are *called*, bounds inclusive, `>` strict, `-1` guard present, `substring` bounds correct).",
+    "notes": [],
+    "topic": "1.15",
+    "topics": [
+      "1.15",
+      "2.9",
+      "2.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q1-methods-control.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q1-p2",
+    "subject": "ap_csa",
+    "number": 2,
+    "question_type": "Q1",
+    "label": "Q1 Methods & Control Structures · PasswordChecker",
+    "name": "PasswordChecker",
+    "aside": null,
+    "kind": "frq",
+    "stem": "**Part A (4 points).** Write `digitSum`, which returns the sum of the decimal digits of a non-negative integer `n` by extracting one digit at a time. For example, `digitSum(2025)` returns `9` (2+0+2+5). `digitSum(0)` returns `0`.\n\n```java\n/** Returns the sum of the decimal digits of n.\n *  Precondition: n >= 0.\n */\npublic static int digitSum(int n) {\n    /* to be implemented in Part A */\n}\n```\n\n**Part B (3 points).** A username/host string has the form `\"user@host\"`. Write `hasHost`, which returns `true` if the part **after the first `@`** equals the String `host` (exact, case-sensitive match), and `false` otherwise. If there is no `@`, return `false`. You may assume `s` and `host` are not `null`.\n\n```java\n/** Returns true iff the part of s after the first '@' equals host exactly.\n *  Returns false if s contains no '@'. Precondition: s and host are not null.\n */\npublic static boolean hasHost(String s, String host) {\n    /* to be implemented in Part B */\n}\n```\n\nFor example, `hasHost(\"amy@apcsa.org\", \"apcsa.org\")` returns `true`; `hasHost(\"amy@gmail.com\", \"apcsa.org\")` returns `false`; `hasHost(\"nobody\", \"apcsa.org\")` returns `false`.",
+    "provided": [],
+    "skeleton": [
+      "/** Returns the sum of the decimal digits of n.\n *  Precondition: n >= 0.\n */\npublic static int digitSum(int n) {\n    /* to be implemented in Part A */\n}",
+      "/** Returns true iff the part of s after the first '@' equals host exactly.\n *  Returns false if s contains no '@'. Precondition: s and host are not null.\n */\npublic static boolean hasHost(String s, String host) {\n    /* to be implemented in Part B */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q1",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [
+        {
+          "label": "Part A",
+          "method": "digitSum",
+          "points": 4
+        },
+        {
+          "label": "Part B",
+          "method": "hasHost",
+          "points": 3
+        }
+      ],
+      "criteria": [
+        {
+          "point": 1,
+          "part": "Part A",
+          "criterion": "Declares and initializes an accumulator (`sum`) to 0"
+        },
+        {
+          "point": 2,
+          "part": "Part A",
+          "criterion": "Loops while there are digits left (`while (n > 0)` or equivalent) — handles `n == 0` correctly by returning 0 (loop body never runs)"
+        },
+        {
+          "point": 3,
+          "part": "Part A",
+          "criterion": "Extracts the last digit with `n % 10` and adds it to the accumulator"
+        },
+        {
+          "point": 4,
+          "part": "Part A",
+          "criterion": "Removes the last digit with `n = n / 10` (integer division) and returns the accumulated sum"
+        },
+        {
+          "point": 5,
+          "part": "Part B",
+          "criterion": "Finds the first `@` with `indexOf(\"@\")` and handles \"no `@`\" by returning `false`"
+        },
+        {
+          "point": 6,
+          "part": "Part B",
+          "criterion": "Extracts the part after the `@` with `substring(at + 1)` (correct off-by-one: `at + 1`, not `at`)"
+        },
+        {
+          "point": 7,
+          "part": "Part B",
+          "criterion": "Compares to `host` with `.equals(...)` (NOT `==`) and returns the boolean result"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int digitSum(int n) {\n    int sum = 0;\n    while (n > 0) {\n        sum += n % 10;\n        n = n / 10;\n    }\n    return sum;\n}\n\npublic static boolean hasHost(String s, String host) {\n    int at = s.indexOf(\"@\");\n    if (at == -1) {\n        return false;\n    }\n    String after = s.substring(at + 1);\n    return after.equals(host);\n}\n```",
+    "explanation": "```java\npublic static int digitSum(int n) {\n    int sum = 0;\n    while (n > 0) {\n        sum += n % 10;\n        n = n / 10;\n    }\n    return sum;\n}\n\npublic static boolean hasHost(String s, String host) {\n    int at = s.indexOf(\"@\");\n    if (at == -1) {\n        return false;\n    }\n    String after = s.substring(at + 1);\n    return after.equals(host);\n}\n```\n\n**Trace check.** Part A: `digitSum(2025)` → sum 0; 2025%10=5 (sum 5, n=202), 202%10=2 (sum 7, n=20), 20%10=0 (sum 7, n=2), 2%10=2 (sum 9, n=0) → loop ends → **9** ✓. `digitSum(0)` → `0>0` false → returns **0** ✓. Part B: `\"amy@apcsa.org\"` → `at=3`, `substring(4)=\"apcsa.org\"`, `.equals(\"apcsa.org\")` → **true** ✓; `\"nobody\"` → `at=-1` → **false** ✓. Points sum **4 + 3 = 7**. The String comparison uses `.equals` (no `==` penalty); `substring(at+1)` has correct bounds; no `charAt` anywhere.",
+    "trace_check": "Part A: `digitSum(2025)` → sum 0; 2025%10=5 (sum 5, n=202), 202%10=2 (sum 7, n=20), 20%10=0 (sum 7, n=2), 2%10=2 (sum 9, n=0) → loop ends → **9** ✓. `digitSum(0)` → `0>0` false → returns **0** ✓. Part B: `\"amy@apcsa.org\"` → `at=3`, `substring(4)=\"apcsa.org\"`, `.equals(\"apcsa.org\")` → **true** ✓; `\"nobody\"` → `at=-1` → **false** ✓. Points sum **4 + 3 = 7**. The String comparison uses `.equals` (no `==` penalty); `substring(at+1)` has correct bounds; no `charAt` anywhere.",
+    "notes": [],
+    "topic": "1.15",
+    "topics": [
+      "1.15",
+      "2.9",
+      "2.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q1-methods-control.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q1-p3",
+    "subject": "ap_csa",
+    "number": 3,
+    "question_type": "Q1",
+    "label": "Q1 Methods & Control Structures · Roster",
+    "name": "Roster",
+    "aside": null,
+    "kind": "frq",
+    "stem": "A `Roster` provides two **already-written** helper methods you must call:\n\n```java\n/** Returns the name of the student at position i.  Precondition: 0 <= i < size(). */\npublic String nameAt(int i) { /* implementation not shown */ }\n\n/** Returns the number of students on the roster (>= 0). */\npublic int size() { /* implementation not shown */ }\n```\n\n**Part A (4 points).** Write the instance method `countStartingWith`, which returns how many student names **begin with** the one-character String `letter`. You may assume every name has length ≥ 1 and `letter` has length 1.\n\n```java\n/** Returns the number of names on the roster whose first character equals letter.\n *  Precondition: letter has length 1; every name has length >= 1.\n */\npublic int countStartingWith(String letter) {\n    /* to be implemented in Part A */\n}\n```\n\nFor example, if the roster is `[\"Ana\", \"Ben\", \"Amir\", \"Cleo\"]` and `letter` is `\"A\"`, the method returns `2`.\n\n**Part B (3 points).** Write the instance method `initials`, which returns a String made of the **first character of every name on the roster, in order**, with nothing between them. For the roster above, `initials()` returns `\"ABAC\"`.\n\n```java\n/** Returns the first character of every name, concatenated in roster order. */\npublic String initials() {\n    /* to be implemented in Part B */\n}\n```",
+    "provided": [
+      "/** Returns the name of the student at position i.  Precondition: 0 <= i < size(). */\npublic String nameAt(int i) { /* implementation not shown */ }\n\n/** Returns the number of students on the roster (>= 0). */\npublic int size() { /* implementation not shown */ }"
+    ],
+    "skeleton": [
+      "/** Returns the number of names on the roster whose first character equals letter.\n *  Precondition: letter has length 1; every name has length >= 1.\n */\npublic int countStartingWith(String letter) {\n    /* to be implemented in Part A */\n}",
+      "/** Returns the first character of every name, concatenated in roster order. */\npublic String initials() {\n    /* to be implemented in Part B */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q1",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [
+        {
+          "label": "Part A",
+          "method": "countStartingWith",
+          "points": 4
+        },
+        {
+          "label": "Part B",
+          "method": "initials",
+          "points": 3
+        }
+      ],
+      "criteria": [
+        {
+          "point": 1,
+          "part": "Part A",
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": "Part A",
+          "criterion": "Loops over all positions `0` through `size() - 1` (correct bounds: `i < size()`), calling the provided `nameAt(i)`"
+        },
+        {
+          "point": 3,
+          "part": "Part A",
+          "criterion": "Gets the first character as a one-char String with `substring(0, 1)` (NOT `charAt`)"
+        },
+        {
+          "point": 4,
+          "part": "Part A",
+          "criterion": "Compares with `.equals(letter)` (NOT `==`), increments on a match, and returns the count"
+        },
+        {
+          "point": 5,
+          "part": "Part B",
+          "criterion": "Initializes an accumulator String (e.g., `\"\"`) and traverses all names with correct bounds"
+        },
+        {
+          "point": 6,
+          "part": "Part B",
+          "criterion": "Extracts each name's first character with `substring(0, 1)` and concatenates it onto the accumulator"
+        },
+        {
+          "point": 7,
+          "part": "Part B",
+          "criterion": "Returns the assembled String"
+        }
+      ]
+    },
+    "solution": "```java\npublic int countStartingWith(String letter) {\n    int count = 0;\n    for (int i = 0; i < size(); i++) {\n        String first = nameAt(i).substring(0, 1);\n        if (first.equals(letter)) {\n            count++;\n        }\n    }\n    return count;\n}\n\npublic String initials() {\n    String result = \"\";\n    for (int i = 0; i < size(); i++) {\n        result += nameAt(i).substring(0, 1);\n    }\n    return result;\n}\n```",
+    "explanation": "```java\npublic int countStartingWith(String letter) {\n    int count = 0;\n    for (int i = 0; i < size(); i++) {\n        String first = nameAt(i).substring(0, 1);\n        if (first.equals(letter)) {\n            count++;\n        }\n    }\n    return count;\n}\n\npublic String initials() {\n    String result = \"\";\n    for (int i = 0; i < size(); i++) {\n        result += nameAt(i).substring(0, 1);\n    }\n    return result;\n}\n```\n\n**Trace check.** Part A: roster `[\"Ana\",\"Ben\",\"Amir\",\"Cleo\"]`, `letter=\"A\"` → `\"A\".equals(\"A\")`✔ (1), `\"B\"`✘, `\"A\"`✔ (2), `\"C\"`✘ → **2** ✓. Part B: `\"\" + \"A\" + \"B\" + \"A\" + \"C\"` → `\"ABAC\"` ✓. Points sum **4 + 3 = 7**. First-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); bounds are `< size()` (no off-by-one).",
+    "trace_check": "Part A: roster `[\"Ana\",\"Ben\",\"Amir\",\"Cleo\"]`, `letter=\"A\"` → `\"A\".equals(\"A\")`✔ (1), `\"B\"`✘, `\"A\"`✔ (2), `\"C\"`✘ → **2** ✓. Part B: `\"\" + \"A\" + \"B\" + \"A\" + \"C\"` → `\"ABAC\"` ✓. Points sum **4 + 3 = 7**. First-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); bounds are `< size()` (no off-by-one).",
+    "notes": [],
+    "topic": "1.15",
+    "topics": [
+      "1.15",
+      "2.9",
+      "2.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q1-methods-control.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q1-p4",
+    "subject": "ap_csa",
+    "number": 4,
+    "question_type": "Q1",
+    "label": "Q1 Methods & Control Structures · ScoreCard",
+    "name": "ScoreCard",
+    "aside": "*Part B uses `split`*",
+    "kind": "frq",
+    "stem": "A `ScoreCard` class works with comma-delimited records. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:\n\n```java\n/** Returns the score recorded for round number r.\n *  Precondition: 1 <= r <= roundCount().\n */\npublic static int scoreOf(int r) { /* implementation not shown */ }\n\n/** Returns the total number of rounds recorded (>= 0). */\npublic static int roundCount() { /* implementation not shown */ }\n```\n\n**Part A (4 points).** Write `totalScore`, which returns the sum of the scores over all recorded rounds. Rounds are numbered `1` through `roundCount()` inclusive. Use the provided methods.\n\n```java\n/** Returns the sum of the scores of all recorded rounds.\n *  Returns 0 if there are no rounds.\n */\npublic static int totalScore() {\n    /* to be implemented in Part A */\n}\n```\n\nFor example, if there are 4 rounds with scores 10, 25, 0, 7, then `totalScore()` returns `42`.\n\n**Part B (3 points).** A player record is a single String of the form `\"name,score,score,score\"` — a name, then one or more whole-number scores, all separated by commas, for example `\"Ana,10,25,7\"`. Write `recordTotal`, which returns the **sum of the numeric scores** in the record (the name is **not** a number and must be skipped). You may assume `record` is not `null`, contains at least the name and one score, and that every field after the name parses as an `int`.\n\n```java\n/** Returns the sum of the numeric scores in record, which has the form\n *  \"name,score,score,...\". The first field (name) is skipped.\n *  Precondition: record is not null and has the form above with >= 1 score.\n */\npublic static int recordTotal(String record) {\n    /* to be implemented in Part B */\n}\n```\n\nFor example, `recordTotal(\"Ana,10,25,7\")` returns `42`, and `recordTotal(\"Bo,5\")` returns `5`.",
+    "provided": [
+      "/** Returns the score recorded for round number r.\n *  Precondition: 1 <= r <= roundCount().\n */\npublic static int scoreOf(int r) { /* implementation not shown */ }\n\n/** Returns the total number of rounds recorded (>= 0). */\npublic static int roundCount() { /* implementation not shown */ }"
+    ],
+    "skeleton": [
+      "/** Returns the sum of the scores of all recorded rounds.\n *  Returns 0 if there are no rounds.\n */\npublic static int totalScore() {\n    /* to be implemented in Part A */\n}",
+      "/** Returns the sum of the numeric scores in record, which has the form\n *  \"name,score,score,...\". The first field (name) is skipped.\n *  Precondition: record is not null and has the form above with >= 1 score.\n */\npublic static int recordTotal(String record) {\n    /* to be implemented in Part B */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q1",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [
+        {
+          "label": "Part A",
+          "method": "totalScore",
+          "points": 4
+        },
+        {
+          "label": "Part B",
+          "method": "recordTotal",
+          "points": 3
+        }
+      ],
+      "criteria": [
+        {
+          "point": 1,
+          "part": "Part A",
+          "criterion": "Declares and initializes an accumulator to 0 (returns 0 when there are no rounds)"
+        },
+        {
+          "point": 2,
+          "part": "Part A",
+          "criterion": "Loops over round numbers `1` through `roundCount()` **inclusive** (correct bounds: `r <= roundCount()`)"
+        },
+        {
+          "point": 3,
+          "part": "Part A",
+          "criterion": "Calls the provided `scoreOf(r)` (does not re-implement the score lookup)"
+        },
+        {
+          "point": 4,
+          "part": "Part A",
+          "criterion": "Adds each score to the accumulator and returns the sum"
+        },
+        {
+          "point": 5,
+          "part": "Part B",
+          "criterion": "Splits `record` on `\",\"` with `split(\",\")` into a `String[]`"
+        },
+        {
+          "point": 6,
+          "part": "Part B",
+          "criterion": "Traverses the score fields, **starting at index 1** to skip the name (correct off-by-one: `i = 1`, not `i = 0`), with correct bounds `i < parts.length`"
+        },
+        {
+          "point": 7,
+          "part": "Part B",
+          "criterion": "Converts each score field with `Integer.parseInt(parts[i])`, accumulates the sum, and returns it"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int totalScore() {\n    int sum = 0;\n    for (int r = 1; r <= roundCount(); r++) {\n        sum += scoreOf(r);\n    }\n    return sum;\n}\n\npublic static int recordTotal(String record) {\n    String[] parts = record.split(\",\");\n    int sum = 0;\n    for (int i = 1; i < parts.length; i++) {\n        sum += Integer.parseInt(parts[i]);\n    }\n    return sum;\n}\n```",
+    "explanation": "```java\npublic static int totalScore() {\n    int sum = 0;\n    for (int r = 1; r <= roundCount(); r++) {\n        sum += scoreOf(r);\n    }\n    return sum;\n}\n\npublic static int recordTotal(String record) {\n    String[] parts = record.split(\",\");\n    int sum = 0;\n    for (int i = 1; i < parts.length; i++) {\n        sum += Integer.parseInt(parts[i]);\n    }\n    return sum;\n}\n```\n\n**Trace check.** Part A: scores 10,25,0,7 → sum 0; r=1 +10 (10), r=2 +25 (35), r=3 +0 (35), r=4 +7 (42) → returns **42** ✓. Part B: `\"Ana,10,25,7\"` → `split(\",\")` = `[\"Ana\",\"10\",\"25\",\"7\"]`, length 4; i=1 `parseInt(\"10\")`=10 (sum 10), i=2 `parseInt(\"25\")`=25 (sum 35), i=3 `parseInt(\"7\")`=7 (sum 42) → returns **42** ✓; `\"Bo,5\"` → `[\"Bo\",\"5\"]`, i=1 +5 → **5** ✓. Points sum **4 + 3 = 7**. The split delimiter `\",\"` is a literal (no regex metacharacter — in-scope); the loop starts at 1 to skip the name; `Integer.parseInt` is on the Quick Reference.",
+    "trace_check": "Part A: scores 10,25,0,7 → sum 0; r=1 +10 (10), r=2 +25 (35), r=3 +0 (35), r=4 +7 (42) → returns **42** ✓. Part B: `\"Ana,10,25,7\"` → `split(\",\")` = `[\"Ana\",\"10\",\"25\",\"7\"]`, length 4; i=1 `parseInt(\"10\")`=10 (sum 10), i=2 `parseInt(\"25\")`=25 (sum 35), i=3 `parseInt(\"7\")`=7 (sum 42) → returns **42** ✓; `\"Bo,5\"` → `[\"Bo\",\"5\"]`, i=1 +5 → **5** ✓. Points sum **4 + 3 = 7**. The split delimiter `\",\"` is a literal (no regex metacharacter — in-scope); the loop starts at 1 to skip the name; `Integer.parseInt` is on the Quick Reference.",
+    "notes": [],
+    "topic": "1.15",
+    "topics": [
+      "1.15",
+      "2.9",
+      "2.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q1-methods-control.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q1-p5",
+    "subject": "ap_csa",
+    "number": 5,
+    "question_type": "Q1",
+    "label": "Q1 Methods & Control Structures · WordList",
+    "name": "WordList",
+    "aside": "*Part B uses `compareTo`*",
+    "kind": "frq",
+    "stem": "A `WordList` class works with a list of words. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:\n\n```java\n/** Returns the word at position i.  Precondition: 0 <= i < wordCount(). */\npublic static String wordAt(int i) { /* implementation not shown */ }\n\n/** Returns the number of words (>= 1). */\npublic static int wordCount() { /* implementation not shown */ }\n```\n\n**Part A (4 points).** Write `countBefore`, which returns how many words come **strictly before** the String `target` in alphabetical (lexicographic) order. A word `w` comes before `target` when `w.compareTo(target)` is **negative**. Words are numbered `0` through `wordCount() - 1`. Use the provided methods.\n\n```java\n/** Returns the number of words that come strictly before target lexicographically.\n *  Precondition: target is not null.\n */\npublic static int countBefore(String target) {\n    /* to be implemented in Part A */\n}\n```\n\nFor example, if the words are `\"pear\", \"apple\", \"mango\", \"kiwi\"` and `target` is `\"mango\"`, the method returns `2` (`\"apple\"` and `\"kiwi\"` come before `\"mango\"`; `\"pear\"` does not, and `\"mango\"` is not strictly before itself).\n\n**Part B (3 points).** Write `alphabeticallyFirst`, which returns the word that comes **first** in lexicographic order among all the words. You may assume there is at least one word. Use the provided methods.\n\n```java\n/** Returns the lexicographically smallest word among all words.\n *  Precondition: wordCount() >= 1.\n */\npublic static String alphabeticallyFirst() {\n    /* to be implemented in Part B */\n}\n```\n\nFor the words above, `alphabeticallyFirst()` returns `\"apple\"`.",
+    "provided": [
+      "/** Returns the word at position i.  Precondition: 0 <= i < wordCount(). */\npublic static String wordAt(int i) { /* implementation not shown */ }\n\n/** Returns the number of words (>= 1). */\npublic static int wordCount() { /* implementation not shown */ }"
+    ],
+    "skeleton": [
+      "/** Returns the number of words that come strictly before target lexicographically.\n *  Precondition: target is not null.\n */\npublic static int countBefore(String target) {\n    /* to be implemented in Part A */\n}",
+      "/** Returns the lexicographically smallest word among all words.\n *  Precondition: wordCount() >= 1.\n */\npublic static String alphabeticallyFirst() {\n    /* to be implemented in Part B */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q1",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [
+        {
+          "label": "Part A",
+          "method": "countBefore",
+          "points": 4
+        },
+        {
+          "label": "Part B",
+          "method": "alphabeticallyFirst",
+          "points": 3
+        }
+      ],
+      "criteria": [
+        {
+          "point": 1,
+          "part": "Part A",
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": "Part A",
+          "criterion": "Loops over all positions `0` through `wordCount() - 1` (correct bounds: `i < wordCount()`), calling the provided `wordAt(i)`"
+        },
+        {
+          "point": 3,
+          "part": "Part A",
+          "criterion": "Compares with `compareTo`, testing **strictly before** as `wordAt(i).compareTo(target) < 0` (negative, not `<= 0`)"
+        },
+        {
+          "point": 4,
+          "part": "Part A",
+          "criterion": "Increments the counter on a match and returns the count"
+        },
+        {
+          "point": 5,
+          "part": "Part B",
+          "criterion": "Seeds the running \"first\" word from a **real word** (`wordAt(0)`), not from `\"\"` or `null`"
+        },
+        {
+          "point": 6,
+          "part": "Part B",
+          "criterion": "Traverses the remaining words and uses `wordAt(i).compareTo(first) < 0` to detect a word that comes earlier, updating `first` when so"
+        },
+        {
+          "point": 7,
+          "part": "Part B",
+          "criterion": "Returns the lexicographically first word"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int countBefore(String target) {\n    int count = 0;\n    for (int i = 0; i < wordCount(); i++) {\n        if (wordAt(i).compareTo(target) < 0) {\n            count++;\n        }\n    }\n    return count;\n}\n\npublic static String alphabeticallyFirst() {\n    String first = wordAt(0);\n    for (int i = 1; i < wordCount(); i++) {\n        if (wordAt(i).compareTo(first) < 0) {\n            first = wordAt(i);\n        }\n    }\n    return first;\n}\n```",
+    "explanation": "```java\npublic static int countBefore(String target) {\n    int count = 0;\n    for (int i = 0; i < wordCount(); i++) {\n        if (wordAt(i).compareTo(target) < 0) {\n            count++;\n        }\n    }\n    return count;\n}\n\npublic static String alphabeticallyFirst() {\n    String first = wordAt(0);\n    for (int i = 1; i < wordCount(); i++) {\n        if (wordAt(i).compareTo(first) < 0) {\n            first = wordAt(i);\n        }\n    }\n    return first;\n}\n```\n\n**Trace check.** Part A: words `\"pear\",\"apple\",\"mango\",\"kiwi\"`, `target=\"mango\"` → `\"pear\".compareTo(\"mango\")` is positive ✘; `\"apple\".compareTo(\"mango\")` negative ✔ (1); `\"mango\".compareTo(\"mango\")` is 0, not `< 0` ✘; `\"kiwi\".compareTo(\"mango\")` negative ✔ (2) → returns **2** ✓. Part B: first=`\"pear\"`; i=1 `\"apple\".compareTo(\"pear\")`<0 ✔ first=`\"apple\"`; i=2 `\"mango\".compareTo(\"apple\")` positive ✘; i=3 `\"kiwi\".compareTo(\"apple\")` positive ✘ → returns **\"apple\"** ✓. Points sum **4 + 3 = 7**. `compareTo` is on the Quick Reference; strict-before uses `< 0` (excludes equal words); the running min is seeded from `wordAt(0)` so it is always a real word.",
+    "trace_check": "Part A: words `\"pear\",\"apple\",\"mango\",\"kiwi\"`, `target=\"mango\"` → `\"pear\".compareTo(\"mango\")` is positive ✘; `\"apple\".compareTo(\"mango\")` negative ✔ (1); `\"mango\".compareTo(\"mango\")` is 0, not `< 0` ✘; `\"kiwi\".compareTo(\"mango\")` negative ✔ (2) → returns **2** ✓. Part B: first=`\"pear\"`; i=1 `\"apple\".compareTo(\"pear\")`<0 ✔ first=`\"apple\"`; i=2 `\"mango\".compareTo(\"apple\")` positive ✘; i=3 `\"kiwi\".compareTo(\"apple\")` positive ✘ → returns **\"apple\"** ✓. Points sum **4 + 3 = 7**. `compareTo` is on the Quick Reference; strict-before uses `< 0` (excludes equal words); the running min is seeded from `wordAt(0)` so it is always a real word.",
+    "notes": [],
+    "topic": "1.15",
+    "topics": [
+      "1.15",
+      "2.9",
+      "2.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q1-methods-control.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q2-p1",
+    "subject": "ap_csa",
+    "number": 1,
+    "question_type": "Q2",
+    "label": "Q2 Class Design · Locker",
+    "name": "Locker",
+    "aside": null,
+    "kind": "frq",
+    "stem": "Design a complete class named `Locker` that meets this specification:\n\n- It stores three pieces of state: an **id number** (whole number), a **combination** (a String), and whether the locker is currently **occupied** (`true`/`false`).\n- A constructor takes the id and the combination (in that order) and initializes the locker as **not occupied**.\n- An accessor `getId()` returns the id number.\n- A method `unlock(String attempt)` returns `true` if `attempt` matches the stored combination (exact match) and `false` otherwise. **Unlocking does not change any state.**\n- A mutator `assign()` sets the locker to occupied.\n- A method `isAvailable()` returns `true` if the locker is **not** occupied, and `false` otherwise.\n\nWrite the **entire class**, including the necessary instance variables, following encapsulation conventions.",
+    "provided": [],
+    "skeleton": [],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q2",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Class header `public class Locker` **and** all instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Three instance variables of the correct types: `int` id, `String` combination, `boolean` occupied"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "`public` constructor with two parameters in the order (id, combination) that initializes id and combination from them"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Constructor initializes `occupied` to `false` (initializes **all** state, including the field not passed in)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Accessor `getId()` is non-`void` and returns the id"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "`unlock(String attempt)` compares with `.equals` (NOT `==`), returns the boolean, and does not modify state; `assign()` is `void` and sets occupied to `true`"
+        },
+        {
+          "point": 7,
+          "part": null,
+          "criterion": "`isAvailable()` returns `!occupied` (correct boolean — `true` exactly when not occupied)"
+        }
+      ]
+    },
+    "solution": "```java\npublic class Locker {\n    private int id;\n    private String combination;\n    private boolean occupied;\n\n    public Locker(int idNumber, String combo) {\n        id = idNumber;\n        combination = combo;\n        occupied = false;\n    }\n\n    public int getId() {\n        return id;\n    }\n\n    public boolean unlock(String attempt) {\n        return attempt.equals(combination);\n    }\n\n    public void assign() {\n        occupied = true;\n    }\n\n    public boolean isAvailable() {\n        return !occupied;\n    }\n}\n```",
+    "explanation": "```java\npublic class Locker {\n    private int id;\n    private String combination;\n    private boolean occupied;\n\n    public Locker(int idNumber, String combo) {\n        id = idNumber;\n        combination = combo;\n        occupied = false;\n    }\n\n    public int getId() {\n        return id;\n    }\n\n    public boolean unlock(String attempt) {\n        return attempt.equals(combination);\n    }\n\n    public void assign() {\n        occupied = true;\n    }\n\n    public boolean isAvailable() {\n        return !occupied;\n    }\n}\n```\n\n**Trace check.** `new Locker(7, \"1234\")` → id 7, combination \"1234\", occupied false. `getId()` → **7** ✓. `unlock(\"0000\")` → `\"0000\".equals(\"1234\")` → **false**, state unchanged ✓. `isAvailable()` → `!false` → **true** ✓. `assign()` → occupied true; now `isAvailable()` → `!true` → **false** ✓. All fields `private`; class/constructor `public`; String compared with `.equals`. Points sum **7**.",
+    "trace_check": "`new Locker(7, \"1234\")` → id 7, combination \"1234\", occupied false. `getId()` → **7** ✓. `unlock(\"0000\")` → `\"0000\".equals(\"1234\")` → **false**, state unchanged ✓. `isAvailable()` → `!false` → **true** ✓. `assign()` → occupied true; now `isAvailable()` → `!true` → **false** ✓. All fields `private`; class/constructor `public`; String compared with `.equals`. Points sum **7**.",
+    "notes": [],
+    "topic": "1.13",
+    "topics": [
+      "1.13",
+      "3.1",
+      "3.3",
+      "3.4",
+      "3.5",
+      "3.9"
+    ],
+    "practice": null,
+    "source_file": "frq-q2-class-design.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q2-p2",
+    "subject": "ap_csa",
+    "number": 2,
+    "question_type": "Q2",
+    "label": "Q2 Class Design · Player",
+    "name": "Player",
+    "aside": null,
+    "kind": "frq",
+    "stem": "Design a complete class named `Player` that meets this specification:\n\n- It stores three pieces of state: a **name** (String), the player's **score** (whole number, starts at 0), and the number of **lives** (whole number).\n- A constructor takes the name and the starting number of lives (in that order). The score always starts at `0`.\n- An accessor `getScore()` returns the current score.\n- A mutator `addPoints(int p)` adds `p` to the score (you may assume `p >= 0`).\n- A method `loseLife()` reduces the number of lives by 1, but **never below 0** (if lives is already 0 it stays 0).\n- A method `isOut()` returns `true` if the player has `0` lives left, `false` otherwise.\n\nWrite the **entire class**, including the instance variables, following encapsulation conventions.",
+    "provided": [],
+    "skeleton": [],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q2",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Class header `public class Player` **and** all instance variables declared `private` (encapsulation point)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Three instance variables of correct types: `String` name, `int` score, `int` lives"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "`public` constructor with two parameters in the order (name, lives) that initializes name and lives from them"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Constructor initializes `score` to `0` (initializes all state, including the field not passed in)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Accessor `getScore()` returns the score; mutator `addPoints(int p)` is `void` and adds `p` to the score"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "`loseLife()` decrements lives **only when `lives > 0`** (guards against going below 0)"
+        },
+        {
+          "point": 7,
+          "part": null,
+          "criterion": "`isOut()` returns `lives == 0` (correct boolean)"
+        }
+      ]
+    },
+    "solution": "```java\npublic class Player {\n    private String name;\n    private int score;\n    private int lives;\n\n    public Player(String playerName, int startLives) {\n        name = playerName;\n        lives = startLives;\n        score = 0;\n    }\n\n    public int getScore() {\n        return score;\n    }\n\n    public void addPoints(int p) {\n        score += p;\n    }\n\n    public void loseLife() {\n        if (lives > 0) {\n            lives--;\n        }\n    }\n\n    public boolean isOut() {\n        return lives == 0;\n    }\n}\n```",
+    "explanation": "```java\npublic class Player {\n    private String name;\n    private int score;\n    private int lives;\n\n    public Player(String playerName, int startLives) {\n        name = playerName;\n        lives = startLives;\n        score = 0;\n    }\n\n    public int getScore() {\n        return score;\n    }\n\n    public void addPoints(int p) {\n        score += p;\n    }\n\n    public void loseLife() {\n        if (lives > 0) {\n            lives--;\n        }\n    }\n\n    public boolean isOut() {\n        return lives == 0;\n    }\n}\n```\n\n**Trace check.** `new Player(\"Sam\", 2)` → name \"Sam\", lives 2, score 0. `addPoints(10)` → score 10; `getScore()` → **10** ✓. `loseLife()` → lives 1; `loseLife()` → lives 0; `loseLife()` → `0 > 0` false, stays **0** ✓ (never negative). `isOut()` → `0 == 0` → **true** ✓. All fields `private`; constructor sets the non-parameter field (`score`) too. Points sum **7**.",
+    "trace_check": "`new Player(\"Sam\", 2)` → name \"Sam\", lives 2, score 0. `addPoints(10)` → score 10; `getScore()` → **10** ✓. `loseLife()` → lives 1; `loseLife()` → lives 0; `loseLife()` → `0 > 0` false, stays **0** ✓ (never negative). `isOut()` → `0 == 0` → **true** ✓. All fields `private`; constructor sets the non-parameter field (`score`) too. Points sum **7**.",
+    "notes": [],
+    "topic": "1.13",
+    "topics": [
+      "1.13",
+      "3.1",
+      "3.3",
+      "3.4",
+      "3.5",
+      "3.9"
+    ],
+    "practice": null,
+    "source_file": "frq-q2-class-design.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q2-p3",
+    "subject": "ap_csa",
+    "number": 3,
+    "question_type": "Q2",
+    "label": "Q2 Class Design · Sensor",
+    "name": "Sensor",
+    "aside": null,
+    "kind": "frq",
+    "stem": "Design a complete class named `Sensor` that meets this specification:\n\n- It stores three pieces of state: a **label** (String), the **latest reading** (a `double`), and an **alert threshold** (a `double`).\n- A constructor takes the label and the threshold (in that order). The latest reading starts at `0.0`.\n- An accessor `getReading()` returns the latest reading.\n- A mutator `record(double value)` stores `value` as the latest reading.\n- A method `isAlerting()` returns `true` if the **absolute value** of the latest reading is **greater than or equal to** the threshold, and `false` otherwise.\n- A method `sameLabel(String other)` returns `true` if `other` matches this sensor's label exactly.\n\nWrite the **entire class**, including the instance variables, following encapsulation conventions.",
+    "provided": [],
+    "skeleton": [],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q2",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Class header `public class Sensor` **and** all instance variables declared `private` (encapsulation point)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Three instance variables of correct types: `String` label, `double` reading, `double` threshold"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "`public` constructor with two parameters in the order (label, threshold) that initializes those two fields"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Constructor initializes `reading` to `0.0` (initializes the field not passed in)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Accessor `getReading()` returns the reading; mutator `record(double value)` is `void` and stores `value`"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "`isAlerting()` uses `Math.abs(reading)` and returns whether it is `>= threshold` (correct boolean and correct comparison direction)"
+        },
+        {
+          "point": 7,
+          "part": null,
+          "criterion": "`sameLabel(String other)` compares with `.equals` (NOT `==`) and returns the boolean"
+        }
+      ]
+    },
+    "solution": "```java\npublic class Sensor {\n    private String label;\n    private double reading;\n    private double threshold;\n\n    public Sensor(String sensorLabel, double alertThreshold) {\n        label = sensorLabel;\n        threshold = alertThreshold;\n        reading = 0.0;\n    }\n\n    public double getReading() {\n        return reading;\n    }\n\n    public void record(double value) {\n        reading = value;\n    }\n\n    public boolean isAlerting() {\n        return Math.abs(reading) >= threshold;\n    }\n\n    public boolean sameLabel(String other) {\n        return label.equals(other);\n    }\n}\n```",
+    "explanation": "```java\npublic class Sensor {\n    private String label;\n    private double reading;\n    private double threshold;\n\n    public Sensor(String sensorLabel, double alertThreshold) {\n        label = sensorLabel;\n        threshold = alertThreshold;\n        reading = 0.0;\n    }\n\n    public double getReading() {\n        return reading;\n    }\n\n    public void record(double value) {\n        reading = value;\n    }\n\n    public boolean isAlerting() {\n        return Math.abs(reading) >= threshold;\n    }\n\n    public boolean sameLabel(String other) {\n        return label.equals(other);\n    }\n}\n```\n\n**Trace check.** `new Sensor(\"temp\", 5.0)` → label \"temp\", threshold 5.0, reading 0.0. `getReading()` → **0.0** ✓. `record(-7.2)` → reading −7.2; `isAlerting()` → `Math.abs(-7.2)=7.2 >= 5.0` → **true** ✓. `record(3.0)` → `Math.abs(3.0)=3.0 >= 5.0` → **false** ✓. `sameLabel(\"temp\")` → `\"temp\".equals(\"temp\")` → **true** ✓. `Math.abs(double)` is on the Quick Reference; label compared with `.equals`. Points sum **7**.",
+    "trace_check": "`new Sensor(\"temp\", 5.0)` → label \"temp\", threshold 5.0, reading 0.0. `getReading()` → **0.0** ✓. `record(-7.2)` → reading −7.2; `isAlerting()` → `Math.abs(-7.2)=7.2 >= 5.0` → **true** ✓. `record(3.0)` → `Math.abs(3.0)=3.0 >= 5.0` → **false** ✓. `sameLabel(\"temp\")` → `\"temp\".equals(\"temp\")` → **true** ✓. `Math.abs(double)` is on the Quick Reference; label compared with `.equals`. Points sum **7**.",
+    "notes": [],
+    "topic": "1.13",
+    "topics": [
+      "1.13",
+      "3.1",
+      "3.3",
+      "3.4",
+      "3.5",
+      "3.9"
+    ],
+    "practice": null,
+    "source_file": "frq-q2-class-design.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q2-p4",
+    "subject": "ap_csa",
+    "number": 4,
+    "question_type": "Q2",
+    "label": "Q2 Class Design · Roster",
+    "name": "Roster",
+    "aside": "*`ArrayList` instance field*",
+    "kind": "frq",
+    "stem": "Design a complete class named `Roster` that meets this specification:\n\n- It stores two pieces of state: a **team name** (String) and a **list of member names** (an `ArrayList<String>`).\n- A constructor takes the team name. The list of members starts **empty**.\n- An accessor `getTeamName()` returns the team name.\n- A mutator `addMember(String name)` adds `name` to the end of the member list.\n- A method `size()` returns how many members are currently on the roster.\n- A method `countStartingWith(String letter)` returns how many member names **begin with** the one-character String `letter`. You may assume every member name has length ≥ 1 and `letter` has length 1.\n\nWrite the **entire class**, including the instance variables, following encapsulation conventions.",
+    "provided": [],
+    "skeleton": [],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q2",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Class header `public class Roster` **and** both instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Two instance variables of the correct types: `String` teamName and `ArrayList<String>` members (a **collection** field, not a scalar)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "`public` constructor taking the team name; initializes `teamName` from the parameter"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Constructor initializes the list to a **new empty** `ArrayList<String>` (`new ArrayList<String>()`) — not left `null`, not handed an external list"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Accessor `getTeamName()` returns the team name; mutator `addMember(String name)` is `void` and calls `members.add(name)`; `size()` returns `members.size()`"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "`countStartingWith` traverses the list with correct bounds (`i < members.size()`) using `members.get(i)`, and gets each first character with `substring(0, 1)` (NOT `charAt`)"
+        },
+        {
+          "point": 7,
+          "part": null,
+          "criterion": "`countStartingWith` compares with `.equals(letter)` (NOT `==`), increments on a match, and returns the count"
+        }
+      ]
+    },
+    "solution": "```java\npublic class Roster {\n    private String teamName;\n    private ArrayList<String> members;\n\n    public Roster(String name) {\n        teamName = name;\n        members = new ArrayList<String>();\n    }\n\n    public String getTeamName() {\n        return teamName;\n    }\n\n    public void addMember(String name) {\n        members.add(name);\n    }\n\n    public int size() {\n        return members.size();\n    }\n\n    public int countStartingWith(String letter) {\n        int count = 0;\n        for (int i = 0; i < members.size(); i++) {\n            String first = members.get(i).substring(0, 1);\n            if (first.equals(letter)) {\n                count++;\n            }\n        }\n        return count;\n    }\n}\n```",
+    "explanation": "```java\npublic class Roster {\n    private String teamName;\n    private ArrayList<String> members;\n\n    public Roster(String name) {\n        teamName = name;\n        members = new ArrayList<String>();\n    }\n\n    public String getTeamName() {\n        return teamName;\n    }\n\n    public void addMember(String name) {\n        members.add(name);\n    }\n\n    public int size() {\n        return members.size();\n    }\n\n    public int countStartingWith(String letter) {\n        int count = 0;\n        for (int i = 0; i < members.size(); i++) {\n            String first = members.get(i).substring(0, 1);\n            if (first.equals(letter)) {\n                count++;\n            }\n        }\n        return count;\n    }\n}\n```\n\n**Trace check.** `new Roster(\"Hawks\")` → teamName \"Hawks\", members `[]`. `addMember(\"Ana\")`, `addMember(\"Ben\")`, `addMember(\"Amir\")` → members `[\"Ana\",\"Ben\",\"Amir\"]`; `size()` → **3** ✓. `getTeamName()` → **\"Hawks\"** ✓. `countStartingWith(\"A\")` → `\"A\".equals(\"A\")`✔ (1), `\"B\"`✘, `\"A\"`✔ (2) → **2** ✓. All fields `private`; the list is initialized to a new empty `ArrayList` in the constructor; first-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); traversal bound is `< members.size()`. Points sum **7**.",
+    "trace_check": "`new Roster(\"Hawks\")` → teamName \"Hawks\", members `[]`. `addMember(\"Ana\")`, `addMember(\"Ben\")`, `addMember(\"Amir\")` → members `[\"Ana\",\"Ben\",\"Amir\"]`; `size()` → **3** ✓. `getTeamName()` → **\"Hawks\"** ✓. `countStartingWith(\"A\")` → `\"A\".equals(\"A\")`✔ (1), `\"B\"`✘, `\"A\"`✔ (2) → **2** ✓. All fields `private`; the list is initialized to a new empty `ArrayList` in the constructor; first-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); traversal bound is `< members.size()`. Points sum **7**.",
+    "notes": [],
+    "topic": "1.13",
+    "topics": [
+      "1.13",
+      "3.1",
+      "3.3",
+      "3.4",
+      "3.5",
+      "3.9"
+    ],
+    "practice": null,
+    "source_file": "frq-q2-class-design.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q2-p5",
+    "subject": "ap_csa",
+    "number": 5,
+    "question_type": "Q2",
+    "label": "Q2 Class Design · BankAccount",
+    "name": "BankAccount",
+    "aside": "*computed-result method with conditional state-update*",
+    "kind": "frq",
+    "stem": "Design a complete class named `BankAccount` that meets this specification:\n\n- It stores three pieces of state: an **owner name** (String), the current **balance** (a `double`), and the total number of **withdrawals** that have actually been made (a whole number).\n- A constructor takes the owner name and the opening balance (in that order). The withdrawal count always starts at `0`.\n- An accessor `getBalance()` returns the current balance.\n- A method `withdraw(double amount)` attempts to take `amount` out of the account. It withdraws **only if** there are sufficient funds — that is, only if `amount` is **less than or equal to** the current balance. When it succeeds, it subtracts `amount` from the balance, increases the withdrawal count by 1, and returns the **new balance**. When there are **not** enough funds, it changes **nothing** and returns `-1.0`. (You may assume `amount >= 0`.)\n- A method `getWithdrawalCount()` returns how many successful withdrawals have been made.\n\nWrite the **entire class**, including the instance variables, following encapsulation conventions.",
+    "provided": [],
+    "skeleton": [],
+    "answer": null,
+    "options": null,
+    "points": 7,
+    "rubric": {
+      "question_type": "Q2",
+      "total_points": 7,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Class header `public class BankAccount` **and** all instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Three instance variables of the correct types: `String` owner, `double` balance, `int` withdrawals"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "`public` constructor header with two parameters in the order (owner, opening balance) that initializes `owner` and `balance` from them"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Constructor initializes `withdrawals` to `0` (initializes **all** state, including the field not passed in)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "`withdraw` header is correct — `public double withdraw(double amount)` (non-`void`, returns a `double`) — and `getBalance()`/`getWithdrawalCount()` are non-`void` accessors that return the matching field"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "`withdraw` performs the **conditional update**: only when `amount <= balance` does it subtract `amount` from `balance` **and** increment `withdrawals`; on the insufficient-funds path it leaves all state unchanged"
+        },
+        {
+          "point": 7,
+          "part": null,
+          "criterion": "`withdraw` returns the **new balance** on success and `-1.0` on failure (correct return on both branches)"
+        }
+      ]
+    },
+    "solution": "```java\npublic class BankAccount {\n    private String owner;\n    private double balance;\n    private int withdrawals;\n\n    public BankAccount(String ownerName, double openingBalance) {\n        owner = ownerName;\n        balance = openingBalance;\n        withdrawals = 0;\n    }\n\n    public double getBalance() {\n        return balance;\n    }\n\n    public double withdraw(double amount) {\n        if (amount <= balance) {\n            balance -= amount;\n            withdrawals++;\n            return balance;\n        }\n        return -1.0;\n    }\n\n    public int getWithdrawalCount() {\n        return withdrawals;\n    }\n}\n```",
+    "explanation": "```java\npublic class BankAccount {\n    private String owner;\n    private double balance;\n    private int withdrawals;\n\n    public BankAccount(String ownerName, double openingBalance) {\n        owner = ownerName;\n        balance = openingBalance;\n        withdrawals = 0;\n    }\n\n    public double getBalance() {\n        return balance;\n    }\n\n    public double withdraw(double amount) {\n        if (amount <= balance) {\n            balance -= amount;\n            withdrawals++;\n            return balance;\n        }\n        return -1.0;\n    }\n\n    public int getWithdrawalCount() {\n        return withdrawals;\n    }\n}\n```\n\n**Trace check.** `new BankAccount(\"Mia\", 100.0)` → owner \"Mia\", balance 100.0, withdrawals 0. `getBalance()` → **100.0** ✓. `withdraw(30.0)` → `30.0 <= 100.0` true → balance 70.0, withdrawals 1, returns **70.0** ✓. `withdraw(200.0)` → `200.0 <= 70.0` false → state unchanged, returns **-1.0** ✓ (balance still 70.0, withdrawals still 1). `withdraw(70.0)` → `70.0 <= 70.0` true (boundary) → balance 0.0, withdrawals 2, returns **0.0** ✓. `getWithdrawalCount()` → **2** ✓ (the failed attempt did not count). All fields `private`; class/constructor `public`; the constructor initializes the non-parameter field (`withdrawals`); real cross-field arithmetic (`balance -= amount`) happens only under the `amount <= balance` guard; no `toString`/`equals` override. Points sum **7**.",
+    "trace_check": "`new BankAccount(\"Mia\", 100.0)` → owner \"Mia\", balance 100.0, withdrawals 0. `getBalance()` → **100.0** ✓. `withdraw(30.0)` → `30.0 <= 100.0` true → balance 70.0, withdrawals 1, returns **70.0** ✓. `withdraw(200.0)` → `200.0 <= 70.0` false → state unchanged, returns **-1.0** ✓ (balance still 70.0, withdrawals still 1). `withdraw(70.0)` → `70.0 <= 70.0` true (boundary) → balance 0.0, withdrawals 2, returns **0.0** ✓. `getWithdrawalCount()` → **2** ✓ (the failed attempt did not count). All fields `private`; class/constructor `public`; the constructor initializes the non-parameter field (`withdrawals`); real cross-field arithmetic (`balance -= amount`) happens only under the `amount <= balance` guard; no `toString`/`equals` override. Points sum **7**.",
+    "notes": [],
+    "topic": "1.13",
+    "topics": [
+      "1.13",
+      "3.1",
+      "3.3",
+      "3.4",
+      "3.5",
+      "3.9"
+    ],
+    "practice": null,
+    "source_file": "frq-q2-class-design.md",
+    "allowOffSyllabus": false,
+    "unit": "1"
+  },
+  {
+    "id": "csa-frq-q3-p1",
+    "subject": "ap_csa",
+    "number": 1,
+    "question_type": "Q3",
+    "label": "Q3 Data Analysis with ArrayList · countLongBooks",
+    "name": "countLongBooks",
+    "aside": "*count / accumulate*",
+    "kind": "frq",
+    "stem": "A `Book` element class is provided for FRQs 1 and 3 (accessors only — **call them**, do not re-implement):\n\n```java\npublic class Book {\n    public String getTitle()  { /* not shown */ }\n    public String getGenre()  { /* not shown */ }\n    public int    getPages()  { /* not shown */ }\n}\n```\n\nWrite `countLongBooks`, which returns the number of books in `library` with **more than** `minPages` pages.\n\n```java\n/** Returns the number of Book objects in library whose page count is greater than minPages.\n *  Precondition: library is not null; no element is null.\n */\npublic static int countLongBooks(ArrayList<Book> library, int minPages) {\n    /* to be implemented */\n}\n```\n\nExample: if the books have 120, 400, 80, 510 pages and `minPages` is `100`, the method returns `3`.",
+    "provided": [
+      "public class Book {\n    public String getTitle()  { /* not shown */ }\n    public String getGenre()  { /* not shown */ }\n    public int    getPages()  { /* not shown */ }\n}"
+    ],
+    "skeleton": [
+      "/** Returns the number of Book objects in library whose page count is greater than minPages.\n *  Precondition: library is not null; no element is null.\n */\npublic static int countLongBooks(ArrayList<Book> library, int minPages) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 5,
+    "rubric": {
+      "question_type": "Q3",
+      "total_points": 5,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Traverses the whole list with correct bounds — `i < library.size()` (or a correct enhanced-for over `library`, valid here since the list is not modified)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Accesses each element with `library.get(i)` and calls the provided `getPages()` (does not re-implement page lookup)"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Tests **strictly greater than** `minPages` (`> minPages`, not `>=`) and increments on a match"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Returns the count"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int countLongBooks(ArrayList<Book> library, int minPages) {\n    int count = 0;\n    for (int i = 0; i < library.size(); i++) {\n        if (library.get(i).getPages() > minPages) {\n            count++;\n        }\n    }\n    return count;\n}\n```",
+    "explanation": "```java\npublic static int countLongBooks(ArrayList<Book> library, int minPages) {\n    int count = 0;\n    for (int i = 0; i < library.size(); i++) {\n        if (library.get(i).getPages() > minPages) {\n            count++;\n        }\n    }\n    return count;\n}\n```\n\n**Trace check.** pages 120,400,80,510, `minPages=100` → `120>100`✔(1), `400>100`✔(2), `80>100`✘, `510>100`✔(3) → returns **3** ✓. Bounds `< size()`; `getPages()` called; `>` strict. Points sum **5**.",
+    "trace_check": "pages 120,400,80,510, `minPages=100` → `120>100`✔(1), `400>100`✔(2), `80>100`✘, `510>100`✔(3) → returns **3** ✓. Bounds `< size()`; `getPages()` called; `>` strict. Points sum **5**.",
+    "notes": [],
+    "topic": "4.8",
+    "topics": [
+      "4.8",
+      "4.9",
+      "4.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q3-arraylist.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q3-p2",
+    "subject": "ap_csa",
+    "number": 2,
+    "question_type": "Q3",
+    "label": "Q3 Data Analysis with ArrayList · removeBelow",
+    "name": "removeBelow",
+    "aside": "**remove-while-iterating**",
+    "kind": "frq",
+    "stem": "A list of `Integer` quiz scores is given. Write `removeBelow`, which **removes every score** strictly less than `passing` from the list (modifying the list in place) and returns **how many** scores were removed.\n\n```java\n/** Removes from scores every value strictly less than passing, modifying scores in place.\n *  Returns the number of values removed.\n *  Precondition: scores is not null; no element is null.\n */\npublic static int removeBelow(ArrayList<Integer> scores, int passing) {\n    /* to be implemented */\n}\n```\n\nExample: if `scores` is `[70, 40, 88, 55, 90]` and `passing` is `60`, then after the call `scores` is `[70, 88, 90]` and the method returns `2`.",
+    "provided": [],
+    "skeleton": [
+      "/** Removes from scores every value strictly less than passing, modifying scores in place.\n *  Returns the number of values removed.\n *  Precondition: scores is not null; no element is null.\n */\npublic static int removeBelow(ArrayList<Integer> scores, int passing) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 5,
+    "rubric": {
+      "question_type": "Q3",
+      "total_points": 5,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Declares and initializes a removed-counter to 0"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Traverses the list **backward**: `for (int i = scores.size() - 1; i >= 0; i--)` (the correct remove-while-iterating pattern — a forward indexed loop that skips elements, or an enhanced-for, does not earn this point)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Tests **strictly less than** `passing` with `scores.get(i) < passing`"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "On a match, removes by index with `scores.remove(i)` and increments the counter"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Returns the number removed"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int removeBelow(ArrayList<Integer> scores, int passing) {\n    int removed = 0;\n    for (int i = scores.size() - 1; i >= 0; i--) {\n        if (scores.get(i) < passing) {\n            scores.remove(i);\n            removed++;\n        }\n    }\n    return removed;\n}\n```",
+    "explanation": "```java\npublic static int removeBelow(ArrayList<Integer> scores, int passing) {\n    int removed = 0;\n    for (int i = scores.size() - 1; i >= 0; i--) {\n        if (scores.get(i) < passing) {\n            scores.remove(i);\n            removed++;\n        }\n    }\n    return removed;\n}\n```\n\n**Why backward?** Removing element `i` shifts every later element left by one. A forward loop (`i++`) would then skip the element that slid into index `i`. Traversing from `size() - 1` down to `0` means every index you still have to visit is *below* the one you just removed, so nothing shifts out from under you.\n\n**Equivalent forward pattern** (also full credit on points 2–4): use a `while` loop and increment the index **only when you do not remove** —\n```java\nint i = 0;\nwhile (i < scores.size()) {\n    if (scores.get(i) < passing) { scores.remove(i); removed++; }\n    else { i++; }\n}\n```\n\n**Trace check.** `[70,40,88,55,90]`, `passing=60`, going backward: i=4 `90<60`✘; i=3 `55<60`✔ remove → `[70,40,88,90]` (removed 1); i=2 `88<60`✘; i=1 `40<60`✔ remove → `[70,88,90]` (removed 2); i=0 `70<60`✘ → list `[70,88,90]`, returns **2** ✓. No element skipped because we walk downward. Points sum **5**.",
+    "trace_check": "`[70,40,88,55,90]`, `passing=60`, going backward: i=4 `90<60`✘; i=3 `55<60`✔ remove → `[70,40,88,90]` (removed 1); i=2 `88<60`✘; i=1 `40<60`✔ remove → `[70,88,90]` (removed 2); i=0 `70<60`✘ → list `[70,88,90]`, returns **2** ✓. No element skipped because we walk downward. Points sum **5**.",
+    "notes": [
+      "**Why backward?** Removing element `i` shifts every later element left by one. A forward loop (`i++`) would then skip the element that slid into index `i`. Traversing from `size() - 1` down to `0` means every index you still have to visit is *below* the one you just removed, so nothing shifts out from under you.",
+      "**Equivalent forward pattern** (also full credit on points 2–4): use a `while` loop and increment the index **only when you do not remove** —\n```java\nint i = 0;\nwhile (i < scores.size()) {\n    if (scores.get(i) < passing) { scores.remove(i); removed++; }\n    else { i++; }\n}\n```"
+    ],
+    "topic": "4.8",
+    "topics": [
+      "4.8",
+      "4.9",
+      "4.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q3-arraylist.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q3-p3",
+    "subject": "ap_csa",
+    "number": 3,
+    "question_type": "Q3",
+    "label": "Q3 Data Analysis with ArrayList · titlesInGenre",
+    "name": "titlesInGenre",
+    "aside": "*build a result list*",
+    "kind": "frq",
+    "stem": "A `Book` element class is provided for FRQs 1 and 3 (accessors only — **call them**, do not re-implement):\n\n```java\npublic class Book {\n    public String getTitle()  { /* not shown */ }\n    public String getGenre()  { /* not shown */ }\n    public int    getPages()  { /* not shown */ }\n}\n```\n\nWrite `titlesInGenre`, which returns a **new** `ArrayList<String>` of the titles of every book in `library` whose genre **equals** `genre` (exact match), in their original order. The input list is **not** modified.\n\n```java\n/** Returns a new list of the titles of books whose genre equals genre, in order.\n *  Precondition: library is not null; no element is null.\n */\npublic static ArrayList<String> titlesInGenre(ArrayList<Book> library, String genre) {\n    /* to be implemented */\n}\n```\n\nExample: if the library holds (title, genre) pairs `(\"Dune\",\"scifi\"), (\"Emma\",\"drama\"), (\"Foundation\",\"scifi\")` and `genre` is `\"scifi\"`, the method returns `[\"Dune\", \"Foundation\"]`.",
+    "provided": [
+      "public class Book {\n    public String getTitle()  { /* not shown */ }\n    public String getGenre()  { /* not shown */ }\n    public int    getPages()  { /* not shown */ }\n}"
+    ],
+    "skeleton": [
+      "/** Returns a new list of the titles of books whose genre equals genre, in order.\n *  Precondition: library is not null; no element is null.\n */\npublic static ArrayList<String> titlesInGenre(ArrayList<Book> library, String genre) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 5,
+    "rubric": {
+      "question_type": "Q3",
+      "total_points": 5,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Creates a new `ArrayList<String>` to hold the result"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Traverses the whole input list with correct bounds (`i < library.size()` or a correct enhanced-for — valid since the input list is not modified)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Calls the provided `getGenre()` and compares to `genre` with `.equals` (NOT `==`)"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "On a match, adds the book's `getTitle()` to the result list (calls the provided accessors, does not re-implement them)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Returns the result list"
+        }
+      ]
+    },
+    "solution": "```java\npublic static ArrayList<String> titlesInGenre(ArrayList<Book> library, String genre) {\n    ArrayList<String> result = new ArrayList<String>();\n    for (int i = 0; i < library.size(); i++) {\n        Book b = library.get(i);\n        if (b.getGenre().equals(genre)) {\n            result.add(b.getTitle());\n        }\n    }\n    return result;\n}\n```",
+    "explanation": "```java\npublic static ArrayList<String> titlesInGenre(ArrayList<Book> library, String genre) {\n    ArrayList<String> result = new ArrayList<String>();\n    for (int i = 0; i < library.size(); i++) {\n        Book b = library.get(i);\n        if (b.getGenre().equals(genre)) {\n            result.add(b.getTitle());\n        }\n    }\n    return result;\n}\n```\n\n**Trace check.** genre `\"scifi\"`: Dune `\"scifi\".equals(\"scifi\")`✔ add \"Dune\"; Emma `\"drama\".equals(\"scifi\")`✘; Foundation `\"scifi\".equals(\"scifi\")`✔ add \"Foundation\" → returns `[\"Dune\",\"Foundation\"]` ✓. Genre compared with `.equals` (no `==` penalty); input list untouched; accessors called. Points sum **5**.",
+    "trace_check": "genre `\"scifi\"`: Dune `\"scifi\".equals(\"scifi\")`✔ add \"Dune\"; Emma `\"drama\".equals(\"scifi\")`✘; Foundation `\"scifi\".equals(\"scifi\")`✔ add \"Foundation\" → returns `[\"Dune\",\"Foundation\"]` ✓. Genre compared with `.equals` (no `==` penalty); input list untouched; accessors called. Points sum **5**.",
+    "notes": [],
+    "topic": "4.8",
+    "topics": [
+      "4.8",
+      "4.9",
+      "4.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q3-arraylist.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q3-p4",
+    "subject": "ap_csa",
+    "number": 4,
+    "question_type": "Q3",
+    "label": "Q3 Data Analysis with ArrayList · countMatchingPair",
+    "name": "countMatchingPair",
+    "aside": "**two parallel lists, matched by index**",
+    "kind": "frq",
+    "stem": "Two parallel `ArrayList`s describe the same students by position: `names.get(i)` is the name of student `i`, and `scores.get(i)` is that student's score. The two lists have the **same size**. Write `countMatchingPair`, which returns how many students have a score **at least** `passing` **and** whose name **equals** `targetName` (exact match). (Useful when several students share a name and you want only those who passed.)\n\n```java\n/** Returns the number of indices i where names.get(i) equals targetName\n *  AND scores.get(i) >= passing.\n *  Precondition: names and scores are non-null, the same size, with no null elements.\n */\npublic static int countMatchingPair(ArrayList<String> names,\n                                    ArrayList<Integer> scores,\n                                    String targetName, int passing) {\n    /* to be implemented */\n}\n```\n\nExample: if `names` is `[\"Ana\",\"Bo\",\"Ana\",\"Ana\"]` and `scores` is `[90, 50, 40, 75]`, then `countMatchingPair(names, scores, \"Ana\", 60)` returns `2` (index 0 with 90 and index 3 with 75; index 2 is \"Ana\" but 40 < 60).",
+    "provided": [],
+    "skeleton": [
+      "/** Returns the number of indices i where names.get(i) equals targetName\n *  AND scores.get(i) >= passing.\n *  Precondition: names and scores are non-null, the same size, with no null elements.\n */\npublic static int countMatchingPair(ArrayList<String> names,\n                                    ArrayList<Integer> scores,\n                                    String targetName, int passing) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 5,
+    "rubric": {
+      "question_type": "Q3",
+      "total_points": 5,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Traverses by a **single shared index** with correct bounds (`i < names.size()`, equivalently `scores.size()`) — one loop indexing **both** lists, not two separate loops"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Reads the matching elements **at the same index** from both lists: `names.get(i)` and `scores.get(i)`"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Tests the name with `.equals(targetName)` (NOT `==`) **and** the score `>= passing`, incrementing only when **both** hold"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Returns the count"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int countMatchingPair(ArrayList<String> names,\n                                    ArrayList<Integer> scores,\n                                    String targetName, int passing) {\n    int count = 0;\n    for (int i = 0; i < names.size(); i++) {\n        if (names.get(i).equals(targetName) && scores.get(i) >= passing) {\n            count++;\n        }\n    }\n    return count;\n}\n```",
+    "explanation": "```java\npublic static int countMatchingPair(ArrayList<String> names,\n                                    ArrayList<Integer> scores,\n                                    String targetName, int passing) {\n    int count = 0;\n    for (int i = 0; i < names.size(); i++) {\n        if (names.get(i).equals(targetName) && scores.get(i) >= passing) {\n            count++;\n        }\n    }\n    return count;\n}\n```\n\n**Trace check.** `names=[\"Ana\",\"Bo\",\"Ana\",\"Ana\"]`, `scores=[90,50,40,75]`, `targetName=\"Ana\"`, `passing=60`: i=0 `\"Ana\".equals(\"Ana\")`✔ & `90>=60`✔ → count 1; i=1 `\"Bo\"`✘ skip; i=2 `\"Ana\"`✔ & `40>=60`✘ skip; i=3 `\"Ana\"`✔ & `75>=60`✔ → count 2 → returns **2** ✓. A single index reads both lists in lockstep; name compared with `.equals`; both conditions joined with `&&`. Points sum **5**.",
+    "trace_check": "`names=[\"Ana\",\"Bo\",\"Ana\",\"Ana\"]`, `scores=[90,50,40,75]`, `targetName=\"Ana\"`, `passing=60`: i=0 `\"Ana\".equals(\"Ana\")`✔ & `90>=60`✔ → count 1; i=1 `\"Bo\"`✘ skip; i=2 `\"Ana\"`✔ & `40>=60`✘ skip; i=3 `\"Ana\"`✔ & `75>=60`✔ → count 2 → returns **2** ✓. A single index reads both lists in lockstep; name compared with `.equals`; both conditions joined with `&&`. Points sum **5**.",
+    "notes": [],
+    "topic": "4.8",
+    "topics": [
+      "4.8",
+      "4.9",
+      "4.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q3-arraylist.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q3-p5",
+    "subject": "ap_csa",
+    "number": 5,
+    "question_type": "Q3",
+    "label": "Q3 Data Analysis with ArrayList · insertInOrder",
+    "name": "insertInOrder",
+    "aside": "**insert in sorted position** (`add(int, E)`)",
+    "kind": "frq",
+    "stem": "An `ArrayList<Integer>` named `sorted` is kept in **non-decreasing** (ascending) order. Write `insertInOrder`, which inserts `value` into `sorted` so the list **stays in non-decreasing order**, and returns the index at which `value` was inserted. If `value` is greater than or equal to every element, it goes at the end. Use `add(int index, E)` to insert at a position.\n\n```java\n/** Inserts value into sorted (which is in non-decreasing order) so that it\n *  remains non-decreasing, and returns the index where value was placed.\n *  Precondition: sorted is non-null, in non-decreasing order, no null elements.\n */\npublic static int insertInOrder(ArrayList<Integer> sorted, int value) {\n    /* to be implemented */\n}\n```\n\nExample: if `sorted` is `[10, 20, 20, 40]` and `value` is `25`, then after the call `sorted` is `[10, 20, 20, 25, 40]` and the method returns `3`.",
+    "provided": [],
+    "skeleton": [
+      "/** Inserts value into sorted (which is in non-decreasing order) so that it\n *  remains non-decreasing, and returns the index where value was placed.\n *  Precondition: sorted is non-null, in non-decreasing order, no null elements.\n */\npublic static int insertInOrder(ArrayList<Integer> sorted, int value) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 5,
+    "rubric": {
+      "question_type": "Q3",
+      "total_points": 5,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Initializes an insertion index (`i = 0`)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Scans forward to find the insertion point: loops **while** `i < sorted.size()` **AND** `sorted.get(i) < value` (the size check first so `&&` short-circuits — no out-of-bounds when `value` belongs at the end)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Uses the correct stop condition (`< value`) so the scan halts at the first element `>= value`, keeping the list non-decreasing"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Inserts with `sorted.add(i, value)` (the two-argument `add(int index, E)` that shifts later elements right — NOT `add(value)`, which would only append)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Returns the insertion index `i`"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int insertInOrder(ArrayList<Integer> sorted, int value) {\n    int i = 0;\n    while (i < sorted.size() && sorted.get(i) < value) {\n        i++;\n    }\n    sorted.add(i, value);\n    return i;\n}\n```",
+    "explanation": "```java\npublic static int insertInOrder(ArrayList<Integer> sorted, int value) {\n    int i = 0;\n    while (i < sorted.size() && sorted.get(i) < value) {\n        i++;\n    }\n    sorted.add(i, value);\n    return i;\n}\n```\n\n**Why `< value`, not `<=`?** Scanning forward while elements are **strictly less than** `value` stops at the first element that is `>= value`, so `value` is inserted **before** any equal elements — keeping the list non-decreasing. The `&&` short-circuits: when `i` reaches `sorted.size()`, the loop stops before `sorted.get(i)` is evaluated, so there is no out-of-bounds access when `value` belongs at the end.\n\n**Trace check.** `sorted=[10,20,20,40]`, `value=25`: i=0 `0<4 && 10<25`✔ i=1; `20<25`✔ i=2; `20<25`✔ i=3; `40<25`✘ stop. `sorted.add(3, 25)` → `[10,20,20,25,40]`, returns **3** ✓. End case: `value=99` → scan runs to i=4, `4<4` false stops (short-circuit, no `get(4)`), `add(4,99)` appends → returns **4** ✓. Front case: `value=5` → i=0 `10<5`✘ stop, `add(0,5)` → `[5,10,20,20,40]`, returns **0** ✓. The two-argument `add(int, E)` shifts elements right; the size check precedes the `get` so there is no out-of-bounds. Points sum **5**.",
+    "trace_check": "`sorted=[10,20,20,40]`, `value=25`: i=0 `0<4 && 10<25`✔ i=1; `20<25`✔ i=2; `20<25`✔ i=3; `40<25`✘ stop. `sorted.add(3, 25)` → `[10,20,20,25,40]`, returns **3** ✓. End case: `value=99` → scan runs to i=4, `4<4` false stops (short-circuit, no `get(4)`), `add(4,99)` appends → returns **4** ✓. Front case: `value=5` → i=0 `10<5`✘ stop, `add(0,5)` → `[5,10,20,20,40]`, returns **0** ✓. The two-argument `add(int, E)` shifts elements right; the size check precedes the `get` so there is no out-of-bounds. Points sum **5**.",
+    "notes": [
+      "**Why `< value`, not `<=`?** Scanning forward while elements are **strictly less than** `value` stops at the first element that is `>= value`, so `value` is inserted **before** any equal elements — keeping the list non-decreasing. The `&&` short-circuits: when `i` reaches `sorted.size()`, the loop stops before `sorted.get(i)` is evaluated, so there is no out-of-bounds access when `value` belongs at the end."
+    ],
+    "topic": "4.8",
+    "topics": [
+      "4.8",
+      "4.9",
+      "4.10"
+    ],
+    "practice": null,
+    "source_file": "frq-q3-arraylist.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q4-p1",
+    "subject": "ap_csa",
+    "number": 1,
+    "question_type": "Q4",
+    "label": "Q4 2D Array · countEven",
+    "name": "countEven",
+    "aside": "*whole-grid count*",
+    "kind": "frq",
+    "stem": "Write `countEven`, which returns the number of **even** values in the rectangular 2D array `grid`.\n\n```java\n/** Returns the number of even values in the rectangular 2D array grid.\n *  Precondition: grid is rectangular with at least one row and one column.\n */\npublic static int countEven(int[][] grid) {\n    /* to be implemented */\n}\n```\n\nExample: for\n```\n{{1, 2, 3},\n {4, 6, 7}}\n```\nthe method returns `3` (the values 2, 4, 6).",
+    "provided": [],
+    "skeleton": [
+      "/** Returns the number of even values in the rectangular 2D array grid.\n *  Precondition: grid is rectangular with at least one row and one column.\n */\npublic static int countEven(int[][] grid) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 6,
+    "rubric": {
+      "question_type": "Q4",
+      "total_points": 6,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Outer loop iterates over **rows** using `grid.length` (correct bound `r < grid.length`)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Inner loop iterates over **columns** using `grid[r].length` (or `grid[0].length`) — correct dimension, not swapped with rows"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Accesses each cell as `grid[r][c]` (row index first, column second)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Tests evenness with `grid[r][c] % 2 == 0` and increments on a match"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "Returns the count"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int countEven(int[][] grid) {\n    int count = 0;\n    for (int r = 0; r < grid.length; r++) {\n        for (int c = 0; c < grid[r].length; c++) {\n            if (grid[r][c] % 2 == 0) {\n                count++;\n            }\n        }\n    }\n    return count;\n}\n```",
+    "explanation": "```java\npublic static int countEven(int[][] grid) {\n    int count = 0;\n    for (int r = 0; r < grid.length; r++) {\n        for (int c = 0; c < grid[r].length; c++) {\n            if (grid[r][c] % 2 == 0) {\n                count++;\n            }\n        }\n    }\n    return count;\n}\n```\n\n**Trace check.** Row 0: 1(odd),2✔(1),3(odd); Row 1: 4✔(2),6✔(3),7(odd) → returns **3** ✓. Rows from `grid.length`, cols from `grid[r].length`, access `grid[r][c]`. Points sum **6**.",
+    "trace_check": "Row 0: 1(odd),2✔(1),3(odd); Row 1: 4✔(2),6✔(3),7(odd) → returns **3** ✓. Rows from `grid.length`, cols from `grid[r].length`, access `grid[r][c]`. Points sum **6**.",
+    "notes": [],
+    "topic": "4.5",
+    "topics": [
+      "4.5",
+      "4.11",
+      "4.12",
+      "4.13"
+    ],
+    "practice": null,
+    "source_file": "frq-q4-2d-array.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q4-p2",
+    "subject": "ap_csa",
+    "number": 2,
+    "question_type": "Q4",
+    "label": "Q4 2D Array · columnMax",
+    "name": "columnMax",
+    "aside": "*per-column max, no `Math.max`*",
+    "kind": "frq",
+    "stem": "Write `columnMax`, which returns the largest value in column `col` of the rectangular 2D array `grid`.\n\n```java\n/** Returns the largest value found in column col of grid.\n *  Precondition: grid is rectangular with at least one row;\n *                0 <= col < grid[0].length.\n */\npublic static int columnMax(int[][] grid, int col) {\n    /* to be implemented */\n}\n```\n\nExample: for\n```\n{{3, 9, 1},\n {7, 2, 8},\n {5, 4, 6}}\n```\n`columnMax(grid, 0)` returns `7` (the values in column 0 are 3, 7, 5).",
+    "provided": [],
+    "skeleton": [
+      "/** Returns the largest value found in column col of grid.\n *  Precondition: grid is rectangular with at least one row;\n *                0 <= col < grid[0].length.\n */\npublic static int columnMax(int[][] grid, int col) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 6,
+    "rubric": {
+      "question_type": "Q4",
+      "total_points": 6,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Initializes the running max to the **first row's** value in that column, `grid[0][col]` (not to 0 — values could all be negative)"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Loops down the **rows** with `grid.length` (correct bound), holding `col` **fixed** — walks a column, not a row"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Accesses cells as `grid[r][col]` (row varies, column index is the parameter, row first)"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Compares each cell to the running max with `>` and updates `max` when larger (no `Math.max`, which is off the reference)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Visits every row (starting either at `r = 0` or `r = 1` after seeding from row 0 — both cover all rows exactly once)"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "Returns the max"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int columnMax(int[][] grid, int col) {\n    int max = grid[0][col];\n    for (int r = 1; r < grid.length; r++) {\n        if (grid[r][col] > max) {\n            max = grid[r][col];\n        }\n    }\n    return max;\n}\n```",
+    "explanation": "```java\npublic static int columnMax(int[][] grid, int col) {\n    int max = grid[0][col];\n    for (int r = 1; r < grid.length; r++) {\n        if (grid[r][col] > max) {\n            max = grid[r][col];\n        }\n    }\n    return max;\n}\n```\n\n**Trace check.** `col=0`, max=grid[0][0]=3; r=1 `7>3`✔ max=7; r=2 `5>7`✘ → returns **7** ✓. Column walked by fixing `col` and varying `r` over `grid.length`; max seeded from a real cell (handles all-negative). Points sum **6**.",
+    "trace_check": "`col=0`, max=grid[0][0]=3; r=1 `7>3`✔ max=7; r=2 `5>7`✘ → returns **7** ✓. Column walked by fixing `col` and varying `r` over `grid.length`; max seeded from a real cell (handles all-negative). Points sum **6**.",
+    "notes": [],
+    "topic": "4.5",
+    "topics": [
+      "4.5",
+      "4.11",
+      "4.12",
+      "4.13"
+    ],
+    "practice": null,
+    "source_file": "frq-q4-2d-array.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q4-p3",
+    "subject": "ap_csa",
+    "number": 3,
+    "question_type": "Q4",
+    "label": "Q4 2D Array · countAvailable",
+    "name": "countAvailable",
+    "aside": "**2D array of objects + null-guard**",
+    "kind": "frq",
+    "stem": "A `Seat` element class is provided (an accessor only — **call it**, do not re-implement):\n\n```java\npublic class Seat {\n    public boolean isReserved() { /* not shown */ }\n}\n```\n\nA theater is a rectangular 2D array `Seat[][] hall`. **Some cells may be `null`** (no seat in that spot — an aisle). Write `countAvailable`, which returns the number of seats that **exist** (are not `null`) **and** are **not reserved**.\n\n```java\n/** Returns the number of non-null Seat cells in hall that are not reserved.\n *  Precondition: hall is rectangular with at least one row and one column.\n *                Cells may be null.\n */\npublic static int countAvailable(Seat[][] hall) {\n    /* to be implemented */\n}\n```",
+    "provided": [
+      "public class Seat {\n    public boolean isReserved() { /* not shown */ }\n}"
+    ],
+    "skeleton": [
+      "/** Returns the number of non-null Seat cells in hall that are not reserved.\n *  Precondition: hall is rectangular with at least one row and one column.\n *                Cells may be null.\n */\npublic static int countAvailable(Seat[][] hall) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 6,
+    "rubric": {
+      "question_type": "Q4",
+      "total_points": 6,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Declares and initializes a counter to 0"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Outer loop over **rows** with `hall.length`; inner loop over **columns** with `hall[r].length` (correct dimensions, not swapped)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Accesses each cell as `hall[r][c]` (row first, column second)"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "**Null-guards** the cell first: `hall[r][c] != null` is checked **before** any method call (the `&&` short-circuits, so `isReserved()` is never called on `null`)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Calls the provided `isReserved()` and counts the cell only when it is **not** reserved (`!hall[r][c].isReserved()`)"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "Returns the count"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int countAvailable(Seat[][] hall) {\n    int count = 0;\n    for (int r = 0; r < hall.length; r++) {\n        for (int c = 0; c < hall[r].length; c++) {\n            if (hall[r][c] != null && !hall[r][c].isReserved()) {\n                count++;\n            }\n        }\n    }\n    return count;\n}\n```",
+    "explanation": "```java\npublic static int countAvailable(Seat[][] hall) {\n    int count = 0;\n    for (int r = 0; r < hall.length; r++) {\n        for (int c = 0; c < hall[r].length; c++) {\n            if (hall[r][c] != null && !hall[r][c].isReserved()) {\n                count++;\n            }\n        }\n    }\n    return count;\n}\n```\n\n**Trace check.** Suppose row 0 = `[reserved, null, free]`, row 1 = `[free, free, null]`. Row 0: cell0 not null but reserved → `!true`=false, skip; cell1 null → `!= null` false, short-circuits, skip (no NPE); cell2 free → count 1. Row 1: cell0 free → count 2; cell1 free → count 3; cell2 null → skip. Returns **3** ✓. The `!= null` test comes first and `&&` short-circuits, so `isReserved()` is never invoked on a `null` cell. Points sum **6**.",
+    "trace_check": "Suppose row 0 = `[reserved, null, free]`, row 1 = `[free, free, null]`. Row 0: cell0 not null but reserved → `!true`=false, skip; cell1 null → `!= null` false, short-circuits, skip (no NPE); cell2 free → count 1. Row 1: cell0 free → count 2; cell1 free → count 3; cell2 null → skip. Returns **3** ✓. The `!= null` test comes first and `&&` short-circuits, so `isReserved()` is never invoked on a `null` cell. Points sum **6**.",
+    "notes": [],
+    "topic": "4.5",
+    "topics": [
+      "4.5",
+      "4.11",
+      "4.12",
+      "4.13"
+    ],
+    "practice": null,
+    "source_file": "frq-q4-2d-array.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q4-p4",
+    "subject": "ap_csa",
+    "number": 4,
+    "question_type": "Q4",
+    "label": "Q4 2D Array · heaviestColumn",
+    "name": "heaviestColumn",
+    "aside": "**genuinely column-major** (each column as a unit)",
+    "kind": "frq",
+    "stem": "Write `heaviestColumn`, which returns the **index of the column whose values sum to the largest total** in the rectangular 2D array `grid`. Process the grid **column by column**: the outer loop walks columns, the inner loop walks the rows of that one column to total it. If two columns tie for the largest sum, return the **smaller** column index.\n\n```java\n/** Returns the index of the column with the greatest column-sum.\n *  On a tie, returns the smaller column index.\n *  Precondition: grid is rectangular with at least one row and one column.\n */\npublic static int heaviestColumn(int[][] grid) {\n    /* to be implemented */\n}\n```\n\nExample: for\n```\n{{1, 5, 0},\n {2, 5, 1},\n {3, 0, 1}}\n```\nthe column sums are column 0 = 6, column 1 = 10, column 2 = 2, so the method returns `1`.",
+    "provided": [],
+    "skeleton": [
+      "/** Returns the index of the column with the greatest column-sum.\n *  On a tie, returns the smaller column index.\n *  Precondition: grid is rectangular with at least one row and one column.\n */\npublic static int heaviestColumn(int[][] grid) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 6,
+    "rubric": {
+      "question_type": "Q4",
+      "total_points": 6,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Tracks a best column index and its sum, seeded from a **real column** (column 0's full sum), not from 0 — so all-negative grids work and the answer is always a valid column"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "**Outer** loop iterates over **columns** using `grid[0].length` (or `grid[r].length`) — the column index is the outer loop variable (column-major)"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "**Inner** loop iterates over the **rows** of the current column using `grid.length`, accumulating that column's sum (a fresh `colSum` reset per column)"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Accesses cells as `grid[r][c]` (row index first, column second) with the column held fixed across the inner loop"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Compares each column sum to the best with `>` (strict, so a tie keeps the smaller index) and updates both the best sum and best column index"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "Returns the best column **index**"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int heaviestColumn(int[][] grid) {\n    int bestCol = 0;\n    int bestSum = 0;\n    for (int r = 0; r < grid.length; r++) {\n        bestSum += grid[r][0];\n    }\n    for (int c = 1; c < grid[0].length; c++) {\n        int colSum = 0;\n        for (int r = 0; r < grid.length; r++) {\n            colSum += grid[r][c];\n        }\n        if (colSum > bestSum) {\n            bestSum = colSum;\n            bestCol = c;\n        }\n    }\n    return bestCol;\n}\n```",
+    "explanation": "```java\npublic static int heaviestColumn(int[][] grid) {\n    int bestCol = 0;\n    int bestSum = 0;\n    for (int r = 0; r < grid.length; r++) {\n        bestSum += grid[r][0];\n    }\n    for (int c = 1; c < grid[0].length; c++) {\n        int colSum = 0;\n        for (int r = 0; r < grid.length; r++) {\n            colSum += grid[r][c];\n        }\n        if (colSum > bestSum) {\n            bestSum = colSum;\n            bestCol = c;\n        }\n    }\n    return bestCol;\n}\n```\n\n**Why column-major here?** Each column must be totaled as a whole before it can be compared, so the **outer** loop fixes a column `c` and the **inner** loop runs the rows `0 .. grid.length - 1` accumulating that column's sum. Seeding `bestSum` from column 0 (and comparing strictly with `>`) makes ties resolve to the smaller index.\n\n**Trace check.** Grid above: seed col 0 sum = 1+2+3 = 6, bestCol 0. c=1: colSum 5+5+0 = 10; `10>6`✔ bestSum 10, bestCol 1. c=2: colSum 0+1+1 = 2; `2>10`✘ → returns **1** ✓. Tie check: with column sums `[6,6]`, col 0 seeds best, col 1 `6>6`✘ → keeps **0** (smaller index) ✓. Outer loop = columns, inner = rows, `colSum` reset each column, cells `grid[r][c]`. Points sum **6**.",
+    "trace_check": "Grid above: seed col 0 sum = 1+2+3 = 6, bestCol 0. c=1: colSum 5+5+0 = 10; `10>6`✔ bestSum 10, bestCol 1. c=2: colSum 0+1+1 = 2; `2>10`✘ → returns **1** ✓. Tie check: with column sums `[6,6]`, col 0 seeds best, col 1 `6>6`✘ → keeps **0** (smaller index) ✓. Outer loop = columns, inner = rows, `colSum` reset each column, cells `grid[r][c]`. Points sum **6**.",
+    "notes": [
+      "**Why column-major here?** Each column must be totaled as a whole before it can be compared, so the **outer** loop fixes a column `c` and the **inner** loop runs the rows `0 .. grid.length - 1` accumulating that column's sum. Seeding `bestSum` from column 0 (and comparing strictly with `>`) makes ties resolve to the smaller index."
+    ],
+    "topic": "4.5",
+    "topics": [
+      "4.5",
+      "4.11",
+      "4.12",
+      "4.13"
+    ],
+    "practice": null,
+    "source_file": "frq-q4-2d-array.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
+    "id": "csa-frq-q4-p5",
+    "subject": "ap_csa",
+    "number": 5,
+    "question_type": "Q4",
+    "label": "Q4 2D Array · borderSum",
+    "name": "borderSum",
+    "aside": "**sub-section / region only** (the border, not the whole grid)",
+    "kind": "frq",
+    "stem": "Write `borderSum`, which returns the sum of only the values on the **border** (outermost edge) of the rectangular 2D array `grid` — the entire first row, the entire last row, and the first and last columns of the rows in between. Interior cells are **not** counted.\n\n```java\n/** Returns the sum of the values on the outer border of grid.\n *  Precondition: grid is rectangular with at least one row and one column.\n */\npublic static int borderSum(int[][] grid) {\n    /* to be implemented */\n}\n```\n\nExample: for\n```\n{{1, 2, 3},\n {4, 5, 6},\n {7, 8, 9}}\n```\nthe border values are 1, 2, 3, 4, 6, 7, 8, 9 (everything except the center 5), so the method returns `40`.",
+    "provided": [],
+    "skeleton": [
+      "/** Returns the sum of the values on the outer border of grid.\n *  Precondition: grid is rectangular with at least one row and one column.\n */\npublic static int borderSum(int[][] grid) {\n    /* to be implemented */\n}"
+    ],
+    "answer": null,
+    "options": null,
+    "points": 6,
+    "rubric": {
+      "question_type": "Q4",
+      "total_points": 6,
+      "penalty_cap": 3,
+      "penalty_policy": "Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.",
+      "parts": [],
+      "criteria": [
+        {
+          "point": 1,
+          "part": null,
+          "criterion": "Declares and initializes an accumulator to 0"
+        },
+        {
+          "point": 2,
+          "part": null,
+          "criterion": "Outer loop over **rows** with `grid.length`; inner loop over **columns** with `grid[r].length` (or `grid[0].length`) — correct dimensions, not swapped"
+        },
+        {
+          "point": 3,
+          "part": null,
+          "criterion": "Accesses each cell as `grid[r][c]` (row first, column second)"
+        },
+        {
+          "point": 4,
+          "part": null,
+          "criterion": "Restricts to the **border region** with the condition `r == 0 || r == grid.length - 1 || c == 0 || c == grid[0].length - 1` (last row/col use `length - 1`)"
+        },
+        {
+          "point": 5,
+          "part": null,
+          "criterion": "Adds only border cells to the accumulator — each border cell counted exactly once (corners not double-counted)"
+        },
+        {
+          "point": 6,
+          "part": null,
+          "criterion": "Returns the border sum"
+        }
+      ]
+    },
+    "solution": "```java\npublic static int borderSum(int[][] grid) {\n    int rows = grid.length;\n    int cols = grid[0].length;\n    int sum = 0;\n    for (int r = 0; r < rows; r++) {\n        for (int c = 0; c < cols; c++) {\n            if (r == 0 || r == rows - 1 || c == 0 || c == cols - 1) {\n                sum += grid[r][c];\n            }\n        }\n    }\n    return sum;\n}\n```",
+    "explanation": "```java\npublic static int borderSum(int[][] grid) {\n    int rows = grid.length;\n    int cols = grid[0].length;\n    int sum = 0;\n    for (int r = 0; r < rows; r++) {\n        for (int c = 0; c < cols; c++) {\n            if (r == 0 || r == rows - 1 || c == 0 || c == cols - 1) {\n                sum += grid[r][c];\n            }\n        }\n    }\n    return sum;\n}\n```\n\n**Why the `||` test, not four separate loops?** A cell is on the border exactly when it is in the first or last row **or** the first or last column. Testing `r == 0 || r == rows - 1 || c == 0 || c == cols - 1` inside one traversal counts each border cell **exactly once** — including the corners — and avoids double-counting that separate edge loops risk. This also handles a single-row, single-column, or 1×1 grid correctly (every cell satisfies the test).\n\n**Trace check.** 3×3 grid above (rows 3, cols 3): r=0 all in border → +1+2+3 = 6; r=1: c=0 border +4, c=1 interior (`1!=0,1!=2,1!=0,1!=2`) skip, c=2 border +6 → +10 (sum 16); r=2 all in border → +7+8+9 = 24 → total **6+10+24 = 40** ✓ (center 5 excluded). 1×1 grid `{{9}}`: r=0,c=0 satisfies `r==0` → +9 → returns **9** ✓. The `||` test selects exactly the border and counts each such cell once. Points sum **6**.",
+    "trace_check": "3×3 grid above (rows 3, cols 3): r=0 all in border → +1+2+3 = 6; r=1: c=0 border +4, c=1 interior (`1!=0,1!=2,1!=0,1!=2`) skip, c=2 border +6 → +10 (sum 16); r=2 all in border → +7+8+9 = 24 → total **6+10+24 = 40** ✓ (center 5 excluded). 1×1 grid `{{9}}`: r=0,c=0 satisfies `r==0` → +9 → returns **9** ✓. The `||` test selects exactly the border and counts each such cell once. Points sum **6**.",
+    "notes": [
+      "**Why the `||` test, not four separate loops?** A cell is on the border exactly when it is in the first or last row **or** the first or last column. Testing `r == 0 || r == rows - 1 || c == 0 || c == cols - 1` inside one traversal counts each border cell **exactly once** — including the corners — and avoids double-counting that separate edge loops risk. This also handles a single-row, single-column, or 1×1 grid correctly (every cell satisfies the test)."
+    ],
+    "topic": "4.5",
+    "topics": [
+      "4.5",
+      "4.11",
+      "4.12",
+      "4.13"
+    ],
+    "practice": null,
+    "source_file": "frq-q4-2d-array.md",
+    "allowOffSyllabus": false,
+    "unit": "4"
+  },
+  {
     "id": "pc-u1-p1",
     "subject": "ap_precalc",
     "unit": "1",
@@ -4278,9 +5816,9 @@
     "difficulty": "hard",
     "calc_allowed": true,
     "tested_on_exam": true,
-    "stem": "Population model $P(t)=a+b\\ln(t+1)$ thousand, with $P(0)=12$ and $P(40)=58$. Find $a$ and $b$ (3 decimals), then find $P(20)$.",
-    "solution": "$P(0)=a+b\\ln(1)=a=12$. $P(40)=12+b\\ln(41)=58\\Rightarrow b\\ln(41)=46\\Rightarrow b=\\frac{46}{\\ln 41}=\\frac{46}{3.7136}\\approx\\mathbf{12.387}$. Then $P(20)=12+12.387\\ln(21)=12+12.387(3.0445)\\approx12+37.712=\\mathbf{49.712}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)",
-    "explanation": "$P(0)=a+b\\ln(1)=a=12$. $P(40)=12+b\\ln(41)=58\\Rightarrow b\\ln(41)=46\\Rightarrow b=\\frac{46}{\\ln 41}=\\frac{46}{3.7136}\\approx\\mathbf{12.387}$. Then $P(20)=12+12.387\\ln(21)=12+12.387(3.0445)\\approx12+37.712=\\mathbf{49.712}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)",
+    "stem": "A drug's concentration in the blood $t$ hours after a single dose is modeled by $C(t)=\\dfrac{24t}{t^2+4}$ mg/L, for $t\\ge 0$. (a) Give the horizontal asymptote and say what it means about the drug. (b) Use a graphing calculator to find when the concentration is greatest, and that greatest concentration. (c) Find the AROC of $C$ on [0, 6]. Is $C$ increasing or decreasing at $t=6$? (d) State the domain restriction this model needs, and say where it comes from.",
+    "solution": "(a) $\\deg N=1 < \\deg D=2$ → **HA: y = 0**. In context: long after the dose the concentration decays toward 0 — the body clears the drug (it never quite reaches 0). Check: $C(100)\\approx0.240$, $C(1000)\\approx0.024$. (b) Graph on $[0,20]$: the peak is at **$t=2$ hours**, where **$C=6$ mg/L**. **Check it by hand** — divide top and bottom by $t$: $C(t)=\\dfrac{24}{t+4/t}$, which is largest when $t+\\frac4t$ is smallest, i.e. when $t=\\frac4t \\Rightarrow t=2$, giving $C=\\frac{24}{4}=6$ ✓. Both values are exact, so to 3 decimals they are 2.000 h and 6.000 mg/L. (c) $C(0)=0$ and $C(6)=\\frac{144}{40}=3.6$, so AROC $=\\dfrac{3.6-0}{6-0}=\\mathbf{0.6}$ mg/L per hour. But $C$ is **decreasing** at $t=6$: the peak was back at $t=2$, and $C(5.9)\\approx3.649 > C(6)=3.6 > C(6.1)\\approx3.553$. **A positive average rate of change over an interval says nothing about the direction at a point inside it** — the average is positive here only because of the climb from 0 to 6 mg/L in the first two hours. (d) $t^2+4$ is never zero, so there is **no algebraic** exclusion — the restriction is **contextual: $t\\ge 0$**, because $t$ counts hours since the dose and negative time is meaningless. (Realistically also an upper bound at the next dose, after which this model no longer describes the situation.)",
+    "explanation": "(a) $\\deg N=1 < \\deg D=2$ → **HA: y = 0**. In context: long after the dose the concentration decays toward 0 — the body clears the drug (it never quite reaches 0). Check: $C(100)\\approx0.240$, $C(1000)\\approx0.024$. (b) Graph on $[0,20]$: the peak is at **$t=2$ hours**, where **$C=6$ mg/L**. **Check it by hand** — divide top and bottom by $t$: $C(t)=\\dfrac{24}{t+4/t}$, which is largest when $t+\\frac4t$ is smallest, i.e. when $t=\\frac4t \\Rightarrow t=2$, giving $C=\\frac{24}{4}=6$ ✓. Both values are exact, so to 3 decimals they are 2.000 h and 6.000 mg/L. (c) $C(0)=0$ and $C(6)=\\frac{144}{40}=3.6$, so AROC $=\\dfrac{3.6-0}{6-0}=\\mathbf{0.6}$ mg/L per hour. But $C$ is **decreasing** at $t=6$: the peak was back at $t=2$, and $C(5.9)\\approx3.649 > C(6)=3.6 > C(6.1)\\approx3.553$. **A positive average rate of change over an interval says nothing about the direction at a point inside it** — the average is positive here only because of the climb from 0 to 6 mg/L in the first two hours. (d) $t^2+4$ is never zero, so there is **no algebraic** exclusion — the restriction is **contextual: $t\\ge 0$**, because $t$ counts hours since the dose and negative time is meaningless. (Realistically also an upper bound at the next dose, after which this model no longer describes the situation.)",
     "answer": null,
     "answer_variants": [],
     "topic": "1.0"
@@ -4308,7 +5846,7 @@
     "number": 11,
     "kind": "constructed_model_graded",
     "difficulty": "hard",
-    "calc_allowed": null,
+    "calc_allowed": true,
     "tested_on_exam": true,
     "stem": "$f$ is given by a table: $f(1)=8, f(2)=4, f(3)=2, f(4)=1$. (a) Compute $h=g\\circ f$ at $x=2$ where $g(x)=x^2-3$. (b) Find $f^{-1}(2)$. (c) Which model best fits $f$ — linear, quadratic, or exponential — and justify.",
     "solution": "(a) $f(2)=4$, so $h(2)=g(4)=4^2-3=13$. (b) $f^{-1}(2)$ = the input giving output 2 → $f(3)=2$, so $f^{-1}(2)=3$. (c) Ratios of successive outputs: $4/8=0.5$, $2/4=0.5$, $1/2=0.5$ — **constant ratio → exponential**. (Justify with the ratios, exactly as 2025 Q1(C)(ii) required. A *linear* model would need constant *differences*, not ratios.)",
@@ -4339,7 +5877,7 @@
     "unit": "2",
     "number": 1,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "easy",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.",
@@ -4355,7 +5893,7 @@
     "unit": "2",
     "number": 2,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "easy",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "$g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.",
@@ -4371,7 +5909,7 @@
     "unit": "2",
     "number": 3,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "easy",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "Compute (a) $\\log_3 81$, (b) $\\log_5 \\frac{1}{25}$, (c) $\\ln e^{7}$.",
@@ -4387,7 +5925,7 @@
     "unit": "2",
     "number": 4,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "easy",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "Rewrite $\\log_2 x = 5$ in exponential form and solve.",
@@ -4403,7 +5941,7 @@
     "unit": "2",
     "number": 5,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "medium",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "Solve $2^{3x} = 16$.",
@@ -4419,7 +5957,7 @@
     "unit": "2",
     "number": 6,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "medium",
     "calc_allowed": true,
     "tested_on_exam": true,
     "stem": "A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?",
@@ -4435,7 +5973,7 @@
     "unit": "2",
     "number": 7,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "medium",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "Write as one logarithm: $\\dfrac{1}{2}\\log x + 2\\log y - \\log z$.",
@@ -4451,7 +5989,7 @@
     "unit": "2",
     "number": 8,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "medium",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "Solve $\\log_2(x) + \\log_2(x-2) = 3$.",
@@ -4467,7 +6005,7 @@
     "unit": "2",
     "number": 9,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "hard",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "$f(x)=\\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.",
@@ -4483,7 +6021,7 @@
     "unit": "2",
     "number": 10,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "hard",
     "calc_allowed": true,
     "tested_on_exam": true,
     "stem": "Data plotted as $\\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.",
@@ -4499,7 +6037,7 @@
     "unit": "2",
     "number": 11,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "hard",
     "calc_allowed": false,
     "tested_on_exam": true,
     "stem": "(a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\\log_3(9x^4) - \\log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.",
@@ -4515,7 +6053,7 @@
     "unit": "2",
     "number": 12,
     "kind": "constructed_model_graded",
-    "difficulty": null,
+    "difficulty": "hard",
     "calc_allowed": true,
     "tested_on_exam": true,
     "stem": "Downloads of an app are modeled by $D(t)=a+b\\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$. (a) Find $a$ and $b$. (b) Find the average rate of change of $D$ from $t=0$ to $t=30$. (c) The true number of downloads at $t=15$ is *greater* than the value predicted by the average rate of change line from (b). Explain why, using concavity.",

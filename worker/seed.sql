@@ -197,22 +197,22 @@ A degree-$n$ polynomial has exactly $n$ zeros counting multiplicity and complex 
 - **b**: horizontal stretch/compress by 1/|b|; reflect over y-axis if b<0.', 30, 40, 1),
   ('1.10', 'ap_precalc', 'Piecewise-defined functions *(easy to skip — and it''s a named FRQ2 model type)*', '1', 'A **piecewise function** is built from different rules on **non-overlapping** intervals of the domain — one formula here, a different one there.', 30, 40, 1),
   ('1.11', 'ap_precalc', 'Model domain & range restrictions *(FRQ Q2 Part C points)*', '1', 'Model domain & range restrictions *(FRQ Q2 Part C points)*', 30, 40, 1),
-  ('2.1', 'ap_precalc', 'Arithmetic vs. Geometric Sequences', '2', 'A sequence is a list of numbers following a rule. **Arithmetic** = you *add* the same number each step (constant difference). **Geometric** = you *multiply* by the same number each step (constant ratio). Arithmetic ↔ linear; geometric ↔ exponential.', 27, 40, 1),
-  ('2.2', 'ap_precalc', 'Linear vs. Exponential Change (the core distinction)', '2', 'Linear functions change by a **constant amount** over equal-length input intervals (add the same thing). Exponential functions change by a **constant proportion/ratio** (multiply by the same factor). This is the #1 conceptual idea the exam tests — including FRQ Q1 2025, which asked students to identify a table as exponential by checking ratios.', 27, 40, 1),
-  ('2.3', 'ap_precalc', 'Exponential Functions: Growth, Decay, Base, Transformations', '2', '$f(x) = a\cdot b^{x}$. Here $a$ = initial value (y-intercept, the value at $x=0$), $b$ = base = the growth/decay factor. $b>1$ → **growth**; $0<b<1$ → **decay**. The graph has a **horizontal asymptote** (default $y=0$).', 27, 40, 1),
-  ('2.4', 'ap_precalc', 'Function Composition', '2', '$(f\circ g)(x) = f(g(x))$ — do the **inside first**, feed its output into the outside function. Order matters; $f(g(x)) \neq g(f(x))$ in general.', 27, 40, 1),
-  ('2.5', 'ap_precalc', 'Inverse Functions', '2', 'The inverse $f^{-1}$ undoes $f$: it swaps inputs and outputs. If $(a,b)$ is on $f$, then $(b,a)$ is on $f^{-1}$. A function has an inverse only if it''s **one-to-one** (passes the horizontal line test). To find it algebraically: swap $x$ and $y$, solve for $y$.', 27, 40, 1),
-  ('2.6', 'ap_precalc', 'Logarithmic Functions & Graphs', '2', 'A log answers "what exponent?" $\log_b x = y$ means $b^y = x$. It''s the inverse of $b^x$. $\log$ (no base) = base 10; $\ln$ = base $e$.', 27, 40, 1),
-  ('2.7', 'ap_precalc', 'Properties / Rules of Logs (the FRQ Q4 bread-and-butter)', '2', 'Three rules turn products into sums, quotients into differences, and exponents into coefficients. Used to **condense** to a single log or **expand** — both directions appear on FRQ Q4.', 27, 40, 1),
-  ('2.8', 'ap_precalc', 'Solving Exponential & Logarithmic Equations', '2', 'To solve for a variable in an exponent, take a log of both sides. To solve a log equation, exponentiate (rewrite in exponential form) — then **check for extraneous solutions** (domain!).', 27, 40, 1),
-  ('2.9', 'ap_precalc', 'Exponential & Logarithmic Modeling', '2', 'Fit a model to data/context, then use it to predict or interpret. **Exponential model** $y=ab^t$ when there''s a constant percent rate. **Logarithmic model** $y=a+b\ln(t+c)$ when growth is fast-then-leveling. This is FRQ Q2 territory (the second-hardest FRQ).', 27, 40, 1),
+  ('2.1', 'ap_precalc', 'Arithmetic vs. Geometric Sequences', '2', 'A sequence is a list of numbers following a rule. **Arithmetic** = you *add* the same number each step (constant difference). **Geometric** = you *multiply* by the same number each step (constant ratio). Arithmetic ↔ linear; geometric ↔ exponential.', 25, 40, 1),
+  ('2.2', 'ap_precalc', 'Linear vs. Exponential Change (the core distinction)', '2', 'Linear functions change by a **constant amount** over equal-length input intervals (add the same thing). Exponential functions change by a **constant proportion/ratio** (multiply by the same factor). This is the #1 conceptual idea the exam tests — including FRQ Q1 2025, which asked students to identify a table as exponential by checking ratios.', 25, 40, 1),
+  ('2.3', 'ap_precalc', 'Exponential Functions: Growth, Decay, Base, Transformations', '2', '$f(x) = a\cdot b^{x}$. Here $a$ = initial value (y-intercept, the value at $x=0$), $b$ = base = the growth/decay factor. $b>1$ → **growth**; $0<b<1$ → **decay**. The graph has a **horizontal asymptote** (default $y=0$).', 25, 40, 1),
+  ('2.4', 'ap_precalc', 'Function Composition', '2', '$(f\circ g)(x) = f(g(x))$ — do the **inside first**, feed its output into the outside function. Order matters; $f(g(x)) \neq g(f(x))$ in general.', 25, 40, 1),
+  ('2.5', 'ap_precalc', 'Inverse Functions', '2', 'The inverse $f^{-1}$ undoes $f$: it swaps inputs and outputs. If $(a,b)$ is on $f$, then $(b,a)$ is on $f^{-1}$. A function has an inverse only if it''s **one-to-one** (passes the horizontal line test). To find it algebraically: swap $x$ and $y$, solve for $y$.', 25, 40, 1),
+  ('2.6', 'ap_precalc', 'Logarithmic Functions & Graphs', '2', 'A log answers "what exponent?" $\log_b x = y$ means $b^y = x$. It''s the inverse of $b^x$. $\log$ (no base) = base 10; $\ln$ = base $e$.', 25, 40, 1),
+  ('2.7', 'ap_precalc', 'Properties / Rules of Logs (the FRQ Q4 bread-and-butter)', '2', 'Three rules turn products into sums, quotients into differences, and exponents into coefficients. Used to **condense** to a single log or **expand** — both directions appear on FRQ Q4.', 25, 40, 1),
+  ('2.8', 'ap_precalc', 'Solving Exponential & Logarithmic Equations', '2', 'To solve for a variable in an exponent, take a log of both sides. To solve a log equation, exponentiate (rewrite in exponential form) — then **check for extraneous solutions** (domain!).', 25, 40, 1),
+  ('2.9', 'ap_precalc', 'Exponential & Logarithmic Modeling', '2', 'Fit a model to data/context, then use it to predict or interpret. **Exponential model** $y=ab^t$ when there''s a constant percent rate. **Logarithmic model** $y=a+b\ln(t+c)$ when growth is fast-then-leveling. This is FRQ Q2 territory (the second-hardest FRQ).', 25, 40, 1),
   ('2.10', 'ap_precalc', 'Semi-Log Plots (Linearizing Data)', '2', 'A **semi-log plot** puts the y-axis on a **log scale** (and x linear). On this plot, **exponential data becomes a straight line.** That''s the whole point: it''s a visual test for "is this exponential?"
 
-> **Exam scope (important):** On the AP exam, semi-log means the **log scale is on the y-axis ONLY, to linearize EXPONENTIAL data.** Putting the *x*-axis on a log scale (to linearize logarithmic data) and full **log-log** plots are **OUT of scope** — don''t study them. The exam writes the linearized form as $y=(\log_n b)x+\log_n a$ for a log base $n>1$.', 27, 40, 1),
+> **Exam scope (important):** On the AP exam, semi-log means the **log scale is on the y-axis ONLY, to linearize EXPONENTIAL data.** Putting the *x*-axis on a log scale (to linearize logarithmic data) and full **log-log** plots are **OUT of scope** — don''t study them. The exam writes the linearized form as $y=(\log_n b)x+\log_n a$ for a log base $n>1$.', 25, 40, 1),
   ('2.11', 'ap_precalc', 'Model Error & Residuals (EK 2.6.B — easy points the exam likes)', '2', 'Once you fit a model, you judge how good it is.
 - **Error (residual)** at a point = **predicted − actual** value. Positive error = the model **overestimates** there; negative = **underestimates**.
 - **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*
-- **Context can make an over- or under-estimate preferable.** The exam may ask which is "better" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn''t a universal "right" choice, it depends on the scenario. Justify with the context.', 27, 40, 1),
+- **Context can make an over- or under-estimate preferable.** The exam may ask which is "better" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn''t a universal "right" choice, it depends on the scenario. Justify with the context.', 25, 40, 1),
   ('3.1', 'ap_precalc', 'Radians & the unit circle (the foundation — memorize cold)', '3', 'A radian measures angle by arc length on a circle of radius 1. Once around = 2π radians = 360°. On the unit circle, the point at angle θ is **(cos θ, sin θ)**.', 30, 35, 1),
   ('3.2', 'ap_precalc', 'Sinusoidal functions: amplitude, period, midline, phase shift', '3', 'Sine and cosine make repeating "waves." Four numbers fully describe any wave.', 30, 35, 1),
   ('3.3', 'ap_precalc', 'The five key points + midline, over TWO cycles (FRQ Q3 **Part A** — scorable points you can''t skip)', '3', 'The five key points + midline, over TWO cycles (FRQ Q3 **Part A** — scorable points you can''t skip)', 30, 35, 1),
@@ -1666,31 +1666,838 @@ for (int i = 1; i < readings.length; i++) {
 }
 System.out.println(best);
 ```', '{"A":"25","B":"12","C":"4","D":"92"}', 'A', NULL, 'Accessing the data set one element at a time and keeping the largest seen so far: `best` rises 12 → 25 and stays (the second 25 is not strictly greater) → `25`. (B) is only the seed; (C) is the last element; (D) is the sum, not the max.', NULL, NULL, NULL),
+  ('csa-frq-q1-p1', 'ap_csa', '1.15', '1', NULL, 'frq', 'A `TripLog` class records the distances (in whole miles) of trips. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:
+
+```java
+/** Returns the distance in miles of the trip with the given id.
+ *  Precondition: 1 <= id <= tripCount().
+ */
+public static int distanceOf(int id) { /* implementation not shown */ }
+
+/** Returns the total number of trips recorded (>= 0). */
+public static int tripCount() { /* implementation not shown */ }
+```
+
+**Part A (4 points).** Write `countLongTrips`, which returns how many recorded trips have a distance **strictly greater than** `minMiles`. Trips are numbered `1` through `tripCount()` inclusive. Use the provided methods.
+
+```java
+/** Returns the number of trips whose distance is strictly greater than minMiles.
+ *  Precondition: minMiles >= 0.
+ */
+public static int countLongTrips(int minMiles) {
+    /* to be implemented in Part A */
+}
+```
+
+For example, if there are 4 trips with distances 12, 5, 30, 8 and `minMiles` is `10`, then `countLongTrips(10)` returns `2` (the 12 and the 30).
+
+**Part B (3 points).** A trip label has the form `"CODE:miles"` — a route code, a colon, then the miles, for example `"NORTH:42"`. Write `routeCode`, which returns the portion **before the first colon**. If the label contains no colon, return the label unchanged. You may assume `label` is not `null`.
+
+```java
+/** Returns the substring of label before the first '':'' , or all of label if there is no '':'' .
+ *  Precondition: label is not null.
+ */
+public static String routeCode(String label) {
+    /* to be implemented in Part B */
+}
+```
+
+For example, `routeCode("NORTH:42")` returns `"NORTH"`, and `routeCode("LOCAL")` returns `"LOCAL"`.', NULL, NULL, NULL, '```java
+public static int countLongTrips(int minMiles) {
+    int count = 0;
+    for (int id = 1; id <= tripCount(); id++) {
+        if (distanceOf(id) > minMiles) {
+            count++;
+        }
+    }
+    return count;
+}
+
+public static String routeCode(String label) {
+    int colon = label.indexOf(":");
+    if (colon == -1) {
+        return label;
+    }
+    return label.substring(0, colon);
+}
+```
+
+**Trace check.** Part A: distances 12,5,30,8, `minMiles=10` → ids 1..4; `12>10` ✔ (count 1), `5>10` ✘, `30>10` ✔ (count 2), `8>10` ✘ → returns **2**. ✓ Part B: `"NORTH:42"` → `indexOf(":")=5`, `substring(0,5)="NORTH"` ✓; `"LOCAL"` → `indexOf(":")=-1` → returns `"LOCAL"` ✓. Points sum **4 + 3 = 7**. Every rubric line is satisfied by the sample (helpers are *called*, bounds inclusive, `>` strict, `-1` guard present, `substring` bounds correct).', '{"question_type":"Q1","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[{"label":"Part A","method":"countLongTrips","points":4},{"label":"Part B","method":"routeCode","points":3}],"criteria":[{"point":1,"part":"Part A","criterion":"Declares and initializes a counter to 0"},{"point":2,"part":"Part A","criterion":"Loops over trip ids `1` through `tripCount()` **inclusive** (correct bounds: `id <= tripCount()`)"},{"point":3,"part":"Part A","criterion":"Calls the provided `distanceOf(id)` and tests it **strictly greater than** `minMiles` (`> minMiles`, not `>=`) — does not re-implement distance lookup"},{"point":4,"part":"Part A","criterion":"Increments the counter on a match and returns the count"},{"point":5,"part":"Part B","criterion":"Finds the first colon with `indexOf(\":\")` and stores/uses the result"},{"point":6,"part":"Part B","criterion":"Handles \"no colon\" (`indexOf` returns `-1`) by returning `label` unchanged"},{"point":7,"part":"Part B","criterion":"When a colon exists, returns `label.substring(0, colon)` with correct bounds"}]}', NULL, NULL),
+  ('csa-frq-q1-p2', 'ap_csa', '1.15', '1', NULL, 'frq', '**Part A (4 points).** Write `digitSum`, which returns the sum of the decimal digits of a non-negative integer `n` by extracting one digit at a time. For example, `digitSum(2025)` returns `9` (2+0+2+5). `digitSum(0)` returns `0`.
+
+```java
+/** Returns the sum of the decimal digits of n.
+ *  Precondition: n >= 0.
+ */
+public static int digitSum(int n) {
+    /* to be implemented in Part A */
+}
+```
+
+**Part B (3 points).** A username/host string has the form `"user@host"`. Write `hasHost`, which returns `true` if the part **after the first `@`** equals the String `host` (exact, case-sensitive match), and `false` otherwise. If there is no `@`, return `false`. You may assume `s` and `host` are not `null`.
+
+```java
+/** Returns true iff the part of s after the first ''@'' equals host exactly.
+ *  Returns false if s contains no ''@''. Precondition: s and host are not null.
+ */
+public static boolean hasHost(String s, String host) {
+    /* to be implemented in Part B */
+}
+```
+
+For example, `hasHost("amy@apcsa.org", "apcsa.org")` returns `true`; `hasHost("amy@gmail.com", "apcsa.org")` returns `false`; `hasHost("nobody", "apcsa.org")` returns `false`.', NULL, NULL, NULL, '```java
+public static int digitSum(int n) {
+    int sum = 0;
+    while (n > 0) {
+        sum += n % 10;
+        n = n / 10;
+    }
+    return sum;
+}
+
+public static boolean hasHost(String s, String host) {
+    int at = s.indexOf("@");
+    if (at == -1) {
+        return false;
+    }
+    String after = s.substring(at + 1);
+    return after.equals(host);
+}
+```
+
+**Trace check.** Part A: `digitSum(2025)` → sum 0; 2025%10=5 (sum 5, n=202), 202%10=2 (sum 7, n=20), 20%10=0 (sum 7, n=2), 2%10=2 (sum 9, n=0) → loop ends → **9** ✓. `digitSum(0)` → `0>0` false → returns **0** ✓. Part B: `"amy@apcsa.org"` → `at=3`, `substring(4)="apcsa.org"`, `.equals("apcsa.org")` → **true** ✓; `"nobody"` → `at=-1` → **false** ✓. Points sum **4 + 3 = 7**. The String comparison uses `.equals` (no `==` penalty); `substring(at+1)` has correct bounds; no `charAt` anywhere.', '{"question_type":"Q1","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[{"label":"Part A","method":"digitSum","points":4},{"label":"Part B","method":"hasHost","points":3}],"criteria":[{"point":1,"part":"Part A","criterion":"Declares and initializes an accumulator (`sum`) to 0"},{"point":2,"part":"Part A","criterion":"Loops while there are digits left (`while (n > 0)` or equivalent) — handles `n == 0` correctly by returning 0 (loop body never runs)"},{"point":3,"part":"Part A","criterion":"Extracts the last digit with `n % 10` and adds it to the accumulator"},{"point":4,"part":"Part A","criterion":"Removes the last digit with `n = n / 10` (integer division) and returns the accumulated sum"},{"point":5,"part":"Part B","criterion":"Finds the first `@` with `indexOf(\"@\")` and handles \"no `@`\" by returning `false`"},{"point":6,"part":"Part B","criterion":"Extracts the part after the `@` with `substring(at + 1)` (correct off-by-one: `at + 1`, not `at`)"},{"point":7,"part":"Part B","criterion":"Compares to `host` with `.equals(...)` (NOT `==`) and returns the boolean result"}]}', NULL, NULL),
+  ('csa-frq-q1-p3', 'ap_csa', '1.15', '1', NULL, 'frq', 'A `Roster` provides two **already-written** helper methods you must call:
+
+```java
+/** Returns the name of the student at position i.  Precondition: 0 <= i < size(). */
+public String nameAt(int i) { /* implementation not shown */ }
+
+/** Returns the number of students on the roster (>= 0). */
+public int size() { /* implementation not shown */ }
+```
+
+**Part A (4 points).** Write the instance method `countStartingWith`, which returns how many student names **begin with** the one-character String `letter`. You may assume every name has length ≥ 1 and `letter` has length 1.
+
+```java
+/** Returns the number of names on the roster whose first character equals letter.
+ *  Precondition: letter has length 1; every name has length >= 1.
+ */
+public int countStartingWith(String letter) {
+    /* to be implemented in Part A */
+}
+```
+
+For example, if the roster is `["Ana", "Ben", "Amir", "Cleo"]` and `letter` is `"A"`, the method returns `2`.
+
+**Part B (3 points).** Write the instance method `initials`, which returns a String made of the **first character of every name on the roster, in order**, with nothing between them. For the roster above, `initials()` returns `"ABAC"`.
+
+```java
+/** Returns the first character of every name, concatenated in roster order. */
+public String initials() {
+    /* to be implemented in Part B */
+}
+```', NULL, NULL, NULL, '```java
+public int countStartingWith(String letter) {
+    int count = 0;
+    for (int i = 0; i < size(); i++) {
+        String first = nameAt(i).substring(0, 1);
+        if (first.equals(letter)) {
+            count++;
+        }
+    }
+    return count;
+}
+
+public String initials() {
+    String result = "";
+    for (int i = 0; i < size(); i++) {
+        result += nameAt(i).substring(0, 1);
+    }
+    return result;
+}
+```
+
+**Trace check.** Part A: roster `["Ana","Ben","Amir","Cleo"]`, `letter="A"` → `"A".equals("A")`✔ (1), `"B"`✘, `"A"`✔ (2), `"C"`✘ → **2** ✓. Part B: `"" + "A" + "B" + "A" + "C"` → `"ABAC"` ✓. Points sum **4 + 3 = 7**. First-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); bounds are `< size()` (no off-by-one).', '{"question_type":"Q1","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[{"label":"Part A","method":"countStartingWith","points":4},{"label":"Part B","method":"initials","points":3}],"criteria":[{"point":1,"part":"Part A","criterion":"Declares and initializes a counter to 0"},{"point":2,"part":"Part A","criterion":"Loops over all positions `0` through `size() - 1` (correct bounds: `i < size()`), calling the provided `nameAt(i)`"},{"point":3,"part":"Part A","criterion":"Gets the first character as a one-char String with `substring(0, 1)` (NOT `charAt`)"},{"point":4,"part":"Part A","criterion":"Compares with `.equals(letter)` (NOT `==`), increments on a match, and returns the count"},{"point":5,"part":"Part B","criterion":"Initializes an accumulator String (e.g., `\"\"`) and traverses all names with correct bounds"},{"point":6,"part":"Part B","criterion":"Extracts each name''s first character with `substring(0, 1)` and concatenates it onto the accumulator"},{"point":7,"part":"Part B","criterion":"Returns the assembled String"}]}', NULL, NULL),
+  ('csa-frq-q1-p4', 'ap_csa', '1.15', '1', NULL, 'frq', 'A `ScoreCard` class works with comma-delimited records. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:
+
+```java
+/** Returns the score recorded for round number r.
+ *  Precondition: 1 <= r <= roundCount().
+ */
+public static int scoreOf(int r) { /* implementation not shown */ }
+
+/** Returns the total number of rounds recorded (>= 0). */
+public static int roundCount() { /* implementation not shown */ }
+```
+
+**Part A (4 points).** Write `totalScore`, which returns the sum of the scores over all recorded rounds. Rounds are numbered `1` through `roundCount()` inclusive. Use the provided methods.
+
+```java
+/** Returns the sum of the scores of all recorded rounds.
+ *  Returns 0 if there are no rounds.
+ */
+public static int totalScore() {
+    /* to be implemented in Part A */
+}
+```
+
+For example, if there are 4 rounds with scores 10, 25, 0, 7, then `totalScore()` returns `42`.
+
+**Part B (3 points).** A player record is a single String of the form `"name,score,score,score"` — a name, then one or more whole-number scores, all separated by commas, for example `"Ana,10,25,7"`. Write `recordTotal`, which returns the **sum of the numeric scores** in the record (the name is **not** a number and must be skipped). You may assume `record` is not `null`, contains at least the name and one score, and that every field after the name parses as an `int`.
+
+```java
+/** Returns the sum of the numeric scores in record, which has the form
+ *  "name,score,score,...". The first field (name) is skipped.
+ *  Precondition: record is not null and has the form above with >= 1 score.
+ */
+public static int recordTotal(String record) {
+    /* to be implemented in Part B */
+}
+```
+
+For example, `recordTotal("Ana,10,25,7")` returns `42`, and `recordTotal("Bo,5")` returns `5`.', NULL, NULL, NULL, '```java
+public static int totalScore() {
+    int sum = 0;
+    for (int r = 1; r <= roundCount(); r++) {
+        sum += scoreOf(r);
+    }
+    return sum;
+}
+
+public static int recordTotal(String record) {
+    String[] parts = record.split(",");
+    int sum = 0;
+    for (int i = 1; i < parts.length; i++) {
+        sum += Integer.parseInt(parts[i]);
+    }
+    return sum;
+}
+```
+
+**Trace check.** Part A: scores 10,25,0,7 → sum 0; r=1 +10 (10), r=2 +25 (35), r=3 +0 (35), r=4 +7 (42) → returns **42** ✓. Part B: `"Ana,10,25,7"` → `split(",")` = `["Ana","10","25","7"]`, length 4; i=1 `parseInt("10")`=10 (sum 10), i=2 `parseInt("25")`=25 (sum 35), i=3 `parseInt("7")`=7 (sum 42) → returns **42** ✓; `"Bo,5"` → `["Bo","5"]`, i=1 +5 → **5** ✓. Points sum **4 + 3 = 7**. The split delimiter `","` is a literal (no regex metacharacter — in-scope); the loop starts at 1 to skip the name; `Integer.parseInt` is on the Quick Reference.', '{"question_type":"Q1","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[{"label":"Part A","method":"totalScore","points":4},{"label":"Part B","method":"recordTotal","points":3}],"criteria":[{"point":1,"part":"Part A","criterion":"Declares and initializes an accumulator to 0 (returns 0 when there are no rounds)"},{"point":2,"part":"Part A","criterion":"Loops over round numbers `1` through `roundCount()` **inclusive** (correct bounds: `r <= roundCount()`)"},{"point":3,"part":"Part A","criterion":"Calls the provided `scoreOf(r)` (does not re-implement the score lookup)"},{"point":4,"part":"Part A","criterion":"Adds each score to the accumulator and returns the sum"},{"point":5,"part":"Part B","criterion":"Splits `record` on `\",\"` with `split(\",\")` into a `String[]`"},{"point":6,"part":"Part B","criterion":"Traverses the score fields, **starting at index 1** to skip the name (correct off-by-one: `i = 1`, not `i = 0`), with correct bounds `i < parts.length`"},{"point":7,"part":"Part B","criterion":"Converts each score field with `Integer.parseInt(parts[i])`, accumulates the sum, and returns it"}]}', NULL, NULL),
+  ('csa-frq-q1-p5', 'ap_csa', '1.15', '1', NULL, 'frq', 'A `WordList` class works with a list of words. Two static helper methods are provided and **already written** — you must **call** them, not re-implement them:
+
+```java
+/** Returns the word at position i.  Precondition: 0 <= i < wordCount(). */
+public static String wordAt(int i) { /* implementation not shown */ }
+
+/** Returns the number of words (>= 1). */
+public static int wordCount() { /* implementation not shown */ }
+```
+
+**Part A (4 points).** Write `countBefore`, which returns how many words come **strictly before** the String `target` in alphabetical (lexicographic) order. A word `w` comes before `target` when `w.compareTo(target)` is **negative**. Words are numbered `0` through `wordCount() - 1`. Use the provided methods.
+
+```java
+/** Returns the number of words that come strictly before target lexicographically.
+ *  Precondition: target is not null.
+ */
+public static int countBefore(String target) {
+    /* to be implemented in Part A */
+}
+```
+
+For example, if the words are `"pear", "apple", "mango", "kiwi"` and `target` is `"mango"`, the method returns `2` (`"apple"` and `"kiwi"` come before `"mango"`; `"pear"` does not, and `"mango"` is not strictly before itself).
+
+**Part B (3 points).** Write `alphabeticallyFirst`, which returns the word that comes **first** in lexicographic order among all the words. You may assume there is at least one word. Use the provided methods.
+
+```java
+/** Returns the lexicographically smallest word among all words.
+ *  Precondition: wordCount() >= 1.
+ */
+public static String alphabeticallyFirst() {
+    /* to be implemented in Part B */
+}
+```
+
+For the words above, `alphabeticallyFirst()` returns `"apple"`.', NULL, NULL, NULL, '```java
+public static int countBefore(String target) {
+    int count = 0;
+    for (int i = 0; i < wordCount(); i++) {
+        if (wordAt(i).compareTo(target) < 0) {
+            count++;
+        }
+    }
+    return count;
+}
+
+public static String alphabeticallyFirst() {
+    String first = wordAt(0);
+    for (int i = 1; i < wordCount(); i++) {
+        if (wordAt(i).compareTo(first) < 0) {
+            first = wordAt(i);
+        }
+    }
+    return first;
+}
+```
+
+**Trace check.** Part A: words `"pear","apple","mango","kiwi"`, `target="mango"` → `"pear".compareTo("mango")` is positive ✘; `"apple".compareTo("mango")` negative ✔ (1); `"mango".compareTo("mango")` is 0, not `< 0` ✘; `"kiwi".compareTo("mango")` negative ✔ (2) → returns **2** ✓. Part B: first=`"pear"`; i=1 `"apple".compareTo("pear")`<0 ✔ first=`"apple"`; i=2 `"mango".compareTo("apple")` positive ✘; i=3 `"kiwi".compareTo("apple")` positive ✘ → returns **"apple"** ✓. Points sum **4 + 3 = 7**. `compareTo` is on the Quick Reference; strict-before uses `< 0` (excludes equal words); the running min is seeded from `wordAt(0)` so it is always a real word.', '{"question_type":"Q1","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (applies to every rubric below): each point is awarded independently; minor syntax slips are forgiven when intent is clear; but **`==` on Strings, using `charAt`, wrong `substring` bounds, off-by-one loop bounds, and re-implementing a provided method DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[{"label":"Part A","method":"countBefore","points":4},{"label":"Part B","method":"alphabeticallyFirst","points":3}],"criteria":[{"point":1,"part":"Part A","criterion":"Declares and initializes a counter to 0"},{"point":2,"part":"Part A","criterion":"Loops over all positions `0` through `wordCount() - 1` (correct bounds: `i < wordCount()`), calling the provided `wordAt(i)`"},{"point":3,"part":"Part A","criterion":"Compares with `compareTo`, testing **strictly before** as `wordAt(i).compareTo(target) < 0` (negative, not `<= 0`)"},{"point":4,"part":"Part A","criterion":"Increments the counter on a match and returns the count"},{"point":5,"part":"Part B","criterion":"Seeds the running \"first\" word from a **real word** (`wordAt(0)`), not from `\"\"` or `null`"},{"point":6,"part":"Part B","criterion":"Traverses the remaining words and uses `wordAt(i).compareTo(first) < 0` to detect a word that comes earlier, updating `first` when so"},{"point":7,"part":"Part B","criterion":"Returns the lexicographically first word"}]}', NULL, NULL),
+  ('csa-frq-q2-p1', 'ap_csa', '1.13', '1', NULL, 'frq', 'Design a complete class named `Locker` that meets this specification:
+
+- It stores three pieces of state: an **id number** (whole number), a **combination** (a String), and whether the locker is currently **occupied** (`true`/`false`).
+- A constructor takes the id and the combination (in that order) and initializes the locker as **not occupied**.
+- An accessor `getId()` returns the id number.
+- A method `unlock(String attempt)` returns `true` if `attempt` matches the stored combination (exact match) and `false` otherwise. **Unlocking does not change any state.**
+- A mutator `assign()` sets the locker to occupied.
+- A method `isAvailable()` returns `true` if the locker is **not** occupied, and `false` otherwise.
+
+Write the **entire class**, including the necessary instance variables, following encapsulation conventions.', NULL, NULL, NULL, '```java
+public class Locker {
+    private int id;
+    private String combination;
+    private boolean occupied;
+
+    public Locker(int idNumber, String combo) {
+        id = idNumber;
+        combination = combo;
+        occupied = false;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public boolean unlock(String attempt) {
+        return attempt.equals(combination);
+    }
+
+    public void assign() {
+        occupied = true;
+    }
+
+    public boolean isAvailable() {
+        return !occupied;
+    }
+}
+```
+
+**Trace check.** `new Locker(7, "1234")` → id 7, combination "1234", occupied false. `getId()` → **7** ✓. `unlock("0000")` → `"0000".equals("1234")` → **false**, state unchanged ✓. `isAvailable()` → `!false` → **true** ✓. `assign()` → occupied true; now `isAvailable()` → `!true` → **false** ✓. All fields `private`; class/constructor `public`; String compared with `.equals`. Points sum **7**.', '{"question_type":"Q2","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Class header `public class Locker` **and** all instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this)"},{"point":2,"part":null,"criterion":"Three instance variables of the correct types: `int` id, `String` combination, `boolean` occupied"},{"point":3,"part":null,"criterion":"`public` constructor with two parameters in the order (id, combination) that initializes id and combination from them"},{"point":4,"part":null,"criterion":"Constructor initializes `occupied` to `false` (initializes **all** state, including the field not passed in)"},{"point":5,"part":null,"criterion":"Accessor `getId()` is non-`void` and returns the id"},{"point":6,"part":null,"criterion":"`unlock(String attempt)` compares with `.equals` (NOT `==`), returns the boolean, and does not modify state; `assign()` is `void` and sets occupied to `true`"},{"point":7,"part":null,"criterion":"`isAvailable()` returns `!occupied` (correct boolean — `true` exactly when not occupied)"}]}', NULL, NULL),
+  ('csa-frq-q2-p2', 'ap_csa', '1.13', '1', NULL, 'frq', 'Design a complete class named `Player` that meets this specification:
+
+- It stores three pieces of state: a **name** (String), the player''s **score** (whole number, starts at 0), and the number of **lives** (whole number).
+- A constructor takes the name and the starting number of lives (in that order). The score always starts at `0`.
+- An accessor `getScore()` returns the current score.
+- A mutator `addPoints(int p)` adds `p` to the score (you may assume `p >= 0`).
+- A method `loseLife()` reduces the number of lives by 1, but **never below 0** (if lives is already 0 it stays 0).
+- A method `isOut()` returns `true` if the player has `0` lives left, `false` otherwise.
+
+Write the **entire class**, including the instance variables, following encapsulation conventions.', NULL, NULL, NULL, '```java
+public class Player {
+    private String name;
+    private int score;
+    private int lives;
+
+    public Player(String playerName, int startLives) {
+        name = playerName;
+        lives = startLives;
+        score = 0;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void addPoints(int p) {
+        score += p;
+    }
+
+    public void loseLife() {
+        if (lives > 0) {
+            lives--;
+        }
+    }
+
+    public boolean isOut() {
+        return lives == 0;
+    }
+}
+```
+
+**Trace check.** `new Player("Sam", 2)` → name "Sam", lives 2, score 0. `addPoints(10)` → score 10; `getScore()` → **10** ✓. `loseLife()` → lives 1; `loseLife()` → lives 0; `loseLife()` → `0 > 0` false, stays **0** ✓ (never negative). `isOut()` → `0 == 0` → **true** ✓. All fields `private`; constructor sets the non-parameter field (`score`) too. Points sum **7**.', '{"question_type":"Q2","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Class header `public class Player` **and** all instance variables declared `private` (encapsulation point)"},{"point":2,"part":null,"criterion":"Three instance variables of correct types: `String` name, `int` score, `int` lives"},{"point":3,"part":null,"criterion":"`public` constructor with two parameters in the order (name, lives) that initializes name and lives from them"},{"point":4,"part":null,"criterion":"Constructor initializes `score` to `0` (initializes all state, including the field not passed in)"},{"point":5,"part":null,"criterion":"Accessor `getScore()` returns the score; mutator `addPoints(int p)` is `void` and adds `p` to the score"},{"point":6,"part":null,"criterion":"`loseLife()` decrements lives **only when `lives > 0`** (guards against going below 0)"},{"point":7,"part":null,"criterion":"`isOut()` returns `lives == 0` (correct boolean)"}]}', NULL, NULL),
+  ('csa-frq-q2-p3', 'ap_csa', '1.13', '1', NULL, 'frq', 'Design a complete class named `Sensor` that meets this specification:
+
+- It stores three pieces of state: a **label** (String), the **latest reading** (a `double`), and an **alert threshold** (a `double`).
+- A constructor takes the label and the threshold (in that order). The latest reading starts at `0.0`.
+- An accessor `getReading()` returns the latest reading.
+- A mutator `record(double value)` stores `value` as the latest reading.
+- A method `isAlerting()` returns `true` if the **absolute value** of the latest reading is **greater than or equal to** the threshold, and `false` otherwise.
+- A method `sameLabel(String other)` returns `true` if `other` matches this sensor''s label exactly.
+
+Write the **entire class**, including the instance variables, following encapsulation conventions.', NULL, NULL, NULL, '```java
+public class Sensor {
+    private String label;
+    private double reading;
+    private double threshold;
+
+    public Sensor(String sensorLabel, double alertThreshold) {
+        label = sensorLabel;
+        threshold = alertThreshold;
+        reading = 0.0;
+    }
+
+    public double getReading() {
+        return reading;
+    }
+
+    public void record(double value) {
+        reading = value;
+    }
+
+    public boolean isAlerting() {
+        return Math.abs(reading) >= threshold;
+    }
+
+    public boolean sameLabel(String other) {
+        return label.equals(other);
+    }
+}
+```
+
+**Trace check.** `new Sensor("temp", 5.0)` → label "temp", threshold 5.0, reading 0.0. `getReading()` → **0.0** ✓. `record(-7.2)` → reading −7.2; `isAlerting()` → `Math.abs(-7.2)=7.2 >= 5.0` → **true** ✓. `record(3.0)` → `Math.abs(3.0)=3.0 >= 5.0` → **false** ✓. `sameLabel("temp")` → `"temp".equals("temp")` → **true** ✓. `Math.abs(double)` is on the Quick Reference; label compared with `.equals`. Points sum **7**.', '{"question_type":"Q2","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Class header `public class Sensor` **and** all instance variables declared `private` (encapsulation point)"},{"point":2,"part":null,"criterion":"Three instance variables of correct types: `String` label, `double` reading, `double` threshold"},{"point":3,"part":null,"criterion":"`public` constructor with two parameters in the order (label, threshold) that initializes those two fields"},{"point":4,"part":null,"criterion":"Constructor initializes `reading` to `0.0` (initializes the field not passed in)"},{"point":5,"part":null,"criterion":"Accessor `getReading()` returns the reading; mutator `record(double value)` is `void` and stores `value`"},{"point":6,"part":null,"criterion":"`isAlerting()` uses `Math.abs(reading)` and returns whether it is `>= threshold` (correct boolean and correct comparison direction)"},{"point":7,"part":null,"criterion":"`sameLabel(String other)` compares with `.equals` (NOT `==`) and returns the boolean"}]}', NULL, NULL),
+  ('csa-frq-q2-p4', 'ap_csa', '1.13', '1', NULL, 'frq', 'Design a complete class named `Roster` that meets this specification:
+
+- It stores two pieces of state: a **team name** (String) and a **list of member names** (an `ArrayList<String>`).
+- A constructor takes the team name. The list of members starts **empty**.
+- An accessor `getTeamName()` returns the team name.
+- A mutator `addMember(String name)` adds `name` to the end of the member list.
+- A method `size()` returns how many members are currently on the roster.
+- A method `countStartingWith(String letter)` returns how many member names **begin with** the one-character String `letter`. You may assume every member name has length ≥ 1 and `letter` has length 1.
+
+Write the **entire class**, including the instance variables, following encapsulation conventions.', NULL, NULL, NULL, '```java
+public class Roster {
+    private String teamName;
+    private ArrayList<String> members;
+
+    public Roster(String name) {
+        teamName = name;
+        members = new ArrayList<String>();
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void addMember(String name) {
+        members.add(name);
+    }
+
+    public int size() {
+        return members.size();
+    }
+
+    public int countStartingWith(String letter) {
+        int count = 0;
+        for (int i = 0; i < members.size(); i++) {
+            String first = members.get(i).substring(0, 1);
+            if (first.equals(letter)) {
+                count++;
+            }
+        }
+        return count;
+    }
+}
+```
+
+**Trace check.** `new Roster("Hawks")` → teamName "Hawks", members `[]`. `addMember("Ana")`, `addMember("Ben")`, `addMember("Amir")` → members `["Ana","Ben","Amir"]`; `size()` → **3** ✓. `getTeamName()` → **"Hawks"** ✓. `countStartingWith("A")` → `"A".equals("A")`✔ (1), `"B"`✘, `"A"`✔ (2) → **2** ✓. All fields `private`; the list is initialized to a new empty `ArrayList` in the constructor; first-character access is `substring(0,1)` (no `charAt`); equality uses `.equals` (no `==` penalty); traversal bound is `< members.size()`. Points sum **7**.', '{"question_type":"Q2","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Class header `public class Roster` **and** both instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this)"},{"point":2,"part":null,"criterion":"Two instance variables of the correct types: `String` teamName and `ArrayList<String>` members (a **collection** field, not a scalar)"},{"point":3,"part":null,"criterion":"`public` constructor taking the team name; initializes `teamName` from the parameter"},{"point":4,"part":null,"criterion":"Constructor initializes the list to a **new empty** `ArrayList<String>` (`new ArrayList<String>()`) — not left `null`, not handed an external list"},{"point":5,"part":null,"criterion":"Accessor `getTeamName()` returns the team name; mutator `addMember(String name)` is `void` and calls `members.add(name)`; `size()` returns `members.size()`"},{"point":6,"part":null,"criterion":"`countStartingWith` traverses the list with correct bounds (`i < members.size()`) using `members.get(i)`, and gets each first character with `substring(0, 1)` (NOT `charAt`)"},{"point":7,"part":null,"criterion":"`countStartingWith` compares with `.equals(letter)` (NOT `==`), increments on a match, and returns the count"}]}', NULL, NULL),
+  ('csa-frq-q2-p5', 'ap_csa', '1.13', '1', NULL, 'frq', 'Design a complete class named `BankAccount` that meets this specification:
+
+- It stores three pieces of state: an **owner name** (String), the current **balance** (a `double`), and the total number of **withdrawals** that have actually been made (a whole number).
+- A constructor takes the owner name and the opening balance (in that order). The withdrawal count always starts at `0`.
+- An accessor `getBalance()` returns the current balance.
+- A method `withdraw(double amount)` attempts to take `amount` out of the account. It withdraws **only if** there are sufficient funds — that is, only if `amount` is **less than or equal to** the current balance. When it succeeds, it subtracts `amount` from the balance, increases the withdrawal count by 1, and returns the **new balance**. When there are **not** enough funds, it changes **nothing** and returns `-1.0`. (You may assume `amount >= 0`.)
+- A method `getWithdrawalCount()` returns how many successful withdrawals have been made.
+
+Write the **entire class**, including the instance variables, following encapsulation conventions.', NULL, NULL, NULL, '```java
+public class BankAccount {
+    private String owner;
+    private double balance;
+    private int withdrawals;
+
+    public BankAccount(String ownerName, double openingBalance) {
+        owner = ownerName;
+        balance = openingBalance;
+        withdrawals = 0;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public double withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            withdrawals++;
+            return balance;
+        }
+        return -1.0;
+    }
+
+    public int getWithdrawalCount() {
+        return withdrawals;
+    }
+}
+```
+
+**Trace check.** `new BankAccount("Mia", 100.0)` → owner "Mia", balance 100.0, withdrawals 0. `getBalance()` → **100.0** ✓. `withdraw(30.0)` → `30.0 <= 100.0` true → balance 70.0, withdrawals 1, returns **70.0** ✓. `withdraw(200.0)` → `200.0 <= 70.0` false → state unchanged, returns **-1.0** ✓ (balance still 70.0, withdrawals still 1). `withdraw(70.0)` → `70.0 <= 70.0` true (boundary) → balance 0.0, withdrawals 2, returns **0.0** ✓. `getWithdrawalCount()` → **2** ✓ (the failed attempt did not count). All fields `private`; class/constructor `public`; the constructor initializes the non-parameter field (`withdrawals`); real cross-field arithmetic (`balance -= amount`) happens only under the `amount <= balance` guard; no `toString`/`equals` override. Points sum **7**.', '{"question_type":"Q2","total_points":7,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **non-`private` instance variables, `==` on String state, directly exposing fields, and wrong constructor/method headers DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Class header `public class BankAccount` **and** all instance variables declared `private` (the encapsulation point — non-`private` fields forfeit this)"},{"point":2,"part":null,"criterion":"Three instance variables of the correct types: `String` owner, `double` balance, `int` withdrawals"},{"point":3,"part":null,"criterion":"`public` constructor header with two parameters in the order (owner, opening balance) that initializes `owner` and `balance` from them"},{"point":4,"part":null,"criterion":"Constructor initializes `withdrawals` to `0` (initializes **all** state, including the field not passed in)"},{"point":5,"part":null,"criterion":"`withdraw` header is correct — `public double withdraw(double amount)` (non-`void`, returns a `double`) — and `getBalance()`/`getWithdrawalCount()` are non-`void` accessors that return the matching field"},{"point":6,"part":null,"criterion":"`withdraw` performs the **conditional update**: only when `amount <= balance` does it subtract `amount` from `balance` **and** increment `withdrawals`; on the insufficient-funds path it leaves all state unchanged"},{"point":7,"part":null,"criterion":"`withdraw` returns the **new balance** on success and `-1.0` on failure (correct return on both branches)"}]}', NULL, NULL),
+  ('csa-frq-q3-p1', 'ap_csa', '4.8', '4', NULL, 'frq', 'A `Book` element class is provided for FRQs 1 and 3 (accessors only — **call them**, do not re-implement):
+
+```java
+public class Book {
+    public String getTitle()  { /* not shown */ }
+    public String getGenre()  { /* not shown */ }
+    public int    getPages()  { /* not shown */ }
+}
+```
+
+Write `countLongBooks`, which returns the number of books in `library` with **more than** `minPages` pages.
+
+```java
+/** Returns the number of Book objects in library whose page count is greater than minPages.
+ *  Precondition: library is not null; no element is null.
+ */
+public static int countLongBooks(ArrayList<Book> library, int minPages) {
+    /* to be implemented */
+}
+```
+
+Example: if the books have 120, 400, 80, 510 pages and `minPages` is `100`, the method returns `3`.', NULL, NULL, NULL, '```java
+public static int countLongBooks(ArrayList<Book> library, int minPages) {
+    int count = 0;
+    for (int i = 0; i < library.size(); i++) {
+        if (library.get(i).getPages() > minPages) {
+            count++;
+        }
+    }
+    return count;
+}
+```
+
+**Trace check.** pages 120,400,80,510, `minPages=100` → `120>100`✔(1), `400>100`✔(2), `80>100`✘, `510>100`✔(3) → returns **3** ✓. Bounds `< size()`; `getPages()` called; `>` strict. Points sum **5**.', '{"question_type":"Q3","total_points":5,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Declares and initializes a counter to 0"},{"point":2,"part":null,"criterion":"Traverses the whole list with correct bounds — `i < library.size()` (or a correct enhanced-for over `library`, valid here since the list is not modified)"},{"point":3,"part":null,"criterion":"Accesses each element with `library.get(i)` and calls the provided `getPages()` (does not re-implement page lookup)"},{"point":4,"part":null,"criterion":"Tests **strictly greater than** `minPages` (`> minPages`, not `>=`) and increments on a match"},{"point":5,"part":null,"criterion":"Returns the count"}]}', NULL, NULL),
+  ('csa-frq-q3-p2', 'ap_csa', '4.8', '4', NULL, 'frq', 'A list of `Integer` quiz scores is given. Write `removeBelow`, which **removes every score** strictly less than `passing` from the list (modifying the list in place) and returns **how many** scores were removed.
+
+```java
+/** Removes from scores every value strictly less than passing, modifying scores in place.
+ *  Returns the number of values removed.
+ *  Precondition: scores is not null; no element is null.
+ */
+public static int removeBelow(ArrayList<Integer> scores, int passing) {
+    /* to be implemented */
+}
+```
+
+Example: if `scores` is `[70, 40, 88, 55, 90]` and `passing` is `60`, then after the call `scores` is `[70, 88, 90]` and the method returns `2`.', NULL, NULL, NULL, '```java
+public static int removeBelow(ArrayList<Integer> scores, int passing) {
+    int removed = 0;
+    for (int i = scores.size() - 1; i >= 0; i--) {
+        if (scores.get(i) < passing) {
+            scores.remove(i);
+            removed++;
+        }
+    }
+    return removed;
+}
+```
+
+**Why backward?** Removing element `i` shifts every later element left by one. A forward loop (`i++`) would then skip the element that slid into index `i`. Traversing from `size() - 1` down to `0` means every index you still have to visit is *below* the one you just removed, so nothing shifts out from under you.
+
+**Equivalent forward pattern** (also full credit on points 2–4): use a `while` loop and increment the index **only when you do not remove** —
+```java
+int i = 0;
+while (i < scores.size()) {
+    if (scores.get(i) < passing) { scores.remove(i); removed++; }
+    else { i++; }
+}
+```
+
+**Trace check.** `[70,40,88,55,90]`, `passing=60`, going backward: i=4 `90<60`✘; i=3 `55<60`✔ remove → `[70,40,88,90]` (removed 1); i=2 `88<60`✘; i=1 `40<60`✔ remove → `[70,88,90]` (removed 2); i=0 `70<60`✘ → list `[70,88,90]`, returns **2** ✓. No element skipped because we walk downward. Points sum **5**.', '{"question_type":"Q3","total_points":5,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Declares and initializes a removed-counter to 0"},{"point":2,"part":null,"criterion":"Traverses the list **backward**: `for (int i = scores.size() - 1; i >= 0; i--)` (the correct remove-while-iterating pattern — a forward indexed loop that skips elements, or an enhanced-for, does not earn this point)"},{"point":3,"part":null,"criterion":"Tests **strictly less than** `passing` with `scores.get(i) < passing`"},{"point":4,"part":null,"criterion":"On a match, removes by index with `scores.remove(i)` and increments the counter"},{"point":5,"part":null,"criterion":"Returns the number removed"}]}', NULL, NULL),
+  ('csa-frq-q3-p3', 'ap_csa', '4.8', '4', NULL, 'frq', 'A `Book` element class is provided for FRQs 1 and 3 (accessors only — **call them**, do not re-implement):
+
+```java
+public class Book {
+    public String getTitle()  { /* not shown */ }
+    public String getGenre()  { /* not shown */ }
+    public int    getPages()  { /* not shown */ }
+}
+```
+
+Write `titlesInGenre`, which returns a **new** `ArrayList<String>` of the titles of every book in `library` whose genre **equals** `genre` (exact match), in their original order. The input list is **not** modified.
+
+```java
+/** Returns a new list of the titles of books whose genre equals genre, in order.
+ *  Precondition: library is not null; no element is null.
+ */
+public static ArrayList<String> titlesInGenre(ArrayList<Book> library, String genre) {
+    /* to be implemented */
+}
+```
+
+Example: if the library holds (title, genre) pairs `("Dune","scifi"), ("Emma","drama"), ("Foundation","scifi")` and `genre` is `"scifi"`, the method returns `["Dune", "Foundation"]`.', NULL, NULL, NULL, '```java
+public static ArrayList<String> titlesInGenre(ArrayList<Book> library, String genre) {
+    ArrayList<String> result = new ArrayList<String>();
+    for (int i = 0; i < library.size(); i++) {
+        Book b = library.get(i);
+        if (b.getGenre().equals(genre)) {
+            result.add(b.getTitle());
+        }
+    }
+    return result;
+}
+```
+
+**Trace check.** genre `"scifi"`: Dune `"scifi".equals("scifi")`✔ add "Dune"; Emma `"drama".equals("scifi")`✘; Foundation `"scifi".equals("scifi")`✔ add "Foundation" → returns `["Dune","Foundation"]` ✓. Genre compared with `.equals` (no `==` penalty); input list untouched; accessors called. Points sum **5**.', '{"question_type":"Q3","total_points":5,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Creates a new `ArrayList<String>` to hold the result"},{"point":2,"part":null,"criterion":"Traverses the whole input list with correct bounds (`i < library.size()` or a correct enhanced-for — valid since the input list is not modified)"},{"point":3,"part":null,"criterion":"Calls the provided `getGenre()` and compares to `genre` with `.equals` (NOT `==`)"},{"point":4,"part":null,"criterion":"On a match, adds the book''s `getTitle()` to the result list (calls the provided accessors, does not re-implement them)"},{"point":5,"part":null,"criterion":"Returns the result list"}]}', NULL, NULL),
+  ('csa-frq-q3-p4', 'ap_csa', '4.8', '4', NULL, 'frq', 'Two parallel `ArrayList`s describe the same students by position: `names.get(i)` is the name of student `i`, and `scores.get(i)` is that student''s score. The two lists have the **same size**. Write `countMatchingPair`, which returns how many students have a score **at least** `passing` **and** whose name **equals** `targetName` (exact match). (Useful when several students share a name and you want only those who passed.)
+
+```java
+/** Returns the number of indices i where names.get(i) equals targetName
+ *  AND scores.get(i) >= passing.
+ *  Precondition: names and scores are non-null, the same size, with no null elements.
+ */
+public static int countMatchingPair(ArrayList<String> names,
+                                    ArrayList<Integer> scores,
+                                    String targetName, int passing) {
+    /* to be implemented */
+}
+```
+
+Example: if `names` is `["Ana","Bo","Ana","Ana"]` and `scores` is `[90, 50, 40, 75]`, then `countMatchingPair(names, scores, "Ana", 60)` returns `2` (index 0 with 90 and index 3 with 75; index 2 is "Ana" but 40 < 60).', NULL, NULL, NULL, '```java
+public static int countMatchingPair(ArrayList<String> names,
+                                    ArrayList<Integer> scores,
+                                    String targetName, int passing) {
+    int count = 0;
+    for (int i = 0; i < names.size(); i++) {
+        if (names.get(i).equals(targetName) && scores.get(i) >= passing) {
+            count++;
+        }
+    }
+    return count;
+}
+```
+
+**Trace check.** `names=["Ana","Bo","Ana","Ana"]`, `scores=[90,50,40,75]`, `targetName="Ana"`, `passing=60`: i=0 `"Ana".equals("Ana")`✔ & `90>=60`✔ → count 1; i=1 `"Bo"`✘ skip; i=2 `"Ana"`✔ & `40>=60`✘ skip; i=3 `"Ana"`✔ & `75>=60`✔ → count 2 → returns **2** ✓. A single index reads both lists in lockstep; name compared with `.equals`; both conditions joined with `&&`. Points sum **5**.', '{"question_type":"Q3","total_points":5,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Declares and initializes a counter to 0"},{"point":2,"part":null,"criterion":"Traverses by a **single shared index** with correct bounds (`i < names.size()`, equivalently `scores.size()`) — one loop indexing **both** lists, not two separate loops"},{"point":3,"part":null,"criterion":"Reads the matching elements **at the same index** from both lists: `names.get(i)` and `scores.get(i)`"},{"point":4,"part":null,"criterion":"Tests the name with `.equals(targetName)` (NOT `==`) **and** the score `>= passing`, incrementing only when **both** hold"},{"point":5,"part":null,"criterion":"Returns the count"}]}', NULL, NULL),
+  ('csa-frq-q3-p5', 'ap_csa', '4.8', '4', NULL, 'frq', 'An `ArrayList<Integer>` named `sorted` is kept in **non-decreasing** (ascending) order. Write `insertInOrder`, which inserts `value` into `sorted` so the list **stays in non-decreasing order**, and returns the index at which `value` was inserted. If `value` is greater than or equal to every element, it goes at the end. Use `add(int index, E)` to insert at a position.
+
+```java
+/** Inserts value into sorted (which is in non-decreasing order) so that it
+ *  remains non-decreasing, and returns the index where value was placed.
+ *  Precondition: sorted is non-null, in non-decreasing order, no null elements.
+ */
+public static int insertInOrder(ArrayList<Integer> sorted, int value) {
+    /* to be implemented */
+}
+```
+
+Example: if `sorted` is `[10, 20, 20, 40]` and `value` is `25`, then after the call `sorted` is `[10, 20, 20, 25, 40]` and the method returns `3`.', NULL, NULL, NULL, '```java
+public static int insertInOrder(ArrayList<Integer> sorted, int value) {
+    int i = 0;
+    while (i < sorted.size() && sorted.get(i) < value) {
+        i++;
+    }
+    sorted.add(i, value);
+    return i;
+}
+```
+
+**Why `< value`, not `<=`?** Scanning forward while elements are **strictly less than** `value` stops at the first element that is `>= value`, so `value` is inserted **before** any equal elements — keeping the list non-decreasing. The `&&` short-circuits: when `i` reaches `sorted.size()`, the loop stops before `sorted.get(i)` is evaluated, so there is no out-of-bounds access when `value` belongs at the end.
+
+**Trace check.** `sorted=[10,20,20,40]`, `value=25`: i=0 `0<4 && 10<25`✔ i=1; `20<25`✔ i=2; `20<25`✔ i=3; `40<25`✘ stop. `sorted.add(3, 25)` → `[10,20,20,25,40]`, returns **3** ✓. End case: `value=99` → scan runs to i=4, `4<4` false stops (short-circuit, no `get(4)`), `add(4,99)` appends → returns **4** ✓. Front case: `value=5` → i=0 `10<5`✘ stop, `add(0,5)` → `[5,10,20,20,40]`, returns **0** ✓. The two-argument `add(int, E)` shifts elements right; the size check precedes the `get` so there is no out-of-bounds. Points sum **5**.', '{"question_type":"Q3","total_points":5,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **forward removal while iterating (skipping elements), enhanced-for + structural modify (`ConcurrentModificationException`), `==` on String content, and re-implementing a provided accessor DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Initializes an insertion index (`i = 0`)"},{"point":2,"part":null,"criterion":"Scans forward to find the insertion point: loops **while** `i < sorted.size()` **AND** `sorted.get(i) < value` (the size check first so `&&` short-circuits — no out-of-bounds when `value` belongs at the end)"},{"point":3,"part":null,"criterion":"Uses the correct stop condition (`< value`) so the scan halts at the first element `>= value`, keeping the list non-decreasing"},{"point":4,"part":null,"criterion":"Inserts with `sorted.add(i, value)` (the two-argument `add(int index, E)` that shifts later elements right — NOT `add(value)`, which would only append)"},{"point":5,"part":null,"criterion":"Returns the insertion index `i`"}]}', NULL, NULL),
+  ('csa-frq-q4-p1', 'ap_csa', '4.5', '4', NULL, 'frq', 'Write `countEven`, which returns the number of **even** values in the rectangular 2D array `grid`.
+
+```java
+/** Returns the number of even values in the rectangular 2D array grid.
+ *  Precondition: grid is rectangular with at least one row and one column.
+ */
+public static int countEven(int[][] grid) {
+    /* to be implemented */
+}
+```
+
+Example: for
+```
+{{1, 2, 3},
+ {4, 6, 7}}
+```
+the method returns `3` (the values 2, 4, 6).', NULL, NULL, NULL, '```java
+public static int countEven(int[][] grid) {
+    int count = 0;
+    for (int r = 0; r < grid.length; r++) {
+        for (int c = 0; c < grid[r].length; c++) {
+            if (grid[r][c] % 2 == 0) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+```
+
+**Trace check.** Row 0: 1(odd),2✔(1),3(odd); Row 1: 4✔(2),6✔(3),7(odd) → returns **3** ✓. Rows from `grid.length`, cols from `grid[r].length`, access `grid[r][c]`. Points sum **6**.', '{"question_type":"Q4","total_points":6,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Declares and initializes a counter to 0"},{"point":2,"part":null,"criterion":"Outer loop iterates over **rows** using `grid.length` (correct bound `r < grid.length`)"},{"point":3,"part":null,"criterion":"Inner loop iterates over **columns** using `grid[r].length` (or `grid[0].length`) — correct dimension, not swapped with rows"},{"point":4,"part":null,"criterion":"Accesses each cell as `grid[r][c]` (row index first, column second)"},{"point":5,"part":null,"criterion":"Tests evenness with `grid[r][c] % 2 == 0` and increments on a match"},{"point":6,"part":null,"criterion":"Returns the count"}]}', NULL, NULL),
+  ('csa-frq-q4-p2', 'ap_csa', '4.5', '4', NULL, 'frq', 'Write `columnMax`, which returns the largest value in column `col` of the rectangular 2D array `grid`.
+
+```java
+/** Returns the largest value found in column col of grid.
+ *  Precondition: grid is rectangular with at least one row;
+ *                0 <= col < grid[0].length.
+ */
+public static int columnMax(int[][] grid, int col) {
+    /* to be implemented */
+}
+```
+
+Example: for
+```
+{{3, 9, 1},
+ {7, 2, 8},
+ {5, 4, 6}}
+```
+`columnMax(grid, 0)` returns `7` (the values in column 0 are 3, 7, 5).', NULL, NULL, NULL, '```java
+public static int columnMax(int[][] grid, int col) {
+    int max = grid[0][col];
+    for (int r = 1; r < grid.length; r++) {
+        if (grid[r][col] > max) {
+            max = grid[r][col];
+        }
+    }
+    return max;
+}
+```
+
+**Trace check.** `col=0`, max=grid[0][0]=3; r=1 `7>3`✔ max=7; r=2 `5>7`✘ → returns **7** ✓. Column walked by fixing `col` and varying `r` over `grid.length`; max seeded from a real cell (handles all-negative). Points sum **6**.', '{"question_type":"Q4","total_points":6,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Initializes the running max to the **first row''s** value in that column, `grid[0][col]` (not to 0 — values could all be negative)"},{"point":2,"part":null,"criterion":"Loops down the **rows** with `grid.length` (correct bound), holding `col` **fixed** — walks a column, not a row"},{"point":3,"part":null,"criterion":"Accesses cells as `grid[r][col]` (row varies, column index is the parameter, row first)"},{"point":4,"part":null,"criterion":"Compares each cell to the running max with `>` and updates `max` when larger (no `Math.max`, which is off the reference)"},{"point":5,"part":null,"criterion":"Visits every row (starting either at `r = 0` or `r = 1` after seeding from row 0 — both cover all rows exactly once)"},{"point":6,"part":null,"criterion":"Returns the max"}]}', NULL, NULL),
+  ('csa-frq-q4-p3', 'ap_csa', '4.5', '4', NULL, 'frq', 'A `Seat` element class is provided (an accessor only — **call it**, do not re-implement):
+
+```java
+public class Seat {
+    public boolean isReserved() { /* not shown */ }
+}
+```
+
+A theater is a rectangular 2D array `Seat[][] hall`. **Some cells may be `null`** (no seat in that spot — an aisle). Write `countAvailable`, which returns the number of seats that **exist** (are not `null`) **and** are **not reserved**.
+
+```java
+/** Returns the number of non-null Seat cells in hall that are not reserved.
+ *  Precondition: hall is rectangular with at least one row and one column.
+ *                Cells may be null.
+ */
+public static int countAvailable(Seat[][] hall) {
+    /* to be implemented */
+}
+```', NULL, NULL, NULL, '```java
+public static int countAvailable(Seat[][] hall) {
+    int count = 0;
+    for (int r = 0; r < hall.length; r++) {
+        for (int c = 0; c < hall[r].length; c++) {
+            if (hall[r][c] != null && !hall[r][c].isReserved()) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+```
+
+**Trace check.** Suppose row 0 = `[reserved, null, free]`, row 1 = `[free, free, null]`. Row 0: cell0 not null but reserved → `!true`=false, skip; cell1 null → `!= null` false, short-circuits, skip (no NPE); cell2 free → count 1. Row 1: cell0 free → count 2; cell1 free → count 3; cell2 null → skip. Returns **3** ✓. The `!= null` test comes first and `&&` short-circuits, so `isReserved()` is never invoked on a `null` cell. Points sum **6**.', '{"question_type":"Q4","total_points":6,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Declares and initializes a counter to 0"},{"point":2,"part":null,"criterion":"Outer loop over **rows** with `hall.length`; inner loop over **columns** with `hall[r].length` (correct dimensions, not swapped)"},{"point":3,"part":null,"criterion":"Accesses each cell as `hall[r][c]` (row first, column second)"},{"point":4,"part":null,"criterion":"**Null-guards** the cell first: `hall[r][c] != null` is checked **before** any method call (the `&&` short-circuits, so `isReserved()` is never called on `null`)"},{"point":5,"part":null,"criterion":"Calls the provided `isReserved()` and counts the cell only when it is **not** reserved (`!hall[r][c].isReserved()`)"},{"point":6,"part":null,"criterion":"Returns the count"}]}', NULL, NULL),
+  ('csa-frq-q4-p4', 'ap_csa', '4.5', '4', NULL, 'frq', 'Write `heaviestColumn`, which returns the **index of the column whose values sum to the largest total** in the rectangular 2D array `grid`. Process the grid **column by column**: the outer loop walks columns, the inner loop walks the rows of that one column to total it. If two columns tie for the largest sum, return the **smaller** column index.
+
+```java
+/** Returns the index of the column with the greatest column-sum.
+ *  On a tie, returns the smaller column index.
+ *  Precondition: grid is rectangular with at least one row and one column.
+ */
+public static int heaviestColumn(int[][] grid) {
+    /* to be implemented */
+}
+```
+
+Example: for
+```
+{{1, 5, 0},
+ {2, 5, 1},
+ {3, 0, 1}}
+```
+the column sums are column 0 = 6, column 1 = 10, column 2 = 2, so the method returns `1`.', NULL, NULL, NULL, '```java
+public static int heaviestColumn(int[][] grid) {
+    int bestCol = 0;
+    int bestSum = 0;
+    for (int r = 0; r < grid.length; r++) {
+        bestSum += grid[r][0];
+    }
+    for (int c = 1; c < grid[0].length; c++) {
+        int colSum = 0;
+        for (int r = 0; r < grid.length; r++) {
+            colSum += grid[r][c];
+        }
+        if (colSum > bestSum) {
+            bestSum = colSum;
+            bestCol = c;
+        }
+    }
+    return bestCol;
+}
+```
+
+**Why column-major here?** Each column must be totaled as a whole before it can be compared, so the **outer** loop fixes a column `c` and the **inner** loop runs the rows `0 .. grid.length - 1` accumulating that column''s sum. Seeding `bestSum` from column 0 (and comparing strictly with `>`) makes ties resolve to the smaller index.
+
+**Trace check.** Grid above: seed col 0 sum = 1+2+3 = 6, bestCol 0. c=1: colSum 5+5+0 = 10; `10>6`✔ bestSum 10, bestCol 1. c=2: colSum 0+1+1 = 2; `2>10`✘ → returns **1** ✓. Tie check: with column sums `[6,6]`, col 0 seeds best, col 1 `6>6`✘ → keeps **0** (smaller index) ✓. Outer loop = columns, inner = rows, `colSum` reset each column, cells `grid[r][c]`. Points sum **6**.', '{"question_type":"Q4","total_points":6,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Tracks a best column index and its sum, seeded from a **real column** (column 0''s full sum), not from 0 — so all-negative grids work and the answer is always a valid column"},{"point":2,"part":null,"criterion":"**Outer** loop iterates over **columns** using `grid[0].length` (or `grid[r].length`) — the column index is the outer loop variable (column-major)"},{"point":3,"part":null,"criterion":"**Inner** loop iterates over the **rows** of the current column using `grid.length`, accumulating that column''s sum (a fresh `colSum` reset per column)"},{"point":4,"part":null,"criterion":"Accesses cells as `grid[r][c]` (row index first, column second) with the column held fixed across the inner loop"},{"point":5,"part":null,"criterion":"Compares each column sum to the best with `>` (strict, so a tie keeps the smaller index) and updates both the best sum and best column index"},{"point":6,"part":null,"criterion":"Returns the best column **index**"}]}', NULL, NULL),
+  ('csa-frq-q4-p5', 'ap_csa', '4.5', '4', NULL, 'frq', 'Write `borderSum`, which returns the sum of only the values on the **border** (outermost edge) of the rectangular 2D array `grid` — the entire first row, the entire last row, and the first and last columns of the rows in between. Interior cells are **not** counted.
+
+```java
+/** Returns the sum of the values on the outer border of grid.
+ *  Precondition: grid is rectangular with at least one row and one column.
+ */
+public static int borderSum(int[][] grid) {
+    /* to be implemented */
+}
+```
+
+Example: for
+```
+{{1, 2, 3},
+ {4, 5, 6},
+ {7, 8, 9}}
+```
+the border values are 1, 2, 3, 4, 6, 7, 8, 9 (everything except the center 5), so the method returns `40`.', NULL, NULL, NULL, '```java
+public static int borderSum(int[][] grid) {
+    int rows = grid.length;
+    int cols = grid[0].length;
+    int sum = 0;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            if (r == 0 || r == rows - 1 || c == 0 || c == cols - 1) {
+                sum += grid[r][c];
+            }
+        }
+    }
+    return sum;
+}
+```
+
+**Why the `||` test, not four separate loops?** A cell is on the border exactly when it is in the first or last row **or** the first or last column. Testing `r == 0 || r == rows - 1 || c == 0 || c == cols - 1` inside one traversal counts each border cell **exactly once** — including the corners — and avoids double-counting that separate edge loops risk. This also handles a single-row, single-column, or 1×1 grid correctly (every cell satisfies the test).
+
+**Trace check.** 3×3 grid above (rows 3, cols 3): r=0 all in border → +1+2+3 = 6; r=1: c=0 border +4, c=1 interior (`1!=0,1!=2,1!=0,1!=2`) skip, c=2 border +6 → +10 (sum 16); r=2 all in border → +7+8+9 = 24 → total **6+10+24 = 40** ✓ (center 5 excluded). 1×1 grid `{{9}}`: r=0,c=0 satisfies `r==0` → +9 → returns **9** ✓. The `||` test selects exactly the border and counts each such cell once. Points sum **6**.', '{"question_type":"Q4","total_points":6,"penalty_cap":3,"penalty_policy":"Grading note (every rubric below): points are independent; minor syntax slips are forgiven when intent is clear; but **swapping rows/columns, off-by-one bounds, calling a method on a `null` cell (`NullPointerException`), assuming a jagged shape, and `==` on String contents DO cost points** (see `../reference/killer-errors-cheatsheet.md`). Penalty cap = 3 per question, earned-parts only, charged once.","parts":[],"criteria":[{"point":1,"part":null,"criterion":"Declares and initializes an accumulator to 0"},{"point":2,"part":null,"criterion":"Outer loop over **rows** with `grid.length`; inner loop over **columns** with `grid[r].length` (or `grid[0].length`) — correct dimensions, not swapped"},{"point":3,"part":null,"criterion":"Accesses each cell as `grid[r][c]` (row first, column second)"},{"point":4,"part":null,"criterion":"Restricts to the **border region** with the condition `r == 0 || r == grid.length - 1 || c == 0 || c == grid[0].length - 1` (last row/col use `length - 1`)"},{"point":5,"part":null,"criterion":"Adds only border cells to the accumulator — each border cell counted exactly once (corners not double-counted)"},{"point":6,"part":null,"criterion":"Returns the border sum"}]}', NULL, NULL),
   ('pc-u1-p1', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'Find the AROC of $f(x)=3x-7$ on [2, 6].', NULL, NULL, '[]', '$\frac{f(6)-f(2)}{6-2}=\frac{11-(-1)}{4}=\frac{12}{4}=3.$ (For a line, AROC = slope, always 3.)', NULL, 'easy', 0),
-  ('pc-u1-p2', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'State the end behavior of $f(x)=4x^4-x+2$ in limit notation.', NULL, NULL, '[]', 'Even degree, positive leading coeff: $\displaystyle\lim_{x\to-\infty}f(x)=\infty$ and $\displaystyle\lim_{x\to\infty}f(x)=\infty$.', NULL, 'easy', 0),
+  ('pc-u1-p2', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'State the end behavior of $f(x)=4x^4-x+2$ in limit notation.', NULL, NULL, '[]', 'Even degree, positive leading coeff: $\displaystyle\lim_{x\to-\infty}f(x)=\infty$ and $\displaystyle\lim_{x\to\infty}f(x)=\infty$.', NULL, 'easy', 0);
+INSERT OR REPLACE INTO items (id, subject, topic, unit, practice, kind, stem, options_json, answer, answer_variants_json, explanation, rubric_json, difficulty, calc_allowed) VALUES
   ('pc-u1-p3', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'Give the zeros and their multiplicities for $f(x)=(x+2)^3(x-1)^2$. Does the graph cross or bounce at each?', NULL, NULL, '[]', '$x=-2$, multiplicity 3 (odd → **crosses**). $x=1$, multiplicity 2 (even → **bounces**). Degree 5.', NULL, 'easy', 0),
   ('pc-u1-p4', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'Is $g(x)=2x^4-x^2$ even, odd, or neither?', NULL, NULL, '[]', '$g(-x)=2(-x)^4-(-x)^2=2x^4-x^2=g(x)$ → **even** (all even powers, y-axis symmetric).', NULL, 'medium', 0),
   ('pc-u1-p5', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'For $f(x)=\dfrac{x^2-x-6}{x^2-9}$: find holes, vertical asymptotes, and the horizontal asymptote.', NULL, NULL, '[]', 'Factor: $\dfrac{(x-3)(x+2)}{(x-3)(x+3)}$. $(x-3)$ cancels → **hole at $x=3$** (y-value: $\frac{3+2}{3+3}=\frac{5}{6}$, hole at $(3,\frac56)$). Remaining denominator factor $(x+3)$ → **VA at $x=-3$**. Equal degrees (2 and 2) → **HA: y = 1** (ratio of leading coeffs 1/1).', NULL, 'medium', 0),
   ('pc-u1-p6', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'Find the slant asymptote of $f(x)=\dfrac{2x^2+3x-1}{x+2}$.', NULL, NULL, '[]', 'Long division: $2x^2+3x-1 \div (x+2)$. $2x^2\div x=2x$; $2x(x+2)=2x^2+4x$; subtract → $-x-1$. $-x\div x=-1$; $-1(x+2)=-x-2$; subtract → remainder 1. Quotient $2x-1$. **Slant asymptote: y = 2x − 1.**', NULL, 'medium', 0),
   ('pc-u1-p7', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', '$f$ is decreasing and concave up on [0, 8]. You estimate $f(4)$ using the secant from $x=0$ to $x=8$. Over- or under-estimate? And is $f$''s rate of change increasing or decreasing?', NULL, NULL, '[]', 'Concave up → secant lies **above** the curve → estimate is **too high (overestimate)**. Concave up → rate of change is **increasing** (becoming less negative). (This is exactly the Q3(C)(ii) / Q2(B)(iii) reasoning the exam loves.)', NULL, 'medium', 0),
   ('pc-u1-p8', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'A song''s daily plays follow $D(t)=at^2+bt+c$ with $D(0)=20$, $D(3)=44$, $D(6)=56$. Find $a, b, c$, then estimate $D(1.5)$ using the AROC from $t=0$ to $t=6$.', NULL, NULL, '[]', '$c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Rightarrow 36a+6b=36\Rightarrow 6a+b=6$. Subtract: $3a=-2\Rightarrow a=-\tfrac23\approx-0.667$, then $b=8-3a=10$, $c=20$. AROC on [0,6]: $\frac{56-20}{6}=6$. Linear estimate at $t=1.5$: $D(0)+6(1.5)=20+9=\mathbf{29}$. (Note: true $D(1.5)=-0.667(2.25)+10(1.5)+20\approx33.5$; the secant **underestimates** because the parabola opens down/concave down here.)', NULL, 'medium', 1),
-  ('pc-u1-p9', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'Population model $P(t)=a+b\ln(t+1)$ thousand, with $P(0)=12$ and $P(40)=58$. Find $a$ and $b$ (3 decimals), then find $P(20)$.', NULL, NULL, '[]', '$P(0)=a+b\ln(1)=a=12$. $P(40)=12+b\ln(41)=58\Rightarrow b\ln(41)=46\Rightarrow b=\frac{46}{\ln 41}=\frac{46}{3.7136}\approx\mathbf{12.387}$. Then $P(20)=12+12.387\ln(21)=12+12.387(3.0445)\approx12+37.712=\mathbf{49.712}$. *Accuracy note:* keep full calculator precision until the LAST step; report to 3 decimals. (Chief Reader: rounding intermediate values loses the point.)', NULL, 'hard', 1),
+  ('pc-u1-p9', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'A drug''s concentration in the blood $t$ hours after a single dose is modeled by $C(t)=\dfrac{24t}{t^2+4}$ mg/L, for $t\ge 0$. (a) Give the horizontal asymptote and say what it means about the drug. (b) Use a graphing calculator to find when the concentration is greatest, and that greatest concentration. (c) Find the AROC of $C$ on [0, 6]. Is $C$ increasing or decreasing at $t=6$? (d) State the domain restriction this model needs, and say where it comes from.', NULL, NULL, '[]', '(a) $\deg N=1 < \deg D=2$ → **HA: y = 0**. In context: long after the dose the concentration decays toward 0 — the body clears the drug (it never quite reaches 0). Check: $C(100)\approx0.240$, $C(1000)\approx0.024$. (b) Graph on $[0,20]$: the peak is at **$t=2$ hours**, where **$C=6$ mg/L**. **Check it by hand** — divide top and bottom by $t$: $C(t)=\dfrac{24}{t+4/t}$, which is largest when $t+\frac4t$ is smallest, i.e. when $t=\frac4t \Rightarrow t=2$, giving $C=\frac{24}{4}=6$ ✓. Both values are exact, so to 3 decimals they are 2.000 h and 6.000 mg/L. (c) $C(0)=0$ and $C(6)=\frac{144}{40}=3.6$, so AROC $=\dfrac{3.6-0}{6-0}=\mathbf{0.6}$ mg/L per hour. But $C$ is **decreasing** at $t=6$: the peak was back at $t=2$, and $C(5.9)\approx3.649 > C(6)=3.6 > C(6.1)\approx3.553$. **A positive average rate of change over an interval says nothing about the direction at a point inside it** — the average is positive here only because of the climb from 0 to 6 mg/L in the first two hours. (d) $t^2+4$ is never zero, so there is **no algebraic** exclusion — the restriction is **contextual: $t\ge 0$**, because $t$ counts hours since the dose and negative time is meaningless. (Realistically also an upper bound at the next dose, after which this model no longer describes the situation.)', NULL, 'hard', 1),
   ('pc-u1-p10', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', '(a) Solve $\log_2(8x)=5$. (b) Condense $\log_3 x + 2\log_3 3$ into a single log. (c) Solve $e^{2x}-e^{x}-6=0$ for all real x.', NULL, NULL, '[]', '(a) $8x=2^5=32\Rightarrow x=4$. (b) $2\log_3 3=\log_3 9$, so $\log_3 x+\log_3 9=\log_3(9x)$. (c) Quadratic-in-disguise: let $u=e^x$. $u^2-u-6=0\Rightarrow(u-3)(u+2)=0\Rightarrow u=3$ or $u=-2$. $e^x=3\Rightarrow x=\ln 3$. $e^x=-2$ impossible (exp is always positive). **x = ln 3.** (This "quadratic in $e^x$" was literally 2025 Q4(C).)', NULL, 'hard', 0),
-  ('pc-u1-p11', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', '$f$ is given by a table: $f(1)=8, f(2)=4, f(3)=2, f(4)=1$. (a) Compute $h=g\circ f$ at $x=2$ where $g(x)=x^2-3$. (b) Find $f^{-1}(2)$. (c) Which model best fits $f$ — linear, quadratic, or exponential — and justify.', NULL, NULL, '[]', '(a) $f(2)=4$, so $h(2)=g(4)=4^2-3=13$. (b) $f^{-1}(2)$ = the input giving output 2 → $f(3)=2$, so $f^{-1}(2)=3$. (c) Ratios of successive outputs: $4/8=0.5$, $2/4=0.5$, $1/2=0.5$ — **constant ratio → exponential**. (Justify with the ratios, exactly as 2025 Q1(C)(ii) required. A *linear* model would need constant *differences*, not ratios.)', NULL, 'hard', NULL),
+  ('pc-u1-p11', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', '$f$ is given by a table: $f(1)=8, f(2)=4, f(3)=2, f(4)=1$. (a) Compute $h=g\circ f$ at $x=2$ where $g(x)=x^2-3$. (b) Find $f^{-1}(2)$. (c) Which model best fits $f$ — linear, quadratic, or exponential — and justify.', NULL, NULL, '[]', '(a) $f(2)=4$, so $h(2)=g(4)=4^2-3=13$. (b) $f^{-1}(2)$ = the input giving output 2 → $f(3)=2$, so $f^{-1}(2)=3$. (c) Ratios of successive outputs: $4/8=0.5$, $2/4=0.5$, $1/2=0.5$ — **constant ratio → exponential**. (Justify with the ratios, exactly as 2025 Q1(C)(ii) required. A *linear* model would need constant *differences*, not ratios.)', NULL, 'hard', 1),
   ('pc-u1-p12', 'ap_precalc', '1.0', '1', NULL, 'constructed_model_graded', 'For $f(x)=0.5x^3-2x^2-x+3$, use a graphing calculator to find all real zeros to 3 decimals, and state the end behavior in limit notation.', NULL, NULL, '[]', 'Graph/solve: zeros ≈ **$x\approx-1.273,\ 1.140,\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\frac{b}{a}=-\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)\approx-5.998\approx-6$, which must equal $-\frac{d}{a}=-\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\displaystyle\lim_{x\to\infty}f(x)=\infty,\ \displaystyle\lim_{x\to-\infty}f(x)=-\infty$.', NULL, 'hard', 1),
-  ('pc-u2-p1', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.', NULL, NULL, '[]', 'Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 = 0.8, 32/40 = 0.8, 25.6/32 = 0.8 → constant → **exponential**. Initial value 50, base 0.8: $y = 50(0.8)^x$.', NULL, NULL, 0),
-  ('pc-u2-p2', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', '$g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.', NULL, NULL, '[]', '$g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.', NULL, NULL, 0),
-  ('pc-u2-p3', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Compute (a) $\log_3 81$, (b) $\log_5 \frac{1}{25}$, (c) $\ln e^{7}$.', NULL, NULL, '[]', '(a) $3^4 = 81 \Rightarrow 4$. (b) $5^{-2} = \frac{1}{25} \Rightarrow -2$. (c) $7$.', NULL, NULL, 0),
-  ('pc-u2-p4', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Rewrite $\log_2 x = 5$ in exponential form and solve.', NULL, NULL, '[]', '$x = 2^5 = 32$.', NULL, NULL, 0),
-  ('pc-u2-p5', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Solve $2^{3x} = 16$.', NULL, NULL, '[]', '$16 = 2^4$, so $3x = 4 \Rightarrow x = \dfrac{4}{3}$.', NULL, NULL, 0),
-  ('pc-u2-p6', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?', NULL, NULL, '[]', '$P(t)=12000(1.03)^t$. $P(8)=12000(1.03)^8 \approx 12000(1.26677) \approx \mathbf{15{,}201}$. Reach 18,000: $1.03^t = 1.5 \Rightarrow t = \dfrac{\ln 1.5}{\ln 1.03} \approx \dfrac{0.405465}{0.029559} \approx \mathbf{13.717}$ years.', NULL, NULL, 1),
-  ('pc-u2-p7', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Write as one logarithm: $\dfrac{1}{2}\log x + 2\log y - \log z$.', NULL, NULL, '[]', '$\log x^{1/2} + \log y^2 - \log z = \log\!\left(\dfrac{\sqrt{x}\,y^2}{z}\right)$.', NULL, NULL, 0),
-  ('pc-u2-p8', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Solve $\log_2(x) + \log_2(x-2) = 3$.', NULL, NULL, '[]', 'Combine: $\log_2[x(x-2)] = 3 \Rightarrow x(x-2) = 2^3 = 8 \Rightarrow x^2 - 2x - 8 = 0 \Rightarrow (x-4)(x+2)=0$. $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**', NULL, NULL, 0),
-  ('pc-u2-p9', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', '$f(x)=\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.', NULL, NULL, '[]', '(a) $g(0)=e^0+1=2$; $f(2)=\ln 2 \approx 0.693$ (or leave exact $\ln 2$). (b) $y=e^x+1 \Rightarrow$ swap: $x=e^y+1 \Rightarrow x-1=e^y \Rightarrow y=\ln(x-1)$. So $g^{-1}(x)=\ln(x-1)$.', NULL, NULL, 0),
-  ('pc-u2-p10', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Data plotted as $\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.', NULL, NULL, '[]', 'Slope $=\dfrac{1.505-0.301}{4-0}=\dfrac{1.204}{4}=0.301=\log_{10}b \Rightarrow b=10^{0.301}\approx 2$. Intercept $=0.301=\log_{10}a \Rightarrow a=10^{0.301}\approx 2$. Model: $y = 2\cdot 2^{x}$.', NULL, NULL, 1);
-INSERT OR REPLACE INTO items (id, subject, topic, unit, practice, kind, stem, options_json, answer, answer_variants_json, explanation, rubric_json, difficulty, calc_allowed) VALUES
-  ('pc-u2-p11', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', '(a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\log_3(9x^4) - \log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.', NULL, NULL, '[]', '(a) $x+2 = \ln 7 \Rightarrow x = \ln 7 - 2$. (b) $\log_3\!\dfrac{9x^4}{x} = \log_3(9x^3) = \log_3 9 + \log_3 x^3 = 2 + 3\log_3 x$. (c) Let $u=e^x$: $u^2-5u+6=0 \Rightarrow (u-2)(u-3)=0 \Rightarrow e^x=2$ or $e^x=3 \Rightarrow x=\ln 2$ or $x=\ln 3$. *(Show every step — answers without work earn 0 on Q4.)*', NULL, NULL, 0),
-  ('pc-u2-p12', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Downloads of an app are modeled by $D(t)=a+b\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$. (a) Find $a$ and $b$. (b) Find the average rate of change of $D$ from $t=0$ to $t=30$. (c) The true number of downloads at $t=15$ is *greater* than the value predicted by the average rate of change line from (b). Explain why, using concavity.', NULL, NULL, '[]', '(a) $D(0)=a+b\ln 1 = a = 10$. $D(30)=10+b\ln 31 = 58 \Rightarrow b=\dfrac{48}{\ln 31}\approx\dfrac{48}{3.4340}\approx 13.978$. (b) AROC $=\dfrac{D(30)-D(0)}{30-0}=\dfrac{58-10}{30}=\dfrac{48}{30}=\mathbf{1.6}$ thousand/day. (c) $D$ is a logarithmic function with $b>0$, so it is **increasing and concave down**. A concave-down curve lies **above** its secant line between the two endpoints. The average-rate line is that secant from $t=0$ to $t=30$, so at the interior point $t=15$ the actual curve value is **greater than** the linear estimate. *(This explanation is the part most students lose — say "concave down → curve above secant.")*', NULL, NULL, 1),
+  ('pc-u2-p1', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.', NULL, NULL, '[]', 'Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 = 0.8, 32/40 = 0.8, 25.6/32 = 0.8 → constant → **exponential**. Initial value 50, base 0.8: $y = 50(0.8)^x$.', NULL, 'easy', 0),
+  ('pc-u2-p2', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', '$g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.', NULL, NULL, '[]', '$g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.', NULL, 'easy', 0),
+  ('pc-u2-p3', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Compute (a) $\log_3 81$, (b) $\log_5 \frac{1}{25}$, (c) $\ln e^{7}$.', NULL, NULL, '[]', '(a) $3^4 = 81 \Rightarrow 4$. (b) $5^{-2} = \frac{1}{25} \Rightarrow -2$. (c) $7$.', NULL, 'easy', 0),
+  ('pc-u2-p4', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Rewrite $\log_2 x = 5$ in exponential form and solve.', NULL, NULL, '[]', '$x = 2^5 = 32$.', NULL, 'easy', 0),
+  ('pc-u2-p5', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Solve $2^{3x} = 16$.', NULL, NULL, '[]', '$16 = 2^4$, so $3x = 4 \Rightarrow x = \dfrac{4}{3}$.', NULL, 'medium', 0),
+  ('pc-u2-p6', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?', NULL, NULL, '[]', '$P(t)=12000(1.03)^t$. $P(8)=12000(1.03)^8 \approx 12000(1.26677) \approx \mathbf{15{,}201}$. Reach 18,000: $1.03^t = 1.5 \Rightarrow t = \dfrac{\ln 1.5}{\ln 1.03} \approx \dfrac{0.405465}{0.029559} \approx \mathbf{13.717}$ years.', NULL, 'medium', 1),
+  ('pc-u2-p7', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Write as one logarithm: $\dfrac{1}{2}\log x + 2\log y - \log z$.', NULL, NULL, '[]', '$\log x^{1/2} + \log y^2 - \log z = \log\!\left(\dfrac{\sqrt{x}\,y^2}{z}\right)$.', NULL, 'medium', 0),
+  ('pc-u2-p8', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Solve $\log_2(x) + \log_2(x-2) = 3$.', NULL, NULL, '[]', 'Combine: $\log_2[x(x-2)] = 3 \Rightarrow x(x-2) = 2^3 = 8 \Rightarrow x^2 - 2x - 8 = 0 \Rightarrow (x-4)(x+2)=0$. $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**', NULL, 'medium', 0),
+  ('pc-u2-p9', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', '$f(x)=\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.', NULL, NULL, '[]', '(a) $g(0)=e^0+1=2$; $f(2)=\ln 2 \approx 0.693$ (or leave exact $\ln 2$). (b) $y=e^x+1 \Rightarrow$ swap: $x=e^y+1 \Rightarrow x-1=e^y \Rightarrow y=\ln(x-1)$. So $g^{-1}(x)=\ln(x-1)$.', NULL, 'hard', 0),
+  ('pc-u2-p10', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Data plotted as $\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.', NULL, NULL, '[]', 'Slope $=\dfrac{1.505-0.301}{4-0}=\dfrac{1.204}{4}=0.301=\log_{10}b \Rightarrow b=10^{0.301}\approx 2$. Intercept $=0.301=\log_{10}a \Rightarrow a=10^{0.301}\approx 2$. Model: $y = 2\cdot 2^{x}$.', NULL, 'hard', 1),
+  ('pc-u2-p11', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', '(a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\log_3(9x^4) - \log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.', NULL, NULL, '[]', '(a) $x+2 = \ln 7 \Rightarrow x = \ln 7 - 2$. (b) $\log_3\!\dfrac{9x^4}{x} = \log_3(9x^3) = \log_3 9 + \log_3 x^3 = 2 + 3\log_3 x$. (c) Let $u=e^x$: $u^2-5u+6=0 \Rightarrow (u-2)(u-3)=0 \Rightarrow e^x=2$ or $e^x=3 \Rightarrow x=\ln 2$ or $x=\ln 3$. *(Show every step — answers without work earn 0 on Q4.)*', NULL, 'hard', 0),
+  ('pc-u2-p12', 'ap_precalc', '2.0', '2', NULL, 'constructed_model_graded', 'Downloads of an app are modeled by $D(t)=a+b\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$. (a) Find $a$ and $b$. (b) Find the average rate of change of $D$ from $t=0$ to $t=30$. (c) The true number of downloads at $t=15$ is *greater* than the value predicted by the average rate of change line from (b). Explain why, using concavity.', NULL, NULL, '[]', '(a) $D(0)=a+b\ln 1 = a = 10$. $D(30)=10+b\ln 31 = 58 \Rightarrow b=\dfrac{48}{\ln 31}\approx\dfrac{48}{3.4340}\approx 13.978$. (b) AROC $=\dfrac{D(30)-D(0)}{30-0}=\dfrac{58-10}{30}=\dfrac{48}{30}=\mathbf{1.6}$ thousand/day. (c) $D$ is a logarithmic function with $b>0$, so it is **increasing and concave down**. A concave-down curve lies **above** its secant line between the two endpoints. The average-rate line is that secant from $t=0$ to $t=30$, so at the interior point $t=15$ the actual curve value is **greater than** the linear estimate. *(This explanation is the part most students lose — say "concave down → curve above secant.")*', NULL, 'hard', 1),
   ('pc-u3-p1', 'ap_precalc', '3.0', '3', NULL, 'constructed_model_graded', 'Convert 135° to radians and find cos(135°) exactly.', NULL, NULL, '[]', '135° · π/180 = **3π/4.** QII, reference angle π/4, cos negative → cos(3π/4) = **−√2/2.**', NULL, 'easy', 0),
   ('pc-u3-p2', 'ap_precalc', '3.0', '3', NULL, 'constructed_model_graded', 'State amplitude, midline, and period of f(x) = 4 sin(3x) − 2.', NULL, NULL, '[]', 'Amplitude = |4| = **4.** Midline = **−2** (so y = −2). Period = 2π/3. Max = −2 + 4 = 2; min = −2 − 4 = −6.', NULL, 'easy', 0),
   ('pc-u3-p3', 'ap_precalc', '3.0', '3', NULL, 'constructed_model_graded', 'Solve cos x = −1/2 for all real x.', NULL, NULL, '[]', 'cos negative in QII and QIII. Reference angle π/3. x = π − π/3 = **2π/3** and x = π + π/3 = **4π/3** in [0, 2π). All: **x = 2π/3 + 2πk** and **x = 4π/3 + 2πk.**', NULL, 'medium', 0),
@@ -1708,7 +2515,8 @@ INSERT OR REPLACE INTO items (id, subject, topic, unit, practice, kind, stem, op
   ('pc-u4-p3', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Eliminate the parameter: `x = 2t`, `y = t − 3`.', NULL, NULL, '[]', '`t = x/2` → `y = x/2 − 3`. A line, slope ½, y-intercept −3.', NULL, 'easy', NULL),
   ('pc-u4-p4', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', '`u = ⟨2, −3⟩`, `w = ⟨−1, 4⟩`. Find `2u − w` and `u · w`.', NULL, NULL, '[]', '`2u = ⟨4, −6⟩`; `2u − w = ⟨4−(−1), −6−4⟩ = ⟨5, −10⟩`. Dot: `(2)(−1)+(−3)(4) = −2 −12 = −14`.', NULL, 'medium', NULL),
   ('pc-u4-p5', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Write parametric equations for the circle centered `(−3, 4)` with radius 6.', NULL, NULL, '[]', '`x = −3 + 6cos t`, `y = 4 + 6sin t`, `t ∈ [0, 2π)`.', NULL, 'medium', NULL),
-  ('pc-u4-p6', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Identify the conic and give its center/radius: `4x² + 4y² − 16x + 8y − 20 = 0`.', NULL, NULL, '[]', 'Both squared, equal coeffs (4 and 4) → **circle**. Divide by 4: `x² + y² − 4x + 2y − 5 = 0`. Complete the square: `(x−2)² + (y+1)² = 5 + 4 + 1 = 10`. Center `(2, −1)`, radius `√10`.', NULL, 'medium', NULL),
+  ('pc-u4-p6', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Identify the conic and give its center/radius: `4x² + 4y² − 16x + 8y − 20 = 0`.', NULL, NULL, '[]', 'Both squared, equal coeffs (4 and 4) → **circle**. Divide by 4: `x² + y² − 4x + 2y − 5 = 0`. Complete the square: `(x−2)² + (y+1)² = 5 + 4 + 1 = 10`. Center `(2, −1)`, radius `√10`.', NULL, 'medium', NULL);
+INSERT OR REPLACE INTO items (id, subject, topic, unit, practice, kind, stem, options_json, answer, answer_variants_json, explanation, rubric_json, difficulty, calc_allowed) VALUES
   ('pc-u4-p7', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Find the inverse of `A = [[2, 1], [5, 3]]`.', NULL, NULL, '[]', '`det = (2)(3) − (1)(5) = 1`. `A⁻¹ = (1/1)·[[3, −1], [−5, 2]] = [[3, −1], [−5, 2]]`.', NULL, 'medium', NULL),
   ('pc-u4-p8', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Multiply `[[1, 0], [2, 3]] · [[4, 5], [6, 7]]`.', NULL, NULL, '[]', 'Row1: `[1·4+0·6, 1·5+0·7] = [4, 5]`. Row2: `[2·4+3·6, 2·5+3·7] = [8+18, 10+21] = [26, 31]`. → `[[4, 5], [26, 31]]`.', NULL, 'medium', NULL),
   ('pc-u4-p9', 'ap_precalc', '4.0', '4', NULL, 'constructed_model_graded', 'Identify the conic: `9x² − 4y² + 36x − 8y − 4 = 0`. (Just classify and give the center.)', NULL, NULL, '[]', '`x²` coeff `+9`, `y²` coeff `−4` → **opposite signs → hyperbola**. Group: `9(x²+4x) − 4(y²+2y) = 4` → `9(x+2)² − 4(y+1)² = 4 + 36 − 4 = 36`. Divide by 36: `(x+2)²/4 − (y+1)²/9 = 1`. **Hyperbola**, center `(−2, −1)`, opens left/right.', NULL, 'hard', NULL),
