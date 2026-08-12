@@ -891,3 +891,42 @@ test('an item abandoned mid-question in one sitting is still servable in the nex
   assert.equal(paper.rows.length, 2, 'and both count as evidence in the new sitting')
   assert.equal(paper.distinct.size, 2, `one row per question: ${paper.items.join(', ')}`)
 })
+
+test('two concurrent /mock/start calls cannot both open a sitting on one subject', async () => {
+  // The read-then-write this closes: handleMockStart could read the mocks table,
+  // see nothing open, and insert — twice, concurrently — which is exactly the
+  // state the guard exists to refuse. Held at the statement, like claimServe's and
+  // recordServe's, so no interleaving can produce two open papers.
+  //
+  // Scheduled rather than hoped for: the first INSERT is parked until the second
+  // request has been through its own, so both are in flight at once.
+  const race = scheduled(/INSERT INTO mocks/i)
+  const { db, sqlite } = freshDb({ hold: race.hold })
+  seedSection(sqlite, 2)
+
+  race.arm()
+  const first = handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  await race.reached // parked with its INSERT in flight, having seen nothing open
+  const second = handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(1) })
+  race.release()
+  const results = await Promise.allSettled([first, second])
+  const opened = sqlite.prepare(`SELECT COUNT(*) n FROM mocks WHERE ended_at IS NULL`).get().n
+  assert.equal(opened, 1, `one subject may have exactly one open sitting, found ${opened}`)
+  assert.equal(results.filter((r) => r.status === 'fulfilled').length, 1, 'exactly one caller may be given a paper')
+
+  const refused = results.find((r) => r.status === 'rejected')
+  assert.ok(refused.reason instanceof ApiError, `the loser must be refused, got ${refused.reason}`)
+  assert.equal(refused.reason.status, 409)
+  assert.match(refused.reason.message, /never submitted/, 'and told what is in the way')
+})
+
+test('a subject with an open sitting does not block the other subject', async () => {
+  const { db, sqlite } = freshDb()
+  seedSection(sqlite, 2)
+  const csa = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const pre = await db.startMock({
+    subject: 'ap_precalc', section: 'I', started_at: T0, proctored: 1, source: 'bank',
+  })
+  assert.ok(csa.mock)
+  assert.ok(pre, 'two exams are in progress; a CSA paper on the desk says nothing about a Precalculus one')
+})

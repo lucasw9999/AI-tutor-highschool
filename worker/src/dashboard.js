@@ -53,6 +53,12 @@ td.ev { color:var(--dim); text-align:right; white-space:nowrap; font-variant-num
 .adv { border-left:3px solid var(--wait); background:color-mix(in srgb, var(--wait) 10%, transparent);
        padding:.7rem .85rem; border-radius:0 6px 6px 0; font-size:.9rem; margin-top:.75rem }
 footer { color:var(--dim); font-size:.8rem; margin-top:3rem; border-top:1px solid var(--line); padding-top:1rem }
+.facts { list-style:none; margin:.9rem 0 0; padding:0; font-size:.9rem; color:var(--dim) }
+.facts li { padding:.25rem 0; border-bottom:1px solid var(--line) }
+.facts li:last-child { border-bottom:0 }
+.facts b { color:var(--ink); font-weight:600 }
+.facts .stale { color:var(--wait) }
+.facts .bad { color:var(--no) }
 `
 
 function criteriaTable(criteria) {
@@ -63,13 +69,87 @@ function criteriaTable(criteria) {
   return `<table><thead><tr><th></th><th>Requirement</th><th class="ev">Evidence</th></tr></thead><tbody>${rows}</tbody></table>`
 }
 
+
+/**
+ * When he last answered anything.
+ *
+ * The page carried no dates at all except the mock chips, so six weeks of silence
+ * rendered identically to a hard week — same 0%, same blocker, same chips — and
+ * nothing on it could tell "working hard, not yet measurable" from "stopped".
+ * `days` is a whole calendar count computed in api.js (in the exam's own zone, the
+ * same unit as the days-to-exam figure above it, so the two cannot disagree).
+ */
+function lastAnswerLine(last) {
+  if (!last) return `<li><b>No answers recorded yet.</b> Nothing on this card has been measured from anything.</li>`
+  const when = last.days <= 0 ? 'today' : last.days === 1 ? 'yesterday' : `${last.days} days ago`
+  const stale = last.days >= 7 ? ' class="stale"' : ''
+  return `<li${stale}>Last answer <b>${esc(when)}</b> (${esc(last.on ?? String(last.at).slice(0, 10))}).`
+    + (last.days >= 7
+      ? ` Every number on this card is a snapshot of that date, not of today.`
+      : '')
+    + `</li>`
+}
+
+/**
+ * How fast he is answering, against the pace the real exam allows.
+ *
+ * Always shown when it can be computed at all, not only when it is bad: pace is
+ * the one thing that decides a timed exam and is invisible in every percentage on
+ * this page. A sample too small to conclude from is labelled rather than hidden,
+ * which is the same rule the pending criteria follow.
+ */
+function paceLine(pace) {
+  if (!pace) return ''
+  const projection = pace.projected_minutes && pace.budget_minutes && pace.section_questions
+    ? ` At that pace a ${pace.section_questions}-question section takes about <b>${pace.projected_minutes} minutes</b>`
+      + ` against the ${pace.budget_minutes} it gets.`
+    : ''
+  const measured = pace.measured
+    ? ''
+    : ` Measured over ${pace.n} answer(s) — too few to conclude from, so it is not yet being reported to him.`
+  const flag = pace.over ? ' class="bad"' : ''
+  return `<li${flag}>Pace <b>${pace.seconds}s</b> per multiple-choice question (middle of the last ${pace.n}),`
+    + ` against the <b>${pace.target_seconds}s</b> one question gets on the real exam.${projection}${measured}</li>`
+}
+
+/**
+ * Open teaching gaps, with how long each has been open.
+ *
+ * These were passed to this page and rendered nowhere, so a gap open since
+ * September looked exactly like one opened this morning — and a gap is the one
+ * thing on the card that a parent can actually act on.
+ */
+function gapLines(gaps) {
+  if (!gaps?.length) return ''
+  const rows = gaps.map((g) => {
+    const age = g.days_open == null ? 'open' : g.days_open === 0 ? 'opened today' : `open ${g.days_open} days`
+    const state = g.taught ? 'taught, awaiting a cold re-test' : 'lesson not given yet'
+    return `<li><b>${esc(g.topic)}</b> — ${esc(age)}, ${esc(state)}</li>`
+  }).join('')
+  return `<h2>Open gaps</h2><ul class="facts">${rows}</ul>`
+}
+
+/** Sittings that were started and never submitted, once past their own budget. */
+function unfinishedLines(unfinished) {
+  if (!unfinished?.length) return ''
+  return unfinished.map((u) =>
+    `<div class="adv">Sitting <b>#${u.id}</b> (section ${esc(u.section)}) was started ${esc(String(u.started_at).slice(0, 10))}`
+    + ` and <b>never submitted</b> — open ${u.open_minutes} minutes against the ${u.budget_minutes} minutes section`
+    + ` ${esc(u.section)} gets on the real exam, with ${u.answered} answer(s) on it. Until it is submitted it counts as`
+    + ` nothing: it is absent from the mock count and from every requirement below.</div>`).join('')
+}
+
 /**
  * Render one subject's card.
  *
- * @param {object} s  { config, readiness, coverage, attempts, mocks }
+ * @param {object} s  { config, readiness, coverage, attempts, mocks, last_answer,
+ *        pace, open_gaps, unfinished_sittings } — everything after `mocks` is
+ *        computed in api.js. Nothing here derives anything; a missing value is
+ *        rendered as the absence it is, never as a zero or a guessed date.
  */
 export function subjectSection(s) {
   const { config, readiness: r, coverage, attempts, mocks } = s
+  const { last_answer = null, pace = null, open_gaps = [], unfinished_sittings = [] } = s
   const days = Math.ceil((new Date(config.exam_date) - new Date(s.now)) / 86400000)
   const blocker = r.criteria.find((c) => !c.met)
   const scored = mocks.filter((m) => m.proctored && m.composite_pct != null)
@@ -103,6 +183,13 @@ export function subjectSection(s) {
     <span class="chip">${scored.length} proctored mock${scored.length === 1 ? '' : 's'}</span>
   </div>
 
+  ${unfinishedLines(unfinished_sittings)}
+
+  <ul class="facts">
+    ${lastAnswerLine(last_answer)}
+    ${paceLine(pace)}
+  </ul>
+
   <h2>Every requirement</h2>
   ${criteriaTable(r.criteria)}
   <p class="note">
@@ -113,6 +200,8 @@ export function subjectSection(s) {
     Readiness reaches 100% only when every row shows ✓ at the same time.
     Answering practice questions correctly, however many, does not move this number.
   </p>
+
+  ${gapLines(open_gaps)}
 
   ${scored.length ? `<h2>Mock history</h2><div class="chips">${recent}</div>` : ''}
 </div>`
