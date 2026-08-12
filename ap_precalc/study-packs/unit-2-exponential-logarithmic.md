@@ -205,11 +205,11 @@ This is **linear in** $x$: $Y = mx + B$ where $Y=\log y$, slope $m=\log b$, inte
 
 ## 3. Graduated Practice Set (easy → exam-level)
 
-> Try each before opening the solution. Tags: **[NC]** = no-calculator (Part A style), **[C]** = calculator allowed (Part B style).
+> Try each before opening the solution. Tags: **[NC]** = no-calculator (Part A style), **[C]** = calculator allowed (Part B style); the word after that is the **difficulty** (Easy → Med → Hard → Exam-level), same convention as the Unit 3 pack.
 
 ---
 
-**P1 [NC] — Linear vs. exponential.** A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.
+**P1 [NC] — Easy — Linear vs. exponential.** A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.
 
 <details><summary>Solution</summary>
 
@@ -218,7 +218,7 @@ Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 
 
 ---
 
-**P2 [NC] — Geometric sequence.** $g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.
+**P2 [NC] — Easy — Geometric sequence.** $g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.
 
 <details><summary>Solution</summary>
 
@@ -227,7 +227,7 @@ $g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.
 
 ---
 
-**P3 [NC] — Evaluate logs.** Compute (a) $\log_3 81$, (b) $\log_5 \frac{1}{25}$, (c) $\ln e^{7}$.
+**P3 [NC] — Easy — Evaluate logs.** Compute (a) $\log_3 81$, (b) $\log_5 \frac{1}{25}$, (c) $\ln e^{7}$.
 
 <details><summary>Solution</summary>
 
@@ -236,7 +236,7 @@ $g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.
 
 ---
 
-**P4 [NC] — Exponential ↔ log form.** Rewrite $\log_2 x = 5$ in exponential form and solve.
+**P4 [NC] — Easy — Exponential ↔ log form.** Rewrite $\log_2 x = 5$ in exponential form and solve.
 
 <details><summary>Solution</summary>
 
@@ -245,7 +245,7 @@ $x = 2^5 = 32$.
 
 ---
 
-**P5 [NC] — Solve a clean exponential.** Solve $2^{3x} = 16$.
+**P5 [NC] — Easy/Med — Solve a clean exponential.** Solve $2^{3x} = 16$.
 
 <details><summary>Solution</summary>
 
@@ -254,7 +254,7 @@ $16 = 2^4$, so $3x = 4 \Rightarrow x = \dfrac{4}{3}$.
 
 ---
 
-**P6 [C] — Exponential growth model.** A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?
+**P6 [C] — Med — Exponential growth model.** A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?
 
 <details><summary>Solution</summary>
 
@@ -264,7 +264,7 @@ Reach 18,000: $1.03^t = 1.5 \Rightarrow t = \dfrac{\ln 1.5}{\ln 1.03} \approx \d
 
 ---
 
-**P7 [NC] — Condense logs.** Write as one logarithm: $\dfrac{1}{2}\log x + 2\log y - \log z$.
+**P7 [NC] — Med — Condense logs.** Write as one logarithm: $\dfrac{1}{2}\log x + 2\log y - \log z$.
 
 <details><summary>Solution</summary>
 
@@ -273,7 +273,7 @@ $\log x^{1/2} + \log y^2 - \log z = \log\!\left(\dfrac{\sqrt{x}\,y^2}{z}\right)$
 
 ---
 
-**P8 [NC] — Solve a log equation (watch domain).** Solve $\log_2(x) + \log_2(x-2) = 3$.
+**P8 [NC] — Med — Solve a log equation (watch domain).** Solve $\log_2(x) + \log_2(x-2) = 3$.
 
 <details><summary>Solution</summary>
 
@@ -283,7 +283,7 @@ $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**
 
 ---
 
-**P9 [NC] — Composition + inverse (FRQ Q1 flavor).** $f(x)=\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.
+**P9 [NC] — Med/Hard — Composition + inverse (FRQ Q1 flavor).** $f(x)=\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.
 
 <details><summary>Solution</summary>
 
@@ -293,7 +293,7 @@ $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**
 
 ---
 
-**P10 [C] — Semi-log plot.** Data plotted as $\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.
+**P10 [C] — Hard — Semi-log plot.** Data plotted as $\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.
 
 <details><summary>Solution</summary>
 
@@ -304,7 +304,7 @@ Model: $y = 2\cdot 2^{x}$.
 
 ---
 
-**P11 [NC] — FRQ Q4-style (Symbolic Manipulation).** (a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\log_3(9x^4) - \log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.
+**P11 [NC] — Exam-level — FRQ Q4-style (Symbolic Manipulation).** (a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\log_3(9x^4) - \log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.
 
 <details><summary>Solution</summary>
 
@@ -316,7 +316,7 @@ Model: $y = 2\cdot 2^{x}$.
 
 ---
 
-**P12 [C] — FRQ Q2-style (Non-Periodic Modeling).** Downloads of an app are modeled by $D(t)=a+b\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$.
+**P12 [C] — Exam-level — FRQ Q2-style (Non-Periodic Modeling).** Downloads of an app are modeled by $D(t)=a+b\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$.
 (a) Find $a$ and $b$.
 (b) Find the average rate of change of $D$ from $t=0$ to $t=30$.
 (c) The true number of downloads at $t=15$ is *greater* than the value predicted by the average rate of change line from (b). Explain why, using concavity.

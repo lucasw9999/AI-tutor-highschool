@@ -270,6 +270,56 @@ test('N12: a worked example whose label carried the actual prompt does not open 
   }
 })
 
+test('PC-C8b: the a + b·ln(t+1) model is practised by ONE item, not two near-duplicates', () => {
+  // pc-u1-p9 and pc-u2-p12 were both "find a and b for a + b·ln(t+1) from two
+  // points" — the same model, the same shape, differing only in the story and the
+  // numbers. Two items of one form is one item of evidence dressed as two: it
+  // spends a bank of 48 twice on the same skill and overstates coverage of the
+  // form. pc-u2-p12 is the one kept, because it goes further (AROC, then the
+  // concavity explanation that FRQ Q2 actually scores) and it lives in the unit
+  // whose content it is.
+  const r = parsePrecalcItems(read)
+  const logModel = r.items.filter((i) => /=\s*a\s*\+\s*b\\ln\(t\+1\)/.test(i.stem))
+  assert.deepEqual(
+    logModel.map((i) => i.id),
+    ['pc-u2-p12'],
+    'exactly one practice item may drill the a + b·ln(t+1) two-point fit',
+  )
+  // ...and the survivor is the richer one, so the differentiation cannot be
+  // "resolved" later by deleting the parts that made it worth keeping.
+  assert.match(logModel[0].stem, /average rate of change/i)
+  assert.match(logModel[0].solution, /concave down/i)
+})
+
+test('PC-C8c: no item in a completed pack is missing difficulty or calc_allowed, and the remaining gaps are pinned', () => {
+  // The parser reads both fields off each item's tagline, and a missing tagline
+  // is silent: difficulty simply comes back null, and a null calc_allowed is read
+  // as FALSE (no-calculator) by readiness.js's calculator-half filter
+  // `a.calc_allowed === flag`, so an untagged item is measured against the wrong
+  // half of the exam rather than skipped.
+  //
+  // The two lists below are pinned as exact sets, not as counts or as "at most":
+  // every id still missing a field is named, so filling one in must be
+  // accompanied by deleting it from here, and dropping a tag from a pack that
+  // HAS one fails immediately. Both remaining groups belong to packs this change
+  // does not own — unit 3's two FRQ-style items, and all twelve of unit 4.
+  const r = parsePrecalcItems(read)
+  const noDifficulty = r.items.filter((i) => !i.difficulty).map((i) => i.id)
+  const noCalc = r.items.filter((i) => i.calc_allowed === null || i.calc_allowed === undefined).map((i) => i.id)
+
+  assert.deepEqual(noDifficulty, ['pc-u3-p11', 'pc-u3-p12'], 'untagged difficulty outside unit 3')
+  assert.deepEqual(
+    noCalc,
+    Array.from({ length: 12 }, (_, k) => `pc-u4-p${k + 1}`),
+    'untagged calc_allowed outside unit 4',
+  )
+  // Unit 1 and unit 2 are complete on both fields — that is what this change fixed.
+  for (const it of r.items.filter((i) => i.unit === '1' || i.unit === '2')) {
+    assert.ok(it.difficulty, `${it.id} has no difficulty`)
+    assert.notEqual(it.calc_allowed, null, `${it.id} has no calc_allowed`)
+  }
+})
+
 // --- build-level guarantees -----------------------------------------------
 
 test('the build reports both subjects, and neither has zero topics', () => {
