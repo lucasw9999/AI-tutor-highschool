@@ -598,6 +598,65 @@ test('Q4-G1: decoration still resolves on every item that has no letter-valued o
   assert.ok(resolved > 15000, `only ${resolved} decorated letters resolved`)
 })
 
+// ---------------------------------------------------------------------------
+// Q4-G3 — a word that asserts nothing is not an answer
+// ---------------------------------------------------------------------------
+
+test('Q4-G3: a lone word lifted out of an option is not a statement of that option', () => {
+  // matchFragment resolved a one-word fragment to whichever option contained it,
+  // so an option's sentence FRAME — 'thrown', 'prints', 'loop' — earned a
+  // confident verdict from a response that names no option at all. Both
+  // directions do damage: credit for an answer he never gave, and a miss that
+  // drags the topic percentage and can open a concept gap he then has to work
+  // off. A stopword in front of the word does not make it two words.
+  const cases = [
+    ['csa-ac-q60', 'thrown', 'was credited: option C is "A `NullPointerException` is thrown."'],
+    ['csa-ac-q60', 'is thrown', 'same word behind a stopword'],
+    ['csa-ac-q60', 'line', 'booked a miss against option B, "An empty line"'],
+    ['csa-ac-q81', 'loop', 'was credited: option C is "Change the loop condition to `i < a.length`"'],
+    ['csa-ac-q81', 'the loop', 'same word behind a stopword'],
+    ['csa-ac-q14', 'thrown', 'booked a miss recorded as a pick of B'],
+    ['csa-ac-q4', 'prints', 'booked a miss recorded as a pick of D'],
+    ['csa-ac-q33', 'thrown', 'was credited on the strength of the frame alone'],
+  ]
+  for (const [id, raw, why] of cases) {
+    const r = grade(byId(id), raw)
+    assert.equal(
+      r.graded_by,
+      'unparsed',
+      `${id} ${JSON.stringify(raw)} was graded (picked ${r.picked}, correct ${r.correct}) — ${why}`,
+    )
+    assert.equal(isServerGraded(r), false, `${id} ${JSON.stringify(raw)} must not count`)
+  }
+})
+
+test('Q4-G3: the word that carries the option keeps its verdict', () => {
+  // The guard has to tell an option's substance from its frame, or it throws
+  // away real evidence with the noise. Every response here names the heaviest
+  // word of exactly one option and stays readable — in both directions, because
+  // naming the wrong option's substance is a real answer and a real miss.
+  assert.equal(grade(byId('csa-ac-q60'), 'NullPointerException').correct, 1)
+  assert.equal(grade(byId('csa-ac-q60'), 'a NullPointerException').correct, 1)
+  assert.equal(grade(byId('csa-ac-q60'), 'it throws a NullPointerException').correct, 1)
+  assert.equal(grade(byId('csa-ac-q33'), 'StringIndexOutOfBoundsException').correct, 1)
+  assert.equal(grade(byId('csa-ac-q4'), 'ArithmeticException').correct, 1)
+  assert.equal(grade(byId('csa-ac-q81'), 'Change the loop condition').correct, 1)
+  assert.equal(grade(byId('csa-ac-q81'), 'condition').correct, 1)
+  for (const [id, raw, picked] of [
+    ['csa-ac-q60', 'an empty line', 'B'],
+    ['csa-ac-q60', 'empty', 'B'],
+    ['csa-ac-q14', 'ArithmeticException', 'B'],
+    ['csa-ac-q4', 'Infinity', 'D'],
+    ['csa-ac-q4', 'it prints Infinity', 'D'],
+    ['csa-ac-q33', 'An empty string', 'C'],
+  ]) {
+    const r = grade(byId(id), raw)
+    assert.equal(r.graded_by, 'server', `${id} ${JSON.stringify(raw)} was declined (${r.detail})`)
+    assert.equal(r.picked, picked, `${id} ${JSON.stringify(raw)} read as ${r.picked}`)
+    assert.equal(r.correct, 0, `${id} ${JSON.stringify(raw)} names a wrong option and is a real miss`)
+  }
+})
+
 test('G7: no shipped mcq is keyed with something the grader cannot use', () => {
   for (const item of SHIPPED_MCQ) {
     const keyed = normalizeChoice(item.answer)

@@ -79,6 +79,12 @@ function canonAnswer(value) {
 const isBareLetter = (text) => /^[a-e]$/i.test(text)
 const tokensOf = (text) => text.split(' ').filter(Boolean)
 
+/** The tokens that carry meaning — what is left once the filler is dropped. */
+const contentWords = (tokens) => tokens.filter((t) => !STOPWORDS.has(t))
+
+/** How much meaning the heaviest word of an option carries. */
+const substanceOf = (tokens) => contentWords(tokens).reduce((max, t) => Math.max(max, t.length), 0)
+
 /** True when `want` appears in `have` as a run of whole tokens. */
 function isTokenRun(want, have) {
   if (!want.length || want.length > have.length) return false
@@ -96,7 +102,8 @@ function optionIndex(options) {
   for (const [label, text] of Object.entries(options)) {
     if (!/^[a-e]$/i.test(label) || text == null) continue
     const canon = canonAnswer(text)
-    index.set(label.toUpperCase(), { canon, tokens: tokensOf(canon) })
+    const tokens = tokensOf(canon)
+    index.set(label.toUpperCase(), { canon, tokens, substance: substanceOf(tokens) })
   }
   return index.size ? index : null
 }
@@ -115,14 +122,28 @@ function matchExact(text, index) {
  * thrown.' Every token he typed has to appear, in order, so an added word (a
  * negation, another option's wording) fails to match rather than matching
  * loosely. AMBIGUOUS if several options contain it, null if none.
+ *
+ * A fragment that comes down to ONE content word has to be that option's
+ * substance, not a word out of its sentence frame. Options are written as
+ * sentences, so 'thrown', 'prints' and 'loop' each sit in exactly one option and
+ * used to resolve to it: on csa-ac-q60 (key C, option C 'A `NullPointerException`
+ * is thrown.') the response 'thrown' was credited, and on csa-ac-q4 (key C)
+ * 'prints' booked a miss as a pick of D. Neither response states an option.
+ * Measured over the shipped bank, this frame-matching awarded credit on 264
+ * (item, word) pairs and booked 570 misses. Requiring the word to be at least as
+ * heavy as every other content word in the option keeps the answers that ARE a
+ * single word — 'NullPointerException', 'Infinity' — and drops the frame.
  */
 function matchFragment(text, index) {
   if (!text || isBareLetter(text) || text.length < 3) return null
   const want = tokensOf(text)
-  if (want.length === 1 && STOPWORDS.has(want[0])) return null
-  const hits = [...index].filter(([, o]) => isTokenRun(want, o.tokens)).map(([label]) => label)
-  if (hits.length === 1) return hits[0]
-  return hits.length ? AMBIGUOUS : null
+  const said = contentWords(want)
+  if (!said.length) return null
+  const hits = [...index].filter(([, o]) => isTokenRun(want, o.tokens))
+  if (hits.length !== 1) return hits.length ? AMBIGUOUS : null
+  const [label, option] = hits[0]
+  if (said.length === 1 && said[0].length < option.substance) return null
+  return label
 }
 
 /** The label the student named, with whether he named it explicitly. */
