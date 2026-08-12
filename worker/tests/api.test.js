@@ -51,9 +51,26 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
     async gaps(subject) { return state.gaps.filter((g) => g.subject === subject) },
     async mocks(subject) { return state.mocks.filter((m) => m.subject === subject) },
     async recordServe(s) {
+      // The conditional INSERT db.js does inside a sitting, with the same
+      // contract: null when this paper already has that item outstanding. A fake
+      // cannot reproduce the race — see tests/db.test.js for that, over real
+      // SQLite — but it can hold the handler to the same return contract.
+      if (s.mock_id != null && state.serves.some(
+        (x) => x.subject === s.subject && !x.logged && Number(x.mock_id) === Number(s.mock_id) && x.item_id === s.item_id,
+      )) {
+        return null
+      }
       const row = { id: state.nextServe++, logged: 0, ...s }
       state.serves.push(row)
       return row.id
+    },
+    /** The sitting's questions in flight: served, not yet logged. Same scope as db.js. */
+    async openServeItems({ subject, mockId }) {
+      return [...new Set(
+        state.serves
+          .filter((s) => s.subject === subject && !s.logged && Number(s.mock_id) === Number(mockId))
+          .map((s) => s.item_id),
+      )]
     },
     async serve(id) { return state.serves.find((s) => s.id === Number(id)) ?? null },
     async markServeLogged(id) { (await this.serve(id)).logged = 1 },
