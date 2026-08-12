@@ -24,7 +24,7 @@
 // never supplies an item id, a timestamp, an elapsed time, or a verdict. It
 // passes back the serve id the server issued and the raw text the student typed.
 
-import { grade } from './grade.js'
+import { grade, MODEL_GRADED } from './grade.js'
 import { computeReadiness } from './readiness.js'
 import { pickNext } from './select.js'
 import { detectGaps, reconcileGaps, clearsGap, buildLesson } from './teaching.js'
@@ -122,6 +122,30 @@ async function requireOpenMock({ db, mockId, subject }) {
   return m
 }
 
+/**
+ * How many gradeable questions of each kind the bank actually holds, per subject.
+ *
+ * Exam-tested topics only, because that is the whole world a sitting is drawn
+ * from (see select.js's `universe`): a paper may not be padded from the
+ * class-only corner of the bank, so that corner cannot make a section look
+ * supplied either. An item with no answer key is counted out for the same
+ * reason — grade.js reports it `unkeyed`, so it can never reach a composite.
+ *
+ * @returns {Map<string, number>} item kind -> how many the bank can ask and mark.
+ */
+function supplyOf({ items = [], topics = [] }) {
+  const tested = new Set(topics.filter((t) => t.tested_on_exam !== 0).map((t) => t.id))
+  const counts = new Map()
+  for (const it of items) {
+    // Mirrors select.js's isTested: with no topic metadata at all, nothing is
+    // excluded, rather than everything being.
+    if (tested.size && !tested.has(it.topic)) continue
+    if (it.answer == null || String(it.answer).trim() === '') continue
+    counts.set(it.kind, (counts.get(it.kind) ?? 0) + 1)
+  }
+  return counts
+}
+
 /** Everything the engines need for one subject, fetched concurrently. */
 async function loadContext(db, subject, config) {
   const [items, attempts, topics, gaps, mocks, teachingRows] = await Promise.all([
@@ -130,6 +154,7 @@ async function loadContext(db, subject, config) {
   ])
   return {
     items, attempts, gaps, mocks, config,
+    supply: supplyOf({ items, topics }),
     topicMeta: new Map(topics.map((t) => [t.id, t])),
     teaching: new Map(teachingRows.map((t) => [t.topic, t])),
     topics,
@@ -519,7 +544,17 @@ function timingFindings(t) {
   return out
 }
 
-/** GET /mock/start — open a proctored sitting. Only these can move readiness. */
+/**
+ * GET /mock/start — open a proctored sitting. Only these can move readiness.
+ *
+ * NOT refused when the bank cannot supply the section: FRQ practice against a
+ * clock is real work, and refusing it would throw away evidence to protect a
+ * number. What it cannot do is produce a composite — see sectionScoring, and
+ * handleMockSubmit's `supplied` guard, which says so in the sitting's own basis
+ * and in an advisory that resurfaces on every later response. Telling him HERE
+ * as well, before he spends ninety minutes on it, would be better still, and is
+ * left undone only because it needs a content read this handler does not have.
+ */
 export async function handleMockStart({ db, subject, section, source, config, now }) {
   if (!['I', 'II', 'full'].includes(section)) throw new ApiError(400, `section must be I, II or full`)
   if (!['bank', 'official'].includes(source)) throw new ApiError(400, `source must be bank or official`)
@@ -542,16 +577,103 @@ export async function handleMockStart({ db, subject, section, source, config, no
  */
 export const MIN_MOCK_COVERAGE = 0.9
 
+/** How the bank labels the questions each half of an exam is made of. */
+const PART_KIND = { mcq: 'mcq', frq: 'frq' }
+const PART_NAME = { mcq: 'multiple choice', frq: 'free-response' }
+
+/**
+ * The halves a section is made of: [item kind, how many the real exam has of it].
+ *
+ * A section is not just a number of questions, it is a number of questions OF A
+ * KIND, and that is the fact this file used to be missing. The selector filters a
+ * sitting by topic and never by kind, so nothing anywhere connected `frq_count`
+ * to whether the bank holds a single free-response item.
+ */
+function sectionParts(section, exam = {}) {
+  const mcq = [PART_KIND.mcq, exam.mcq_count ?? (exam.mcq_no_calc_count != null || exam.mcq_calc_count != null
+    ? (exam.mcq_no_calc_count ?? 0) + (exam.mcq_calc_count ?? 0)
+    : null)]
+  const frq = [PART_KIND.frq, exam.frq_count ?? null]
+  if (section === 'I') return [mcq]
+  if (section === 'II') return [frq]
+  if (section === 'full') return [mcq, frq]
+  return []
+}
+
 /** How many questions a section of this exam is expected to contain. */
 function expectedQuestions(section, exam = {}) {
-  const mcq = exam.mcq_count ?? (exam.mcq_no_calc_count != null || exam.mcq_calc_count != null
-    ? (exam.mcq_no_calc_count ?? 0) + (exam.mcq_calc_count ?? 0)
-    : null)
-  const frq = exam.frq_count ?? null
-  if (section === 'I') return mcq
-  if (section === 'II') return frq
-  if (section === 'full') return mcq == null && frq == null ? null : (mcq ?? 0) + (frq ?? 0)
+  const counted = sectionParts(section, exam).filter(([, n]) => n != null)
+  return counted.length ? counted.reduce((total, [, n]) => total + n, 0) : null
+}
+
+/**
+ * Why one half of a section cannot reach a composite, or null when it can.
+ *
+ * Deliberately worded to avoid the phrases the other unscored branches own
+ * ("graded mechanically", "run against a clock", "short of the N% of the
+ * section"): these are distinct reasons with distinct things to fix, and
+ * gpt-instructions.md is checked against those markers.
+ */
+function partObstacle([kind, count], supply) {
+  if (MODEL_GRADED.has(kind)) {
+    return `its ${count} ${PART_NAME[kind]} question(s) are rubric-scored rather than mechanically marked, so they `
+      + `cannot move readiness until the grader is calibrated`
+  }
+  const need = Math.ceil(count * MIN_MOCK_COVERAGE)
+  const have = supply.get(kind) ?? 0
+  if (have < need) {
+    return `the bank holds ${have} exam-tested ${PART_NAME[kind]} question(s), short of the ${need} it takes to `
+      + `cover the ${count} a sitting of it contains`
+  }
   return null
+}
+
+/**
+ * What a section can actually be scored on, measured against the bank rather
+ * than against the exam table alone.
+ *
+ * THE DISTINCTION THIS DRAWS, and why the composite hangs off it:
+ *
+ * `expected` is what the REAL exam's section contains — a true fact about the
+ * exam, and what the student should be told. `scorable` is how many of those
+ * questions this system can actually put in front of him AND mark: the exam
+ * table's count for each half of the section, but only for halves the bank can
+ * supply and grade. Nothing checked that before, and both directions were
+ * live defects:
+ *
+ *   sec=II claimed 4 (frq_count) while the bank holds ZERO free-response items.
+ *   The selector filters by topic, not kind, so it served 4 multiple choice
+ *   questions — 4 of 4, past MIN_MOCK_COVERAGE, composite 100, counted. Six
+ *   such afternoons formed a COMPLETE qualifying window on 24 questions, which
+ *   is the precise overstatement MIN_MOCK_COVERAGE was written to prevent.
+ *
+ *   sec=full claimed 46 while only 42 questions can be asked or marked, so a
+ *   perfect paper scored 91.3 with 4 "blanks" it was never offered — three of
+ *   them put max_blanks (1) out of reach and made `ready` unreachable that way.
+ *
+ * A section with NOTHING scorable gets no composite at all: that is the same
+ * mechanism a sitting below MIN_MOCK_COVERAGE or one run without a clock
+ * already goes through — recorded, disclosed, unable to move readiness — and
+ * the answers are still kept as practice.
+ *
+ * @returns {{expected: number|null, scorable: number|null, obstacles: string[]}}
+ *          `scorable` is null exactly when `expected` is (the exam table
+ *          declares no count for this section, so there is nothing to measure
+ *          against), and 0 when the section cannot be scored at all.
+ */
+function sectionScoring({ section, exam = {}, supply = new Map() }) {
+  const parts = sectionParts(section, exam).filter(([, n]) => n != null)
+  const expected = expectedQuestions(section, exam)
+  if (!parts.length) return { expected, scorable: null, obstacles: [] }
+
+  let scorable = 0
+  const obstacles = []
+  for (const part of parts) {
+    const obstacle = partObstacle(part, supply)
+    if (obstacle) obstacles.push(obstacle)
+    else scorable += part[1]
+  }
+  return { expected, scorable, obstacles }
 }
 
 /** GET /mock/submit — close the sitting and score it from its own attempts. */
@@ -595,7 +717,17 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   const scored = attempts.filter((a) => a.graded_by === 'server')
   const right = scored.filter((a) => a.correct).length
   const ungraded = attempts.length - scored.length
-  const expected = expectedQuestions(m.section, cfg.exam)
+
+  // What this section can actually be asked and marked from, read off the bank
+  // rather than off the exam table alone. `expected` is what the real section
+  // contains and is what he is told; `scorable` is what the composite may be
+  // measured against. See sectionScoring for why they are not the same number.
+  const [items, topics] = await Promise.all([db.items(m.subject), db.topics(m.subject)])
+  const { expected, scorable, obstacles } = sectionScoring({
+    section: m.section, exam: cfg.exam, supply: supplyOf({ items, topics }),
+  })
+  // A section with nothing scorable is not a paper this system can mark at all.
+  const supplied = scorable == null || scorable > 0
 
   // Blanks count what the answer sheet would show, which is the same rule the
   // composite applies below: a question left empty and a question never reached
@@ -603,31 +735,50 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // sitting report composite 90.5 (the 4 unreached scored as wrong) alongside
   // "0 blanks", so the max_blanks criterion was blind to exactly the four
   // questions the composite had just penalised — one fix, two stories.
-  const unreached = expected == null ? 0 : Math.max(0, expected - attempts.length)
+  //
+  // Measured against `scorable`, never against `expected`: a question the bank
+  // cannot ask is not one he failed to reach. Counting the 4 free-response
+  // questions of a full sitting as blanks put max_blanks (1) permanently out of
+  // reach after three sittings, i.e. it made `ready` unreachable through sec=full.
+  const unreached = scorable == null ? 0 : Math.max(0, scorable - attempts.length)
   const left = attempts.filter((a) => (a.response ?? '') === '').length
   const blanks = left + unreached
 
-  // Two guards against two different false claims:
+  // Three guards against three different false claims:
   //   1. `correct / answered` reads 100% on three questions out of 42, and six
   //      such sittings satisfy every composite criterion there is. A sitting that
   //      does not cover the section gets NO composite at all.
   //   2. Inside a sitting that does cover it, a question left unanswered is wrong,
   //      exactly as on the real exam. Dividing by what he happened to answer
   //      would quietly delete the ones he skipped.
-  const covered = expected == null || attempts.length >= Math.ceil(expected * MIN_MOCK_COVERAGE)
-  const denominator = Math.max(scored.length, (expected ?? 0) - ungraded)
+  //   3. A section whose questions do not exist covers nothing, whatever it
+  //      answered. sec=II counted 4 multiple choice answers as 4 of the 4
+  //      questions "a section II sitting is expected to contain" and scored them
+  //      100 — the coverage gate cannot do its job on a count the bank has no
+  //      questions behind.
+  const covered = scorable == null || attempts.length >= Math.ceil(scorable * MIN_MOCK_COVERAGE)
+  const denominator = Math.max(scored.length, (scorable ?? 0) - ungraded)
 
-  // The third guard: a sitting that was not run against a clock is not evidence
+  // The fourth guard: a sitting that was not run against a clock is not evidence
   // about how he performs under exam conditions, whatever it scores. See
   // MOCK_TIME_SLACK for the measurement and the reasoning behind the bar.
   const timing = sittingTiming({ section: m.section, exam: cfg.exam, attempts })
   const timed = !timing?.untimed
 
-  const composite = covered && timed && denominator > 0 ? (right / denominator) * 100 : null
+  const composite = supplied && covered && timed && denominator > 0 ? (right / denominator) * 100 : null
+
+  // Answers of a kind this section does not contain, which is what an unsupplied
+  // section is actually made of: reporting 4 multiple choice answers as "4 of the
+  // 4 questions section II is expected to contain" IS the overstatement.
+  const sectionKinds = new Set(sectionParts(m.section, cfg.exam).map(([kind]) => kind))
+  const ofSection = attempts.filter((a) => sectionKinds.has(a.kind)).length
 
   const basis = []
   if (expected != null) {
-    basis.push(`Answered ${attempts.length} of the ${expected} questions a section ${m.section} sitting is expected to contain.`)
+    basis.push(ofSection === attempts.length
+      ? `Answered ${attempts.length} of the ${expected} questions a section ${m.section} sitting is expected to contain.`
+      : `Answered ${attempts.length} question(s), ${ofSection} of which are the kind a section ${m.section} sitting is `
+        + `made of, against the ${expected} it is expected to contain.`)
   }
   if (ungraded) {
     basis.push(`${ungraded} response(s) need human or model grading and are excluded from the composite.`)
@@ -646,6 +797,13 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // be true at once: a short sitting that also took four hours is both, and
   // naming only one of them tells him to fix the wrong thing.
   if (composite == null) {
+    if (!supplied) {
+      basis.push(
+        `A section ${m.section} sitting cannot be scored from this question bank at all: ${obstacles.join('; ')}. `
+        + `This sitting is recorded but NOT scored and cannot count toward readiness. The answers stand as ordinary `
+        + `practice — nothing is thrown away — but only a section the bank can both ask and mark can produce a composite.`,
+      )
+    }
     if (!covered) {
       basis.push(
         `That is short of the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a sitting has to cover, so this one is `
@@ -661,10 +819,16 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
         + `clock before it can move readiness. Re-sit one timed to turn this into a score.`,
       )
     }
-    if (covered && timed) {
+    if (supplied && covered && timed) {
       basis.push('Nothing in this sitting could be graded mechanically, so it has no composite and cannot count toward readiness.')
     }
   } else {
+    if (obstacles.length) {
+      basis.push(
+        `This composite is measured over the ${scorable} question(s) of the ${expected} a section ${m.section} sitting `
+        + `contains that can actually be scored: ${obstacles.join('; ')}.`,
+      )
+    }
     basis.push(`Scored ${right} right out of ${denominator} — anything not answered counts as wrong, as on the exam.`)
     basis.push('Multiple choice only. Free response is scored separately and cannot move readiness until the grader is calibrated.')
   }
@@ -688,34 +852,45 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
 /**
  * Proctored sittings that were recorded and then not scored, with the reason.
  *
- * A sitting below MIN_MOCK_COVERAGE, or one that was not run against a clock,
- * gets no composite, which keeps it out of `proctored_mocks`, out of the
- * qualifying window and out of every criterion — so a genuine sitting where he
- * reached 37 of 42 left no trace at all beyond questions_answered. Running out
- * of time is the single failure a mock exists to expose, so it has to be
- * reported rather than dropped. It still cannot be scored: lowering the gate is
- * what let three answers read as 100%.
+ * A sitting below MIN_MOCK_COVERAGE, one that was not run against a clock, or one
+ * sat on a section the bank cannot supply, gets no composite, which keeps it out
+ * of `proctored_mocks`, out of the qualifying window and out of every criterion —
+ * so a genuine sitting where he reached 37 of 42 left no trace at all beyond
+ * questions_answered. Running out of time is the single failure a mock exists to
+ * expose, so it has to be reported rather than dropped. It still cannot be
+ * scored: lowering the gate is what let three answers read as 100%.
  */
 function unscoredSittings(ctx) {
   const out = []
   for (const m of ctx.mocks) {
     if (!m.proctored || !m.ended_at || m.composite_pct != null) continue
     const rows = ctx.attempts.filter((a) => a.mock_id === m.id)
-    const expected = expectedQuestions(m.section, ctx.config.exam)
+    const { expected, scorable, obstacles } = sectionScoring({
+      section: m.section, exam: ctx.config.exam, supply: ctx.supply,
+    })
     const timing = sittingTiming({ section: m.section, exam: ctx.config.exam, attempts: rows })
+    // A section the bank cannot supply was never scorable, whatever the clock or
+    // the count says, so it is reported ahead of both.
+    const unsupplied = scorable === 0 ? obstacles : null
     out.push({
       id: m.id,
+      section: m.section,
       answered: rows.length,
       expected,
-      // Three different reasons produce a null composite, and each has its own
+      scorable,
+      // Four different reasons produce a null composite, and each has its own
       // thing to fix. Reported as one reason apiece, most fundamental first: a
       // sitting that was not run against a clock has no pace problem to work on
       // and no shortage of gradeable items to report — it was not a mock at all
       // — so saying "you ran out of time" or "nothing could be graded" about it
       // would be a false statement in its own right, exactly as saying either
-      // about a fully-sat, fully-gradeable paper would be.
-      untimed: timing?.untimed ? timing : null,
-      short: !timing?.untimed && expected != null && rows.length < Math.ceil(expected * MIN_MOCK_COVERAGE),
+      // about a fully-sat, fully-gradeable paper would be. And a section whose
+      // questions do not exist has neither a pace nor a coverage problem: what
+      // it answered was not that section's questions at all.
+      unsupplied,
+      untimed: !unsupplied && timing?.untimed ? timing : null,
+      short: !unsupplied && !timing?.untimed && scorable != null
+        && rows.length < Math.ceil(scorable * MIN_MOCK_COVERAGE),
     })
   }
   return out
@@ -728,6 +903,15 @@ function unscoredAdvisory(unscored) {
     `${n} proctored sitting${n === 1 ? ' was' : 's were'} recorded but NOT scored, so ${n === 1 ? 'it is' : 'they are'} ` +
     `absent from the proctored mock count and from every readiness criterion.`,
   ]
+  const unsupplied = unscored.filter((u) => u.unsupplied)
+  if (unsupplied.length) {
+    parts.push(
+      `${unsupplied.map((u) => `#${u.id} (${u.answered} answered) was sat as section ${u.section}, which this question ` +
+        `bank cannot be scored on: ${u.unsupplied.join('; ')}`).join('. ')}. Those answers stand as practice and ` +
+      `nothing was deleted, but a section the bank cannot both ask and mark can never produce a composite, however ` +
+      `many of these are sat.`,
+    )
+  }
   const untimed = unscored.filter((u) => u.untimed)
   if (untimed.length) {
     parts.push(
@@ -742,13 +926,13 @@ function unscoredAdvisory(unscored) {
   const short = unscored.filter((u) => u.short)
   if (short.length) {
     parts.push(
-      `${short.map((u) => `#${u.id} reached ${u.answered} of ${u.expected}`).join(', ')} — under the ` +
+      `${short.map((u) => `#${u.id} reached ${u.answered} of ${u.scorable}`).join(', ')} — under the ` +
       `${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a scored sitting has to cover. Running out of time is ` +
       `exactly what a mock is for: treat that as a pace problem to work on, not as noise. Only a sitting that covers ` +
       `the section can produce a composite, so re-sit a full one to turn this into a score.`,
     )
   }
-  const other = unscored.filter((u) => !u.short && !u.untimed)
+  const other = unscored.filter((u) => !u.short && !u.untimed && !u.unsupplied)
   if (other.length) {
     parts.push(
       `${other.map((u) => `#${u.id} (${u.answered} answered)`).join(', ')} had nothing that could be graded ` +
