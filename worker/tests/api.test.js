@@ -1433,6 +1433,29 @@ withSeed('a full sitting cannot be padded past the section it is a sitting of, a
   assert.equal(r.scored_out_of, mcq, 'the divisor is the section half that can be asked and marked, not the paper length')
 })
 
+withSeed('a section the bank cannot supply is still only as long as that section', async () => {
+  const { db } = realDb()
+  const frq = CSA.exam.frq_count
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'II', source: 'bank', config: CSA, now: T0 })
+
+  // Section II is 4 questions and the bank holds no free-response items at all, so
+  // its frq half can never fill and the per-half bound cannot stop the paper. The
+  // section's own length is what does: multiple choice practice against a clock is
+  // real work and is kept (see handleMockStart), but 12 answers are not a 4-question
+  // section, and the basis would have had to report them against it.
+  const { answered, refusal } = await sitUntilRefused({ db, mock: m.mock, limit: frq + 8 })
+  assert.equal(answered, frq, `a section II paper is ${frq} questions long, whatever kind the bank can supply`)
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `and the next serve is refused: ${refusal}`)
+  assert.match(refusal.message, new RegExp(`all ${frq} question\\(s\\) a section II sitting contains`), refusal.message)
+
+  // Unchanged by the bound: the sitting is recorded, unscored, and honest about
+  // which half its answers actually filled.
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(2000) })
+  assert.equal(r.counted, false)
+  assert.match(r.basis, new RegExp(`0 of its ${frq} free-response`), r.basis)
+  assert.equal(r.status.questions_answered, frq, 'and nothing he did was thrown away')
+})
+
 // ---------------------------------------------------------------------------
 // The composite states ONE divisor, in the field and in the sentence
 //
