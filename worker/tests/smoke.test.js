@@ -26,6 +26,14 @@ const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', imp
 /**
  * Minimal D1-compatible wrapper over node:sqlite, matching the subset of the
  * binding that db.js actually uses: prepare().bind().all()/.first()/.run().
+ *
+ * run() reshapes node:sqlite's raw {changes, lastInsertRowid} into the D1
+ * envelope the deployed Worker actually resolves to — {success, meta: {changes,
+ * ...}}, with NO top-level `changes` — so the changed-row counts db.js reads in
+ * claimServe, closeMock and scoreMock (`r?.meta?.changes ?? r?.changes ?? 0`)
+ * are exercised through their production branch here too, not only through the
+ * node:sqlite-shaped fallback. See worker/tests/db.test.js's D1_ENVELOPE for the
+ * same shape driven with a mutation check proving both branches are covered.
  */
 function d1(sqlite) {
   return {
@@ -39,7 +47,20 @@ function d1(sqlite) {
         },
         all: async () => ({ results: stmt.all(...args) }),
         first: async () => stmt.all(...args)[0] ?? null,
-        run: async () => stmt.run(...args),
+        run: async () => {
+          const r = stmt.run(...args)
+          return {
+            success: true,
+            results: [],
+            meta: {
+              changes: r.changes,
+              last_row_id: Number(r.lastInsertRowid),
+              changed_db: r.changes > 0,
+              duration: 0.1,
+              served_by: 'test',
+            },
+          }
+        },
       }
       return api
     },

@@ -141,23 +141,28 @@ response looks fine. These exist because the plain numbers hide the very thing h
 needs to know:
 
 - **A proctored sitting was recorded but not scored.** The entry names the sitting
-  and says which of four reasons applies: he reached too little of the section,
+  and says which of five reasons applies: he reached too little of the section,
   the sitting ran past the time a real sitting allows (including spending too long
-  on one question), nothing in it could be graded mechanically, or the bank cannot
+  on one question), nothing in it could be graded mechanically, the bank cannot
   supply that section at all — for instance a section II sitting when the bank
-  holds no free-response items. Read the reason it actually gives — do not call a
-  fully-sat, correctly-timed paper a pace problem, and do not call a slow one a
-  coverage problem; they are different failures with different fixes. This is how
-  every one of the four stays visible at all: an unscored sitting is missing from
-  `proctored_mocks` and from every criterion, so without the advisory the evidence
-  would leave no trace. When the reason is reaching too little of the section,
-  that IS a pace problem — treat it as something to work on rather than noise.
-  When the reason is running past the time allowed, the answers still stand as
-  practice, but tell him to re-sit one against a clock. When the reason is the
-  bank cannot supply the section, there is nothing for him to fix by re-sitting —
-  say plainly that this section cannot produce a score from the current question
-  bank, and that his answers still stand as practice. Otherwise, a sitting that
-  covers the section and is run against a clock is what turns it into a score.
+  holds no free-response items — or the sitting was closed but never scored,
+  because the write that scores it did not finish. Read the reason it actually
+  gives — do not call a fully-sat, correctly-timed paper a pace problem, and do
+  not call a slow one a coverage problem; they are different failures with
+  different fixes. This is how every one of the five stays visible at all: an
+  unscored sitting is missing from `proctored_mocks` and from every criterion, so
+  without the advisory the evidence would leave no trace. When the reason is
+  closed but never scored, nothing is wrong with the sitting and no answer was
+  lost — call `submitMock` again with that same `mock` id, and it will be scored
+  from the answers already on it. When the reason is reaching too little of the
+  section, that IS a pace problem — treat it as something to work on rather than
+  noise. When the reason is running past the time allowed, the answers still
+  stand as practice, but tell him to re-sit one against a clock. When the reason
+  is the bank cannot supply the section, there is nothing for him to fix by
+  re-sitting — say plainly that this section cannot produce a score from the
+  current question bank, and that his answers still stand as practice.
+  Otherwise, a sitting that covers the section and is run against a clock is
+  what turns it into a score.
 - **Scores are sliding across the window.** That usually means fatigue rather than
   lost knowledge. Say so, and tell him to rest before the next sitting. Do not
   relabel the evidence — the scores stand; the advice is to stop for a bit.
