@@ -36,7 +36,7 @@
 | **2.2** Relational Operators | `== != < > <= >=`; comparing **primitives** (value) vs **references** (address); do not use `==` on Strings | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |
 | **2.3** `if` / `if-else` | Syntax; one- and two-way selection; boolean test | `question-bank/mcq-unit-2.md` |
 | **2.4** Nested `if` & `if-else-if` Chains | Multi-way selection; boundary conditions; nested `if` inside `if-else` | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |
-| **2.5** `!` `&&` `||`, Precedence & Short-Circuit | Logical NOT/AND/OR; precedence (`!` > `&&` > `||`); **short-circuit evaluation** stops early | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |
+| **2.5** `!` `&&` `\|\|`, Precedence & Short-Circuit | Logical NOT/AND/OR; precedence (`!` > `&&` > `\|\|`); **short-circuit evaluation** stops early | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |
 | **2.6** Boolean Equivalence, De Morgan & `equals` | Truth tables; **De Morgan's laws** (`!(A&&B)` = `(!A\|\|!B)`); `==` compares references; use `.equals()` for String/object content; `null` check | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |
 | **2.7** `while` Loop & Off-by-One | `while` syntax; loop body; infinite loop risk; **off-by-one** boundary errors | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |
 | **2.8** `for` Loop: Init/Condition/Update & while Equivalence | `for` loop anatomy; converting `for` ↔ `while`; loop variable scope | `question-bank/mcq-unit-2.md`, `question-bank/mcq-analyze-code.md` |

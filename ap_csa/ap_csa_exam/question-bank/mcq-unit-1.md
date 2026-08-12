@@ -236,7 +236,7 @@ Which expression returns the **first character** of a non-empty String `s` as a 
 A) `s.charAt(0)`   B) `s.substring(0, 1)`   C) `s.substring(1)`   D) `s.get(0)`
 
 **Answer: B.** `charAt` is **not** on the Quick Reference. The in-syllabus way to get a single character is `s.substring(0, 1)` (indices 0 inclusive, 1 exclusive). (C) drops the first char; (D) is not a String method.
-`[topic 1.15][practice P2]`
+`[topic 1.15][practice P2][allow-offsyllabus]`
 
 ---
 
