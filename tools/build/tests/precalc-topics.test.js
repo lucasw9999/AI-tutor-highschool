@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { sections, labelled, parsePack, parseAll, PACKS } from '../parse-precalc-topics.js'
+import { sections, labelled, parsePack, parseAll, PACKS, UNIT_WEIGHTS } from '../parse-precalc-topics.js'
 import { parseAll as parsePrecalcItems } from '../parse-precalc.js'
 import { compile, summary } from '../build.js'
 
@@ -85,6 +85,50 @@ test('the real packs parse to 11 sections each, across all four units', () => {
   assert.deepEqual(r.perUnit, { 1: 11, 2: 11, 3: 11, 4: 11 })
   assert.equal(r.topics.length, 44)
   assert.deepEqual(r.errors, [])
+})
+
+test('PC-C4: the per-unit exam weights are the CED figures, and the config agrees with the parser', () => {
+  // The official AP Precalculus CED gives Unit 1 30-40%, Unit 2 25-40%, Unit 3
+  // 30-35% of the multiple-choice section. Unit 2's low bound shipped as 27,
+  // which is not a College Board number. It is not decorative: select.js
+  // apportions a proctored sitting across units in proportion to
+  // exam_weight_low/high (see its `examWeight` and the mock coverage pass), so a
+  // wrong weight changes which questions a paper asks and how many come from
+  // each unit. It is replicated onto every topic row in the unit, so one wrong
+  // pair biases eleven rows.
+  //
+  // Both places are pinned because there are two independent copies of these
+  // numbers — the parser's table (which reaches the database via topics rows)
+  // and worker/config/ap_precalc.json's exam.unit_weights (which the dashboard
+  // reads) — and they can drift apart silently.
+  const CED = { 1: [30, 40], 2: [25, 40], 3: [30, 35] }
+
+  for (const [unit, want] of Object.entries(CED)) {
+    assert.deepEqual(UNIT_WEIGHTS[unit], want, `parser UNIT_WEIGHTS unit ${unit} disagrees with the CED`)
+  }
+  assert.deepEqual(UNIT_WEIGHTS['4'], [0, 0], 'Unit 4 is not assessed on the exam')
+
+  const config = JSON.parse(read('worker/config/ap_precalc.json'))
+  for (const [unit, want] of Object.entries(CED)) {
+    assert.deepEqual(
+      config.exam.unit_weights[unit],
+      want,
+      `worker/config/ap_precalc.json exam.unit_weights unit ${unit} disagrees with the CED`,
+    )
+  }
+  assert.deepEqual(
+    Object.keys(config.exam.unit_weights).sort(),
+    ['1', '2', '3'],
+    'the config must weight exactly the exam-tested units',
+  )
+
+  // The weight the parser actually stamps onto topic rows, not just the table.
+  const r = parseAll(read)
+  for (const t of r.topics) {
+    const [lo, hi] = CED[t.unit] ?? [0, 0]
+    assert.equal(t.exam_weight_low, lo, `topic ${t.id} carries the wrong exam_weight_low`)
+    assert.equal(t.exam_weight_high, hi, `topic ${t.id} carries the wrong exam_weight_high`)
+  }
 })
 
 test('Unit 4 is marked untested and every other unit is tested', () => {

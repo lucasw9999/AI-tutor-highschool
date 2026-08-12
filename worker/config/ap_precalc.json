@@ -21,7 +21,7 @@
     "pace_seconds_calc": 185,
     "unit_weights": {
       "1": [30, 40],
-      "2": [27, 40],
+      "2": [25, 40],
       "3": [30, 35]
     },
     "_note": "mcq_weight, frq_weight, and unit_weights describe the REAL AP exam's official section and unit weighting, for reference only. The readiness engine does not apply them: composite_pct is a flat percent-correct across all server-graded attempts with no section weighting, and readiness.per_unit_min holds every unit to the same floor regardless of its exam weight."

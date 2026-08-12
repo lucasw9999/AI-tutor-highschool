@@ -25,10 +25,21 @@ export const PACKS = [
   { file: 'unit-4-parametric-vectors-matrices.md', unit: '4', tested: false },
 ]
 
-/** Exam MCQ weight per unit, from the verified coverage map. */
+/**
+ * Exam MCQ weight per unit, as published in the College Board AP Precalculus
+ * Course and Exam Description.
+ *
+ * These are not decorative. select.js apportions a proctored sitting across
+ * units in proportion to exam_weight_low/high, so these bounds decide which
+ * questions a mock paper asks and how many come from each unit; the pair is also
+ * replicated onto every topic row in the unit, so one wrong bound biases eleven
+ * rows. Unit 2 shipped as [27, 40]; the CED says 25-40%, and 27 was not a
+ * College Board figure. `ap_precalc/coverage-map.md` and
+ * `ap_precalc/mastery-tracker.md` still print the old 27-40% in prose.
+ */
 export const UNIT_WEIGHTS = {
   1: [30, 40],
-  2: [27, 40],
+  2: [25, 40],
   3: [30, 35],
   4: [0, 0],
 }

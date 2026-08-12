@@ -6,7 +6,7 @@
 
 ## 1. Why it matters / exam weight
 
-Unit 2 is **one of the two heaviest MCQ units (27–40% of the multiple-choice section).** Exponential/log questions show up everywhere on the no-calculator Part A *and* power FRQ Q2 (Non-Periodic Modeling) and FRQ Q4 (Symbolic Manipulation) — the two **lowest-scoring** free-response questions on the whole exam. Master logs and you move the needle on a 4→5 more than any other unit.
+Unit 2 is **one of the two heaviest MCQ units (25–40% of the multiple-choice section).** Exponential/log questions show up everywhere on the no-calculator Part A *and* power FRQ Q2 (Non-Periodic Modeling) and FRQ Q4 (Symbolic Manipulation) — the two **lowest-scoring** free-response questions on the whole exam. Master logs and you move the needle on a 4→5 more than any other unit.
 
 ---
 
