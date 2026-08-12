@@ -817,10 +817,12 @@ function timingClauses(t) {
 export async function handleMockStart({ db, subject, section, source, config, now }) {
   if (!['I', 'II', 'full'].includes(section)) throw new ApiError(400, `section must be I, II or full`)
   if (!['bank', 'official'].includes(source)) throw new ApiError(400, `source must be bank or official`)
-  // Refused inside the INSERT (see db.startMock), so two concurrent starts cannot
-  // both open a paper either. A sitting that was walked away from has to be
-  // submitted — which scores whatever is on it, with the reason — before another
-  // can be opened, or the abandoned one leaves no trace of how it was going.
+  // Refused inside the INSERT (see db.startMock), so no interleaving can open a
+  // paper over a sitting that holds an answer either. A sitting that was walked
+  // away from has to be submitted — which scores whatever is on it, with the
+  // reason — before another can be opened, or the abandoned one leaves no trace of
+  // how it was going. An EMPTY open sitting deliberately blocks nothing: submit
+  // refuses a paper with no answers, so blocking on one would deadlock the subject.
   const id = await db.startMock({ subject, section, started_at: now, proctored: 1, source })
   if (id == null) {
     // Only a sitting holding at least one ANSWER can be what blocked this, so the
@@ -1576,7 +1578,11 @@ function lastAnswerOf(attempts, now) {
     if (!a.ts) continue
     if (latest == null || new Date(a.ts) > new Date(latest)) latest = a.ts
   }
-  return latest == null ? null : { at: latest, days: calendarDaysSince(latest, now), on: String(latest).slice(0, 10) }
+  if (latest == null) return null
+  const days = calendarDaysSince(latest, now)
+  // `stale` is decided HERE, against SILENCE_DAYS, so the parent page does not need
+  // its own copy of the threshold to know when to say the card is out of date.
+  return { at: latest, days, on: String(latest).slice(0, 10), stale: days >= SILENCE_DAYS }
 }
 
 /** The silence sentence. Only raised past SILENCE_DAYS. */
