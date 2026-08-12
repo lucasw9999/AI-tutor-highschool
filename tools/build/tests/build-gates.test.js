@@ -127,21 +127,33 @@ test('B3: an exam-tested topic with no items of its own is a build ERROR', () =>
   }
 })
 
-test('B3: every exam-tested Precalc CONCEPT topic is unreachable today, and no CSA topic is', () => {
-  // All 48 Precalc items sit in the <unit>.0 untagged buckets, so every real
-  // exam-tested concept topic has zero items — coverage is capped at 3 of 36 (8.3%)
-  // and readiness.js requires topics_drilled >= topics_total before it evaluates
-  // anything else. This is the content gap, not the gate: it shrinks only when
-  // Precalc items get real topic tags.
+test('B3: the exam-tested Precalc topics with no items are exactly the ones the gate reports', () => {
+  // This test used to assert that EVERY exam-tested Precalc concept topic is
+  // unreachable, because all 48 items sat in the <unit>.0 untagged buckets. Its own
+  // comment said the gap "shrinks only when Precalc items get real topic tags" —
+  // the packs now carry those tags, so the snapshot has been replaced by the
+  // invariant it was standing in for: the gate names exactly the exam-tested topics
+  // no item of the subject can reach, the tagged ones are off that list, and no CSA
+  // topic is on it.
+  //
+  // Note what stays on the list even with every item tagged: build.js declares a
+  // `<unit>.0` bucket for every unit that has items, whether or not any item still
+  // lands in it, and marks the units 1-3 buckets tested_on_exam. Three permanently
+  // empty placeholder topics therefore keep Precalc coverage under 100%.
   const r = compile()
+  const noItems = (t) => !r.items.some((i) => i.subject === t.subject && i.topic === t.id)
   const expected = r.topics
-    .filter((t) => t.subject === 'ap_precalc' && t.tested_on_exam && !t.untagged_bucket)
+    .filter((t) => t.subject === 'ap_precalc' && t.tested_on_exam)
+    .filter(noItems)
     .map((t) => t.id)
-  assert.ok(expected.length > 0, 'precondition: Precalc has exam-tested concept topics')
-  assert.deepEqual(
-    r.unreachable.filter((u) => u.subject === 'ap_precalc').map((u) => u.id).sort(),
-    expected.sort(),
-  )
+    .sort()
+  assert.deepEqual(r.unreachable.filter((u) => u.subject === 'ap_precalc').map((u) => u.id).sort(), expected)
+
+  const tagged = [...new Set(r.items.filter((i) => i.subject === 'ap_precalc').map((i) => i.topic))]
+  assert.ok(tagged.some((id) => !id.endsWith('.0')), 'precondition: the packs tag items at real topic ids')
+  for (const id of tagged) {
+    assert.ok(!expected.includes(id), `topic ${id} has items, so the gate must not call it unreachable`)
+  }
   assert.deepEqual(
     r.unreachable.filter((u) => u.subject === 'ap_csa'),
     [],
@@ -178,15 +190,30 @@ test('B4: the real content ships exactly one all-blank teaching row, and it erro
 })
 
 test('B4: a topic that has items must have a teaching row of its own', () => {
-  const r = compile()
-  for (const id of ['1.0', '2.0', '3.0', '4.0']) {
-    assert.ok(
-      r.topicsMissingTeaching.some((t) => t.id === id && t.subject === 'ap_precalc'),
-      `bucket ${id} carries items but no teaching row, and must be reported`,
-    )
-    assert.ok(
-      r.errors.some((e) => e.includes(id) && /no teaching row/.test(e)),
-      `expected a missing-teaching-row error for ${id}, got:\n  ${brief(r.errors)}`,
+  // The <unit>.0 buckets used to hold all 48 Precalc items and so proved this gate
+  // on real content. The packs now tag their items, so a bucket holds items only
+  // when a tag is missing — which is exactly when the gate should speak. Both
+  // halves are pinned: remove one tag in memory and the gate must name the bucket,
+  // and on the real content a bucket is reported if and only if it has items.
+  const r = compile(patched(U1, (t) => t.replace('<!-- topic: 1.1 -->', '')))
+  const bucketed = r.items.filter((i) => i.subject === 'ap_precalc' && i.topic === '1.0')
+  assert.equal(bucketed.length, 1, 'precondition: the untagged item must fall into the 1.0 bucket')
+  assert.ok(
+    r.topicsMissingTeaching.some((t) => t.id === '1.0' && t.subject === 'ap_precalc'),
+    'bucket 1.0 carries an item but has no teaching row, and must be reported',
+  )
+  assert.ok(
+    r.errors.some((e) => e.includes('1.0') && /no teaching row/.test(e)),
+    `expected a missing-teaching-row error for 1.0, got:\n  ${brief(r.errors)}`,
+  )
+
+  const real = compile()
+  for (const b of real.topics.filter((t) => t.untagged_bucket)) {
+    const hasItems = real.items.some((i) => i.subject === b.subject && i.topic === b.id)
+    assert.equal(
+      real.topicsMissingTeaching.some((t) => t.subject === b.subject && t.id === b.id),
+      hasItems,
+      `bucket ${b.id} is reported when it has items and only then (has items: ${hasItems})`,
     )
   }
 })
@@ -211,9 +238,17 @@ test('B5: the per-subject table reports rows written and rows complete separatel
 test('B5: the INCOMPLETE list names every class of gap, not just untagged items', () => {
   const r = compile()
   const lines = incompleteReport(r).join('\n')
-  assert.match(lines, /bucketed at <unit>\.0/, 'untagged items')
+  // The untagged-items line was unconditional when all 48 Precalc items were
+  // bucketed at <unit>.0. They now carry real topic tags, and a disclosure that
+  // went on claiming untagged items would be false — so it is asserted to be
+  // present exactly when there are untagged items, and its absence is proved to be
+  // a fact about the content rather than a line that stopped being printed.
+  if (r.precalcUntagged) assert.match(lines, /bucketed at <unit>\.0/, 'untagged items')
+  else assert.doesNotMatch(lines, /bucketed at <unit>\.0/, 'no item is untagged, so nothing may claim otherwise')
+  const withUntagged = incompleteReport(compile(patched(U1, (t) => t.replace('<!-- topic: 1.1 -->', '')))).join('\n')
+  assert.match(withUntagged, /bucketed at <unit>\.0/, 'an untagged item must still be disclosed')
+  assert.match(withUntagged, /no teaching row/, 'and so must the bucket it lands in, which has no teaching row')
   assert.match(lines, /1\.11/, 'the blank teaching row')
-  assert.match(lines, /no teaching row/, 'item-bearing topics with no teaching row')
   assert.match(lines, /cannot reach readiness|unreachable/, 'unreachable exam-tested topics')
   for (const u of r.unreachable) {
     assert.ok(lines.includes(u.id), `unreachable topic ${u.id} must appear in the INCOMPLETE list`)

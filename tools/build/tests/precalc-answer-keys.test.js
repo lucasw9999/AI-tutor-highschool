@@ -432,14 +432,16 @@ test('a malformed topic id is a build ERROR', () => {
 })
 
 test('a declared topic survives into the compiled build instead of the bucket', () => {
-  const real = read(`ap_precalc/study-packs/${U1}`)
-  // After P3's own </details>, so the declaration lands inside P3's block: a
-  // line ABOVE the **P3** header would belong to P2.
-  const tagged = real.replace('Degree 5.\n</details>', 'Degree 5.\n</details>\n<!-- topic: 1.4 -->')
-  assert.notEqual(tagged, real, 'the fixture substitution must actually apply')
-  const r = compile((f) => (f.includes(U1) ? tagged : read(f)))
+  // This used to inject `<!-- topic: 1.4 -->` into P3 in memory, because no shipped
+  // item declared a topic. P3 now declares that topic in the pack itself, so the
+  // injection would be a SECOND declaration of the same field (a build error), and
+  // the real content is the better fixture anyway: what is asserted below is that
+  // build.js honours the pack's declared topic rather than bucketing the item at
+  // `1.0`, read off the compiled artifact.
+  const r = compile()
   const p3 = r.items.find((i) => i.id === 'pc-u1-p3')
   assert.equal(p3.topic, '1.4', 'build.js must honour the declared topic over UNTAGGED(unit)')
+  assert.notEqual(p3.topic, '1.0', 'and must not fall back to the placeholder bucket for a tagged item')
   assert.equal(
     r.errors.some((e) => /pc-u1-p3/.test(e)),
     false,
@@ -485,13 +487,11 @@ test('a keyed item passes every build gate, and grade.js marks it from the compi
   // The end-to-end proof: markdown -> parser -> build.js -> validate.js -> the
   // item object as items.json holds it -> grade.js's verdict. Every earlier test
   // stops at the parser, and the parser is not the thing that has to agree.
-  const real = read(`ap_precalc/study-packs/${U1}`)
-  const keyed = real.replace(
-    'Quotient $2x-1$. **Slant asymptote: y = 2x − 1.**\n</details>',
-    'Quotient $2x-1$. **Slant asymptote: y = 2x − 1.**\n</details>\n<!-- key: y = 2x - 1 -->\n<!-- topic: 1.7 -->',
-  )
-  assert.notEqual(keyed, real, 'the fixture substitution must actually apply')
-  const r = compile((f) => (f.includes(U1) ? keyed : read(f)))
+  //
+  // The key used to be injected into P6 in memory. P6 now declares it in the pack,
+  // so injecting it again would be a duplicate `key:` field — and reading the
+  // shipped key is a stronger test than reading one this file wrote.
+  const r = compile()
   const p6 = r.items.find((i) => i.id === 'pc-u1-p6')
 
   assert.equal(p6.kind, 'constructed', 'a keyed item must be server-graded')

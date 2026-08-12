@@ -166,48 +166,86 @@ Justifying these limitations is exactly what FRQ Q2's reasoning parts reward —
 
 $\frac{f(6)-f(2)}{6-2}=\frac{11-(-1)}{4}=\frac{12}{4}=3.$ (For a line, AROC = slope, always 3.)
 </details>
+<!-- key: 3 -->
+<!-- accept: AROC = 3 -->
+<!-- topic: 1.1 -->
 
 **P2 (easy, no-calc).** State the end behavior of $f(x)=4x^4-x+2$ in limit notation.
 <details><summary>Solution</summary>
 
 Even degree, positive leading coeff: $\displaystyle\lim_{x\to-\infty}f(x)=\infty$ and $\displaystyle\lim_{x\to\infty}f(x)=\infty$.
 </details>
+<!-- topic: 1.3 -->
+<!-- note: deliberately NOT keyed. What is being marked here is the limit NOTATION itself (the #1 mistake in 2.3, flagged by the Chief Reader both years), and "lim x->inf f(x) = inf" has too many correct spellings to enumerate — a right answer typed any other way would be marked wrong. The rubric is the right grader for notation. -->
 
-**P3 (easy, no-calc).** Give the zeros and their multiplicities for $f(x)=(x+2)^3(x-1)^2$. Does the graph cross or bounce at each?
+**P3 (easy, no-calc).** Give the zeros and their multiplicities for $f(x)=(x+2)^3(x-1)^2$. Does the graph cross or bounce at each? Answer as a comma-separated list with one entry per zero, each written as the zero, then mult, then the multiplicity, then crosses or bounces (e.g. 5 mult 4 bounces).
 <details><summary>Solution</summary>
 
 $x=-2$, multiplicity 3 (odd → **crosses**). $x=1$, multiplicity 2 (even → **bounces**). Degree 5.
 </details>
+<!-- part 1: -2 mult 3 crosses -->
+<!-- part 1: x=-2 mult 3 crosses -->
+<!-- part 1: -2 multiplicity 3 crosses -->
+<!-- part 2: 1 mult 2 bounces -->
+<!-- part 2: x=1 mult 2 bounces -->
+<!-- part 2: 1 multiplicity 2 bounces -->
+<!-- format: Answer as a comma-separated list with one entry per zero, each written as the zero, then mult, then the multiplicity, then crosses or bounces (e.g. 5 mult 4 bounces). -->
+<!-- topic: 1.4 -->
 
 **P4 (medium, no-calc).** Is $g(x)=2x^4-x^2$ even, odd, or neither?
 <details><summary>Solution</summary>
 
 $g(-x)=2(-x)^4-(-x)^2=2x^4-x^2=g(x)$ → **even** (all even powers, y-axis symmetric).
 </details>
+<!-- key: even -->
+<!-- accept: even function -->
+<!-- accept: g is even -->
+<!-- topic: 1.5 -->
 
-**P5 (medium, no-calc).** For $f(x)=\dfrac{x^2-x-6}{x^2-9}$: find holes, vertical asymptotes, and the horizontal asymptote.
+**P5 (medium, no-calc).** For $f(x)=\dfrac{x^2-x-6}{x^2-9}$: find holes, vertical asymptotes, and the horizontal asymptote. Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7 — your own numbers, and give the hole by its x-value only.
 <details><summary>Solution</summary>
 
 Factor: $\dfrac{(x-3)(x+2)}{(x-3)(x+3)}$. $(x-3)$ cancels → **hole at $x=3$** (y-value: $\frac{3+2}{3+3}=\frac{5}{6}$, hole at $(3,\frac56)$). Remaining denominator factor $(x+3)$ → **VA at $x=-3$**. Equal degrees (2 and 2) → **HA: y = 1** (ratio of leading coeffs 1/1).
 </details>
+<!-- part 1: hole at x=3 -->
+<!-- part 1: hole x=3 -->
+<!-- part 2: VA at x=-3 -->
+<!-- part 2: VA x=-3 -->
+<!-- part 2: vertical asymptote at x=-3 -->
+<!-- part 3: HA y=1 -->
+<!-- part 3: HA at y=1 -->
+<!-- part 3: horizontal asymptote y=1 -->
+<!-- format: Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7 — your own numbers, and give the hole by its x-value only. -->
+<!-- topic: 1.6 -->
 
 **P6 (medium, no-calc).** Find the slant asymptote of $f(x)=\dfrac{2x^2+3x-1}{x+2}$.
 <details><summary>Solution</summary>
 
 Long division: $2x^2+3x-1 \div (x+2)$. $2x^2\div x=2x$; $2x(x+2)=2x^2+4x$; subtract → $-x-1$. $-x\div x=-1$; $-1(x+2)=-x-2$; subtract → remainder 1. Quotient $2x-1$. **Slant asymptote: y = 2x − 1.**
 </details>
+<!-- key: y = 2x - 1 -->
+<!-- topic: 1.7 -->
 
-**P7 (medium, no-calc).** $f$ is decreasing and concave up on [0, 8]. You estimate $f(4)$ using the secant from $x=0$ to $x=8$. Over- or under-estimate? And is $f$'s rate of change increasing or decreasing?
+**P7 (medium, no-calc).** $f$ is decreasing and concave up on [0, 8]. You estimate $f(4)$ using the secant from $x=0$ to $x=8$. Over- or under-estimate? And is $f$'s rate of change increasing or decreasing? Answer as two comma-separated words: overestimate or underestimate, then increasing or decreasing.
 <details><summary>Solution</summary>
 
 Concave up → secant lies **above** the curve → estimate is **too high (overestimate)**. Concave up → rate of change is **increasing** (becoming less negative). (This is exactly the Q3(C)(ii) / Q2(B)(iii) reasoning the exam loves.)
 </details>
+<!-- part 1: overestimate -->
+<!-- part 1: over-estimate -->
+<!-- part 1: too high -->
+<!-- part 2: increasing -->
+<!-- part 2: increases -->
+<!-- format: Answer as two comma-separated words: overestimate or underestimate, then increasing or decreasing. -->
+<!-- topic: 1.2 -->
 
 **P8 (medium, calculator).** A song's daily plays follow $D(t)=at^2+bt+c$ with $D(0)=20$, $D(3)=44$, $D(6)=56$. Find $a, b, c$, then estimate $D(1.5)$ using the AROC from $t=0$ to $t=6$.
 <details><summary>Solution</summary>
 
 $c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Rightarrow 36a+6b=36\Rightarrow 6a+b=6$. Subtract: $3a=-2\Rightarrow a=-\tfrac23\approx-0.667$, then $b=8-3a=10$, $c=20$. AROC on [0,6]: $\frac{56-20}{6}=6$. Linear estimate at $t=1.5$: $D(0)+6(1.5)=20+9=\mathbf{29}$. (Note: true $D(1.5)=-0.667(2.25)+10(1.5)+20\approx33.5$; the secant **underestimates** because the parabola opens down/concave down here.)
 </details>
+<!-- topic: 1.8 -->
+<!-- note: deliberately NOT keyed. Four values, one of them exact only as -2/3 while the item allows a calculator, so a correct answer may legitimately be typed -2/3, -0.667, -0.67 or -.667 in any of four positions. Enumerating that safely runs past the parser's cap on accepted forms, and enumerating it UNsafely marks a right answer wrong. -->
 
 **P9 (exam-level, calculator).** A drug's concentration in the blood $t$ hours after a single dose is modeled by $C(t)=\dfrac{24t}{t^2+4}$ mg/L, for $t\ge 0$. (a) Give the horizontal asymptote and say what it means about the drug. (b) Use a graphing calculator to find when the concentration is greatest, and that greatest concentration. (c) Find the AROC of $C$ on [0, 6]. Is $C$ increasing or decreasing at $t=6$? (d) State the domain restriction this model needs, and say where it comes from.
 <details><summary>Solution</summary>
@@ -217,6 +255,8 @@ $c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Right
 (c) $C(0)=0$ and $C(6)=\frac{144}{40}=3.6$, so AROC $=\dfrac{3.6-0}{6-0}=\mathbf{0.6}$ mg/L per hour. But $C$ is **decreasing** at $t=6$: the peak was back at $t=2$, and $C(5.9)\approx3.649 > C(6)=3.6 > C(6.1)\approx3.553$. **A positive average rate of change over an interval says nothing about the direction at a point inside it** — the average is positive here only because of the climb from 0 to 6 mg/L in the first two hours.
 (d) $t^2+4$ is never zero, so there is **no algebraic** exclusion — the restriction is **contextual: $t\ge 0$**, because $t$ counts hours since the dose and negative time is meaningless. (Realistically also an upper bound at the next dose, after which this model no longer describes the situation.)
 </details>
+<!-- topic: 1.11 -->
+<!-- note: not keyable — four lettered sub-parts, and (a) and (d) ask what the asymptote MEANS and where the restriction COMES FROM. The parser refuses a key on both counts. -->
 
 **P10 (exam-level, no-calc) — FRQ Q4 Symbolic style.** (a) Solve $\log_2(8x)=5$. (b) Condense $\log_3 x + 2\log_3 3$ into a single log. (c) Solve $e^{2x}-e^{x}-6=0$ for all real x.
 <details><summary>Solution</summary>
@@ -225,6 +265,8 @@ $c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Right
 (b) $2\log_3 3=\log_3 9$, so $\log_3 x+\log_3 9=\log_3(9x)$.
 (c) Quadratic-in-disguise: let $u=e^x$. $u^2-u-6=0\Rightarrow(u-3)(u+2)=0\Rightarrow u=3$ or $u=-2$. $e^x=3\Rightarrow x=\ln 3$. $e^x=-2$ impossible (exp is always positive). **x = ln 3.** (This "quadratic in $e^x$" was literally 2025 Q4(C).)
 </details>
+<!-- topic: 1.8 -->
+<!-- note: not keyable — three lettered sub-parts, so what a student types is a worked solution rather than one answer. -->
 
 **P11 (exam-level, calculator) — FRQ Q1 Function Concepts style.** $f$ is given by a table: $f(1)=8, f(2)=4, f(3)=2, f(4)=1$. (a) Compute $h=g\circ f$ at $x=2$ where $g(x)=x^2-3$. (b) Find $f^{-1}(2)$. (c) Which model best fits $f$ — linear, quadratic, or exponential — and justify.
 <details><summary>Solution</summary>
@@ -233,12 +275,16 @@ $c=20$. $9a+3b+20=44\Rightarrow 9a+3b=24\Rightarrow 3a+b=8$. $36a+6b+20=56\Right
 (b) $f^{-1}(2)$ = the input giving output 2 → $f(3)=2$, so $f^{-1}(2)=3$.
 (c) Ratios of successive outputs: $4/8=0.5$, $2/4=0.5$, $1/2=0.5$ — **constant ratio → exponential**. (Justify with the ratios, exactly as 2025 Q1(C)(ii) required. A *linear* model would need constant *differences*, not ratios.)
 </details>
+<!-- topic: 1.8 -->
+<!-- note: not keyable — three lettered sub-parts, and (c) asks for a justification. -->
 
 **P12 (exam-level, calculator).** For $f(x)=0.5x^3-2x^2-x+3$, use a graphing calculator to find all real zeros to 3 decimals, and state the end behavior in limit notation.
 <details><summary>Solution</summary>
 
 Graph/solve: zeros ≈ **$x\approx-1.273,\ 1.140,\ 4.133$** (calculator roots). **Check them:** sum $=-1.273+1.140+4.133=4.000$, which must equal $-\frac{b}{a}=-\frac{-2}{0.5}=4$ ✓; product $=(-1.273)(1.140)(4.133)\approx-5.998\approx-6$, which must equal $-\frac{d}{a}=-\frac{3}{0.5}=-6$ ✓. Always run **both** checks — the sum alone can agree while a root is still wrong. End behavior (odd degree, positive leading coeff $0.5x^3$): $\displaystyle\lim_{x\to\infty}f(x)=\infty,\ \displaystyle\lim_{x\to-\infty}f(x)=-\infty$.
 </details>
+<!-- topic: 1.4 -->
+<!-- note: deliberately NOT keyed. The zeros alone would key cleanly, but the stem also demands end behavior in limit notation, which is the same unenumerable-notation problem as P2 — and the answer to a keyed item has to be the WHOLE response. -->
 
 ---
 
