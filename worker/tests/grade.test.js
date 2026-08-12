@@ -805,6 +805,155 @@ test('Q4-G5: the fragment floor keeps operators out and lets a real short answer
   }
 })
 
+// ---------------------------------------------------------------------------
+// Q6-G1 — the printed form, hedged and decorated the way a student writes it
+// ---------------------------------------------------------------------------
+
+/** A hedge a student puts in front of an answer, and nothing else. */
+const HEDGES = ['I think', 'i think', 'maybe', 'probably', 'my answer is', "I'd say", 'it must be', 'well']
+
+test('Q6-G1: a hedge in front of the printed form does not cost the student his answer', () => {
+  // Both halves already resolve on their own — 'C. 3.2' is credited, and so is
+  // 'I think C'. Put them together and the answer was thrown away, because
+  // labelWithText was the only reader handed the RAW response: it never saw a
+  // hedge stripped, and every one of its patterns is anchored at ^.
+  const item = byId('csa-ac-q1') // key C, option C is '3.2'
+  assert.equal(grade(item, 'C. 3.2').correct, 1, 'baseline: the printed form resolves')
+  assert.equal(grade(item, 'I think C').correct, 1, 'baseline: the hedge is stripped off a bare letter')
+  for (const hedge of HEDGES) {
+    for (const raw of [`${hedge} C. 3.2`, `${hedge} (C) 3.2`, `${hedge} C) 3.2`, `${hedge} C: 3.2`, `${hedge} C - 3.2`, `${hedge} 3.2 (C)`]) {
+      const r = grade(item, raw)
+      assert.equal(r.graded_by, 'server', `${JSON.stringify(raw)} was declined (${r.detail})`)
+      assert.equal(r.correct, 1, `${JSON.stringify(raw)} was scored wrong (picked ${r.picked})`)
+    }
+  }
+  // A hedge cannot manufacture agreement either: the two halves still have to
+  // name the same option.
+  for (const raw of ['I think C. 3.4', 'maybe A. 3.2']) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'unparsed', `${JSON.stringify(raw)} was graded as ${r.picked}`)
+    assert.equal(r.detail, 'ambiguous_choice')
+  }
+})
+
+test('Q6-G1: one trailing mark on the printed form is decoration, not a different answer', () => {
+  // LETTER_ONLY has always tolerated a trailing ',', '!', '?', ';', ':' or quote
+  // on a bare letter — 'C?' is credited. The text half of the printed form
+  // tolerated none of it, so 'C. 3.2?' declined while 'C. 3.2.' and 'C?' both
+  // resolved. The whole point of this reader is that giving MORE of the answer
+  // must not be punished.
+  const item = byId('csa-ac-q1')
+  for (const raw of ['C. 3.2?', 'C. 3.2!', 'C. 3.2,', 'C. 3.2;', 'C. 3.2:', '"C. 3.2"', "'C. 3.2'", '(C) 3.2?', 'C) 3.2!', 'I think C. 3.2?']) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'server', `${JSON.stringify(raw)} was declined (${r.detail})`)
+    assert.equal(r.correct, 1, `${JSON.stringify(raw)} was scored wrong (picked ${r.picked})`)
+  }
+  // A wrong option, decorated the same way, is still a real miss.
+  const wrong = grade(item, 'A. 3.4?')
+  assert.equal(wrong.graded_by, 'server')
+  assert.equal(wrong.picked, 'A')
+  assert.equal(wrong.correct, 0)
+
+  // The undecorated text is tried FIRST, and that ordering is load-bearing.
+  // csa-ac-q76 offers `g`, `go`, `g!` and `go!` as four separate options, so on
+  // that item a trailing '!' is not decoration at all — it names a different
+  // option. 'A. g!' is therefore a genuine standoff between label A and option
+  // C, and stripping the mark before trying the text as written would resolve it
+  // to A and book a wrong pick.
+  const q76 = byId('csa-ac-q76')
+  assert.deepEqual(Object.values(q76.options), ['g', 'go', 'g!', 'go!'], 'fixture assumption')
+  assert.equal(grade(q76, 'A. g!').detail, 'ambiguous_choice', 'the mark is meaningful on this item')
+  assert.equal(grade(q76, 'B. go!').detail, 'ambiguous_choice')
+  assert.equal(grade(q76, 'D. go!').correct, 1, 'and the option that really is `go!` still resolves')
+  assert.equal(grade(q76, 'A. g?').picked, 'A', "'?' is not one of this item's options, so it is decoration")
+})
+
+test('Q6-G1: across the whole shipped bank, a hedged or decorated printed form resolves', () => {
+  let resolved = 0
+  for (const item of SHIPPED_MCQ) {
+    const keyed = normalizeChoice(item.answer)
+    for (const [label, text] of Object.entries(item.options)) {
+      for (const raw of [
+        `I think ${label}. ${text}`,
+        `maybe ${label}) ${text}`,
+        `my answer is ${label}: ${text}`,
+        `${label}. ${text}?`,
+        `${label}. ${text},`,
+        `${label}. ${text};`,
+        `"${label}. ${text}"`,
+      ]) {
+        const r = grade(item, raw)
+        assert.equal(r.graded_by, 'server', `${item.id} ${JSON.stringify(raw)} => ${r.graded_by} (${r.detail})`)
+        assert.equal(r.picked, label, `${item.id} ${JSON.stringify(raw)} read as ${r.picked}`)
+        assert.equal(r.correct, label === keyed ? 1 : 0, `${item.id} ${JSON.stringify(raw)}`)
+        resolved++
+      }
+    }
+  }
+  assert.ok(resolved > 5000, `only ${resolved} hedged printed forms resolved`)
+})
+
+// ---------------------------------------------------------------------------
+// Q6-G2 — the separator is what keeps the English article out
+// ---------------------------------------------------------------------------
+
+test('Q6-G2: a bare space is not a label separator, on any item in the bank', () => {
+  // LABEL_THEN_TEXT demands a real separator — ')', '.', ':', ',', ';' or a dash
+  // — between the label and its text. Accepting a space instead would make the
+  // article in 'a NullPointerException' a label prefix: on csa-ac-q1 (key C) the
+  // response 'a 3.4' would name label A over option A's own text, the two halves
+  // would agree, and a wrong pick of A would be booked; on csa-ac-q2 (key A,
+  // option A '11') 'a 11' would be credited outright. Neither response names a
+  // label at all. Pinned over the whole bank, in both directions.
+  for (const item of SHIPPED_MCQ) {
+    for (const [label, text] of Object.entries(item.options)) {
+      for (const raw of [`${label} ${text}`, `${label.toLowerCase()} ${text}`]) {
+        const r = grade(item, raw)
+        assert.equal(
+          r.graded_by,
+          'unparsed',
+          `${item.id} ${JSON.stringify(raw)} was graded as ${r.picked} (correct ${r.correct})`,
+        )
+        assert.equal(r.detail, 'no_letter', `${item.id} ${JSON.stringify(raw)} declined for the wrong reason`)
+      }
+    }
+  }
+  // The two responses the audit named, stated as the outcomes they must not have.
+  const q1 = grade(byId('csa-ac-q1'), 'a 3.4')
+  assert.notEqual(q1.picked, 'A', 'the article booked a wrong pick of A')
+  assert.equal(isServerGraded(q1), false)
+  const q2 = grade(byId('csa-ac-q2'), 'a 11')
+  assert.notEqual(q2.correct, 1, 'the article earned an undeserved credit')
+  assert.equal(isServerGraded(q2), false)
+  // And a real separator still resolves the same pair, so the pin is about the
+  // space and not about the reading.
+  assert.equal(grade(byId('csa-ac-q1'), 'a. 3.4').picked, 'A')
+  assert.equal(grade(byId('csa-ac-q2'), 'a. 11').correct, 1)
+})
+
+// ---------------------------------------------------------------------------
+// Q6-G3 — a letter the item does not offer names nothing
+// ---------------------------------------------------------------------------
+
+test('Q6-G3: a fifth letter over an option text is no_letter, not an ambiguous choice', () => {
+  // csa-ac-q1 has four options. 'E. 3.2' names a label that does not exist, so
+  // the response is not the printed form of anything and the recorded reason is
+  // that no letter was named. Without the index check the letter E survives, the
+  // text half resolves to C, the two disagree, and the attempt is stored — and
+  // handed to the GPT — as 'ambiguous choice': it tells the student his answer
+  // was unreadable between two options when he named an option that is not on
+  // the paper.
+  const item = byId('csa-ac-q1')
+  assert.ok(!('E' in item.options), 'fixture assumption: csa-ac-q1 offers no option E')
+  for (const raw of ['E. 3.2', 'e) 3.2', '(E) 3.2', 'E: 3.2', '3.2 (E)', 'I think E. 3.2']) {
+    const r = grade(item, raw)
+    assert.equal(r.graded_by, 'unparsed', `${JSON.stringify(raw)} was graded as ${r.picked}`)
+    assert.equal(r.detail, 'no_letter', `${JSON.stringify(raw)} was recorded as ${r.detail}`)
+  }
+  // The same shape with a letter the item DOES offer still reports the standoff.
+  assert.equal(grade(item, 'D. 3.2').detail, 'ambiguous_choice')
+})
+
 test('G7: no shipped mcq is keyed with something the grader cannot use', () => {
   for (const item of SHIPPED_MCQ) {
     const keyed = normalizeChoice(item.answer)

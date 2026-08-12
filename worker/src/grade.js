@@ -79,6 +79,22 @@ function canonAnswer(value) {
 const isBareLetter = (text) => /^[a-e]$/i.test(text)
 const tokensOf = (text) => text.split(' ').filter(Boolean)
 
+/**
+ * The canonical form of a response, and — when a hedge is there to strip — the
+ * same form without it. Every reader works from these, so none of them can be
+ * the one reader that only ever sees the hedged text.
+ *
+ * The trailing-period strip is repeated after HEDGE_TAIL because canonAnswer's
+ * own strip ran against the OLD end of the string: 'the program throws an
+ * arithmeticexception. i think' loses ' i think' here, which uncovers a period
+ * that was mid-string when canonAnswer looked.
+ */
+function hedgeBases(response) {
+  const canon = canonAnswer(response)
+  const hedged = canon.replace(HEDGE_HEAD, '').replace(HEDGE_TAIL, '').replace(/\.$/, '').trim()
+  return hedged && hedged !== canon ? [canon, hedged] : [canon]
+}
+
 /** The tokens that carry meaning — what is left once the filler is dropped. */
 const contentWords = (tokens) => tokens.filter((t) => !STOPWORDS.has(t))
 
@@ -161,18 +177,8 @@ function labelReading(response) {
 
 /** The option whose value he stated, with whether he said so plainly. */
 function valueReading(response, index, letter) {
-  const canon = canonAnswer(response)
-  if (!canon) return null
-  // canonAnswer's trailing-period strip already ran, looking for a period at
-  // THAT end. Stripping HEDGE_TAIL can uncover a NEW end — 'the program
-  // throws an arithmeticexception. i think' loses ' i think' here, leaving
-  // 'the program throws an arithmeticexception.' with the option's own
-  // period now trailing and never removed. Re-running the same strip catches
-  // it, so a verbatim option that ends in a period still matches once its
-  // hedge is gone.
-  const hedged = canon.replace(HEDGE_HEAD, '').replace(HEDGE_TAIL, '').replace(/\.$/, '').trim()
-  const bases = [canon]
-  if (hedged && hedged !== canon) bases.push(hedged)
+  const bases = hedgeBases(response)
+  if (!bases[0]) return null
   // A letter he decorated is a candidate VALUE as well as a label. LETTER_ONLY
   // strips `"`, `'`, brackets and ',!?:;' off a letter but canonAnswer keeps
   // them, and matchFragment ignores anything under three characters — so on the
@@ -224,6 +230,26 @@ const LABEL_THEN_TEXT = /^["'“‘([\s]*([a-e])(?:[)\]]|\s*[.:,;]|\s*[-–—])
 const TEXT_THEN_LABEL = /^(\S.*?)[\s,]*[([]([a-e])[)\]][\s.!?]*$/i
 
 /**
+ * One trailing mark a student leaves on the end of an answer. LETTER_ONLY has
+ * always tolerated exactly this set on a bare letter, so 'C?' is credited; the
+ * text half of the printed form has to tolerate it too, or 'C. 3.2?' declines
+ * while both of its halves resolve. Only ONE character, and only after the
+ * undecorated text has already failed to match: quotes carry meaning here (on
+ * csa-ac-q46 `"50"` and `50` are different options), so a quote is never
+ * stripped off a reading that matched with it.
+ */
+const TRAILING_MARK = /[)\]"'”’.,!?:;]$/
+
+/**
+ * The option a half of the printed form names, tolerating one trailing mark.
+ */
+function textReading(text, index) {
+  const first = valueReading(text, index, null)
+  if (first || !TRAILING_MARK.test(text)) return first
+  return valueReading(text.replace(TRAILING_MARK, ''), index, null)
+}
+
+/**
  * The option he named by giving BOTH halves of it — the label and the text
  * printed next to it. Neither single reading sees this: LETTER_ONLY needs the
  * letter to be the whole response, and the label prefix stops the text matching
@@ -235,21 +261,28 @@ const TEXT_THEN_LABEL = /^(\S.*?)[\s,]*[([]([a-e])[)\]][\s.!?]*$/i
  * `agrees` is false when the two halves name different options — 'C. 3.4' where
  * 3.4 is option A. That is the same standoff as any other double reading and is
  * reported unparsed rather than resolved to whichever half is checked first.
+ *
+ * Both patterns are anchored at ^, so this reader is the one that cannot afford
+ * to work from the raw response: 'I think C. 3.2' matched neither shape and was
+ * thrown away even though 'C. 3.2' and 'I think C' are each credited on their
+ * own. It reads the hedge-stripped canonical forms instead, newest reading
+ * first, so an unhedged response is judged exactly as it was before.
  */
 function labelWithText(response, index) {
-  const raw = String(response)
-  for (const [pattern, letterAt, textAt] of [
-    [LABEL_THEN_TEXT, 1, 2],
-    [TEXT_THEN_LABEL, 2, 1],
-  ]) {
-    const split = raw.match(pattern)
-    if (!split) continue
-    const letter = split[letterAt].toUpperCase()
-    // 'E. 3.2' on a four-option item names nothing, so it is not this shape.
-    if (!index.has(letter)) continue
-    const value = valueReading(split[textAt], index, null)
-    if (!value) continue
-    return { letter, agrees: value.letter === letter }
+  for (const base of hedgeBases(response)) {
+    for (const [pattern, letterAt, textAt] of [
+      [LABEL_THEN_TEXT, 1, 2],
+      [TEXT_THEN_LABEL, 2, 1],
+    ]) {
+      const split = base.match(pattern)
+      if (!split) continue
+      const letter = split[letterAt].toUpperCase()
+      // 'E. 3.2' on a four-option item names nothing, so it is not this shape.
+      if (!index.has(letter)) continue
+      const value = textReading(split[textAt], index)
+      if (!value) continue
+      return { letter, agrees: value.letter === letter }
+    }
   }
   return null
 }
