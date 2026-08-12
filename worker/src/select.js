@@ -14,6 +14,17 @@
 //   4. Spaced review of something previously missed and now due.
 //   5. Anything unseen, so the bank keeps moving.
 //
+// 3 and 4 are INTERLEAVED rather than strictly ordered: one ordinary-practice
+// question in REVIEW_SHARE is reserved for a due review ahead of remediation,
+// because a strict order starved review to the point of never running at all (see
+// priority 4). The reserve is taken out of 3's share only — 1 and 2 keep theirs.
+//
+// "Weakest" is judged on RECENCY-WEIGHTED accuracy, not on lifetime accuracy: over
+// a nine-month run a topic drilled to 100% in September still read 100% in May, so
+// selecting on "below the floor" steered practice away from exactly the material
+// he had had longest to forget. See topicStats — every percentage the student or
+// parent is SHOWN is still the plain unweighted one, computed in readiness.js.
+//
 // Each of those branches asks for a specific topic, and each draws from that
 // topic's OWN pool: its never-asked items first, then its items whose reuse
 // window has passed. A topic that has been used up must not fall through to a
@@ -110,17 +121,68 @@ export function reviewInterval(streak) {
 }
 
 /**
- * Per-topic history: how many attempts, how many right, when it was last seen,
- * and the current run of consecutive correct answers.
+ * How long an answer keeps half its weight, in days, in the accuracy that drives
+ * SELECTION. Nothing the student or parent is SHOWN is weighted — see topicStats.
+ *
+ * WHY THERE IS A HALF-LIFE AT ALL. Lifetime accuracy is the wrong question for
+ * "what should he practise next?" over a nine-month run. A topic drilled to 100%
+ * in September still read 100% in May, and because priority 3 selects on being
+ * BELOW the floor, the selector then permanently stopped drilling exactly the
+ * material he had had the longest to forget. That is not a missing feature; it is
+ * study time routed away from the topics that need it most.
+ *
+ * WHY 30 DAYS. It is set against the schedule this module already runs on rather
+ * than picked round: the spaced-review intervals top out at 35 days, so one
+ * half-life is a little under the point at which the review schedule itself says
+ * a topic is worth re-checking. Evidence from the previous month therefore counts
+ * for about half, and September's work counts for about 0.4% by May — which is
+ * the honest weight to put on "he could do this eight months ago".
  */
-export function topicStats(attempts) {
+export const RECENCY_HALF_LIFE_DAYS = 30
+
+/** How much of an answer still counts as evidence about today. 1 when just given. */
+function recencyWeight(ts, now) {
+  return 2 ** (-Math.max(0, ageDays(ts, now)) / RECENCY_HALF_LIFE_DAYS)
+}
+
+/**
+ * Per-topic history: how many attempts, how many right, when it was last seen,
+ * the current run of consecutive correct answers, and TWO percentages.
+ *
+ * `pct` is lifetime and unweighted — correct/n over the whole history. It is what
+ * the module reports alongside the other one, and it is the shape every existing
+ * consumer already expects.
+ *
+ * `recent_pct` is the same accuracy with each answer weighted by how long ago it
+ * was given, and it is what SELECTION judges a topic on. Two properties make it
+ * measure decay rather than merely re-describe the same ratio:
+ *
+ *   - Both halves of the fraction are weighted, so a topic whose answers are ALL
+ *     equally old would come out at exactly its lifetime figure. Decay alone
+ *     cannot move a ratio.
+ *   - The divisor is therefore floored at ONE fresh answer's worth of weight.
+ *     Below that the topic is scaled down in proportion to the evidence still
+ *     standing: three right answers eight months ago carry 0.012 of an answer's
+ *     worth of weight between them, so the topic reads ~1% rather than 100%. That
+ *     floor is what makes "he has not touched this since September" visible, and
+ *     it is why a topic he HAS worked recently is unaffected — one right answer
+ *     today is a full answer's worth of weight, and still reads 100%.
+ *
+ * @param {string|null} now  The moment the weighting is relative to. Without it
+ *        `recent_pct` is null rather than a number silently equal to `pct`: a
+ *        recency-weighted percentage is a statement about a moment in time, and
+ *        there is no honest value for it when no moment was given.
+ */
+export function topicStats(attempts, now = null) {
   const stats = new Map()
   // Only graded attempts carry a percentage or a streak; an ungraded one has no
   // verdict to record.
   const ordered = [...attempts].filter(isServerGraded).sort((a, b) => new Date(a.ts) - new Date(b.ts))
   for (const a of ordered) {
     if (a.topic == null) continue
-    if (!stats.has(a.topic)) stats.set(a.topic, { n: 0, correct: 0, streak: 0, last_ts: null, misses: 0 })
+    if (!stats.has(a.topic)) {
+      stats.set(a.topic, { n: 0, correct: 0, streak: 0, last_ts: null, misses: 0, weight: 0, weighted_correct: 0 })
+    }
     const s = stats.get(a.topic)
     s.n++
     if (a.correct) {
@@ -130,11 +192,25 @@ export function topicStats(attempts) {
       s.streak = 0
       s.misses++
     }
+    if (now != null) {
+      const w = recencyWeight(a.ts, now)
+      s.weight += w
+      if (a.correct) s.weighted_correct += w
+    }
     s.last_ts = a.ts
   }
-  for (const s of stats.values()) s.pct = (s.correct / s.n) * 100
+  for (const s of stats.values()) {
+    s.pct = (s.correct / s.n) * 100
+    s.recent_pct = now == null ? null : (s.weighted_correct / Math.max(1, s.weight)) * 100
+  }
   return stats
 }
+
+/**
+ * One ordinary-practice question in this many is reserved for a review that is
+ * due, ahead of remediation. See the interleave below priority 3.
+ */
+export const REVIEW_SHARE = 3
 
 /** Mean of a topic's [low, high] exam weight range, as a tie-breaker. */
 function examWeight(topic, topicMeta) {
@@ -182,7 +258,8 @@ export function pickNext({
 }) {
   const inMock = sampling === 'mock'
   const reuseWindow = reuseDays ?? config?.readiness?.reuse_days ?? DEFAULT_REUSE_DAYS
-  const stats = topicStats(attempts)
+  // `now` is what makes the accuracy in `stats` recency-aware: see topicStats.
+  const stats = topicStats(attempts, now)
   // Coverage asks "has he tried this?", which an ungraded attempt still answers.
   const attempted = new Set(attempts.map((a) => a.topic))
   const excluded = excludeItemIds instanceof Set ? excludeItemIds : new Set(excludeItemIds ?? [])
@@ -555,11 +632,114 @@ export function pickNext({
   // 3. The weakest topic that matters most. Ranked by shortfall against the
   //    per-unit floor, scaled by exam weight, so a weak heavily-tested topic
   //    outranks a weak footnote.
+  //
+  //    Judged on RECENT accuracy, not lifetime accuracy. See topicStats: over a
+  //    nine-month run the lifetime figure keeps saying 100% about a topic he last
+  //    saw in September, and because this branch selects on being BELOW the floor,
+  //    that permanently steered practice away from the material with the longest
+  //    time to decay. The reported percentages — every number in readiness.js, the
+  //    status view and the dashboard — are unweighted and unchanged; this is the
+  //    selector's own view of what he can do TODAY.
   const floor = config?.readiness?.per_unit_min ?? 70
+  /** The accuracy selection judges a topic on; falls back to lifetime with no clock. */
+  const held = (s) => s.recent_pct ?? s.pct
+  /**
+   * How a topic's accuracy is stated to the student.
+   *
+   * Both numbers, whenever they differ. The recency-weighted one is the one that
+   * chose the question, so it has to be the one in the sentence — but a student
+   * who has 100% of this topic's answers right can check "3%" and find it false,
+   * and a reason he can catch out is worse than no reason. So the sentence says
+   * what the number is, and what the raw record says, and why they differ.
+   */
+  const statedPct = (s) => {
+    const recent = held(s).toFixed(0)
+    const lifetime = s.pct.toFixed(0)
+    return recent === lifetime
+      ? `${recent}%`
+      : `${recent}% on recent evidence (${lifetime}% across all ${s.n} answer(s) ever, weighted down because an ` +
+        `answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days — work you have not repeated is not ` +
+        `evidence about today)`
+  }
   const weak = [...stats.entries()]
-    .filter(([topic, s]) => s.pct < floor && isTested(topic))
-    .map(([topic, s]) => ({ topic, s, urgency: (floor - s.pct) * (1 + examWeight(topic, topicMeta)) }))
+    .filter(([topic, s]) => held(s) < floor && isTested(topic))
+    .map(([topic, s]) => ({ topic, s, urgency: (floor - held(s)) * (1 + examWeight(topic, topicMeta)) }))
     .sort((a, b) => b.urgency - a.urgency || a.topic.localeCompare(b.topic))
+
+  // 4. Spaced review: previously missed, correct since, and now due again.
+  //    Restricted to topics the exam asks about, so a session is not spent
+  //    reviewing material the readiness score deliberately ignores.
+  //
+  //    INTERLEAVED WITH 3, NOT RANKED BELOW IT. Strict ordering starved this
+  //    branch to the point of never running: priority 3 returns on the first topic
+  //    below the floor with a servable item, and poolFor falls back to the topic's
+  //    whole item set, so it essentially always found one. Review was therefore
+  //    unreachable until EVERY tested topic cleared the floor, which for most of a
+  //    nine-month run is never — so the 1/3/7/16/35 schedule this module is built
+  //    around did not execute at all.
+  //
+  //    One ordinary-practice question in REVIEW_SHARE is reserved for a due review
+  //    instead. Three reasons for that number: remediation keeps the majority of
+  //    the session while anything is genuinely below its floor, which is the right
+  //    balance early on; at the ~8 answers a day the configs size the bank for, a
+  //    third is around 2-3 reviews a day, enough to work down a due queue that is
+  //    small at steady state (only topics with a past miss that are past their
+  //    interval); and a due review waits at most two questions, so a 1-day
+  //    interval is still honoured inside one short session.
+  //
+  //    Which slot is the reserved one is a function of the recorded history —
+  //    ordinary-practice attempts only, so a 42-answer paper cannot rotate the
+  //    phase — and of nothing else. No clock, no counter, no RNG: replaying the
+  //    same history serves the same question, which is the guarantee this module
+  //    is built on.
+  const due = [...stats.entries()]
+    .filter(([topic, s]) => isTested(topic) && s.misses > 0 && s.last_ts && ageDays(s.last_ts, now) >= reviewInterval(s.streak))
+    .sort((a, b) => ageDays(b[1].last_ts, now) - ageDays(a[1].last_ts, now) || a[0].localeCompare(b[0]))
+
+  /**
+   * The first due review that can actually be served, or null.
+   *
+   * On the reserved slot the topics remediation is about to serve are skipped. A
+   * topic below its floor is not what the reserve exists for — priority 3 will
+   * serve it in a moment, with a reason that describes it accurately — and
+   * spending the reserved slot on it would relabel remediation as spaced review
+   * and leave the actual review queue exactly as starved as before.
+   */
+  const serveReview = (reserved = false) => {
+    const skip = reserved ? new Set(weak.map((w) => w.topic)) : new Set()
+    for (const [topic, s] of due) {
+      if (skip.has(topic)) continue
+      const pool = poolFor(topic)
+      if (!pool.length) continue
+      const days = ageDays(s.last_ts, now).toFixed(0)
+      // Only on the reserved slot, and only when something really is below its
+      // floor: the student is looking at a review while the status view names a
+      // weak topic, and the two have to agree about what is going on.
+      const displaced = reserved ? weak[0] : null
+      return serve({
+        item: pool[0],
+        priority: 'review',
+        conditions: 'cold',
+        reason: `Spaced review of ${topic} — you missed it before, and it has been ${days} days. Checking it stuck.`
+          + (displaced
+            ? ` ${displaced.topic} is at ${statedPct(displaced.s)} and is still the next thing to work on, but one `
+              + `ordinary question in ${REVIEW_SHARE} is kept for a review that has come due: with remediation always `
+              + `first, a review would never be served at all.`
+            : ''),
+      })
+    }
+    return null
+  }
+
+  // Ordinary practice only: a sitting's answers are not part of the drill stream
+  // the reserve is measured over, and every attempt counts toward the phase
+  // whether or not it could be graded — this is a position in the session, not a
+  // percentage.
+  const drilled = attempts.filter((a) => a.mock_id == null).length
+  if ((drilled + 1) % REVIEW_SHARE === 0) {
+    const reserved = serveReview(true)
+    if (reserved) return reserved
+  }
 
   for (const w of weak) {
     const pool = poolFor(w.topic)
@@ -568,29 +748,13 @@ export function pickNext({
         item: pool[0],
         priority: 'weakest',
         conditions: 'cold',
-        reason: `${w.topic} is at ${w.s.pct.toFixed(0)}%, below the ${floor}% this subject needs. Working it until it holds.`,
+        reason: `${w.topic} is at ${statedPct(w.s)}, below the ${floor}% this subject needs. Working it until it holds.`,
       })
     }
   }
 
-  // 4. Spaced review: previously missed, correct since, and now due again.
-  //    Restricted to topics the exam asks about, so a session is not spent
-  //    reviewing material the readiness score deliberately ignores.
-  const due = [...stats.entries()]
-    .filter(([topic, s]) => isTested(topic) && s.misses > 0 && s.last_ts && ageDays(s.last_ts, now) >= reviewInterval(s.streak))
-    .sort((a, b) => ageDays(b[1].last_ts, now) - ageDays(a[1].last_ts, now) || a[0].localeCompare(b[0]))
-
-  for (const [topic, s] of due) {
-    const pool = poolFor(topic)
-    if (pool.length) {
-      return serve({
-        item: pool[0],
-        priority: 'review',
-        conditions: 'cold',
-        reason: `Spaced review of ${topic} — you missed it before, and it has been ${ageDays(s.last_ts, now).toFixed(0)} days. Checking it stuck.`,
-      })
-    }
-  }
+  const review = serveReview()
+  if (review) return review
 
   // 5. Keep moving through the bank. An on-exam question he answered long enough
   //    ago to have forgotten beats a never-asked class-only one, or the exam
@@ -609,7 +773,7 @@ export function pickNext({
     priority: 'breadth',
     conditions: 'cold',
     reason: stranded
-      ? `${stranded.topic} is at ${stranded.s.pct.toFixed(0)}%, below the ${floor}% this subject needs, but it has no questions left that you have not just answered — so this is ${ground} in the meantime.`
+      ? `${stranded.topic} is at ${statedPct(stranded.s)}, below the ${floor}% this subject needs, but it has no questions left that you have not just answered — so this is ${ground} in the meantime.`
       : `Everything is at or above its floor, so this is ${ground}.`,
   })
 }
