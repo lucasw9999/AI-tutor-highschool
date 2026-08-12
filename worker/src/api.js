@@ -520,6 +520,13 @@ function sectionMinutes(section, e = {}) {
  * section" runs past its allowance whether the time went into one question or
  * forty-two.
  *
+ * WHAT THAT DELIBERATELY LETS THROUGH: the one question the forgiven break was
+ * spent on may have been looked up rather than thought about — about 2.4 points
+ * of a 42-question composite. Taken knowingly, because the alternative was
+ * discarding a whole 42-of-42 afternoon on evidence that cannot tell a dinner
+ * break from a lookup, and because the total-time bar still bounds it: the
+ * sitting, break included, has to fit inside 1.5x of the real budget.
+ *
  * WHAT HAPPENS THEN — disclosed, never discarded. The answers stay on the
  * record and still count as practice; the sitting is stored with no composite,
  * which is the existing mechanism for a sitting that cannot count (see
