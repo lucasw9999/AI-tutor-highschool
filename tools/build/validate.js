@@ -34,21 +34,39 @@ const MODEL_GRADED_KINDS = new Set(['frq', 'constructed_model_graded'])
 // the sixth sitting could not be completed and total_logged_mocks_min was
 // unreachable — arithmetically, not eventually. The only symptom was a 409.
 //
+// EVERY DEMAND HERE IS PER KIND, and that is the correction this gate needed
+// most. It used to add the halves of a paper together — CSA's 42 multiple choice
+// plus 4 free-response — take 90% of the total, and count the whole bank against
+// it. 218 mcq items cleared a 42-question demand comfortably, so the gate passed
+// a bank holding ZERO free-response questions while free response is 45% of the
+// real exam score and all 25 of its free-response points. Every mock that bank
+// could assemble was structurally 0% free response, and nothing said so.
+//
+// A section is not a number of questions, it is a number of questions OF A KIND:
+// api.js's sectionFill credits an answer only to the half its own kind belongs
+// to, and its partObstacle judges each half's supply on its own with exactly the
+// arithmetic mirrored below (ceil(count x MIN_MOCK_COVERAGE) items of that kind).
+// A half the bank cannot supply is dropped from `scorable`, so the composite
+// silently becomes a percentage of part of an exam.
+//
 // What is a HARD demand and what is merely tight, reasoned out explicitly:
 //
-//   * One sitting must be assembled from DISTINCT items. Asking the same
-//     question twice does not make it two questions of evidence, and the
-//     composite a sitting produces is the only number that moves readiness. So
-//     `bank >= ceil(questions * MIN_MOCK_COVERAGE)` is unavoidable: no policy can
-//     conjure the items, only more content can. -> ERROR.
-//   * Those items must be gradable BY KEY. The composite counts server-graded
-//     answers only, so a bank of model-graded items can fill a sitting and still
-//     never produce a composite. -> ERROR.
+//   * Each half of a sitting must be assembled from DISTINCT items OF ITS OWN
+//     KIND. Asking the same question twice does not make it two questions of
+//     evidence, and no number of multiple choice answers fills the free-response
+//     half. So `supply(kind) >= ceil(count * MIN_MOCK_COVERAGE)` is unavoidable
+//     per half: no policy can conjure the items, only more content can. -> ERROR.
+//   * At least one half must be gradable BY KEY. The composite counts
+//     server-graded answers only, so a bank of model-graded items can fill a
+//     sitting and still never produce a composite. -> ERROR.
+//   * A half whose kind is rubric-scored by design (frq) is NOT required to
+//     carry keys — grade.js routes it to the model on purpose. Its supply still
+//     matters: without it the student cannot practise that half at all.
 //   * The `consecutive_qualifying_mocks` sittings that decide readiness must all
 //     fall inside `window_span_days_max` days. If the no-repeat window covers
 //     that whole span, none of them may re-ask an earlier one's question, so they
-//     need that many disjoint papers. -> ERROR (fixable from either side: more
-//     items, or a window sized to the bank).
+//     need that many disjoint papers — again per half. -> ERROR (fixable from
+//     either side: more items, or a window sized to the bank).
 //   * Reuse ACROSS sittings once the window has passed is ordinary test practice
 //     — a paper is a sample of the exam, and a question answered five weeks ago
 //     is evidence again — and select.js labels a repeat that is still inside the
@@ -82,6 +100,34 @@ export function readinessConfigs(dir = new URL('../../worker/config/', import.me
 }
 
 /**
+ * The halves a full paper is made of: the item KIND each is drawn from, how many
+ * of them the real exam has, and the config key that says so.
+ *
+ * Mirrors api.js's sectionParts, including its two accepted shapes for the
+ * multiple-choice count — CSA states `mcq_count`, Precalc states
+ * `mcq_no_calc_count` + `mcq_calc_count` — and its kind labels, which are what
+ * the bank is counted by.
+ */
+function examParts(e = {}) {
+  const parts = []
+  const stated = e.mcq_count != null
+  const split = e.mcq_no_calc_count != null || e.mcq_calc_count != null
+  const mcq = stated ? e.mcq_count : (split ? (e.mcq_no_calc_count ?? 0) + (e.mcq_calc_count ?? 0) : null)
+  if (mcq != null) {
+    parts.push({
+      kind: 'mcq',
+      name: 'multiple choice',
+      count: mcq,
+      key: stated ? 'exam.mcq_count' : 'exam.mcq_no_calc_count + exam.mcq_calc_count',
+    })
+  }
+  if (e.frq_count != null) {
+    parts.push({ kind: 'frq', name: 'free-response', count: e.frq_count, key: 'exam.frq_count' })
+  }
+  return parts
+}
+
+/**
  * Judge ONE subject's bank against ONE subject's readiness config.
  *
  * `bank` is that subject's items and nothing else. An empty bank is not judged:
@@ -100,10 +146,9 @@ export function feasibility(bank, config) {
   const r = readinessBlock ?? {}
 
   // The longest sitting /mock/start accepts is 'full' — the whole paper — so that
-  // is what the bank has to be able to assemble.
-  const mcq = e.mcq_count ?? ((e.mcq_no_calc_count ?? 0) + (e.mcq_calc_count ?? 0) || null)
-  const frq = e.frq_count ?? null
-  const questions = (mcq ?? 0) + (frq ?? 0)
+  // is what the bank has to be able to assemble, half by half.
+  const parts = examParts(e)
+  const questions = parts.reduce((total, p) => total + p.count, 0)
 
   // A missing/misnamed "exam" block resolves `questions` to 0 exactly like a
   // healthy one that legitimately has nothing to check — the two shipped configs
@@ -130,36 +175,91 @@ export function feasibility(bank, config) {
     return { errors, warnings }
   }
 
-  const perSitting = Math.ceil(questions * MIN_MOCK_COVERAGE)
+  const share = `${Math.round(MIN_MOCK_COVERAGE * 100)}%`
   const mocks = r.total_logged_mocks_min ?? 0
-  const demand = `a scored sitting needs ${perSitting} distinct questions (exam.mcq_count ${mcq ?? 0} + ` +
-    `exam.frq_count ${frq ?? 0}, times the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of a section a sitting must cover)`
 
-  if (bank.length < perSitting) {
+  // What each half of a full paper demands of the bank, and what the bank has of
+  // that kind. `need` is api.js partObstacle's own arithmetic; `keyed` is what
+  // grade.js can mark mechanically, which is all the composite counts.
+  const halves = parts.filter((p) => p.count > 0).map((p) => ({
+    ...p,
+    need: Math.ceil(p.count * MIN_MOCK_COVERAGE),
+    have: bank.filter((i) => i.kind === p.kind).length,
+    keyed: bank.filter(
+      (i) => i.kind === p.kind && !MODEL_GRADED_KINDS.has(i.kind) && String(i.answer ?? '').trim() !== '',
+    ).length,
+    // A kind that is rubric-scored by design. Its supply is still required; its
+    // keys are not, and demanding them would be demanding the wrong content.
+    rubric: MODEL_GRADED_KINDS.has(p.kind),
+  }))
+  const kindsPresent = [...new Set(bank.map((i) => i.kind ?? 'no kind'))].sort()
+    .map((k) => `${k}=${bank.filter((i) => (i.kind ?? 'no kind') === k).length}`)
+    .join(', ')
+
+  // 1. Can each half be put in front of him at all?
+  //
+  // When the bank holds nothing markable AT ALL, that is said here rather than as
+  // a second error: "you have no questions of this kind" and "none of what you do
+  // have could be marked" are one finding about one bank with one fix, and a bank
+  // of 48 rubric-scored items against an exam that wants 42 multiple choice would
+  // otherwise be reported twice.
+  const markable = bank.filter(
+    (i) => !MODEL_GRADED_KINDS.has(i.kind) && String(i.answer ?? '').trim() !== '',
+  ).length
+  const short = halves.filter((h) => h.have < h.need)
+  if (short.length) {
+    const detail = short
+      .map((h) =>
+        `${h.have} of the ${h.need} ${h.name} question(s) it takes to cover the ${h.count} a full paper contains ` +
+        `(${h.key} ${h.count}, times the ${share} of a half api.js requires before that half is scorable)`)
+      .join('; and ')
     errors.push(
-      `${subject}: ${bank.length} items in the bank, but ${demand} — no sitting can ever be assembled, so ` +
-        `readiness.total_logged_mocks_min (${mocks}) is unreachable. Add at least ${perSitting - bank.length} ` +
-        `more item${perSitting - bank.length === 1 ? '' : 's'}.`,
+      `${subject}: the bank holds ${detail}. ` +
+      (short.length === halves.length
+        ? `No sitting can be assembled at all, so readiness.total_logged_mocks_min (${mocks}) is unreachable.`
+        : `A sitting is a number of questions OF A KIND and an answer fills only its own half (api.js sectionFill), ` +
+          `so every paper this bank can assemble is structurally 0% ${short.map((h) => h.name).join(' and ')} — ` +
+          `api.js drops that half from the sitting's scorable count and the composite becomes a percentage of part ` +
+          `of an exam, with nothing at runtime saying which part.`) +
+      ` Kinds in the bank: ${kindsPresent}. Only items of the kind that is short can fix this; no other kind ` +
+      `substitutes for it.` +
+      (markable
+        ? ''
+        : ` And not one item in this bank can be graded mechanically, so no sitting could produce a composite even ` +
+          `if it were assembled: the composite counts server-graded answers only, and ` +
+          `readiness.composite_mean_min (${r.composite_mean_min ?? '?'}) can never be met.`),
     )
   }
 
-  // The composite counts server-graded answers only (grade.js), so an item routed
-  // to a rubric, or carrying no usable key, cannot move readiness at all. Reported
-  // only when gradability is the binding shortfall: if every item in the bank is
-  // gradable, the bank is simply too small and the check above has said so once.
-  const scorable = bank.filter((i) => !MODEL_GRADED_KINDS.has(i.kind) && String(i.answer ?? '').trim() !== '')
-  if (scorable.length < perSitting && scorable.length < bank.length) {
-    const kinds = [...new Set(bank.map((i) => i.kind ?? 'no kind'))].sort().join(', ')
+  // 2. Can a composite come out of it? The composite counts server-graded answers
+  // only (grade.js), so an item routed to a rubric, or carrying no usable key,
+  // cannot move readiness. Reported per half, and only where supply is not already
+  // the binding shortfall — "you have the questions but cannot mark them" and "you
+  // do not have the questions" are different problems with different fixes.
+  const marked = halves.filter((h) => !h.rubric && h.have >= h.need)
+  for (const h of marked.filter((x) => x.keyed < x.need)) {
     errors.push(
-      `${subject}: only ${scorable.length} of ${bank.length} items can be graded mechanically (kinds present: ` +
-        `${kinds}), but the composite that moves readiness counts server-graded answers only — so ${demand}, and ` +
-        `readiness.composite_mean_min (${r.composite_mean_min ?? '?'}) can never be met. Add keyed items.`,
+      `${subject}: only ${h.keyed} of the ${h.have} ${h.name} item(s) in the bank can be graded mechanically ` +
+        `(kinds present: ${kindsPresent}), short of the ${h.need} that half needs, but the composite that moves ` +
+        `readiness counts server-graded answers only — so readiness.composite_mean_min (${r.composite_mean_min ?? '?'}) ` +
+        `can never be met. Add keyed items.`,
+    )
+  }
+  // A subject whose every half is rubric-scored BY DESIGN can never produce a
+  // composite however large its bank grows, which no supply or key count says.
+  if (halves.length && halves.every((h) => h.rubric)) {
+    errors.push(
+      `${subject}: every half of this exam is rubric-scored by design ` +
+        `(${halves.map((h) => `${h.name} → kind '${h.kind}'`).join(', ')}), so no sitting can ever produce a ` +
+        `composite and readiness.composite_mean_min (${r.composite_mean_min ?? '?'}) can never be met. This is a ` +
+        `standard that cannot be measured, not a bank that is too small.`,
     )
   }
 
-  // How many of the qualifying sittings fall inside one no-repeat window. K
+  // 3. How many of the qualifying sittings fall inside one no-repeat window. K
   // sittings spread as widely as the span allows are span/(K-1) days apart, so a
-  // window covering several of those gaps forces those sittings to share a pool.
+  // window covering several of those gaps forces those sittings to share a pool —
+  // and to share it per half, since a paper still needs its own kinds.
   const reuseWindow = r.reuse_days ?? ASSUMED_REUSE_DAYS
   const stated = r.reuse_days == null ? ` (unset, so the selector's ${ASSUMED_REUSE_DAYS}-day fallback applies)` : ''
   const qualifying = r.consecutive_qualifying_mocks ?? 0
@@ -167,26 +267,29 @@ export function feasibility(bank, config) {
   if (qualifying > 1 && span != null) {
     const apart = span / (qualifying - 1)
     const disjoint = Math.min(qualifying, Math.floor(reuseWindow / apart) + 1)
-    const need = disjoint * perSitting
-    if (disjoint > 1 && bank.length < need) {
+    const tight = halves.filter((h) => h.have >= h.need && h.have < disjoint * h.need)
+    if (disjoint > 1 && tight.length) {
       errors.push(
         `${subject}: readiness.consecutive_qualifying_mocks (${qualifying}) sittings must fall inside ` +
           `readiness.window_span_days_max (${span}) days, i.e. about ${apart.toFixed(0)} days apart, and ` +
           `readiness.reuse_days (${reuseWindow})${stated} spans ${disjoint} of them — so ${disjoint} sittings need ` +
-          `distinct questions: ${need} required, ${bank.length} in the bank (short ${need - bank.length}). Either ` +
-          `add items or set readiness.reuse_days below ${apart.toFixed(0)}, so a sitting that much later may re-ask ` +
-          `a question.`,
+          `distinct questions of each kind: ` +
+          tight.map((h) => `${disjoint * h.need} ${h.name} required, ${h.have} in the bank (short ${disjoint * h.need - h.have})`).join('; ') +
+          `. Either add items or set readiness.reuse_days below ${apart.toFixed(0)}, so a sitting that much later may ` +
+          `re-ask a question.`,
       )
     }
   }
 
-  const servings = mocks * perSitting
-  if (servings > bank.length) {
+  // 4. Reuse across sittings weeks apart is fine, and worth saying out loud.
+  const reused = halves.filter((h) => h.have >= h.need && mocks * h.need > h.have)
+  if (reused.length) {
     warnings.push(
-      `${subject}: readiness.total_logged_mocks_min (${mocks}) sittings x ${perSitting} questions = ${servings} ` +
-        `servings, and the bank holds ${bank.length} — so sittings will re-ask questions from earlier ones. That is ` +
-        `allowed once readiness.reuse_days (${reuseWindow})${stated} has passed, and select.js labels the repeat when it ` +
-        `has not; the fix is more items, never a lower mock count.`,
+      `${subject}: readiness.total_logged_mocks_min (${mocks}) sittings x ` +
+        reused.map((h) => `${h.need} ${h.name} = ${mocks * h.need} servings against ${h.have} in the bank`).join(', and ') +
+        ` — so sittings will re-ask questions from earlier ones. That is allowed once readiness.reuse_days ` +
+        `(${reuseWindow})${stated} has passed, and select.js labels the repeat when it has not; the fix is more items, ` +
+        `never a lower mock count.`,
     )
   }
 
