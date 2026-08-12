@@ -81,37 +81,9 @@ export function parsePracticeItems(text, filename) {
   })
 }
 
-export function parseTeachingTriples(text, filename) {
-  const meta = UNIT_OF[filename]
-  if (!meta) throw new Error(`unknown Precalc file: ${filename}`)
-  const out = []
-  const sections = text.split(/^###+\s+/m).slice(1)
-  for (const sec of sections) {
-    const heading = sec.split('\n')[0].trim()
-    const idm = heading.match(/^(\d+\.\d+[a-z]?)\s+(.*)$/)
-    if (!idm) continue
-    const grab = (re) => {
-      const mm = sec.match(re)
-      return mm ? mm[1].replace(/\s+/g, ' ').trim() : null
-    }
-    out.push({
-      topic: `pc-${idm[1]}`,
-      subject: 'ap_precalc',
-      unit: meta.unit,
-      name: idm[2],
-      plain_idea: grab(/\*\*Plain idea:?\*\*\s*([\s\S]*?)(?=\n\n|\*\*)/),
-      worked_example: grab(/\*\*Worked example[^*]*\*\*\s*([\s\S]*?)(?=\n\n\*\*|\*\*#1)/),
-      common_mistake: grab(/\*\*#1 mistake:?\*\*\s*([\s\S]*?)(?=\n\n|\*\*|$)/),
-      source_file: `ap_precalc/study-packs/${filename}`,
-    })
-  }
-  return out
-}
-
 /** Parse every unit and refuse to report success if any unit is short. */
 export function parseAll(readFile) {
   const items = []
-  const teaching = []
   const errors = []
   for (const f of Object.keys(UNIT_OF)) {
     const text = readFile(`ap_precalc/study-packs/${f}`)
@@ -119,14 +91,22 @@ export function parseAll(readFile) {
     if (got.length !== EXPECTED_PER_UNIT) {
       errors.push(`${f}: parsed ${got.length} items, expected ${EXPECTED_PER_UNIT}`)
     }
+    // The count check above only catches a short unit. A renumbered problem
+    // (e.g. P6 relabelled P5) still parses to the expected count while two
+    // items collide on the same id — and items.id is a PRIMARY KEY loaded via
+    // INSERT OR REPLACE, so one problem would silently disappear downstream.
+    const ids = got.map((i) => i.id)
+    const dupes = [...new Set(ids.filter((id, idx) => ids.indexOf(id) !== idx))]
+    if (dupes.length) {
+      errors.push(`${f}: duplicate item id(s), one problem would be silently dropped: ${dupes.join(', ')}`)
+    }
     const missingSolution = got.filter((i) => !i.solution).map((i) => i.id)
     if (missingSolution.length) {
       errors.push(`${f}: items with no solution block: ${missingSolution.join(', ')}`)
     }
     items.push(...got)
-    teaching.push(...parseTeachingTriples(text, f))
   }
-  return { items, teaching, errors }
+  return { items, errors }
 }
 
 export const PRECALC_FILES = Object.keys(UNIT_OF)

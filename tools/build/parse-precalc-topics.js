@@ -68,17 +68,32 @@ export function sections(text) {
  * to anchor `^**Label` to a line start, but under `m` a `$` in the lookahead
  * matches every line ending too — which truncated every field to its first line
  * and silently dropped the solution from every worked example.
+ *
+ * The suffix between the alias and the colon is uncapped (`[^*]*?`, not a fixed
+ * `{0,N}`), because some packs put the actual worked-example PROMPT there (e.g.
+ * "Worked example — simplify k(x) = [...] to a single term in tan x:"). A fixed
+ * cap made the whole label fail to match and silently dropped the solution. The
+ * stop lookahead also exempts further labels from the SAME alias family, so a
+ * lettered run ("Worked example A/B/C") is consumed as one field instead of
+ * being cut off at the second label.
  */
-export function labelled(body, aliases) {
+export function labelled(body, aliases, { includeSuffix = false } = {}) {
+  const altPattern = aliases.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')
   for (const alias of aliases) {
     const esc = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     // Matches `**Plain language:**`, `**#1 mistake (HUGE):**`, `**Worked example — sec:**`
     const re = new RegExp(
-      `^\\*\\*${esc}[^*]{0,60}?:?\\*\\*\\s*([\\s\\S]*?)(?=\\n\\*\\*|\\n###|\\n---|(?![\\s\\S]))`,
+      `^\\*\\*${esc}([^*]*?):?\\*\\*\\s*([\\s\\S]*?)(?=\\n\\*\\*(?!(?:${altPattern}))|\\n###|\\n---|(?![\\s\\S]))`,
       'm',
     )
     const m = body.match(re)
-    if (m && m[1].trim()) return m[1].trim()
+    if (m && m[2].trim()) {
+      const value = m[2].trim()
+      // Strip the leading em-dash/colon/whitespace punctuation the suffix was
+      // introduced with, e.g. " — simplify k(x)..." -> "simplify k(x)...".
+      const suffix = m[1].replace(/^[\s—–:-]+/, '').trim()
+      return includeSuffix && suffix ? `${suffix}\n${value}` : value
+    }
   }
   return null
 }
@@ -117,7 +132,10 @@ export function parsePack({ text, unit, tested, file }) {
     })
 
     const plain_idea = labelled(s.body, IDEA)
-    const worked_example = labelled(s.body, EXAMPLE)
+    // The prompt sometimes lives in the label itself (e.g. "Worked example —
+    // simplify k(x) = ... to a single term in tan x:"), so it is prepended to
+    // the solution — otherwise the solution arrives without its question.
+    const worked_example = labelled(s.body, EXAMPLE, { includeSuffix: true })
     const common_mistake = labelled(s.body, MISTAKE)
     teaching.push({
       topic: id,

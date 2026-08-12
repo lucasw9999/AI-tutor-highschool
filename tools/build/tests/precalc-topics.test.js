@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { sections, labelled, parsePack, parseAll, PACKS } from '../parse-precalc-topics.js'
+import { parseAll as parsePrecalcItems } from '../parse-precalc.js'
 import { compile, summary } from '../build.js'
 
 const read = (f) => readFileSync(f, 'utf8')
@@ -105,11 +106,114 @@ test('real worked examples are substantial, proving the truncation fix holds', (
   assert.ok(aroc.worked_example.includes('\n'), 'a two-line example must keep both lines')
 })
 
+test('PC5 REGRESSION: no section with a Worked example line ends up with a null field, and the incomplete count is pinned', () => {
+  // The test above only averages length over rows that ALREADY have an
+  // example, so it is blind to a whole-field loss — it passed even while PC1
+  // silently dropped topics 3.9 and 3.11 to null. Check every section whose
+  // raw markdown contains a "**Worked example" line directly against its
+  // parsed output, and pin the count of rows that are genuinely incomplete in
+  // the source (verified by hand, not just trusted): 1.10, 1.11, 2.11, 3.3,
+  // 4.3, 4.9 — six, not the eight that shipped with the cap bug live.
+  const r = parseAll(read)
+  for (const pack of PACKS) {
+    const text = read(`ap_precalc/study-packs/${pack.file}`)
+    sections(text).forEach((s, i) => {
+      if (/\*\*Worked examples?\b/.test(s.body)) {
+        const topic = r.teaching.find((t) => t.topic === `${pack.unit}.${i + 1}`)
+        assert.ok(
+          topic?.worked_example,
+          `${pack.file} §${s.label} "${s.title}" has a Worked example line in the markdown but parsed to null`,
+        )
+      }
+    })
+  }
+
+  assert.equal(r.incomplete.length, 6, `expected 6 genuinely-incomplete rows, got ${r.incomplete.length}`)
+  assert.deepEqual(
+    r.incomplete.map((row) => row.topic).sort(),
+    ['1.10', '1.11', '2.11', '3.3', '4.3', '4.9'],
+  )
+})
+
+test('PC1 REGRESSION: a worked example is not dropped just because its label carries a long prompt', () => {
+  // unit-3 §2.8 (topic 3.9) labels its worked example with a 70-char inline
+  // question: "Worked example — simplify k(x) = [(1 − sin²x)/sin x]·sec x to a
+  // single term in tan x:". The 60-char suffix cap in labelled() silently ate
+  // this whole field, and the build printed a false "missing: worked_example"
+  // warning even though the solution is right there in the markdown.
+  const r = parseAll(read)
+  const t39 = r.teaching.find((t) => t.topic === '3.9')
+  assert.ok(t39.worked_example, 'topic 3.9 must have a worked example — the markdown has one')
+  assert.match(t39.worked_example, /1\/tan x|cot x/, 'the 2024 FRQ Q4B answer must survive')
+  assert.match(
+    t39.worked_example,
+    /simplify k\(x\)/,
+    'the prompt embedded in the label must be kept, not just the solution',
+  )
+
+  // Same bug, unit-3 §2.10 (topic 3.11): "Worked example — for r = 3 + 2cos θ,
+  // is the distance from origin increasing on (0, π)?" also exceeds 60 chars.
+  const t311 = r.teaching.find((t) => t.topic === '3.11')
+  assert.ok(t311.worked_example, 'topic 3.11 must have a worked example — the markdown has one')
+  assert.match(t311.worked_example, /-4\/\\?pi|−4\/π|-1\.27|−1\.27/, 'the computed average rate of change must survive')
+
+  assert.ok(
+    !r.incomplete.some((row) => row.topic === '3.9' || row.topic === '3.11'),
+    'once the field is captured, these rows must not be reported missing worked_example',
+  )
+})
+
+test('PC2 REGRESSION: lettered worked examples (A/B/C) are all kept, not just the first', () => {
+  // unit-2 §2.8 (topic 2.8) has three lettered examples — A (no calc), B
+  // (calculator, 3 decimals), C (quadratic-in-disguise, 2025 FRQ Q4). Each new
+  // "**Worked example ...**" bold label used to terminate the match, so only A
+  // survived while `complete: true` asserted the row was whole.
+  const r = parseAll(read)
+  const t28 = r.teaching.find((t) => t.topic === '2.8')
+  assert.match(t28.worked_example, /3\^\{?x\}?\s*=\s*9|x\s*=\s*2\b/, 'example A must survive')
+  assert.match(t28.worked_example, /4\^\{?x\}?\s*=\s*20|2\.161/, 'example B must survive')
+  assert.match(
+    t28.worked_example,
+    /e\^\{?2x\}?-e\^\{?x\}?-12=0|quadratic-in-disguise|u=4/,
+    'example C (2025 FRQ Q4) must survive',
+  )
+})
+
+test('PC3 REGRESSION: a duplicated P number is a hard error even though the item count still matches', () => {
+  // Renumbering unit 1's P6 to P5 (a plausible hand-edit slip) yields 12 items
+  // parsed — the count check alone is satisfied — but only 11 unique ids,
+  // and items.id is a PRIMARY KEY, so one problem silently vanishes on
+  // INSERT OR REPLACE. Use an injected readFile so real content is untouched.
+  const real = read('ap_precalc/study-packs/unit-1-polynomial-rational.md')
+  const dup = real.replace('**P6 (medium, no-calc).**', '**P5 (medium, no-calc).**')
+  assert.notEqual(dup, real, 'the fixture substitution must actually apply')
+  const readInjected = (f) => (f.includes('unit-1') ? dup : read(f))
+
+  const r = parsePrecalcItems(readInjected)
+  const unit1Items = r.items.filter((i) => i.unit === '1')
+  assert.equal(unit1Items.length, 12, 'the plain count check is satisfied — that is exactly the blind spot')
+  assert.equal(
+    new Set(unit1Items.map((i) => i.id)).size,
+    11,
+    'two items now share an id, proving the collision',
+  )
+  assert.ok(
+    r.errors.some((e) => /unit-1/.test(e) && /duplicate/i.test(e)),
+    `expected a duplicate-id error, got: ${JSON.stringify(r.errors)}`,
+  )
+})
+
 // --- build-level guarantees -----------------------------------------------
 
 test('the build reports both subjects, and neither has zero topics', () => {
   const r = compile()
-  assert.deepEqual(r.errors, [])
+  // Today's content legitimately FAILS the build: 33 exam-tested Precalc topics
+  // have no items of their own and one teaching row is entirely blank (both proved
+  // in build-gates.test.js). What must hold HERE is narrower and permanent — no
+  // parser silently produced nothing, which is the failure this test was written
+  // for. Asserting zero errors would now mean asserting those content gaps away.
+  const silent = r.errors.filter((e) => /has no topics|parse failed|parsed \d+ items|no concept sections/.test(e))
+  assert.deepEqual(silent, [], 'a parser returned nothing and the build did not object')
   const rows = summary(r)
   for (const [subject, counts] of Object.entries(rows)) {
     assert.ok(counts.topics > 0, `${subject} has no topics`)
