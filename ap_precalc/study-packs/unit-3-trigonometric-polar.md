@@ -6,7 +6,7 @@
 
 ## 1. Why it matters / exam weight
 
-Unit 3 is **30–35% of the MCQ** — the single biggest unit on the exam. It owns **FRQ Q3 (Modeling a Periodic Context, no-calc)** outright and supplies the trig half of **FRQ Q4 (Symbolic Manipulation, no-calc)** — and Q4 is the **lowest-scoring FRQ both years** (mean 1.28/6 in 2024, 1.93/6 in 2025). Master this unit and you separate yourself from the 4s. **Calculator must be in RADIAN mode all year.**
+Unit 3 is **30–35% of the MCQ** — the single biggest function-type category (Trig & Polar) on the exam. It owns **FRQ Q3 (Modeling a Periodic Context, no-calc)** outright and supplies the trig half of **FRQ Q4 (Symbolic Manipulation, no-calc)** — and Q4 is the **lowest-scoring FRQ both years** (mean 1.28/6 in 2024, 1.93/6 in 2025). Master this unit and you separate yourself from the 4s. **Calculator must be in RADIAN mode all year.**
 
 ---
 
