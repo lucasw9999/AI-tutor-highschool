@@ -17,6 +17,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { makeDb } from '../src/db.js'
 import { handleNext, handleLog, handleStatus, handleMockStart, handleMockSubmit } from '../src/api.js'
+import { breakdown } from '../src/readiness.js'
 
 const SEED = new URL('../seed.sql', import.meta.url)
 const CSA = JSON.parse(readFileSync(new URL('../config/ap_csa.json', import.meta.url)))
@@ -156,6 +157,69 @@ maybe('a proctored mock scores itself and is the only thing that moves the needl
   // One mock is nowhere near the six-mock requirement, so readiness stays 0.
   assert.equal(r.status.readiness_pct, 0)
   assert.match(r.status.next_thing_blocking, /mock|topic/i)
+})
+
+maybe('a full 42-question mock scores an exact composite and blank count, and its per-unit breakdown matches real content', async () => {
+  const { db } = freshDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'official', config: CSA, now: T0 })
+
+  // A fully known set of outcomes across the WHOLE section: 21 right, 20 wrong,
+  // 1 genuinely blank -- 42 answers total, matching CSA.exam.mcq_count exactly,
+  // so this sitting clears the coverage floor api.js requires before it will
+  // produce a composite at all (a handful of answers is recorded but NOT
+  // scored). Every "right"/"wrong" response is derived from the REAL answer
+  // key pulled back off the serve, not guessed, so the expected composite
+  // below is exact rather than merely plausible.
+  const plan = [...Array(21).fill('right'), ...Array(20).fill('wrong'), 'blank']
+  const seen = []
+  let i = 0
+  while (seen.length < plan.length) {
+    const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(i * 100), mockId: m.mock })
+    i++
+    if (q.type !== 'question') continue
+
+    const serveRow = await db.serve(q.serve)
+    const item = await db.item(serveRow.item_id)
+    const outcome = plan[seen.length]
+    const response = outcome === 'right' ? item.answer : outcome === 'wrong' ? (item.answer === 'A' ? 'B' : 'A') : ''
+
+    await handleLog({ db, serveId: q.serve, response, config: CSA, now: at(i * 100 + 30) })
+    seen.push({ unit: item.unit, correct: outcome === 'right' })
+  }
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(20000) })
+
+  // 42 answers against a 42-question section clears the coverage floor, so
+  // this gets a real composite. Every CSA item in the seed is mcq, so all 42
+  // answers -- including the blank, which grade.js scores as a mechanically
+  // graded miss -- are scored. 21 of 42 right is exactly 50%, not merely a
+  // value inside [0, 100].
+  assert.equal(r.answered, 42)
+  assert.equal(r.scored, 42, 'every CSA item in the seed is mcq, so all 42 must be mechanically graded')
+  assert.equal(r.counted, true, 'full coverage of the section must produce a real composite')
+  assert.equal(r.composite_pct, 50, 'a known 21-of-42 must produce the exact composite, not just a plausible one')
+  // This is the exact shape of the regression a missing a.response projection
+  // produces: blanks silently equals attempts.length (42) for every mock,
+  // regardless of what was actually typed.
+  assert.equal(r.blanks, 1, 'blanks must equal the 1 response actually left blank, not the 42 that were answered')
+
+  // Per-unit breakdown, checked against the real unit each served item carries
+  // in the seeded content, not a synthetic attempt.
+  const attempts = (await db.attempts('ap_csa')).filter((a) => a.mock_id === m.mock)
+  const byUnit = breakdown(attempts, 'unit')
+  const expected = new Map()
+  for (const { unit, correct } of seen) {
+    const e = expected.get(unit) ?? { n: 0, right: 0 }
+    e.n++
+    if (correct) e.right++
+    expected.set(unit, e)
+  }
+  assert.equal(Object.keys(byUnit).length, expected.size, 'breakdown must surface exactly the units actually exercised')
+  for (const [unit, e] of expected) {
+    assert.ok(byUnit[unit], `unit ${unit} must appear in the breakdown`)
+    assert.equal(byUnit[unit].n, e.n, `unit ${unit} attempt count must match the real items served`)
+    assert.equal(byUnit[unit].pct, (e.right / e.n) * 100, `unit ${unit} pct must match real correctness`)
+  }
 })
 
 maybe('a Precalc question is served and never marked wrong for lacking a key', async () => {

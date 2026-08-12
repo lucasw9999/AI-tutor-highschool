@@ -13,15 +13,16 @@
     "frq_minutes": 90,
     "frq_weight": 0.45,
     "frq_points": { "Q1": 7, "Q2": 7, "Q3": 5, "Q4": 6 },
-    "pace_seconds_per_mcq": 129
+    "pace_seconds_per_mcq": 129,
+    "unit_weights": {
+      "1": [15, 25],
+      "2": [25, 35],
+      "3": [10, 18],
+      "4": [30, 40]
+    },
+    "_note": "mcq_weight, frq_weight, and unit_weights describe the REAL AP exam's official section and unit weighting, for reference only. The readiness engine does not apply them: composite_pct is a flat percent-correct across all server-graded attempts with no section weighting, and readiness.per_unit_min holds every unit to the same floor regardless of its exam weight."
   },
   "units": ["1", "2", "3", "4"],
-  "unit_weights": {
-    "1": [15, 25],
-    "2": [25, 35],
-    "3": [10, 18],
-    "4": [30, 40]
-  },
   "practices": ["P1", "P2", "P3", "P4", "P5"],
   "readiness": {
     "composite_mean_min": 82,
@@ -33,16 +34,27 @@
     "dominant_practice_min": 85,
     "other_practice_min": 70,
     "frq_min_pct": 85,
+    "frq_calibrated": false,
+    "frq_calibrated_note": "False until the FRQ grader is validated against an officially scored College Board response. While false, the frq criterion is reported as pending rather than failed, and free-response evidence does not count toward readiness.",
     "max_blanks": 1,
     "consecutive_qualifying_mocks": 3,
     "total_logged_mocks_min": 6,
-    "reduced_confidence_mocks_min": 4,
     "window_span_days_min": 10,
     "window_span_days_max": 42,
     "freshness_days": 42,
     "burnout_drop_points": 8,
-    "difficulty_gap_max": 7,
     "require_official_mock": true
+  },
+  "_documentation_only": {
+    "_note": "Keys below are not read anywhere in worker/src. They record intent that was never wired into the readiness engine; treat every value here as reference, not as an enforced rule.",
+    "reduced_confidence_mocks_min": {
+      "value": 4,
+      "note": "Meant to raise the required mock count when the evidence is weak (e.g. still bank-only). Not implemented — no criterion or advisory reads it."
+    },
+    "difficulty_gap_max": {
+      "value": 7,
+      "note": "Meant to cap how far the question bank's difficulty can drift from the official exam's. Not implemented — no criterion or advisory reads it."
+    }
   },
   "historical_note": "2026 redesigned exam: 5=25%, 4=26%, 3=15%, 2=11%, 1=23%. Distribution published; raw-to-composite conversion is NOT, so C5 is unknown and these floors stay conservative."
 }
