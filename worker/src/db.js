@@ -8,15 +8,74 @@
 // which is roughly 7 months out at 50 answers/day) but that is a real ceiling,
 // not a hypothetical one, and it will need windowing before it is reached.
 
-/** Rows a readiness computation needs, and nothing more. */
-const ATTEMPT_COLS = `a.id, a.ts, a.subject, a.item_id, a.topic, a.unit, a.practice,
+/**
+ * Rows a readiness computation needs, and nothing more.
+ *
+ * `picked` is projected through a fixed alias whether or not the column exists,
+ * so the row SHAPE never depends on whether the database has been migrated —
+ * only the value does. See attemptsHavePicked().
+ */
+const ATTEMPT_COLS = (picked) => `a.id, a.ts, a.subject, a.item_id, a.topic, a.unit, a.practice,
   a.response, a.correct, a.graded_by, a.seconds, a.hints_used, a.conditions, a.mock_id,
+  ${picked ? 'a.picked' : 'NULL'} AS picked,
   i.kind, i.calc_allowed`
+
+/** The attempt columns every write names, in the order both INSERTs bind them. */
+const ATTEMPT_WRITE_COLS = (picked) => [
+  'ts', 'subject', 'item_id', 'topic', 'unit', 'practice', 'response', 'correct',
+  'graded_by', 'seconds', 'hints_used', ...(picked ? ['picked'] : []),
+]
 
 export function makeDb(D1) {
   const all = async (sql, ...binds) => (await D1.prepare(sql).bind(...binds).all()).results ?? []
   const one = async (sql, ...binds) => await D1.prepare(sql).bind(...binds).first()
   const run = async (sql, ...binds) => await D1.prepare(sql).bind(...binds).run()
+
+  /**
+   * Whether THIS database's `attempts` table has the `picked` column yet.
+   * Probed once per instance — i.e. at most once per request — and cached.
+   *
+   * WHY THIS IS ASKED AT ALL. schema.sql declares the column, but every CREATE
+   * TABLE in that file is IF NOT EXISTS: that is what makes reloading it (and
+   * seed.sql, which embeds it) safe against a database full of real evidence, and
+   * it is also why an existing `attempts` table does not gain a column when the
+   * schema does. The database therefore needs `ALTER TABLE attempts ADD COLUMN
+   * picked TEXT` by hand, and in this deployment that ALTER is a manual step
+   * through Cloudflare's REST API, because `wrangler d1 execute --remote` is
+   * blocked here (see DEPLOY.md). So the code cannot assume it has happened.
+   *
+   * WHAT THE ALTERNATIVE COSTS. Naming an absent column in an INSERT makes SQLite
+   * reject the whole statement, so a hard dependency turns EVERY /log into a 500
+   * against an unmigrated database: the tutor would stop recording answers
+   * altogether in order to record one extra letter about them. Losing evidence to
+   * protect a detail about it is the wrong direction, and it is the failure this
+   * project has hit before.
+   *
+   * IT IS NOT SILENT. The absence is logged with the exact remedy, the projection
+   * above returns NULL rather than dropping the field, and the column is listed as
+   * a pending migration at the top of schema.sql. What it will never do is decide
+   * that an answer cannot be stored.
+   *
+   * The probe is a SELECT rather than a PRAGMA on purpose: `PRAGMA table_info` is
+   * only conditionally available across drivers, while "does this column resolve"
+   * is answered identically by every SQL engine either module runs against.
+   */
+  let picked = null
+  const attemptsHavePicked = async () => {
+    if (picked == null) {
+      try {
+        await all(`SELECT picked FROM attempts LIMIT 0`)
+        picked = true
+      } catch {
+        picked = false
+        console.warn(
+          'attempts.picked is missing, so which option a wrong answer chose is not being recorded. ' +
+          'Run: ALTER TABLE attempts ADD COLUMN picked TEXT',
+        )
+      }
+    }
+    return picked
+  }
 
   return {
     async items(subject) {
@@ -40,9 +99,9 @@ export function makeDb(D1) {
       }
     },
 
-    attempts(subject) {
+    async attempts(subject) {
       return all(
-        `SELECT ${ATTEMPT_COLS} FROM attempts a
+        `SELECT ${ATTEMPT_COLS(await attemptsHavePicked())} FROM attempts a
          LEFT JOIN items i ON i.id = a.item_id
          WHERE a.subject = ? ORDER BY a.ts`,
         subject,
@@ -238,14 +297,12 @@ export function makeDb(D1) {
       return Number(r?.meta?.changes ?? r?.changes ?? 0)
     },
 
-    recordAttempt(a) {
+    async recordAttempt(a) {
+      const cols = ATTEMPT_WRITE_COLS(await attemptsHavePicked())
       return run(
-        `INSERT INTO attempts
-           (ts, subject, item_id, topic, unit, practice, response, correct,
-            graded_by, seconds, hints_used, conditions, mock_id)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-        a.ts, a.subject, a.item_id, a.topic, a.unit, a.practice, a.response,
-        a.correct, a.graded_by, a.seconds, a.hints_used, a.conditions, a.mock_id,
+        `INSERT INTO attempts (${cols.join(', ')}, conditions, mock_id)
+         VALUES (${cols.map(() => '?').join(',')},?,?)`,
+        ...cols.map((c) => a[c] ?? null), a.conditions, a.mock_id,
       )
     },
 
@@ -278,17 +335,15 @@ export function makeDb(D1) {
      * recorded as ordinary practice.
      */
     async recordAttemptUnderOpenMock(a) {
+      const cols = ATTEMPT_WRITE_COLS(await attemptsHavePicked())
       const r = await one(
-        `INSERT INTO attempts
-           (ts, subject, item_id, topic, unit, practice, response, correct,
-            graded_by, seconds, hints_used, conditions, mock_id)
-         SELECT ?,?,?,?,?,?,?,?,?,?,?,
+        `INSERT INTO attempts (${cols.join(', ')}, conditions, mock_id)
+         SELECT ${cols.map(() => '?').join(',')},
                 CASE WHEN m.id IS NULL THEN ? ELSE 'proctored_mock' END,
                 m.id
            FROM (SELECT 1) LEFT JOIN mocks m ON m.id = ? AND m.ended_at IS NULL
          RETURNING mock_id`,
-        a.ts, a.subject, a.item_id, a.topic, a.unit, a.practice, a.response,
-        a.correct, a.graded_by, a.seconds, a.hints_used, a.conditions_if_closed, a.mock_id,
+        ...cols.map((c) => a[c] ?? null), a.conditions_if_closed, a.mock_id,
       )
       return r?.mock_id ?? null
     },

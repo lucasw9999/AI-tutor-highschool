@@ -3,6 +3,21 @@
 -- The governing rule: nothing is stored that can be derived. Every number the
 -- student or parent sees is a query over `attempts`, joined to `topics` for
 -- weights.
+--
+-- MIGRATING A DATABASE THAT ALREADY EXISTS. Every CREATE TABLE below is
+-- IF NOT EXISTS, which is what makes reloading this file (and worker/seed.sql,
+-- which embeds it verbatim) safe against real evidence — and it also means a
+-- table that already exists does NOT gain a column that was added here later.
+-- Each such column is listed below with the ALTER an existing database needs;
+-- there is no `ADD COLUMN IF NOT EXISTS` in SQLite, so it cannot be expressed
+-- as part of this file without breaking the reload guarantee.
+--
+--   ALTER TABLE attempts ADD COLUMN picked TEXT;   -- the option a graded mcq
+--                                                  -- answer resolved to
+--
+-- db.js detects that column's absence and keeps recording answers without it
+-- rather than failing every /log, so an unmigrated database degrades to "the
+-- distractor was not recorded" instead of "the answer was not recorded".
 
 CREATE TABLE IF NOT EXISTS items (
   id            TEXT PRIMARY KEY,
@@ -67,6 +82,17 @@ CREATE TABLE IF NOT EXISTS attempts (
   practice   TEXT,
   response   TEXT,
   correct    INTEGER NOT NULL,
+  picked     TEXT,                      -- for an mcq, the option letter the answer RESOLVED to, as
+                                         -- grade.js read it. The distractor is the misconception: 'D'
+                                         -- on a short-circuit question is a different error from 'A'
+                                         -- on the same question, and `response` (what he typed) does
+                                         -- not carry it, because reading it back would depend on
+                                         -- whatever the grader's parsing rules are by then. NULL
+                                         -- whenever there was no option to record: a blank, a
+                                         -- response no grader could read as one answer, an unkeyed
+                                         -- item, model-graded work, or any non-mcq item.
+                                         -- Added after the table shipped — see the migration note at
+                                         -- the top of this file.
   graded_by  TEXT NOT NULL,             -- 'server' (mechanical verdict) | 'model' (rubric-scored FRQ,
                                          -- quarantined from readiness) | 'unkeyed' (item has no usable
                                          -- answer key) | 'unparsed' (response could not be read as one
