@@ -753,7 +753,17 @@ const seeded = existsSync(SEED)
 const withSeed = seeded ? test : test.skip
 if (!seeded) console.warn('worker/seed.sql missing — run `npm run seed:sql` first; skipping real-SQLite api tests')
 
-/** The subset of the D1 binding db.js uses, over node:sqlite. */
+/**
+ * The subset of the D1 binding db.js uses, over node:sqlite.
+ *
+ * run() resolves to the D1 ENVELOPE — `{success, meta: {changes, ...}}`, with no
+ * top-level `changes` — because that is the shape Cloudflare returns and the
+ * branch claimServe, closeMock, scoreMock and markTaught actually take in
+ * production. Handing back node:sqlite's `{changes, lastInsertRowid}` instead
+ * exercised only their fallback, so the tests below drove a path the deployed
+ * Worker never takes. tests/db.test.js keeps one test on the node:sqlite shape so
+ * the fallback stays covered.
+ */
 function d1(sqlite) {
   return {
     prepare(sql) {
@@ -766,7 +776,14 @@ function d1(sqlite) {
         },
         all: async () => ({ results: stmt.all(...args) }),
         first: async () => stmt.all(...args)[0] ?? null,
-        run: async () => stmt.run(...args),
+        run: async () => {
+          const r = stmt.run(...args)
+          return {
+            success: true,
+            results: [],
+            meta: { changes: r.changes, last_row_id: Number(r.lastInsertRowid), changed_db: r.changes > 0 },
+          }
+        },
       }
       return api
     },
