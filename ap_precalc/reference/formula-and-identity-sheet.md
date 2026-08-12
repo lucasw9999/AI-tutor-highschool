@@ -125,7 +125,7 @@ Start with `y = f(x)`. Transformed form: **`y = a · f(b(x − h)) + k`**
   - n > m → **no HA**; if n = m+1 there's a **slant/oblique asymptote** (do polynomial division, use the quotient).
 
 **Exponential `y = a·bˣ + k`:** horizontal asymptote at **y = k**.
-**Logarithmic `y = a·logₐ(x − h) + k`:** vertical asymptote at **x = h**.
+**Logarithmic `y = c·log_b(x − h) + k`:** vertical asymptote at **x = h**. *(Base written `b` here so it isn't confused with the vertical stretch factor.)*
 **Tangent `y = tan x`:** VAs where cos x = 0, i.e. `x = π/2 + nπ`.
 
 *Use it:* `f(x) = (2x² + 1)/(x² − 4)` → same degree → HA `y = 2`; VAs at `x = ±2`.

@@ -165,7 +165,7 @@ Composite = (MCQ score × 0.55) + (FRQ score × 0.45)
 
 ### Step 4 — Estimated AP score (orientation only)
 
-This composite→score mapping is a **rough orientation estimate, not the readiness bar.** The actual readiness thresholds — composite mean/min, per-unit, per-practice, FRQ, calibration, mock-count, freshness — are defined ONLY in [`../exam-skill-tracker.md`](../exam-skill-tracker.md) §(f); do not treat any single number here as "ready." Historical AP CSA 5-cutoffs have been roughly 65–72% composite; College Board has not published the redesigned curve, which is why §(f) sets a deliberately conservative bar with margin.
+This composite→score mapping is a **rough orientation estimate, not the readiness bar.** The actual readiness thresholds — composite mean/min, per-unit, per-practice, FRQ, calibration, mock-count, freshness — are defined ONLY in [`../exam-skill-tracker.md`](../exam-skill-tracker.md) §(f); do not treat any single number here as "ready." Historical AP CSA 5-cutoffs have been roughly 65–72% composite. College Board published the **2026 redesigned-exam score distribution** (5 = 25%, 4 = 26%, 3 = 15%, 2 = 11%, 1 = 23%) but **not** the raw→composite→score conversion, so the exact 5-cutoff is still unknown — which is why §(f) keeps a deliberately conservative bar with margin.
 
 | Composite | Estimated AP score |
 |---|---|
@@ -176,7 +176,7 @@ This composite→score mapping is a **rough orientation estimate, not the readin
 | ~28–41% | 2 (estimate) |
 | < ~28% | 1 (estimate) |
 
-> **These cutoffs are estimates until College Board publishes the redesigned score distribution.** Monitor: `apstudents.collegeboard.org/about-ap-scores/score-distributions` (CSA columns blank as of mid-2026; expected later summer 2026). When the real curve is published, update the tracker table and re-score any past mocks.
+> **These composite cutoffs remain estimates.** The 2026 redesigned-exam **score distribution** is published (5 = 25%, 4 = 26%, 3 = 15%, 2 = 11%, 1 = 23% — verified 2026-08-11), but the **raw→composite→score conversion is not**, so the real 5-cutoff is still unknown. Keep using §(f)'s conservative bar. If College Board ever publishes a conversion, update the tracker table and re-score every past mock.
 
 ---
 
