@@ -144,7 +144,12 @@ function fakeDb({ items = [], topics = [], teaching = [], attempts = [], gaps = 
      * but it can hold the handler to the same return contract.
      */
     async startMock(m) {
-      if (state.mocks.some((x) => x.subject === m.subject && !x.ended_at)) return null
+      // Only a sitting with an ANSWER on it blocks a new one — an empty open
+      // sitting cannot be submitted, so blocking on it would deadlock the subject.
+      const blocking = state.mocks.some((x) => (
+        x.subject === m.subject && !x.ended_at && state.attempts.some((a) => a.mock_id === x.id)
+      ))
+      if (blocking) return null
       const row = { id: state.nextMock++, composite_pct: null, blanks: null, ended_at: null, ...m }
       state.mocks.push(row)
       return row.id
@@ -2122,6 +2127,11 @@ withSeed('six weeks of silence is said out loud, not hidden behind an unchanged 
 withSeed('a second sitting cannot be opened while one is still open', async () => {
   const { db } = realDb()
   const first = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  // One answer on the paper: that is what "saw it going badly and walked away"
+  // means, and an answer is the only thing walking away can discard. An empty
+  // paper deliberately blocks nothing — see the deadlock test below.
+  const opening = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(10), mockId: first.mock })
+  await handleLog({ db, serveId: opening.serve, response: 'B', config: CSA, now: at(40) })
   await assert.rejects(
     () => handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(60) }),
     (e) => {
@@ -2139,8 +2149,6 @@ withSeed('a second sitting cannot be opened while one is still open', async () =
   )
 
   // Finishing it — not abandoning it — is what frees the subject.
-  const q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(70), mockId: first.mock })
-  await handleLog({ db, serveId: q.serve, response: 'B', config: CSA, now: at(100) })
   await handleMockSubmit({ db, mockId: first.mock, config: CSA, now: at(200) })
   const second = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(300) })
   assert.ok(second.mock > first.mock)
@@ -2181,4 +2189,38 @@ withSeed('the dashboard is handed the staleness, the pace and the gap ages, not 
 
   const empty = data.subjects.find((s) => s.config.subject === 'ap_precalc')
   assert.equal(empty.last_answer, null, 'no answers at all is null, not a fabricated date')
+})
+
+withSeed('an open sitting with nothing on it does not lock the subject out forever', async () => {
+  // The deadlock the refusal above would otherwise create, and it is total:
+  // handleMockSubmit deliberately REFUSES a sitting with no logged answers and
+  // leaves it open (so a mistaken submit does not strand a sittable paper). So a
+  // /mock/start that was never answered — a mis-tap, or a model that called start
+  // twice — could never be submitted, and if it also blocked every new sitting,
+  // proctored evidence for this subject would be unreachable for good. The guard
+  // therefore refuses only a sitting that holds an ANSWER, which is the only thing
+  // that walking away can discard.
+  const { db } = realDb()
+  const empty = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  await assert.rejects(
+    () => handleMockSubmit({ db, mockId: empty.mock, config: CSA, now: at(30) }),
+    (e) => e instanceof ApiError && /no logged answers/.test(e.message),
+    'the fixture depends on submit refusing an empty sitting, which is deliberate behaviour',
+  )
+  const next = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: at(60) })
+  assert.ok(next.mock > empty.mock, 'an empty paper holds no evidence, so nothing is discarded by starting another')
+})
+
+withSeed('an unfinished sitting with no answers on it is reported as what it is', async () => {
+  const { db } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: T0 })
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at((CSA.exam.mcq_minutes + 1) * 60) })
+  const open = advisory(s, /never submitted/i)
+  assert.ok(open, `an open sitting past its budget must be visible even when it is empty: ${JSON.stringify(s.advisories)}`)
+  assert.match(open, new RegExp(`#${m.mock}`))
+  assert.match(open, /no answers/i, 'and it must not be described as holding evidence it does not hold')
+  assert.doesNotMatch(
+    open, /Submit it with submitMock and it will be scored/,
+    'submitMock refuses an empty sitting, so the advisory must not send him to a call that cannot work',
+  )
 })

@@ -823,16 +823,23 @@ export async function handleMockStart({ db, subject, section, source, config, no
   // can be opened, or the abandoned one leaves no trace of how it was going.
   const id = await db.startMock({ subject, section, started_at: now, proctored: 1, source })
   if (id == null) {
-    const open = (await db.mocks(subject))
-      .filter((m) => !m.ended_at)
+    // Only a sitting holding at least one ANSWER can be what blocked this, so the
+    // refusal is written to name that sitting and how much is on it. An open
+    // sitting with nothing on it does not block anything — see db.startMock for why
+    // it must not.
+    const [answers, mocks] = await Promise.all([db.attempts(subject), db.mocks(subject)])
+    const open = mocks
+      .filter((m) => !m.ended_at && answers.some((a) => a.mock_id === m.id))
       .sort((a, b) => new Date(a.started_at) - new Date(b.started_at))[0]
+    const on = answers.filter((a) => a.mock_id === open?.id).length
     throw new ApiError(
       409,
       `mock ${open?.id} is a ${subject} sitting that was started${open?.started_at ? ` at ${open.started_at}` : ''} and `
-        + `never submitted, so a second one cannot be opened. Nothing was recorded. Submit that one with submitMock and `
-        + `the same mock id — it will be scored from the answers already on it, and a short or slow sitting is still `
-        + `recorded with the reason it could not count. Starting a fresh sitting instead would leave the abandoned one `
-        + `absent from the mock count and from every criterion, which is how a section that went badly disappears.`,
+        + `never submitted, with ${on} answer(s) on it, so a second one cannot be opened. Nothing was recorded. Submit `
+        + `that one with submitMock and the same mock id — it will be scored from the answers already on it, and a short `
+        + `or slow sitting is still recorded with the reason it could not count. Starting a fresh sitting instead would `
+        + `leave those answers absent from the mock count and from every criterion, which is how a section that went `
+        + `badly disappears.`,
     )
   }
   return {
@@ -1632,17 +1639,38 @@ function unfinishedSittings(ctx, now) {
   return out
 }
 
-/** The sentence for a sitting that was started and never finished. */
+/**
+ * The sentence for a sitting that was started and never finished.
+ *
+ * Two shapes, because the remedy differs and neither may be stated about the other:
+ * a sitting with answers on it has to be SUBMITTED (which scores whatever is on
+ * it, with the reason, and is what unblocks the subject), while an EMPTY one cannot
+ * be submitted at all — handleMockSubmit refuses a sitting with no logged answers —
+ * and blocks nothing either. Telling him to submit an empty paper would be an
+ * instruction that cannot work, which is the one thing these strings must not be.
+ */
 function unfinishedAdvisory(unfinished) {
   const n = unfinished.length
-  return `${n} proctored sitting${n === 1 ? ' was' : 's were'} started and never submitted: `
-    + `${unfinished.map((u) => `#${u.id} (section ${u.section}, opened ${u.started_at}, ${u.answered} answer(s) on it) `
-      + `has been open ${u.open_minutes} minutes, past the ${u.budget_minutes} minutes section ${u.section} gets on the `
-      + `real exam`).join('; ')}. `
-    + `An unsubmitted sitting is scored as nothing and counts as nothing: it is absent from the proctored mock count and `
-    + `from every criterion, so walking away from a section leaves no record of how it was going. Submit it with `
-    + `submitMock and it will be scored from the answers already on it — a short or slow sitting still gets recorded, `
-    + `with the reason. A new sitting on this subject cannot be started until this one is submitted.`
+  const where = (u) => `#${u.id} (section ${u.section}, opened ${u.started_at}) has been open ${u.open_minutes} `
+    + `minutes, past the ${u.budget_minutes} minutes section ${u.section} gets on the real exam`
+  const sat = unfinished.filter((u) => u.answered > 0)
+  const empty = unfinished.filter((u) => !u.answered)
+  const parts = [
+    `${n} proctored sitting${n === 1 ? ' was' : 's were'} started and never submitted.`,
+    ...(sat.length
+      ? [`${sat.map((u) => `${where(u)}, with ${u.answered} answer(s) on it`).join('; ')}. An unsubmitted sitting is `
+        + `scored as nothing and counts as nothing: it is absent from the proctored mock count and from every `
+        + `criterion, so walking away from a section leaves no record of how it was going. Submit it with submitMock `
+        + `and it will be scored from the answers already on it — a short or slow sitting is still recorded, with the `
+        + `reason. No new sitting on this subject can be started until it is submitted.`]
+      : []),
+    ...(empty.length
+      ? [`${empty.map((u) => `${where(u)}, with no answers on it at all`).join('; ')}. There is nothing on it to `
+        + `score, so it cannot be submitted and it blocks nothing — a new sitting can be started whenever he is ready. `
+        + `It is reported only so that an open sitting is never something the record quietly forgets.`]
+      : []),
+  ]
+  return parts.join(' ')
 }
 
 /**
