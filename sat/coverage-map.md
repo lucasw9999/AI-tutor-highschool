@@ -1,6 +1,10 @@
 # Digital SAT Coverage Map — Express, Question-Driven (Lucas)
 
-**Goal:** **1500+** on the Digital SAT, ready by **spring 2027** (and ideally earlier). This is the dense, question-driven catch-up — cover *every* question type, but spend reps where his answers reveal weakness. *Spec verified against College Board (satsuite.collegeboard.org).*
+**Goal:** **1500+** on the Digital SAT at the **Saturday 6 March 2027 sitting** — registration closes **Friday 19 February 2027**. This is the dense, question-driven catch-up — cover *every* question type, but spend reps where his answers reveal weakness. *Spec verified against College Board (satsuite.collegeboard.org).*
+
+> **📅 Target sitting: Sat 6 Mar 2027 · register by Fri 19 Feb 2027 · retake slot Aug or Oct 2027.**
+> Two sittings to avoid, and why: **Sat 1 May 2027** falls 10 days before AP Precalculus (Tue 11 May 2027) and 11 before AP CSA (Wed 12 May 2027) — it burns the last revision weekend before both. **Sat 5 Jun 2027** is usable, but its registration closes **Fri 21 May 2027**, nine days after the AP CSA exam, so the deadline is easy to sleep through. If a device has to be borrowed from College Board, the request goes in **30+ days before test day** (by 4 Feb 2027 for a 6 Mar sitting).
+> *Dates verified 12 August 2026 against satsuite.collegeboard.org/sat/dates-deadlines. Full table in `README.md`.*
 
 ---
 
