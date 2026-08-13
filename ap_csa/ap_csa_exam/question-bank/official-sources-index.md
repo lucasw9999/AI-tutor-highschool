@@ -59,7 +59,7 @@ The exam format changed with the redesign (Effective Fall 2025). Apply these fil
 | **Q1 Methods & Control** | ✅ Use across years — always methods + conditions + String work |
 | **Q3 ArrayList / Data Analysis** | ✅ Use — ArrayList shape is consistent |
 | **Q4 2D Array** | ✅ Use — 2D array work is consistent |
-| **Q2 Class Design** | ⚠️ Use **only post-redesign (2026+)** Q2. Pre-redesign Q2 was often "design a subclass" — **inheritance, which is off the exam**. Old "GridWorld" and subclass FRQs: skip entirely. |
+| **Q2 Class Design** | ⚠️ Use **only post-redesign (2026+)** Q2. Pre-redesign Q2 was often "design a subclass" — **designing a class hierarchy, which is off the exam**. Old "GridWorld" and subclass FRQs: skip entirely. |
 
 **Old scoring structure:** pre-redesign FRQs were **9/9/9/9 = 36 pts total**. The redesigned format is **7/7/5/6 = 25 pts**. Practice the rubric logic, but do not over-weight the old point values when computing estimates.
 
