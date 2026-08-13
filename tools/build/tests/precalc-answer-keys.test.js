@@ -80,16 +80,23 @@ test('an item with no key block is untouched — model-graded, no key, no varian
 
 test('every item in the shipped packs is either keyed and server-graded, or model-graded with a solution', () => {
   // Phrased as the INVARIANT rather than as "all 48 are model-graded", so it
-  // still holds after the content agents key the items this syntax unblocks.
+  // still holds after the content agents key the items this syntax unblocks —
+  // and after they declare the multiple-choice and free-response questions
+  // parse-precalc.js's other two declarations unblock, which is why the kinds are
+  // named as SETS: 'mcq' is server-graded by letter and 'frq' is rubric-scored by
+  // design, so pinning 'constructed' and 'constructed_model_graded' here would
+  // fail the first declared half of a paper for doing exactly what it should.
+  const SERVER_GRADED = new Set(['constructed', 'mcq'])
+  const MODEL_GRADED_KINDS = new Set(['constructed_model_graded', 'frq'])
   const r = parseAll(read)
   assert.equal(r.items.length >= 48, true, `expected at least 48 items, got ${r.items.length}`)
   for (const it of r.items) {
     const keyed = it.answer != null && String(it.answer).trim() !== ''
     if (keyed) {
-      assert.equal(it.kind, 'constructed', `${it.id} carries a key but is not server-graded`)
+      assert.ok(SERVER_GRADED.has(it.kind), `${it.id} carries a key but its kind '${it.kind}' is not server-graded`)
       assert.equal(grade(it, it.answer).correct, 1, `${it.id}: its own key does not grade as correct`)
     } else {
-      assert.equal(it.kind, 'constructed_model_graded', `${it.id} has no key and must declare model grading`)
+      assert.ok(MODEL_GRADED_KINDS.has(it.kind), `${it.id} has no key, so its kind '${it.kind}' must be model-graded`)
       assert.deepEqual(it.answer_variants, [], `${it.id} has variants but no key`)
     }
   }
