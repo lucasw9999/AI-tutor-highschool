@@ -119,6 +119,120 @@
  *
  * ===========================================================================
  *
+ * ===========================================================================
+ * THE TWO HALVES OF A PAPER: MULTIPLE CHOICE AND FREE RESPONSE
+ * ===========================================================================
+ *
+ * WHY THESE EXIST. api.js sizes a sitting in `mcq` and `frq` and nothing else
+ * (sectionParts), and it credits an answer only to the half its own KIND belongs
+ * to (sectionFill). A `constructed` short answer fills neither half however well
+ * it is keyed, so a bank of 48 of them could not assemble one sitting: the build
+ * reported "the bank holds 0 of the 38 multiple choice question(s) ... and 0 of
+ * the 4 free-response question(s) ... No sitting can be assembled at all". The
+ * two declarations below are the plumbing for the halves; the questions
+ * themselves are content work that follows.
+ *
+ * A MULTIPLE-CHOICE QUESTION. The choices are PRINTED, on one line, exactly as
+ * ap_csa's mcq-*.md files print them — the pack is a document a student reads, so
+ * "which of the following" with nothing following would be a broken question —
+ * and the presence of that line is the whole opt-in. It compiles to the same item
+ * shape parse-mcq.js produces (kind 'mcq', options keyed A-D, `answer` a letter),
+ * which is what makes it server-graded by letter match everywhere for free:
+ *
+ *     **P13 (easy, no-calc).** Which of these is the horizontal asymptote of
+ *     $f(x)=\dfrac{3x^2+1}{x^2-4}$?
+ *     A) y = 0   B) y = 3   C) y = 1/3   D) no horizontal asymptote
+ *     <details><summary>Solution</summary>
+ *
+ *     Equal degrees, so the asymptote is the ratio of the leading coefficients:
+ *     $y=3$.
+ *     </details>
+ *     <!-- key: B -->
+ *     <!-- practice: 1.A -->
+ *     <!-- topic: 1.6 -->
+ *
+ * The option line is lifted OUT of the stem into `options`, because the Worker
+ * renders the two separately and would otherwise print the choices twice. It is
+ * split by parse-mcq.js's own parseOptions, so "A) x   B) y   C) z   D) w" means
+ * here exactly what it means there — four options, no more and no fewer.
+ *
+ * A FREE-RESPONSE QUESTION. Precalc free response is handwritten in a paper
+ * booklet and rubric-scored, so it is MODEL-GRADED by design: kind 'frq' is
+ * already in grade.js's MODEL_GRADED, and the worked solution is the feedback
+ * api.js returns to the student. Declaring which of the exam's four
+ * free-response questions it models is the opt-in:
+ *
+ *     **P14 (exam-level, calculator).** A Ferris wheel turns at a constant rate.
+ *     (a) Write a sinusoidal model for a rider's height. (b) State the midline
+ *     and amplitude, and explain what each means about the wheel. (c) Find the
+ *     first time the rider is 30 feet above the ground.
+ *     <details><summary>Solution</summary>
+ *
+ *     ... worked solution, part by part ...
+ *     </details>
+ *     <!-- frq: Q3 -->
+ *     <!-- topic: 3.4 -->
+ *     <!-- practice: 2.B -->
+ *
+ * Fields the two halves add:
+ *
+ *   key: <A-D>         on an item that prints options, the LABEL of the correct
+ *                      choice. Required there, and it must be one of the printed
+ *                      labels.
+ *   frq: <Q1-Q4>       which free-response question of the real exam this models.
+ *                      Its presence is the opt-in.
+ *   practice: <skill>  one of the CED's 8 skills (1.A .. 3.C). REQUIRED on a
+ *                      multiple-choice item, because validate.js refuses an mcq
+ *                      with no practice tag; optional elsewhere.
+ *   topic: <id>        REQUIRED on both. The `<unit>.0` bucket exists for the 48
+ *                      items that predate the tagging syntax; a question written
+ *                      after it names the topic it tests.
+ *
+ * An `frq` also compiles `question_type` ("Q3") and `frq_type` ("Modeling
+ * Periodic"). Both are BUILD-TIME metadata: the items table has no column for
+ * them, so to-sql.js does not carry them to D1 and nothing at runtime reads them —
+ * exactly as the CSA FRQ items carry `question_type`, `points`, `provided` and
+ * `trace_check` in items.json and hand D1 only the columns that exist. They are
+ * here so the compiled bank can say which of the four free-response questions each
+ * item models; do not build a runtime rule on them without adding the column.
+ *
+ * ...and the tagline must say whether a calculator is allowed ("[NC]", "no-calc",
+ * "calculator"): readiness.js buckets a sitting's answers on `calc_allowed === 0`
+ * and `calc_allowed === 1`, so an item with neither falls into NEITHER the
+ * no_calc_min nor the calc_min floor and is invisible to both.
+ *
+ * WHAT IS DELIBERATELY NOT SUPPORTED HERE
+ * ---------------------------------------
+ *   * `constructed` counting as `mcq`. A short-answer drill reported as a
+ *     42-question multiple-choice paper would measure the wrong thing, which is
+ *     the failure mode this repo exists to prevent.
+ *   * A fifth option. grade.js reads a-e, but validate.js's key-balance warning
+ *     counts A-D only and the exam has four choices, so a fifth would be a key
+ *     no distribution check could see.
+ *   * A rubric on a Precalc `frq`, in the shape parse-frq.js builds for CSA. Three
+ *     reasons, all of them "the number would be invented or dropped":
+ *     worker/config/ap_precalc.json states no `frq_points`, so any point total
+ *     would be asserted rather than derived; nothing in worker/src reads
+ *     `item.rubric` (db.js parses it back out of rubric_json and api.js never
+ *     passes it to anything), so an authored rubric would be stored and never
+ *     used; and what the student is actually shown after a free-response answer
+ *     is `item.explanation` — the worked solution — which these items carry. When
+ *     a consumer for a Precalc rubric exists, that is the job to add it in.
+ *   * An answer key on an `frq`. grade.js routes 'frq' to the model before it ever
+ *     looks at `answer`, so a key there would be dead metadata that reads like a
+ *     promise of mechanical marking.
+ *
+ * ONE THING TO CLEAR BEFORE THE FIRST DECLARED ITEM LANDS, stated here because it
+ * lives in a file this parser must not touch: worker/tests/ungraded.test.js's
+ * per-item invariant asserts that a keyed Precalc item is kind 'constructed' and
+ * an unkeyed one is 'constructed_model_graded'. A declared 'mcq' or 'frq' fails it
+ * for doing exactly the right thing — the same way the first answer key would have
+ * failed the assertion that file has already retired once. Both kinds have to be
+ * named as SETS there (as tools/build/tests/precalc-answer-keys.test.js now does),
+ * and that is the worker-test owner's edit, not this parser's.
+ *
+ * ===========================================================================
+ *
  * Each unit shipped with 12 items. parseAll() asserts a per-unit MINIMUM plus
  * contiguous numbering, so a pack may gain problems but cannot quietly lose one
  * (the first version of this parser found only 22 of 48 and reported success).
@@ -129,7 +243,19 @@
 // shipped lived in the one-line difference between two normalizations, and a
 // copy of it here would be free to drift the same way. grade.js is pure and
 // imports nothing, so depending on it costs the build nothing.
-import { normalizeShort } from '../../worker/src/grade.js'
+//
+// grade() itself is imported for the same reason, one level up: a declared
+// multiple-choice item is PROVED against the real grader at build time — every
+// label, in every spelling a student types, and every option's own text has to
+// resolve to the option it belongs to — because an option list the grader parses
+// differently from how the student reads it is exactly where the next false
+// negative gets born. parseOptions and letterOptionCollisions are imported for
+// the same reason again: the option line must mean here what it means for CSA,
+// and the bare-letter collision must be judged by the one rule the build already
+// applies rather than by a second copy of it.
+import { grade, normalizeShort } from '../../worker/src/grade.js'
+import { parseOptions } from './parse-mcq.js'
+import { letterOptionCollisions } from './validate.js'
 
 const UNIT_OF = {
   'unit-1-polynomial-rational.md': { unit: '1', slug: 'u1', tested: true },
@@ -157,7 +283,60 @@ const DECLARATION = /^\s*([A-Za-z][A-Za-z0-9 _-]*?)\s*([:=])\s*([\s\S]*?)\s*$/
 const PART_FIELD = /^part[ _-]?(\d+)$/
 /** Fields that are prose for a human and are dropped without comment. */
 const NOTE_FIELDS = new Set(['note', 'todo', 'fixme', 'source', 'comment'])
-const KEY_FIELDS = ['key', 'accept', 'format', 'topic']
+const KEY_FIELDS = ['key', 'accept', 'format', 'topic', 'practice', 'frq']
+
+/**
+ * The line that prints a multiple-choice item's options, recognized exactly as
+ * parse-mcq.js recognizes it in the CSA banks, so one convention covers both
+ * subjects. parse-mcq.js's parseOptions is the authority on what it must contain:
+ * the four labels A to D, in order, on that one line.
+ */
+const PRINTED_OPTIONS = /^A\)/
+
+/**
+ * The CED's 8 skills, grouped under its 3 Mathematical Practices, as
+ * ap_precalc/reference/skills-and-weightings.md tabulates them from the official
+ * Course Framework. CSA's P1-P5 are a different course's practices and are not
+ * interchangeable with these — the `practice` column holds whichever vocabulary
+ * the item's own subject uses.
+ */
+export const PRECALC_PRACTICES = ['1.A', '1.B', '1.C', '2.A', '2.B', '3.A', '3.B', '3.C']
+
+/**
+ * The exam's four free-response questions, in exam order.
+ *
+ * Mirrors worker/config/ap_precalc.json `exam.frq_types`, re-stated here so the
+ * content build does not read the Worker's config at runtime — the same
+ * arrangement parse-frq.js uses for the CSA point values and validate.js for
+ * MIN_MOCK_COVERAGE — and tools/build/tests/precalc-mcq-frq.test.js fails if the
+ * two ever disagree.
+ */
+export const PRECALC_FRQ_SLOTS = [
+  { slot: 'Q1', type: 'Function Concepts' },
+  { slot: 'Q2', type: 'Modeling Non-Periodic' },
+  { slot: 'Q3', type: 'Modeling Periodic' },
+  { slot: 'Q4', type: 'Symbolic Manipulation' },
+]
+
+/**
+ * Every spelling of a choice the grader must credit, built from the label.
+ *
+ * These are not a wish list: each one is a shape grade.js has a reader for
+ * (LETTER_ONLY's decoration set, STRONG_LABEL, WEAK_LABEL), and on an option list
+ * where a letter is ambiguous some of them stop resolving. Running all of them
+ * over every declared item is what turns "the grader probably reads this" into
+ * "the grader does read this", for the ~42 items the content authors will write
+ * rather than only for the fixtures in a test file.
+ */
+const CHOICE_SPELLINGS = [
+  (L) => L,
+  (L) => L.toLowerCase(),
+  (L) => `(${L})`,
+  (L) => `${L})`,
+  (L) => `${L}.`,
+  (L) => `answer: ${L}`,
+  (L) => `choice ${L}`,
+]
 
 /**
  * A key declaration an author wrote in the open, where the pack renders it next
@@ -165,7 +344,7 @@ const KEY_FIELDS = ['key', 'accept', 'format', 'topic']
  * does not read it — so it is refused rather than ignored.
  */
 const VISIBLE_DECL =
-  /^[ \t]*\*{0,2}[ \t]*(keys?|answers?|answer key|accepts?|accepted|variants?|part[ _-]?\d+|format|topic)[ \t]*\*{0,2}[ \t]*[:=]/i
+  /^[ \t]*\*{0,2}[ \t]*(keys?|answers?|answer key|accepts?|accepted|variants?|part[ _-]?\d+|format|topic|practice|frq)[ \t]*\*{0,2}[ \t]*[:=]/i
 
 /** Stems whose answer is not a short string, however it is written. */
 const UNKEYABLE_STEM = [
@@ -228,7 +407,7 @@ function fieldOf(rawName) {
   return part ? { field: 'part', index: Number(part[1]) } : null
 }
 
-const FIELD_LIST = 'key, accept, part <n>, format, topic'
+const FIELD_LIST = 'key, accept, part <n>, format, topic, practice, frq'
 
 /**
  * Split a problem's body into the lines a student sees and the key declarations
@@ -306,6 +485,296 @@ function readDeclarations(lines) {
   return { decls, errors, kept }
 }
 
+/**
+ * The one value a field may have, reporting a second declaration rather than
+ * silently taking the first.
+ */
+function only(decls, field, errors) {
+  const found = decls.filter((d) => d.field === field)
+  if (found.length > 1) errors.push(`"${field}:" is declared ${found.length} times — there can be only one`)
+  return found[0]?.value
+}
+
+/** True when any declaration names this field. */
+const declares = (decls, field) => decls.some((d) => d.field === field)
+
+/**
+ * A declared topic id, checked against the shape parse-precalc-topics.js numbers
+ * the packs with, and against the unit the problem actually lives in. Null (with
+ * an error) when it is neither.
+ */
+function resolveTopic(topicDecl, unit, errors) {
+  if (topicDecl == null) return null
+  const shape = topicDecl.trim().match(/^(\d+)\.(\d+)$/)
+  if (!shape) {
+    errors.push(
+      `topic "${topicDecl.trim()}" is not a Precalc topic id — they are <unit>.<n> ("1.4"), as ` +
+        `parse-precalc-topics.js numbers the pack's concept sections`,
+    )
+    return null
+  }
+  if (shape[1] !== unit) {
+    errors.push(
+      `topic "${topicDecl.trim()}" belongs to unit ${shape[1]}, but this problem is in unit ${unit}. ` +
+        `Both ids exist in the matrix, so validate.js would accept it while to-sql.js derived the wrong unit ` +
+        `for the item`,
+    )
+    return null
+  }
+  return topicDecl.trim()
+}
+
+/** A declared CED skill, upper-cased, or null (with an error) when it is not one. */
+function resolvePractice(practiceDecl, errors) {
+  if (practiceDecl == null) return null
+  const code = practiceDecl.trim().toUpperCase()
+  if (!PRECALC_PRACTICES.includes(code)) {
+    errors.push(
+      `practice "${practiceDecl.trim()}" is not an AP Precalculus skill — they are ${PRECALC_PRACTICES.join(', ')}, ` +
+        `the CED's 3 Mathematical Practices and their 8 skills (ap_precalc/reference/skills-and-weightings.md). ` +
+        `CSA's P1-P5 belong to a different course`,
+    )
+    return null
+  }
+  return code
+}
+
+/**
+ * Two option texts a student could both be right about.
+ *
+ * Deliberately stricter than the grader's own comparison: grade.js reports two
+ * IDENTICAL options as unreadable, but "y = 3" and "y=3" are two spellings of one
+ * answer that it would happily tell apart — so a key on either one marks a right
+ * answer wrong. Spaces, $ and markdown emphasis go; nothing that could change the
+ * mathematics does, so "y = 3" and "x = 3" stay two different answers.
+ */
+const optionShape = (text) => String(text).toLowerCase().replace(/[`*$\s]/g, '').replace(/\.$/, '')
+
+/**
+ * Run every reading of a declared option list through the REAL grader, and report
+ * the ones that do not land where the student meant them to.
+ *
+ * This is the whole defence against the defect class an MCQ format invites: an
+ * option list the grader parses differently from how the student reads it. It is
+ * checked here, at build time, rather than only in a test, because the items that
+ * matter are the ones the content authors write next.
+ */
+function probeChoices(options, answer) {
+  const item = { kind: 'mcq', options, answer }
+  const problems = []
+  const reading = (v, label) =>
+    v.graded_by === 'server'
+      ? `option ${v.picked}, not option ${label}`
+      : `not one answer at all (${v.graded_by}: ${v.detail})`
+  for (const label of Object.keys(options)) {
+    for (const spell of CHOICE_SPELLINGS) {
+      const typed = spell(label)
+      const v = grade(item, typed)
+      if (v.graded_by !== 'server' || v.picked !== label) {
+        problems.push(`a response of "${typed}" is read as ${reading(v, label)}`)
+      }
+    }
+    const text = String(options[label] ?? '').trim()
+    if (!text) continue
+    const v = grade(item, text)
+    if (v.graded_by !== 'server' || v.picked !== label) {
+      problems.push(`option ${label}'s own text "${text}" is read as ${reading(v, label)}`)
+    }
+  }
+  return problems
+}
+
+/**
+ * Turn a problem that PRINTS its options into a multiple-choice item, or into
+ * errors and no item at all.
+ *
+ * A refusal degrades to the model-graded default — the item is exactly what it
+ * would have been without the declaration, printed options and all — so no
+ * half-formed option set or doubtful letter key can reach an artifact even under
+ * --write-despite-incomplete.
+ */
+function resolveChoices({ decls, printed, unit, calc }) {
+  const errors = []
+  const topicDecl = only(decls, 'topic', errors)
+  const practiceDecl = only(decls, 'practice', errors)
+  const keyDecl = only(decls, 'key', errors)
+  const topic = resolveTopic(topicDecl, unit, errors)
+  const practice = resolvePractice(practiceDecl, errors)
+  const refused = () => ({ kind: 'constructed_model_graded', answer: null, variants: [], topic, errors, extra: {} })
+
+  // Fields that only mean something to a typed short answer. A letter has no
+  // spellings to accept and no format to state, and grade.js never looks at
+  // `answer_variants` on an mcq — so these would be dead metadata that reads like
+  // a promise the grader does not keep.
+  for (const field of ['accept', 'format']) {
+    if (declares(decls, field)) {
+      errors.push(
+        `"${field}:" is declared on a multiple-choice item, whose answer is one of the printed letters — grade.js ` +
+          `matches an mcq by letter and never reads a variant or a format sentence. Delete it, or delete the ` +
+          `printed option line if this is meant to be a typed answer`,
+      )
+    }
+  }
+  if (declares(decls, 'part')) {
+    errors.push(
+      `"part <n>:" is declared on a multiple-choice item, whose answer is one of the printed letters, not a ` +
+        `compound typed answer. Delete it, or delete the printed option line`,
+    )
+  }
+  if (declares(decls, 'frq')) {
+    errors.push(
+      `both a printed option line and "frq:" are declared — a question is one half of the paper or the other, ` +
+        `never both. api.js counts an answer toward the half its own kind belongs to and no other`,
+    )
+  }
+  if (topicDecl == null) {
+    errors.push(
+      `a multiple-choice item needs "topic: <id>" — the <unit>.0 bucket exists for the 48 items that predate the ` +
+        `tagging syntax, and an untagged item cannot drive topic-level teaching or count toward topic coverage`,
+    )
+  }
+  if (practiceDecl == null) {
+    errors.push(
+      `a multiple-choice item needs "practice: <skill>", one of ${PRECALC_PRACTICES.join(', ')} — validate.js ` +
+        `refuses an mcq with no practice tag, because a per-practice floor cannot see an untagged item`,
+    )
+  }
+  if (calc == null) {
+    errors.push(
+      `the tagline says whether a calculator is allowed for every other item and says nothing here. readiness.js ` +
+        `buckets a sitting's answers on calc_allowed 0 and 1 (no_calc_min, calc_min), so an item with neither falls ` +
+        `into NEITHER floor and is invisible to both. Write "[NC]"/"no-calc" or "calculator" in the tagline`,
+    )
+  }
+
+  const options = parseOptions(printed)
+  if (!options) {
+    errors.push(
+      `the option line does not print all four choices as "A) ... B) ... C) ... D) ..." — parse-mcq.js's own ` +
+        `parseOptions reads it, and the exam has four options: ${printed}`,
+    )
+    return refused()
+  }
+  for (const [label, text] of Object.entries(options)) {
+    if (!String(text).trim()) errors.push(`option ${label} prints no text, so there is nothing for a student to pick`)
+  }
+  const shapes = new Map()
+  for (const [label, text] of Object.entries(options)) {
+    const shape = optionShape(text)
+    if (!shape) continue
+    if (shapes.has(shape)) {
+      errors.push(
+        `options ${shapes.get(shape)} and ${label} are the same answer written two ways ` +
+          `("${String(options[shapes.get(shape)]).trim()}" and "${String(text).trim()}") — two options a student ` +
+          `could both be right about, while only one of them can be the key`,
+      )
+    } else {
+      shapes.set(shape, label)
+    }
+  }
+  for (const c of letterOptionCollisions(options)) {
+    errors.push(
+      `option ${c.label}'s text "${String(c.text).trim()}" is itself label ${c.collidesWith}, so a response of ` +
+        `"${c.collidesWith}" cannot be disambiguated between option ${c.label} (by text) and option ` +
+        `${c.collidesWith} (by letter) — grade.js declines it, and a decline is invisible to every downstream ` +
+        `statistic. Reword option ${c.label}`,
+    )
+  }
+
+  if (keyDecl == null) {
+    errors.push(
+      `a printed option line makes this a multiple-choice item and it declares no "key:" — write ` +
+        `"<!-- key: B -->", the label of the correct choice`,
+    )
+  }
+  const answer = keyDecl == null ? null : keyDecl.trim().toUpperCase()
+  if (answer != null && !(answer in options)) {
+    errors.push(
+      `the key "${keyDecl.trim()}" is not one of the printed option labels — a multiple-choice key is A, B, C or D, ` +
+        `and grade.js compares the letter a student picks against it`,
+    )
+  }
+  if (errors.length) return refused()
+
+  const problems = probeChoices(options, answer)
+  if (problems.length) {
+    errors.push(
+      `the real grader does not read this option list the way a student would: ` +
+        `${problems.slice(0, 4).join('; ')}${problems.length > 4 ? `; and ${problems.length - 4} more` : ''}. ` +
+        `Reword the options until every letter and every option's own text resolve to their own choice`,
+    )
+    return refused()
+  }
+
+  return { kind: 'mcq', answer, variants: [], topic, errors, extra: { practice, options } }
+}
+
+/**
+ * Turn a problem that declares `frq:` into a free-response item, or into errors
+ * and the model-graded default.
+ *
+ * There is no key and there is no rubric: kind 'frq' is in grade.js's
+ * MODEL_GRADED, so the response is routed to the model and the worked solution is
+ * the feedback api.js returns. See the module comment for why a rubric is left
+ * out rather than invented.
+ */
+function resolveFrq({ decls, unit, calc }) {
+  const errors = []
+  const topicDecl = only(decls, 'topic', errors)
+  const practiceDecl = only(decls, 'practice', errors)
+  const frqDecl = only(decls, 'frq', errors)
+  const topic = resolveTopic(topicDecl, unit, errors)
+  const practice = resolvePractice(practiceDecl, errors)
+  const refused = () => ({ kind: 'constructed_model_graded', answer: null, variants: [], topic, errors, extra: {} })
+
+  for (const field of ['key', 'accept', 'format']) {
+    if (declares(decls, field)) {
+      errors.push(
+        `"${field}:" is declared on a free-response item. grade.js routes kind 'frq' to the model before it looks ` +
+          `at any key, so this would never be compared to anything — dead metadata that reads like a promise of ` +
+          `mechanical marking. Delete it, or delete "frq:" if this is meant to be a typed answer`,
+      )
+    }
+  }
+  if (declares(decls, 'part')) {
+    errors.push(
+      `"part <n>:" is declared on a free-response item, which is rubric-scored rather than matched against a ` +
+        `typed answer. Delete it, or delete "frq:"`,
+    )
+  }
+  if (topicDecl == null) {
+    errors.push(
+      `a free-response item needs "topic: <id>" — the items table has one topic column, so name the topic this ` +
+        `question primarily tests (the CSA FRQs carry the first topic their file declares, for the same reason)`,
+    )
+  }
+  if (calc == null) {
+    errors.push(
+      `the tagline says nothing about a calculator. The free-response half is sat in a calculator part and a ` +
+        `no-calculator part (exam.frq_calc_minutes, exam.frq_no_calc_minutes), and readiness.js buckets answers on ` +
+        `calc_allowed 0 and 1, so an item with neither is invisible to both floors`,
+    )
+  }
+  const slot = PRECALC_FRQ_SLOTS.find((s) => s.slot === String(frqDecl).trim().toUpperCase())
+  if (!slot) {
+    errors.push(
+      `frq "${String(frqDecl).trim()}" is not one of this exam's four free-response questions — they are ` +
+        `${PRECALC_FRQ_SLOTS.map((s) => `${s.slot} ${s.type}`).join(', ')} ` +
+        `(worker/config/ap_precalc.json exam.frq_types). Declare the slot, e.g. "<!-- frq: Q3 -->"`,
+    )
+  }
+  if (errors.length) return refused()
+
+  return {
+    kind: 'frq',
+    answer: null,
+    variants: [],
+    topic,
+    errors,
+    extra: { ...(practice ? { practice } : {}), question_type: slot.slot, frq_type: slot.type },
+  }
+}
+
 /** Every ordering of a list. Bounded by MAX_PARTS, so at most 24. */
 function permutations(list) {
   if (list.length <= 1) return [list]
@@ -348,36 +817,14 @@ function resolveKey({ decls, stem, unit }) {
   const errors = []
   const unkeyed = { answer: null, variants: [], topic: null, errors }
 
-  const only = (field) => {
-    const found = decls.filter((d) => d.field === field)
-    if (found.length > 1) errors.push(`"${field}:" is declared ${found.length} times — there can be only one`)
-    return found[0]?.value
-  }
-  const keyDecl = only('key')
-  const formatDecl = only('format')
-  const topicDecl = only('topic')
+  const keyDecl = only(decls, 'key', errors)
+  const formatDecl = only(decls, 'format', errors)
+  const topicDecl = only(decls, 'topic', errors)
   const accepts = decls.filter((d) => d.field === 'accept').map((d) => d.value)
   const partDecls = decls.filter((d) => d.field === 'part')
 
   // --- the topic tag, which stands on its own ------------------------------
-  let topic = null
-  if (topicDecl != null) {
-    const shape = topicDecl.trim().match(/^(\d+)\.(\d+)$/)
-    if (!shape) {
-      errors.push(
-        `topic "${topicDecl.trim()}" is not a Precalc topic id — they are <unit>.<n> ("1.4"), as ` +
-          `parse-precalc-topics.js numbers the pack's concept sections`,
-      )
-    } else if (shape[1] !== unit) {
-      errors.push(
-        `topic "${topicDecl.trim()}" belongs to unit ${shape[1]}, but this problem is in unit ${unit}. ` +
-          `Both ids exist in the matrix, so validate.js would accept it while to-sql.js derived the wrong unit ` +
-          `for the item`,
-      )
-    } else {
-      topic = topicDecl.trim()
-    }
-  }
+  const topic = resolveTopic(topicDecl, unit, errors)
 
   const indices = [...new Set(partDecls.map((d) => d.index))].sort((a, b) => a - b)
   if (keyDecl == null && !partDecls.length) {
@@ -626,9 +1073,81 @@ export function parsePracticeItems(text, filename) {
     const solMatch = body.match(/<details><summary>Solution<\/summary>\s*([\s\S]*?)<\/details>/)
     const stemTail = body.split('<details>')[0]
     const { difficulty, calc } = readTagline(s.tagline)
-    const stem = `${head.kept.join('\n')}\n${stemTail}`.replace(/\s+/g, ' ').trim()
-    const key = resolveKey({ decls: [...head.decls, ...declared.decls], stem, unit: meta.unit })
-    for (const e of [...head.errors, ...declared.errors, ...key.errors]) errors.push(`${id}: ${e}`)
+    const decls = [...head.decls, ...declared.decls]
+
+    // The printed option line, which is what makes a problem multiple choice. It
+    // is looked for in the STEM REGION only — the lines a student reads before
+    // opening the solution — for two reasons: a worked solution may legitimately
+    // walk through "A) 0, B) 3, C) 1/3, D) none" while explaining the distractors,
+    // and an option list below the answer is not a question anyone can answer.
+    // The region below </details> is checked separately, because a list written
+    // there would otherwise be a multiple-choice item the build silently read as
+    // a typed short answer keyed to the letter 'B'.
+    const stemLines = stemTail.split('\n')
+    const printedLines = stemLines.filter((l) => PRINTED_OPTIONS.test(l.trim()))
+    const printedAt = stemLines.findIndex((l) => PRINTED_OPTIONS.test(l.trim()))
+    const printed = printedAt === -1 ? null : stemLines[printedAt].trim()
+    const stemOf = (kept) => `${head.kept.join('\n')}\n${kept.join('\n')}`.replace(/\s+/g, ' ').trim()
+    const fullStem = stemOf(stemLines)
+    const misplaced = body
+      .split('</details>')
+      .slice(1)
+      .some((tail) => tail.split('\n').some((l) => PRINTED_OPTIONS.test(l.trim())))
+
+    let r
+    if (printed != null) {
+      r = resolveChoices({ decls, printed, unit: meta.unit, calc })
+    } else if (declares(decls, 'frq')) {
+      r = resolveFrq({ decls, unit: meta.unit, calc })
+    } else {
+      const key = resolveKey({ decls, stem: fullStem, unit: meta.unit })
+      const practice = resolvePractice(only(decls, 'practice', key.errors), key.errors)
+      r = {
+        // A problem that declares no answer key is a worked-solution exercise:
+        // "give the zeros and their multiplicities, and say whether the graph
+        // crosses or bounces" has no canonical short answer. Those are declared
+        // model-graded rather than left with a null key, which grade.js would
+        // otherwise treat as a mismatch and mark every answer WRONG. Model-graded
+        // work is excluded from every readiness floor — which is exactly why the
+        // key syntax exists, and why a keyed problem becomes 'constructed', the
+        // kind schema.sql has named for a mechanically marked short answer since
+        // the items table shipped.
+        kind: key.answer ? 'constructed' : 'constructed_model_graded',
+        answer: key.answer,
+        variants: key.variants,
+        topic: key.topic,
+        errors: key.errors,
+        // Nothing is appended unless the pack declared it, so an item that
+        // declares no practice compiles byte-for-byte as it did before this field
+        // existed.
+        extra: practice ? { practice } : {},
+      }
+    }
+    // Two ways an option list can be in the wrong place, both of which the
+    // resolvers above cannot see because they are handed one line. Either one
+    // degrades the item exactly as a refused declaration does, so nothing
+    // half-formed reaches an artifact.
+    const misplacedErrors = []
+    if (misplaced) {
+      misplacedErrors.push(
+        `a printed option line sits BELOW the solution's </details>, where the build does not look for one and the ` +
+          `student would read the choices after the answer. Move it directly under the stem`,
+      )
+    }
+    // A second option line in the stem would stay in the stem as prose while the
+    // first became the item's options — two conflicting lists in front of the
+    // student, only one of which he is marked against.
+    if (printedLines.length > 1) {
+      misplacedErrors.push(
+        `${printedLines.length} printed option lines above the solution; a multiple-choice item has one. The first ` +
+          `would become the options and the rest would stay in the stem: ${printedLines[1].trim()}`,
+      )
+    }
+    if (misplacedErrors.length) {
+      r.errors.push(...misplacedErrors)
+      r = { kind: 'constructed_model_graded', answer: null, variants: [], topic: r.topic, errors: r.errors, extra: {} }
+    }
+    for (const e of [...head.errors, ...declared.errors, ...r.errors]) errors.push(`${id}: ${e}`)
 
     const solution = solMatch ? solMatch[1].replace(/\s+/g, ' ').trim() : null
     items.push({
@@ -636,30 +1155,29 @@ export function parsePracticeItems(text, filename) {
       subject: 'ap_precalc',
       unit: meta.unit,
       number: s.num,
-      // A problem that declares no answer key is a worked-solution exercise:
-      // "give the zeros and their multiplicities, and say whether the graph
-      // crosses or bounces" has no canonical short answer. Those are declared
-      // model-graded rather than left with a null key, which grade.js would
-      // otherwise treat as a mismatch and mark every answer WRONG. Model-graded
-      // work is excluded from every readiness floor — which is exactly why the
-      // key syntax exists, and why a keyed problem becomes 'constructed', the
-      // kind schema.sql has named for a mechanically marked short answer since
-      // the items table shipped.
-      kind: key.answer ? 'constructed' : 'constructed_model_graded',
+      kind: r.kind,
       difficulty,
       calc_allowed: calc,
       tested_on_exam: meta.tested,
-      stem,
+      // The option line belongs to `options` on an accepted multiple-choice item,
+      // because the Worker renders the two separately and would print the choices
+      // twice. On anything else — including a REFUSED multiple-choice item — the
+      // stem is every line the pack wrote, so the question still reads as written.
+      stem: r.kind === 'mcq' ? stemOf([...stemLines.slice(0, printedAt), ...stemLines.slice(printedAt + 1)]) : fullStem,
       solution,
       // The printed solution is the feedback the student sees after answering.
       explanation: solution,
-      answer: key.answer,
-      answer_variants: key.variants,
+      answer: r.answer,
+      answer_variants: r.variants,
       // Last, and null unless the pack tags it, so build.js's
       // `it.topic ?? UNTAGGED(unit)` keeps bucketing the untagged ones at
       // <unit>.0 — and so the compiled items.json keeps the key order it had
       // when build.js was the one appending the topic.
-      topic: key.topic,
+      topic: r.topic,
+      // Only what this problem actually declared: `practice` and `options` for a
+      // multiple-choice item, `question_type` and `frq_type` for a free-response
+      // one, nothing at all for the short-answer items that predate both.
+      ...r.extra,
     })
   })
 

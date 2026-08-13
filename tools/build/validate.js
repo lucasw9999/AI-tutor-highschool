@@ -310,6 +310,37 @@ function bareLetter(text) {
 }
 
 /**
+ * Options whose TEXT is a bare letter naming a DIFFERENT option's label.
+ *
+ * A bare letter matching this option's OWN label is fine: reading the response as
+ * a letter and matching it against option text both land on the same option, so
+ * there is nothing to disambiguate. A bare letter matching a DIFFERENT option's
+ * label is genuinely ambiguous — the grader has no way to tell which the student
+ * meant, so it declines the response rather than guess, and that decline is
+ * invisible to every downstream statistic. Ship the fix in the content, not
+ * around it: reword the option.
+ *
+ * EXPORTED so the content parsers can refuse an option list before it is ever
+ * compiled, judged by this exact function rather than by a second copy of the
+ * rule that would be free to drift weaker (tools/build/parse-precalc.js). The
+ * CSA bank ships four of these — csa-ac-q14, csa-ac-q33 and csa-u2-q7 twice.
+ *
+ * @returns {Array<{label: string, text: string, collidesWith: string}>}
+ */
+export function letterOptionCollisions(options) {
+  if (!options || typeof options !== 'object') return []
+  const labels = Object.keys(options)
+  const out = []
+  for (const [label, text] of Object.entries(options)) {
+    const bare = bareLetter(text)
+    if (bare && bare !== label.toUpperCase() && labels.some((l) => l.toUpperCase() === bare)) {
+      out.push({ label, text, collidesWith: bare })
+    }
+  }
+  return out
+}
+
+/**
  * Errors block the build; warnings print but allow it.
  *
  * Runs over EVERY subject. The MCQ-shaped assertions (practice tag, four options,
@@ -353,24 +384,15 @@ export function validate(items, topics, configs = readinessConfigs()) {
         errors.push(`${it.id}: answer key ${it.answer} is not one of the options`)
       }
       if (it.options) {
-        const labels = Object.keys(it.options)
-        for (const [label, text] of Object.entries(it.options)) {
-          const bare = bareLetter(text)
-          // A bare letter matching this option's OWN label is fine: reading the
-          // response as a letter and matching it against option text both land
-          // on the same option, so there is nothing to disambiguate. A bare
-          // letter matching a DIFFERENT option's label is genuinely ambiguous —
-          // the grader has no way to tell which the student meant, so it now
-          // declines the response rather than guess, and that decline is
-          // invisible to every downstream statistic. Ship the fix in the
-          // content, not around it: reword the option.
-          if (bare && bare !== label.toUpperCase() && labels.some((l) => l.toUpperCase() === bare)) {
-            errors.push(
-              `${it.id}: option ${label}'s text "${text.trim()}" is itself label ${bare} — a response of ` +
-                `"${bare}" cannot be disambiguated between option ${label} (by text) and option ${bare} ` +
-                `(by letter); reword option ${label}'s text so it is not a bare letter`,
-            )
-          }
+        // The gate itself lives in letterOptionCollisions, so the content
+        // parsers refuse a colliding option list against this exact rule rather
+        // than against a second copy of it.
+        for (const c of letterOptionCollisions(it.options)) {
+          errors.push(
+            `${it.id}: option ${c.label}'s text "${c.text.trim()}" is itself label ${c.collidesWith} — a response of ` +
+              `"${c.collidesWith}" cannot be disambiguated between option ${c.label} (by text) and option ` +
+              `${c.collidesWith} (by letter); reword option ${c.label}'s text so it is not a bare letter`,
+          )
         }
       }
     } else if (it.kind === 'constructed') {
