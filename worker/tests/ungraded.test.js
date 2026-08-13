@@ -204,20 +204,40 @@ test('every Precalc item is either keyed and server-graded, or model-graded with
   // turns an item into 'constructed' and makes it count — and the first key landed
   // would have failed this test for doing precisely the thing it was blocking.
   //
-  // What this file actually guards is unchanged, so it is now stated per item and
-  // holds at every ratio of keyed to unkeyed: an item is either mechanically
-  // gradeable AND carries a key grade.js can mark against, or it is declared
-  // model-graded AND carries the worked solution the rubric needs. The state this
-  // file exists to forbid — a gradeable kind with nothing to grade against, which
-  // grade() would report 'unkeyed' and every downstream number would inherit — is
-  // still impossible in both directions.
+  // WHY THE REPLACEMENT IS NOW STATED OVER SETS, which is the same mistake caught
+  // one size larger. The replacement said keyed => EXACTLY 'constructed' and
+  // unkeyed => EXACTLY 'constructed_model_graded'. Both were again true only of the
+  // bank of the day: the packs can now also declare `kind: mcq` and `kind: frq`
+  // (tools/build/parse-precalc.js), which is what lets a Precalc paper be the
+  // section it names — a sitting may only be served items of the kinds its section
+  // is made of, and neither 'constructed' nor 'constructed_model_graded' is a half
+  // of any AP Precalculus section (worker/src/api.js, handleNext's `closed`). So a
+  // declared `mcq` would have failed here for being exactly the item the exam asks
+  // for, and a declared `frq` for being the other half. Pinning one kind per branch
+  // pins the bank's current composition, and this file has now been wrong about
+  // that composition twice.
+  //
+  // What this file actually guards is unchanged, holds at every ratio of keyed to
+  // unkeyed, and does not care which of the four kinds the pack chose: an item is
+  // either mechanically gradeable AND carries a key grade.js can mark against, or
+  // it is declared model-graded AND carries the worked solution the rubric needs.
+  // The state this file exists to forbid — a gradeable kind with nothing to grade
+  // against, which grade() would report 'unkeyed' and every downstream number would
+  // inherit — is still impossible in both directions, and an unkeyed item still
+  // cannot escape into a server-graded kind: MODEL_GRADED holds neither 'mcq' nor
+  // 'constructed', so the else branch below refuses an unkeyed one of either.
+  const SERVER_MARKED = new Set(['constructed', 'mcq'])
   const r = compile()
   const pc = r.items.filter((i) => i.subject === 'ap_precalc')
   assert.ok(pc.length > 0)
   for (const it of pc) {
     const keyed = it.answer != null && String(it.answer).trim() !== ''
     if (keyed) {
-      assert.equal(it.kind, 'constructed', `${it.id} carries an answer key but is not server-graded`)
+      assert.ok(
+        SERVER_MARKED.has(it.kind),
+        `${it.id} carries an answer key, but kind ${JSON.stringify(it.kind)} is not one the server marks`,
+      )
+      assert.ok(!MODEL_GRADED.has(it.kind), `${it.id} carries an answer key and must not be routed to the model`)
       // A key that does not credit its own canonical answer is a false negative
       // waiting to happen, so it is checked against the real grader, not asserted.
       const v = grade(it, it.answer)
@@ -230,9 +250,44 @@ test('every Precalc item is either keyed and server-graded, or model-graded with
         assert.equal(av.graded_by, 'server', `${it.id}: accepted form ${JSON.stringify(form)} was not server-graded`)
       }
     } else {
-      assert.equal(it.kind, 'constructed_model_graded', `${it.id} has no key and must declare model grading`)
+      assert.ok(
+        MODEL_GRADED.has(it.kind),
+        `${it.id} has no key, so kind ${JSON.stringify(it.kind)} must be one the model grades`,
+      )
       assert.deepEqual(it.answer_variants ?? [], [], `${it.id} declares accepted forms but no key to accept them`)
     }
     assert.ok(it.explanation, `${it.id} must ship its worked solution`)
   }
+})
+
+test('the keyed/model-graded contract covers every kind a Precalc pack may declare, in both directions', () => {
+  // The widening above is not yet exercised by content: the packs can declare `mcq`
+  // and `frq` (tools/build/parse-precalc.js), and as this lands no Precalc item does
+  // — 24 keyed `constructed` and 29 `constructed_model_graded`, zero of either exam
+  // kind. So the rule is driven over the four kinds directly rather than waiting for
+  // the content to arrive and finding out then whether it was widened correctly, and
+  // the two shapes it must still refuse are checked against the REAL router instead
+  // of being restated.
+  const SERVER_MARKED = new Set(['constructed', 'mcq'])
+  for (const kind of ['constructed', 'mcq']) {
+    assert.ok(SERVER_MARKED.has(kind), `a keyed ${kind} must be accepted as server-marked`)
+    assert.ok(!MODEL_GRADED.has(kind), `${kind} must not also be model-graded`)
+  }
+  for (const kind of ['constructed_model_graded', 'frq']) {
+    assert.ok(MODEL_GRADED.has(kind), `an unkeyed ${kind} must be accepted as model-graded`)
+    assert.ok(!SERVER_MARKED.has(kind), `${kind} must not also count as server-marked`)
+  }
+
+  // The two mis-declarations widening to sets could have let through. Both are real
+  // failures, not bookkeeping: an unkeyed mcq reaches NO verdict, and a key on a
+  // rubric kind is never read at all, so the student's right answer is invisible to
+  // every number either way.
+  assert.equal(
+    grade({ kind: 'mcq', answer: null, options: { A: 'a', B: 'b' } }, 'A').graded_by, 'unkeyed',
+    'an unkeyed mcq cannot be marked, which is why the contract still forbids one',
+  )
+  assert.equal(
+    grade({ kind: 'frq', answer: 'B' }, 'B').graded_by, 'model',
+    'a key on a rubric-scored kind is never read, so an item carrying one is mis-declared',
+  )
 })
