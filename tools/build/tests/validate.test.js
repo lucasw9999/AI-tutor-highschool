@@ -459,13 +459,45 @@ test('the shipped configs and the shipped bank are judged against each other', (
   const pcItems = items.filter((i) => i.subject === 'ap_precalc')
   const pcConfig = configs.find((c) => c.subject === 'ap_precalc')
   const pc = feasibility(pcItems, pcConfig)
-  assert.equal(pc.errors.length, 1, JSON.stringify(pc.errors))
-  assert.match(pc.errors[0], /ap_precalc/)
-  assert.match(
-    pc.errors[0], /0 of the 38 multiple choice/,
-    'no Precalc item is of kind mcq or frq, so neither half of its paper can be supplied',
-  )
-  assert.match(pc.errors[0], /0 of the 4 free-response/, 'and the gate must name BOTH halves it is short of')
+
+  // RETIRED ASSERTIONS: `assert.equal(pc.errors.length, 1)` with
+  // `assert.match(pc.errors[0], /0 of the 38 multiple choice/)` and
+  // `/0 of the 4 free-response/`.
+  //
+  // Those literal zeroes were true only while NO Precalc item was of kind mcq or
+  // frq. The packs now carry both, so the shipped bank reads "12 of the 38" and "2
+  // of the 4" and will read more as the packs grow — and the moment a half is
+  // actually supplied, the gate correctly stops naming it at all, which the fixed
+  // `errors.length` of 1 also forbade. Stated as a function of the supply instead,
+  // exactly as the CSA half above already is: each half is checked against the
+  // arithmetic api.js itself uses, the gate must name a half if and only if that
+  // half is short, and the shortfall it prints must be this bank's real numbers.
+  const pcHalves = [
+    { name: 'multiple choice', kind: 'mcq', count: pcConfig.exam.mcq_count },
+    { name: 'free-response', kind: 'frq', count: pcConfig.exam.frq_count },
+  ].map((h) => ({
+    ...h,
+    need: Math.ceil(h.count * MIN_MOCK_COVERAGE),
+    have: pcItems.filter((i) => i.kind === h.kind).length,
+  }))
+  const pcShort = pcHalves.filter((h) => h.have < h.need)
+  assert.equal(pc.errors.length, pcShort.length ? 1 : 0, JSON.stringify(pc.errors))
+  for (const h of pcHalves) {
+    const arithmetic = new RegExp(`${h.have} of the ${h.need} ${h.name}`)
+    if (pcShort.includes(h)) {
+      assert.match(pc.errors[0], /ap_precalc/)
+      assert.match(
+        pc.errors[0], arithmetic,
+        `the shipped Precalc bank holds ${h.have} item(s) of kind ${h.kind} against the ${h.need} a full paper's ` +
+        `${h.name} half needs, and the gate must print that arithmetic rather than a total that hides it`,
+      )
+    } else {
+      assert.doesNotMatch(
+        pc.errors.join('\n'), arithmetic,
+        `the ${h.name} half IS supplied (${h.have} of ${h.need}), so it must not be blamed`,
+      )
+    }
+  }
 
   // RETIRED ASSERTION: `assert.match(pc.errors[0], /composite/, 'all 48 Precalc
   // items are model-graded, so no sitting can be scored')`.
@@ -479,8 +511,8 @@ test('the shipped configs and the shipped bank are judged against each other', (
   // bank it is describing genuinely holds nothing a grader can mark.
   const markable = pcItems.filter((i) => !MODEL_GRADED.has(i.kind) && String(i.answer ?? '').trim() !== '')
   assert.equal(
-    /not one item in this bank can be graded mechanically/.test(pc.errors[0]),
-    markable.length === 0,
+    /not one item in this bank can be graded mechanically/.test(pc.errors.join('\n')),
+    pcShort.length > 0 && markable.length === 0,
     `the shipped Precalc bank has ${markable.length} mechanically markable item(s); the "nothing here can be ` +
     'marked" clause must appear exactly when that count is zero',
   )
@@ -496,15 +528,39 @@ test('the shipped configs and the shipped bank are judged against each other', (
     `the packs key ${compiledKeyed.length} Precalc items; keys are only ever added, so this floor may rise, never fall`,
   )
   const compiledPc = feasibility(compiled, pcConfig)
-  assert.equal(compiledPc.errors.length, 1, JSON.stringify(compiledPc.errors))
-  assert.doesNotMatch(
-    compiledPc.errors[0], /not one item in this bank can be graded mechanically/,
-    'keyed Precalc items exist and grade server-side, so the gate must not claim the bank is unmarkable',
-  )
-  assert.match(
-    compiledPc.errors[0], new RegExp(`constructed=${compiledKeyed.length}\\b`),
-    'and the gate must report the keyed items it can see, so the remaining shortfall is read as a KIND problem',
-  )
+  const compiledShort = ['mcq', 'frq'].filter((kind) => {
+    const count = kind === 'mcq' ? pcConfig.exam.mcq_count : pcConfig.exam.frq_count
+    return compiled.filter((i) => i.kind === kind).length < Math.ceil(count * MIN_MOCK_COVERAGE)
+  })
+  assert.equal(compiledPc.errors.length, compiledShort.length ? 1 : 0, JSON.stringify(compiledPc.errors))
+  if (compiledShort.length) {
+    assert.doesNotMatch(
+      compiledPc.errors[0], /not one item in this bank can be graded mechanically/,
+      'keyed Precalc items exist and grade server-side, so the gate must not claim the bank is unmarkable',
+    )
+    // RETIRED ASSERTION: `assert.match(compiledPc.errors[0], new
+    // RegExp('constructed=' + compiledKeyed.length))`.
+    //
+    // That conflated KEYED with kind `constructed`. It held only while the keyed
+    // items were all short-answer drills; the packs now key 12 `mcq` items too, so it
+    // demanded "constructed=36" of a gate correctly printing "constructed=24,
+    // constructed_model_graded=29, frq=2, mcq=12". Counting keys against a kind's
+    // name would have been satisfied by feasibility() miscounting the kinds.
+    //
+    // The clause's actual job is to make the shortfall legible as a KIND problem, so
+    // what replaces it is the whole histogram, derived from the bank: every kind
+    // present, with its real count, in the gate's own order. Nothing about keys — the
+    // keyed contract is the floor above and the biconditional below, which is where
+    // it belongs.
+    const byKind = [...new Set(compiled.map((i) => i.kind ?? 'no kind'))].sort()
+      .map((k) => `${k}=${compiled.filter((i) => (i.kind ?? 'no kind') === k).length}`)
+      .join(', ')
+    assert.match(
+      compiledPc.errors[0], new RegExp(`Kinds in the bank: ${byKind.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\.`),
+      'the gate must report every kind it can see with its real count, so the remaining shortfall is read as a ' +
+      `KIND problem and not as a shortage of items — expected "Kinds in the bank: ${byKind}."`,
+    )
+  }
   // The unkeyed half is still unkeyed, and the gate still counts it as unmarkable —
   // keying 19 items did not quietly reclassify the other 29.
   assert.equal(
