@@ -2,11 +2,11 @@
 
 ## Campaign Status
 
-**NOT converged.** Seven rounds. Round 5 fixed all Round 4 findings (33). Round 6 found defects in Round 5's code AND opened the content/external-currency lens, which out-yielded the code lens. **Round 7 pushed that lens to its full width** (`sat/`, 10th English, third-party links, newly published College Board material, scheduling, score value, learning method) — and its largest findings were **absences, not defects**: no SAT date anywhere, no Precalc study plan, a 2026 official FRQ the repo didn't know existed, and 86 commits that had never left this laptop. Pattern persists: auditing a round's fix code finds more. Stopped for dispatcher context budget, not a dry round. Two consecutive dry rounds is the bar and was not met.
+**NOT converged.** Eight rounds. Round 7 opened the content/external-currency lens on the *documentation*. **Round 8 read the user's words at face value — "how much coverage we do" is the ITEM BANK — and that is where the real hole was.** AP Precalculus went from structurally unmeasurable (every item model-graded and excluded from every floor; 500 correct answers → 0%) to fully measurable: 33 of 33 exam-tested topics covered AND keyed, 38 MCQ + 4 FRQ, and a mock that assembles and scores, verified end-to-end through the real seed and the real grader. **The build reports `Build OK` for the first time in the project's life.** Pattern persists: auditing a round's fix code finds more — round 8 caught a "100%" bug that the round's own new content would have made reachable.
 
-**Verification command:** `npm test` → 612 tests, 612 pass, 0 fail. Note `npm run build` exits 1 on incomplete content; `node tools/build/build.js --write-despite-incomplete` is the opt-in escape hatch.
+**Verification command:** `npm test` → 698 tests, 698 pass, 0 fail. `node tools/build/build.js` → `Build OK`, 0 gate lines (was 62 at round-8 start).
 
-**Largest open risk is not a defect:** `origin/main` holds zero files under `worker/`, and 104 commits are unpushed. Nine months of work on one laptop. Reported to the user; pushing is theirs to call.
+**Largest open risk is still not a defect:** `origin/main` holds zero files under `worker/`, and 175 commits are unpushed. Nine months of work on one laptop. Reported to the user; pushing is theirs to call.
 
 ---
 
@@ -14,11 +14,11 @@
 
 **Branch:** perfect/audit-356f3d9  
 **Baseline commit:** 356f3d9 (198 tests / 198 pass / 0 fail)  
-**Rounds completed:** 7  
-**Agents dispatched:** ~109  
-**Commits applied:** 91  
-**Test coverage at end:** 612 tests / 612 pass / 0 fail  
-**Build note:** `npm run build` exits 1 on incomplete content; use `node tools/build/build.js --write-despite-incomplete` to regenerate artifacts despite content gaps.
+**Rounds completed:** 8  
+**Agents dispatched:** ~131 (5 died on API timeouts, all on one task — see round-8.md)  
+**Commits applied:** 160  
+**Test coverage at end:** 698 tests / 698 pass / 0 fail  
+**Build:** `Build OK` — 336 items (ap_csa=241, ap_precalc=95), 97 topics, 97 teaching rows.
 
 ## Verified fixed (independently confirmed, with commit)
 
