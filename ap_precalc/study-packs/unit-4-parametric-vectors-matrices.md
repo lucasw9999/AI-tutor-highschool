@@ -46,6 +46,8 @@ Pure **class-test material**: parametric equations, conics, vectors, and matrice
 
 ### C. Parametric circles & lines (memorize these templates)
 
+**Plain language:** A circle and a straight line each have one standard parametric recipe, and both are worth memorizing outright. For a circle you walk around the rim: `cos` drives the `x`-coordinate, `sin` drives the `y`-coordinate, both scaled by the radius, and you add the centre so the circle sits where it belongs. For a line you start at a point and add the *same* fixed step to `x` and to `y` on every tick of `t`.
+
 **Key rules:**
 - **Circle**, center `(h, k)`, radius `r`:  `x = h + r·cos t`, `y = k + r·sin t`, `t ∈ [0, 2π)`.
 - **Line** through `(x₀, y₀)` with direction `(a, b)`:  `x = x₀ + a·t`, `y = y₀ + b·t`.
@@ -147,6 +149,8 @@ For 2×2:
 ---
 
 ### I. Determinant & inverse of a 2×2 matrix
+
+**Plain language:** The determinant is one number, squeezed out of the four entries, that says whether a matrix can be undone. If it isn't zero the matrix has an **inverse** — the matrix that cancels it, the way dividing by 3 cancels multiplying by 3 — and there's a fill-in-the-blanks formula for it. If the determinant is 0, no inverse exists at all.
 
 **Key rules** for `A = [[a, b], [c, d]]`:
 - **Determinant:**  `det(A) = ad − bc`.
