@@ -562,9 +562,9 @@ test('a declared MCQ and FRQ pass every build gate, and grade from the compiled 
 })
 
 test('38 declared MCQs and 4 declared FRQs make a Precalc sitting assemblable and scorable', () => {
-  // The arithmetic the build blocks on today, walked to its end: what api.js's
-  // partObstacle demands of each half (ceil(count x MIN_MOCK_COVERAGE)) against a
-  // bank that holds them. This is the claim the format has to earn.
+  // The arithmetic the build once blocked on, walked to its end: what api.js's
+  // partObstacle demands of each half (ceil(count x MIN_MOCK_COVERAGE)) against the
+  // bank that holds them. This is the claim the format had to earn.
   const config = readinessConfigs().find((c) => c.subject === 'ap_precalc')
   const need = {
     mcq: Math.ceil(config.exam.mcq_count * MIN_MOCK_COVERAGE),
@@ -572,23 +572,60 @@ test('38 declared MCQs and 4 declared FRQs make a Precalc sitting assemblable an
   }
   assert.deepEqual(need, { mcq: 38, frq: 4 })
 
+  // RETIRED PRECONDITION: `assert.equal(before.errors.filter((e) => /the bank
+  // holds/.test(e)).length, 1, 'precondition: today the bank supplies neither half')`,
+  // followed by the same feasibility() call over the shipped bank PLUS 42 synthetic
+  // items, to show what would happen if the packs ever supplied both halves.
+  //
+  // The packs now do. The content agents have written 38 multiple-choice and 4
+  // free-response Precalc items, so that precondition demanded the bank stay unable
+  // to assemble a sitting — the exact outcome this test was written to ask for — and
+  // the synthetic 42 were standing in for content that exists. So the claim is made
+  // about the real bank instead: both halves ARE supplied, and the feasibility gate
+  // is silent on it. Nothing is softened; the floors are proved to be live below.
   const shipped = parseAll(read).items
-  const declared = [
-    ...Array.from({ length: need.mcq }, (_, k) => ({
-      id: `pc-mcq-${k}`, subject: 'ap_precalc', kind: 'mcq', topic: '1.6', practice: '1.A',
-      stem: STEM, options: parseOptions(OPTIONS), answer: 'B',
-    })),
-    ...Array.from({ length: need.frq }, (_, k) => ({
-      id: `pc-frq-${k}`, subject: 'ap_precalc', kind: 'frq', topic: '1.11', stem: FRQ_STEM, answer: null,
-    })),
-  ]
-  const before = feasibility(shipped, config)
-  assert.equal(
-    before.errors.filter((e) => /the bank holds/.test(e)).length, 1,
-    'precondition: today the bank supplies neither half',
+  const held = Object.fromEntries(
+    Object.keys(need).map((kind) => [kind, shipped.filter((i) => i.kind === kind).length]),
   )
-  const after = feasibility([...shipped, ...declared], config)
-  assert.deepEqual(after.errors, [], `both halves must now be supplied and markable: ${after.errors.join(' | ')}`)
-  assert.equal(after.warnings.length, 1, 'reuse across sittings weeks apart stays a warning, never an error')
-  assert.match(after.warnings[0], /re-ask questions from earlier ones/)
+  assert.ok(
+    held.mcq >= need.mcq,
+    `the packs must supply the multiple-choice half: ${held.mcq} of the ${need.mcq} a scorable section I needs`,
+  )
+  assert.ok(
+    held.frq >= need.frq,
+    `the packs must supply the free-response half: ${held.frq} of the ${need.frq} a scorable section II needs`,
+  )
+  const now = feasibility(shipped, config)
+  assert.deepEqual(
+    now.errors, [],
+    `both halves are supplied and markable, so the gate must be silent: ${now.errors.join(' | ')}`,
+  )
+  assert.equal(now.warnings.length, 1, 'reuse across sittings weeks apart stays a warning, never an error')
+  assert.match(now.warnings[0], /re-ask questions from earlier ones/)
+
+  // AND EVERY FLOOR IS STILL LIVE. Each half is re-judged on a bank cut to one item
+  // BELOW its own floor — short by construction, so this cannot go quiet however much
+  // content is added later — and the gate must name that half's shortfall, with the
+  // real numbers, and must not report the half that is still supplied. Cut to
+  // `need - 1` rather than "drop one" for the same reason: dropping one item from a
+  // bank of 50 MCQs would leave it comfortably above 38 and prove nothing.
+  for (const [kind, label] of [['mcq', 'multiple choice'], ['frq', 'free-response']]) {
+    const other = kind === 'mcq' ? 'frq' : 'mcq'
+    const otherLabel = kind === 'mcq' ? 'free-response' : 'multiple choice'
+    const cut = [
+      ...shipped.filter((i) => i.kind !== kind),
+      ...shipped.filter((i) => i.kind === kind).slice(0, need[kind] - 1),
+    ]
+    const short = feasibility(cut, config).errors.filter((e) => /the bank holds/.test(e))
+    assert.equal(
+      short.length, 1,
+      `a bank holding ${need[kind] - 1} ${label} question(s) is below the floor of ${need[kind]} and the gate must ` +
+        `say so exactly once, got ${JSON.stringify(short)}`,
+    )
+    assert.match(short[0], new RegExp(`${need[kind] - 1} of the ${need[kind]} ${label}`), short[0])
+    assert.ok(
+      !new RegExp(`of the ${need[other]} ${otherLabel}`).test(short[0]),
+      `the ${otherLabel} half is still supplied, so the gate must not report it short: ${short[0]}`,
+    )
+  }
 })

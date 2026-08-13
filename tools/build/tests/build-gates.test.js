@@ -10,7 +10,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -365,29 +365,108 @@ test('B5: the INCOMPLETE list names every class of gap, not just untagged items'
 
 // --- B6: "faithful compile" and "complete content" are separate questions ---
 //
-// The completeness gates above are correct and stay hard errors: ap_precalc has 33
-// exam-tested topics with no items, so its readiness can never exceed 8.3%. But the
-// failing build also refused to write anything, which stranded content fixes that
-// were already correct in the markdown (a wrong answer key, a false arithmetic
-// check, 92 backtick-corrupted MCQ options) in the compiler and out of the DB.
+// The completeness gates above are correct and stay hard errors, and while one of
+// them is firing the build must not write a single byte. But refusing to write also
+// stranded content fixes that were already correct in the markdown (a wrong answer
+// key, a false arithmetic check, 92 backtick-corrupted MCQ options) in the compiler
+// and out of the DB.
 //
 // So the CLI grows ONE explicit opt-in flag: write the artifacts anyway, still fail,
 // still print every ERROR. These tests pin both halves — the default must stay
 // byte-for-byte "nothing written", and the flag must never be reachable by accident.
+//
+// RETIRED PRECONDITION, four times over: these tests used to get their failing build
+// from the REAL content. ap_precalc had 33 exam-tested topics with no items, so
+// `node tools/build/build.js` exited 1 for the whole life of the project, and each
+// test below simply ran the CLI over the repo. The content agents have since written
+// the missing Precalc questions — exam-tested coverage is 100% and the build reports
+// `Build OK` — so three of these four tests could no longer observe their own subject
+// at all: there was no failing build left to write nothing, to compare ERROR lines
+// against, or to refuse to force.
+//
+// The guarantee is unchanged and the flag is not touched. What changed is only where
+// the failing build comes from: a bank that is INCOMPLETE BY CONSTRUCTION — the real
+// content plus one extra exam-tested concept section that no item in the bank is
+// tagged to. That is exactly the gate this flag was written for, and no content fix
+// can take it away. That the FIXTURE and not the content is what fails is proved in
+// the first test below, which runs the same CLI over the unpatched tree and requires
+// it to pass and write.
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url))
 const BUILD = fileURLToPath(new URL('../build.js', import.meta.url))
 const FLAG = '--write-despite-incomplete'
 const ARTIFACTS = ['items.json', 'topics.json', 'teaching.json']
 
 /**
+ * One more exam-tested concept section for unit 1's pack, with all three teaching
+ * fields filled so the ONLY gate it can trip is the coverage gate.
+ *
+ * Appended after the last concept section (topic ids are positional, `<unit>.<n>`),
+ * so it adds a topic id and renumbers none.
+ */
+const UNREACHABLE_SECTION = [
+  '### 1.99 A concept no item in the bank tests',
+  '',
+  '**Plain language:** injected by a test, to give the compile one exam-tested topic with no items of its own.',
+  '',
+  '**Worked example:** none is needed; nothing is ever taught from this row.',
+  '',
+  '**#1 mistake:** treating this section as real content.',
+  '',
+].join('\n')
+
+const PRACTICE_HEADING = '## 3. Graduated practice set'
+const injectUnreachable = (t) => t.replace(PRACTICE_HEADING, `${UNREACHABLE_SECTION}${PRACTICE_HEADING}`)
+
+/** The one file the incomplete-by-construction bank rewrites, and its new text. */
+function incompleteBank() {
+  const original = read(U1)
+  const text = injectUnreachable(original)
+  assert.notEqual(
+    text, original,
+    `the injected section did not land: "${PRACTICE_HEADING}" is no longer in ${U1}, so the fixture is not ` +
+      'incomplete and these tests would prove nothing. Re-anchor it on the heading the pack uses now.',
+  )
+  return { file: U1, text }
+}
+
+/**
+ * Symlink every entry of `src` into `dest`, except `rel` — whose directories are
+ * real and whose own text is `text`.
+ *
+ * Symlinks, not a copy: ap_csa carries 25MB of venv, and nothing under the repo may
+ * be mutated by a test in any case.
+ */
+function mirror(src, dest, rel, text) {
+  const [head, ...rest] = rel.split('/')
+  const entries = readdirSync(src)
+  assert.ok(entries.includes(head), `cannot patch ${rel}: ${join(src, head)} does not exist`)
+  mkdirSync(dest, { recursive: true })
+  for (const name of entries) {
+    if (name !== head) symlinkSync(join(src, name), join(dest, name))
+    else if (rest.length) mirror(join(src, name), join(dest, name), rest.join('/'), text)
+    else writeFileSync(join(dest, name), text)
+  }
+}
+
+/**
  * A throwaway cwd that reads the REAL content (the parsers resolve every path
  * relative to cwd) but whose `content/` output directory is not the repo's, so a
  * test can watch what the CLI writes without touching the checked-in artifacts.
+ *
+ * With a `patch` from incompleteBank(), one content file is rewritten in the
+ * sandbox: its directories are real, its siblings are symlinks to the repo, and it
+ * alone holds patched text.
  */
-function sandbox(t) {
+function sandbox(t, patch = null) {
   const dir = mkdtempSync(join(tmpdir(), 'ap-build-gate-'))
-  for (const d of ['ap_csa', 'ap_precalc']) symlinkSync(join(ROOT, d), join(dir, d))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
+  for (const d of ['ap_csa', 'ap_precalc']) {
+    if (patch && patch.file.startsWith(`${d}/`)) {
+      mirror(join(ROOT, d), join(dir, d), patch.file.slice(d.length + 1), patch.text)
+    } else {
+      symlinkSync(join(ROOT, d), join(dir, d))
+    }
+  }
   return dir
 }
 
@@ -398,40 +477,101 @@ function runBuild(dir, { args = [], env = {} } = {}) {
   return { ...p, output: `${p.stdout}${p.stderr}` }
 }
 
-/** Just the ERROR lines, so "did any gate go quiet?" is directly comparable. */
-const errorLines = (out) => out.split('\n').filter((l) => l.startsWith('ERROR ')).sort()
+/**
+ * Every ERROR the CLI printed, each with its own indented continuation lines, so
+ * "did any gate go quiet, soften or get reworded?" is directly comparable.
+ *
+ * The continuation lines matter: the coverage gate's message lists the untestable
+ * topics UNDER its first line, so comparing only lines that start with "ERROR "
+ * would compare the headline and ignore everything the gate actually named. A run
+ * of indented lines is only attached while it directly follows an error, which is
+ * what keeps the flag's own indented "must NOT be deployed" paragraph out.
+ */
+function errorBlocks(out) {
+  const blocks = []
+  let open = false
+  for (const line of out.split('\n')) {
+    if (line.startsWith('ERROR ')) {
+      blocks.push(line)
+      open = true
+    } else if (open && /^\s+\S/.test(line)) {
+      blocks[blocks.length - 1] += `\n${line}`
+    } else {
+      open = false
+    }
+  }
+  return blocks.sort()
+}
 
 const wroteFiles = (dir) => ARTIFACTS.filter((f) => existsSync(join(dir, 'content', f)))
 
 test('B6: by default a failing build still writes absolutely nothing', (t) => {
-  const dir = sandbox(t)
+  // THE FIXTURE IS PROVED TO BE WHAT FAILS, before anything is asserted about the
+  // refusal to write. The real content trips no gate, the same content plus the
+  // injected section trips exactly one — the coverage gate, naming the injected
+  // topic — so the failing build below fails for that reason and no other.
+  const clean = compile()
+  const broken = compile(patched(U1, injectUnreachable))
+  assert.deepEqual(
+    clean.errors, [],
+    `the real content passes every gate, so only the fixture can fail this build:\n  ${brief(clean.errors)}`,
+  )
+  assert.equal(
+    broken.unreachable.length, 1,
+    `the fixture must make exactly one topic unreachable, got ${JSON.stringify(broken.unreachable)}`,
+  )
+  assert.equal(broken.unreachable[0].subject, 'ap_precalc')
+  assert.equal(broken.errors.length, 1, `the fixture must trip exactly one gate:\n  ${brief(broken.errors)}`)
+  assert.match(broken.errors[0], /exam-tested topic\(s\) have NO items/)
+  assert.ok(broken.errors[0].includes(broken.unreachable[0].id), 'and the gate must name the topic it cannot reach')
+
+  // The same CLI, same sandbox, over the unpatched tree: it passes and it writes.
+  // This is the relapse guard for the content too — if the Precalc bank ever loses
+  // the coverage it just earned, this line goes red.
+  const okDir = sandbox(t)
+  const ok = runBuild(okDir)
+  assert.equal(ok.status, 0, `the real content must still build:\n${ok.output}`)
+  assert.match(ok.stdout, /Build OK/)
+  assert.deepEqual(wroteFiles(okDir), ARTIFACTS, 'a passing build writes all three artifacts')
+
+  const dir = sandbox(t, incompleteBank())
   const r = runBuild(dir)
 
   assert.equal(r.status, 1, `expected exit 1, got ${r.status}\n${r.output}`)
   assert.match(r.stderr, /Nothing written\./)
   assert.deepEqual(wroteFiles(dir), [], 'the default invocation must not write an artifact')
   assert.equal(existsSync(join(dir, 'content')), false, 'not even the output directory')
-  assert.ok(errorLines(r.output).length > 0, 'the gates must still speak')
-  // Which gate is firing is a fact about today's content, not about this test's
-  // subject (that a failing build writes nothing), so no specific gate is named
-  // here: the coverage gate used to be, and it went quiet when the content stopped
-  // tripping it. B3 owns the coverage gate's own contract.
+  // Every gate the compile found is printed, verbatim and in full — so no gate is
+  // lost between compile() and the CLI, and the failing build fails out loud.
+  assert.deepEqual(errorBlocks(r.output), broken.errors.map((e) => `ERROR ${e}`).sort())
   assert.doesNotMatch(r.output, /Build OK/)
 })
 
 test(`B6: ${FLAG} writes the artifacts and STILL fails`, (t) => {
-  const dir = sandbox(t)
+  const patch = incompleteBank()
+  const dir = sandbox(t, patch)
   const r = runBuild(dir, { args: [FLAG] })
 
   assert.notEqual(r.status, 0, `incomplete content must never exit 0\n${r.output}`)
   assert.deepEqual(wroteFiles(dir), ARTIFACTS, 'all three artifacts must be written')
 
-  const expected = compile()
+  // What was written must be the faithful compile of the content the CLI actually
+  // read — asserted row for row, not by row count. Row-identity also proves the
+  // sandbox served the PATCHED pack: the injected topic and its teaching row are in
+  // these artifacts and are not in the repo's content.
+  const expected = compile(patched(patch.file, injectUnreachable))
   for (const [file, key] of [['items.json', 'items'], ['topics.json', 'topics'], ['teaching.json', 'teaching']]) {
     const written = JSON.parse(readFileSync(join(dir, 'content', file), 'utf8'))
     assert.ok(Array.isArray(written), `${file} must be a JSON array`)
     assert.equal(written.length, expected[key].length, `${file} must hold every compiled row`)
+    assert.deepEqual(written, expected[key], `${file} must be exactly what the markdown it read compiles to`)
   }
+  const injected = expected.unreachable[0].id
+  const topics = JSON.parse(readFileSync(join(dir, 'content', 'topics.json'), 'utf8'))
+  assert.ok(
+    topics.some((t2) => t2.subject === 'ap_precalc' && t2.id === injected),
+    `the incomplete topic ${injected} must be in the artifacts, or the CLI did not read the patched pack`,
+  )
 
   // The write is not permission to ship: the output has to say so, loudly.
   assert.match(r.output, /INCOMPLETE/)
@@ -440,19 +580,26 @@ test(`B6: ${FLAG} writes the artifacts and STILL fails`, (t) => {
 })
 
 test(`B6: ${FLAG} downgrades no gate — the ERROR lines are identical either way`, (t) => {
-  const strict = runBuild(sandbox(t))
-  const forced = runBuild(sandbox(t), { args: [FLAG] })
+  const strict = runBuild(sandbox(t, incompleteBank()))
+  const forced = runBuild(sandbox(t, incompleteBank()), { args: [FLAG] })
 
   assert.deepEqual(
-    errorLines(forced.output),
-    errorLines(strict.output),
+    errorBlocks(forced.output),
+    errorBlocks(strict.output),
     'writing anyway must not silence, soften or reword a single gate',
   )
-  // A floor of ONE, not of six: the comparison above is the test's subject, and it
-  // only means something while at least one gate is firing. The old floor of six
-  // counted today's content defects, so every defect fixed brought this test closer
-  // to failing for the best possible reason.
-  assert.ok(errorLines(strict.output).length >= 1, 'precondition: the real content still trips a gate')
+  // The comparison above is this test's subject, and it only means something while a
+  // gate is firing — an empty list equals an empty list. The floor is therefore
+  // stated as the fixture's OWN gate, by name: the coverage gate, which is the one
+  // the flag exists to be used alongside.
+  const strictErrors = errorBlocks(strict.output)
+  assert.ok(strictErrors.length >= 1, 'precondition: the incomplete-by-construction bank must trip a gate')
+  assert.ok(
+    strictErrors.some((e) => /exam-tested topic\(s\) have NO items/.test(e)),
+    `precondition: the fixture's own gate must be among the errors, got:\n  ${brief(strictErrors)}`,
+  )
+  assert.equal(forced.status, 1, 'and the flag must not turn the failure into a pass')
+  assert.equal(strict.status, 1)
 })
 
 test('B6: nothing but the explicit flag can force a write', (t) => {
@@ -466,10 +613,11 @@ test('B6: nothing but the explicit flag can force a write', (t) => {
     { args: ['--write'] },
     { args: ['-w'] },
   ]) {
-    const dir = sandbox(t)
+    const dir = sandbox(t, incompleteBank())
     const r = runBuild(dir, attempt)
     assert.equal(r.status, 1, `${JSON.stringify(attempt)} must still fail\n${r.output}`)
     assert.deepEqual(wroteFiles(dir), [], `${JSON.stringify(attempt)} must not write anything`)
+    assert.match(r.stderr, /Nothing written\./, `${JSON.stringify(attempt)} must take the no-write path`)
   }
 })
 
