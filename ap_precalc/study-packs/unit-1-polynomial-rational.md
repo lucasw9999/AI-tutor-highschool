@@ -436,6 +436,37 @@ Why the others are there: **A** multiplies by 2 instead of dividing — the "$f(
 <!-- practice: 1.C -->
 <!-- topic: 1.9 -->
 
+**P22 (medium, no-calc) — where an average rate of change vanishes.** For $f(x)=x^2-6x$, on which of these intervals is the average rate of change of $f$ equal to $0$?
+A) [0, 3]   B) [1, 5]   C) [2, 6]   D) [-3, 3]
+<details><summary>Solution</summary>
+
+**Do the algebra once, in general, rather than four times.** On $[a,b]$,
+$$\text{AROC}=\frac{f(b)-f(a)}{b-a}=\frac{(b^2-a^2)-6(b-a)}{b-a}=\frac{(b-a)(b+a)-6(b-a)}{b-a}=a+b-6$$
+so the average rate of change is $0$ **exactly when $a+b=6$**, and only $[1,5]$ has endpoints that add to 6.
+The same fact without any algebra: an average rate of change of $0$ means the numerator is $0$ — **no net change** — so the two endpoint outputs must be **equal**. And they are: $f(1)=1-6=-5$ and $f(5)=25-30=-5$ ✓. The parabola's axis is $x=3$, and $1$ and $5$ sit the same distance either side of it, so they land at the same height.
+The other three, checked: $\dfrac{f(3)-f(0)}{3-0}=\dfrac{-9-0}{3}=-3$; $\dfrac{f(6)-f(2)}{6-2}=\dfrac{0-(-8)}{4}=2$; $\dfrac{f(3)-f(-3)}{3-(-3)}=\dfrac{-9-27}{6}=-6$.
+
+Why the others are there: **A** ends at the vertex $x=3$, where the graph really is momentarily flat — but that is the rate at a single **instant**, not an average, and across the whole of $[0,3]$ the output fell from $0$ to $-9$, an average rate of $-3$. **C** ends at $x=6$, where $f(6)=0$: that is a zero of the **function**, and the question asks for a zero **rate of change**. The output changing from $-8$ to $0$ is a change of $+8$, not of nothing. **D** is symmetric about $x=0$, which would be the right instinct for $x^2$ — but this parabola's axis is $x=3$, so $-3$ and $3$ are nowhere near the same height ($27$ and $-9$), and the average rate is $-6$.
+</details>
+<!-- key: B -->
+<!-- practice: 2.A -->
+<!-- topic: 1.1 -->
+
+**P23 (medium, no-calc) — "odd" is a definition, not an exponent.** Which of these expressions defines an **odd** function?
+A) (x - 2)^3   B) 1/(x^2 - 4)   C) x^3 - x^2 + x   D) (x^2 + 1)/x
+<details><summary>Solution</summary>
+
+**Odd means $f(-x)=-f(x)$ for every $x$ in the domain. Test it; never eyeball it.**
+Take **D**, $f(x)=\dfrac{x^2+1}{x}$. Substituting $-x$ changes only the denominator, because $(-x)^2=x^2$:
+$$f(-x)=\frac{(-x)^2+1}{-x}=\frac{x^2+1}{-x}=-\frac{x^2+1}{x}=-f(x)$$
+So **D is odd**, and its graph is symmetric about the **origin**. (Its domain, every real except $0$, is itself symmetric about $0$ — it has to be, or there would be an $x$ whose partner $-x$ has no output to compare with.) Spot-check with numbers: $f(2)=\frac52=2.5$ and $f(-2)=\frac{5}{-2}=-2.5$ ✓. An **even** top over an **odd** bottom is odd.
+
+Why the others are there: **A** is a cube, and "odd exponent, so odd function" is the single most common wrong reason on this topic. An odd power gives origin symmetry only when it is **centred at the origin**; $(x-2)^3$ is centred at $x=2$. Test it: $f(-1)=(-3)^3=-27$, while $-f(1)=-(-1)^3=+1$. Not equal, so **neither** even nor odd. **B** *is* symmetric — about the **y-axis**, which is the definition of **even**: $f(-x)=\frac{1}{(-x)^2-4}=\frac{1}{x^2-4}=f(x)$. This catches two habits at once, remembering that there is symmetry without remembering which name goes with which, and reasoning "$\frac1x$ is odd, so $\frac{1}{x^2-4}$ must be" — the reciprocal of an **even** function is even. **C** has odd powers in two of its three terms, and a student who counts them calls it odd. One even term is enough to break it: $f(-x)=-x^3-x^2-x$ while $-f(x)=-x^3+x^2-x$, differing by $2x^2$. Numerically $f(1)=1$ and $f(-1)=-3$, but odd would need $f(-1)=-1$. **"Mostly odd" is not odd.**
+</details>
+<!-- key: D -->
+<!-- practice: 3.A -->
+<!-- topic: 1.5 -->
+
 ---
 
 ## 4. Quick self-check
