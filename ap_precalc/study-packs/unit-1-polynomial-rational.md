@@ -526,6 +526,34 @@ Why the others are there: **D** solves $10+k=5$ by **adding** 10 instead of subt
 <!-- practice: 1.A -->
 <!-- topic: 1.10 -->
 
+**P28 (exam-level, calculator) — FRQ Q1 Function Concepts style.** Let $f$ be the function given by $f(x)=\dfrac{x^3}{x^2-4}$. (a) Determine whether $f$ is even, odd, or neither, showing the substitution you used, and say what your answer means about the symmetry of the graph. (b) Find the average rate of change of $f$ on the interval $[3,5]$, to three decimal places. Then find the average rate of change of $f$ on $[-5,-3]$, and use your answer to (a) to explain why these two values had to come out equal. (c) State the domain of $f$, and give an equation of the line the graph approaches far from the origin, showing the division that produces it. (d) A student concludes from your answer to (c) that $f(x)=x$ once $x$ is large. Explain why that conclusion is wrong, and support your explanation with values of $f$.
+<details><summary>Solution</summary>
+
+**(a)** Substitute $-x$ and simplify, taking the odd power on top and the even power underneath separately:
+$$f(-x)=\frac{(-x)^3}{(-x)^2-4}=\frac{-x^3}{x^2-4}=-\frac{x^3}{x^2-4}=-f(x)$$
+Since $f(-x)=-f(x)$ for every $x$ in the domain, $f$ is **odd**. That means the graph is **symmetric about the origin**: rotating it a half turn about $(0,0)$ leaves it unchanged, so whatever the graph does at $x=a$ it does upside down at $x=-a$. (The domain in (c) is symmetric about $0$, which it must be for the comparison to be available at every $x$.)
+
+**(b)** $f(3)=\dfrac{27}{9-4}=\dfrac{27}{5}=5.4$ and $f(5)=\dfrac{125}{25-4}=\dfrac{125}{21}\approx5.952380952$, so
+$$\text{AROC on }[3,5]=\frac{f(5)-f(3)}{5-3}=\frac{\frac{125}{21}-\frac{27}{5}}{2}=\frac{\frac{625-567}{105}}{2}=\frac{58}{210}=\frac{29}{105}\approx\mathbf{0.276}$$
+On $[-5,-3]$: $f(-5)=-\frac{125}{21}$ and $f(-3)=-\frac{27}{5}$, so the AROC is $\dfrac{-\frac{27}{5}-(-\frac{125}{21})}{-3-(-5)}=\dfrac{\frac{58}{105}}{2}=\dfrac{29}{105}\approx\mathbf{0.276}$ — the same value exactly, not merely to three decimals.
+**Why it had to happen.** Because $f$ is odd, reflecting an interval through the origin negates **both** the run and the rise, and a fraction is unchanged when its numerator and denominator both change sign:
+$$\frac{f(-a)-f(-b)}{-a-(-b)}=\frac{-f(a)+f(b)}{-(a-b)}=\frac{-(f(a)-f(b))}{-(a-b)}=\frac{f(b)-f(a)}{b-a}$$
+So for an odd function the average rate of change on $[-b,-a]$ always equals the average rate of change on $[a,b]$. The symmetry is not a coincidence about these numbers; it is a property of every odd function, and it is the kind of reason a Q1 justification part pays for. (Note it is *equal*, not opposite — a half-turn rotation preserves the slope of a secant line, it does not flip it.)
+
+**(c)** The domain is set by the denominator: $x^2-4=0$ at $x=\pm2$, and neither factor cancels, because the numerator $x^3$ shares no factor with $(x-2)(x+2)$. So both are vertical asymptotes rather than holes, and the **domain is all real numbers except $x=-2$ and $x=2$**.
+For the line, $\deg N=3=\deg D+1$, which is the slant-asymptote case, so divide:
+$$x^3\div(x^2-4):\quad x\cdot(x^2-4)=x^3-4x,\quad x^3-(x^3-4x)=4x \ \Rightarrow\ f(x)=x+\frac{4x}{x^2-4}$$
+The remainder term $\dfrac{4x}{x^2-4}$ has a bigger degree underneath than on top, so it tends to $0$, and the **slant asymptote is $y=x$**.
+
+**(d)** The conclusion is wrong because **an asymptote is what a graph gets arbitrarily close to, never what it becomes**. Part (c) already shows the exact gap:
+$$f(x)-x=\frac{4x}{x^2-4}$$
+which is **positive for every $x>2$** and only shrinks towards $0$; it is never equal to $0$ for any large $x$, since $4x=0$ only at $x=0$. So for $x>2$ the graph lies strictly **above** the line $y=x$, closing in on it without ever touching it.
+The values say the same thing: $f(10)=\frac{1000}{96}\approx10.417$, which is $0.417$ above $10$; $f(100)\approx100.040$, which is $0.040$ above $100$; $f(1000)\approx1000.004$. The gap is shrinking, which is what "approaches the line" means, and it is never zero, which is why $f(x)=x$ is false at every one of those inputs. **"Approaches" is a statement about a limit, not an equation** — and it is exactly this difference that makes $y=x$ useful for sketching the ends of the graph while remaining useless for computing $f(10)$.
+</details>
+<!-- frq: Q1 -->
+<!-- topic: 1.5 -->
+<!-- practice: 3.C -->
+
 ---
 
 ## 4. Quick self-check
