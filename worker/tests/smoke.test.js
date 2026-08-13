@@ -316,10 +316,26 @@ maybe('a Precalc mock separates the answers it can mark from the work it cannot'
   // So each answer is now the right one for the item served, and the property under
   // test is the one the name promises: graded answers and ungraded work are counted
   // separately, and neither drags the other to zero.
+  //
+  // RETIRED PREMISE: `section: 'I'`, five answers. Section I is the MULTIPLE CHOICE
+  // paper, and every Precalc mcq item carries a key, so once the packs gained mcq
+  // items a section I sitting became 100% markable and `ungraded` fell to 0 — the
+  // test's own subject vanished from its fixture. A `full` sitting is the shape that
+  // genuinely holds both classes, because the free-response half is rubric-scored by
+  // design.
+  //
+  // Sitting `full` is NOT sufficient on its own: select.js serves the whole multiple
+  // choice half before the first free-response question, so five answers on a full
+  // paper are still five mcq and `ungraded` is still 0. The paper is therefore
+  // filled until it holds BOTH classes, bounded by the number of questions the exam
+  // itself has (config, not bank — so this cannot slow down as the bank grows), and
+  // both classes are then asserted present rather than hoped for.
   const { db } = freshDb()
-  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: T0 })
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'full', source: 'bank', config: PRECALC, now: T0 })
+  const paperLength = (PRECALC.exam.mcq_count ?? 0) + (PRECALC.exam.frq_count ?? 0)
   const answered = []
-  for (let i = 0; i < 5; i++) {
+  const bothClasses = () => answered.includes(true) && answered.includes(false)
+  for (let i = 0; i < paperLength && !bothClasses(); i++) {
     const q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(i * 100), mockId: m.mock })
     if (q.type !== 'question') continue
     const item = await db.item((await db.serve(q.serve)).item_id)
@@ -333,12 +349,15 @@ maybe('a Precalc mock separates the answers it can mark from the work it cannot'
     answered.push(keyed)
   }
 
-  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(2000) })
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(paperLength * 100 + 1000) })
   const keyedCount = answered.filter(Boolean).length
   assert.equal(r.scored, keyedCount, 'exactly the answers whose items carry a key are scored, and no others')
   assert.equal(r.ungraded, answered.length - keyedCount, 'and the rest are reported as needing grading, never as misses')
-  assert.ok(r.ungraded > 0, 'precondition: this bank still holds model-graded work')
-  // Five answers is nowhere near the coverage floor, and Precalc's bank supplies
+  // Both halves of the test's own subject have to be on this paper, or the
+  // separation above is being asserted over a set with nothing to separate.
+  assert.ok(r.scored > 0, 'precondition: the sitting held answers the grader can mark')
+  assert.ok(r.ungraded > 0, 'precondition: the sitting held work the grader cannot mark')
+  // Neither count is far enough for the coverage floor, and Precalc's bank supplies
   // neither half of its paper, so the sitting is recorded and not scored. null is
   // not zero, and must never be shown as one.
   assert.equal(r.counted, false)
