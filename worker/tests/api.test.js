@@ -1949,25 +1949,67 @@ withSeed('a stranded sitting that would score is still reported as sound', async
 withSeed('the refusal on an exhausted paper names the real condition, and offers no remedy that cannot work', async () => {
   const { db, sqlite } = realDb()
   const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: T0 })
-  const tested = sqlite.prepare(
+  const onExam = (kinds) => sqlite.prepare(
     `SELECT count(*) n FROM items i
       JOIN topics t ON t.id = i.topic AND t.subject = i.subject
-     WHERE i.subject = 'ap_precalc' AND t.tested_on_exam <> 0`,
+     WHERE i.subject = 'ap_precalc' AND t.tested_on_exam <> 0 ${kinds}`,
   ).get().n
+
+  // RETIRED PRECONDITION: `tested`, counted over EVERY exam-tested Precalc item of
+  // any kind, and required to be shorter than one section.
+  //
+  // That was the servable supply only while the bank held no `mcq` at all: with no
+  // question of section I's own half in it, api.js keeps every other kind servable
+  // so that timed practice on an unsuppliable section is still real work. The
+  // Precalc packs now ship 12 multiple choice items, which flips that allowance
+  // off — a section I paper is drawn from the halves section I is made of and
+  // nothing else, because a keyed short-answer drill fills no half of it and may
+  // not stand in for one. So the exam-tested bank went from 36 to 55 while the
+  // supply THIS paper may draw from went from 36 to 12, and a precondition reading
+  // "55 < 42" is measuring the wrong set.
+  //
+  // It is replaced by that same rule, stated: the supply is the section's own
+  // halves once the bank holds one exam-tested question of them, and whatever else
+  // it has while it holds none. Both eras satisfy it, and the corrected truth is
+  // pinned below — every answer on the paper is of a kind section I contains, and
+  // the refusal quotes the section's supply and NOT the bank's total.
+  const ownHalf = onExam(`AND i.kind = 'mcq'`)
+  const eligible = ownHalf > 0 ? ownHalf : onExam(`AND i.kind <> 'frq'`)
+  const wholeBank = onExam('')
   assert.ok(
-    tested > 0 && tested < PRECALC.exam.mcq_count,
-    `this test needs a bank smaller than one section, which the Precalc bank is: ${tested}`,
+    eligible > 0 && eligible < PRECALC.exam.mcq_count,
+    `this test needs a section this bank cannot fill, which section I of Precalc is: ${eligible} of ` +
+      `${PRECALC.exam.mcq_count}`,
   )
 
-  // A fresh database, the first sitting anyone has ever sat: every exam-tested
-  // item is served once, and then there is nothing left this paper may ask.
+  // A fresh database, the first sitting anyone has ever sat: every question this
+  // section may be given is served once, and then there is nothing left to ask.
   const { answered, refusal } = await sitUntilRefused({
     db, mock: m.mock, subject: 'ap_precalc', config: PRECALC, limit: PRECALC.exam.mcq_count,
   })
-  assert.equal(answered, tested, 'a question may not appear twice on one paper, so the bank is the bound')
+  assert.equal(answered, eligible, 'a question may not appear twice on one paper, so the bank is the bound')
+  const kinds = sqlite.prepare(
+    `SELECT DISTINCT i.kind k FROM attempts a JOIN items i ON i.id = a.item_id WHERE a.mock_id = ? ORDER BY k`,
+  ).all(m.mock).map((r) => r.k)
+  if (ownHalf > 0) {
+    assert.deepEqual(
+      kinds, ['mcq'],
+      `a section I paper is multiple choice, so nothing else may be on it: got ${kinds.join(', ')}`,
+    )
+  }
   assert.ok(refusal instanceof ApiError && refusal.status === 409, `the next serve must be refused: ${refusal}`)
   assert.match(refusal.message, /already/i, `name what actually happened: ${refusal.message}`)
-  assert.match(refusal.message, new RegExp(String(tested)), `in numbers: ${refusal.message}`)
+  assert.match(
+    refusal.message, new RegExp(`all ${eligible} exam-tested question\\(s\\)`),
+    `in numbers, and the number is the supply this SECTION has: ${refusal.message}`,
+  )
+  if (wholeBank !== eligible) {
+    assert.doesNotMatch(
+      refusal.message, new RegExp(`\\b${wholeBank}\\b`),
+      `the bank's ${wholeBank} exam-tested items are not ${eligible} questions this paper could ask, and quoting the ` +
+        `larger figure would tell him the paper saw material it never saw: ${refusal.message}`,
+    )
+  }
   assert.doesNotMatch(
     refusal.message, /no.repeat window|reuse window/i,
     `that state cannot produce this refusal — the selector serves a labelled repeat instead: ${refusal.message}`,
