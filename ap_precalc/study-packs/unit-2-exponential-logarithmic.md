@@ -199,6 +199,10 @@ This is **linear in** $x$: $Y = mx + B$ where $Y=\log y$, slope $m=\log b$, inte
 - **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*
 - **Context can make an over- or under-estimate preferable.** The exam may ask which is "better" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn't a universal "right" choice, it depends on the scenario. Justify with the context.
 
+**Worked example:** A model predicts 84.2 thousand downloads on day 30; the app actually had 88.0 thousand. Find the error and say whether the model over- or underestimates.
+Error $=$ predicted $-$ actual $=84.2-88.0=\mathbf{-3.8}$ thousand. The error is **negative**, so the model **underestimates** on day 30.
+And one error is not a verdict on the model *type*: if the residuals on days 10, 20, 30, 40 ran $+2.1,\ -0.9,\ -3.8,\ -7.2$ — sliding steadily downward instead of scattering about 0 — that **pattern** says the wrong family of function was fitted, however small any single error looks.
+
 **#1 mistake:** Calling a model "good" because the curve looks close, ignoring the residual plot — or saying an estimate is "wrong" when the question wants *over vs under* and *why that's appropriate here*.
 
 ---
@@ -365,6 +369,32 @@ Model: $y = 2\cdot 2^{x}$.
 </details>
 <!-- topic: 2.9 -->
 <!-- note: not keyable — three lettered sub-parts, and (c) asks for an explanation. -->
+
+---
+
+**P13 [NC] — Med — Composition.** $f(x)=\ln x$ and $g(x)=e^{2x}$. Find $f(g(3))$.
+
+<details><summary>Solution</summary>
+
+Inside first: $g(3)=e^{2\cdot 3}=e^{6}$. Then the outside: $f(e^{6})=\ln(e^{6})=\mathbf{6}$ (same base — $\ln$ and $e^x$ undo each other).
+Order matters, and the other composition is a different number: $g(f(3))=e^{2\ln 3}=(e^{\ln 3})^{2}=3^{2}=9$. So $f(g(3))=6$ while $g(f(3))=9$ — always work inside-out from the value the stem names.
+</details>
+<!-- key: 6 -->
+<!-- accept: f(g(3)) = 6 -->
+<!-- topic: 2.4 -->
+
+---
+
+**P14 [C] — Med — Model error & residuals.** Daily active users, in thousands, are modeled by $U(t)=12(1.5)^t$ with $t$ in weeks. At $t=4$ the app actually had 58.5 thousand users. Find the model's error at $t=4$, where error $=$ predicted $-$ actual. Give the number only.
+
+<details><summary>Solution</summary>
+
+Predicted: $U(4)=12(1.5)^4=12(5.0625)=60.75$.
+Error $=60.75-58.5=\mathbf{2.25}$ (thousand users). It is **positive**, so the model **overestimates** at $t=4$.
+A single error never settles whether the model TYPE is right — that is the **residual plot's** job: residuals scattered about 0 with no pattern → the exponential model is appropriate; a curve or a fan shape → the wrong family was fitted, no matter how small this one error is.
+</details>
+<!-- key: 2.25 -->
+<!-- topic: 2.11 -->
 
 ---
 

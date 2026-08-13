@@ -147,14 +147,21 @@ To evaluate, pick the piece whose interval contains the input: $f(-2)=2(-2)+1=-3
 
 **What the exam asks:** evaluate at a point; identify which interval applies; **build a piecewise model from a context** ("charges \$5 up to 10 items, then \$0.40 each after" → a two-piece function); read/interpret a piecewise graph; check continuity at the breakpoints. The CED lists **piecewise-defined** as one of the FRQ Q2 modeling function types, so it can be the whole modeling question.
 
+**Worked example:** A shop charges \$5 for up to 10 items, then \$0.40 for each item beyond 10. Write $C(n)$ and find $C(25)$.
+$$C(n)=\begin{cases} 5, & 0\le n\le 10\\ 5+0.40(n-10), & n>10\end{cases}$$
+$C(25)=5+0.40(25-10)=5+0.40(15)=5+6=\mathbf{11}$ dollars. Note the $n-10$: the per-item charge starts counting only *after* the 10th item, so it multiplies the items in EXCESS of 10, not all 25.
+
 **#1 mistake:** Using the wrong piece at a boundary — watch the **≤ vs <** at each breakpoint to see which rule owns the endpoint.
 
 ### 2.11 Model domain & range restrictions *(FRQ Q2 Part C points)*
-When you build a model for a real context, state its **valid domain/range**:
+**Plain language:** A model is only true over the inputs the situation actually allows, so the model is the formula *plus* its **valid domain and range** — give both.
 - **Domain restriction** — from the context (time can't be negative; you can't have a fraction of a person), a math constraint (no division by zero / no log of ≤0), or an extreme-value clue.
 - **Range restriction** — e.g., a count must be a whole number (round), or a quantity can't exceed a physical max.
 
-Justifying these limitations is exactly what FRQ Q2's reasoning parts reward — don't just give the formula, **say where it's valid and why.**
+**Worked example:** A 200-litre rain barrel drains at 8 L per minute, so $V(t)=200-8t$ litres after $t$ minutes. State the model's domain and range.
+Algebraically $200-8t$ is defined for every real $t$, so nothing here is a *math* restriction — both ends come from the **context**: $t$ cannot be negative, and the barrel is empty when $200-8t=0 \Rightarrow t=25$, after which the formula would report a negative volume. **Domain: $0\le t\le 25$. Range: $0\le V\le 200$.**
+
+**#1 mistake:** Handing in the formula and stopping. Q2's reasoning parts pay for *where the model is valid and why* — and "all real numbers" is almost always wrong on a context problem. Check **both** ends: the one the context sets ($t\ge 0$) and the one the model sets (where it stops describing the situation).
 
 ---
 
@@ -293,6 +300,27 @@ Graph/solve: zeros ≈ **$x\approx-1.273,\ 1.140,\ 4.133$** (calculator roots). 
 </details>
 <!-- topic: 1.4 -->
 <!-- note: deliberately NOT keyed. The zeros alone would key cleanly, but the stem also demands end behavior in limit notation, which is the same unenumerable-notation problem as P2 — and the answer to a keyed item has to be the WHOLE response. -->
+
+**P13 (medium, no-calc).** The graph of $f$ passes through the point $(2, 7)$, and $g(x)=2f(x+3)-1$. Find $g(-1)$.
+<details><summary>Solution</summary>
+
+Work the inside first: $g(-1)=2f(-1+3)-1=2f(2)-1$, and $f(2)=7$, so $g(-1)=2(7)-1=\mathbf{13}$.
+Why $x=-1$ is the input that reaches $f(2)$: the $+3$ **inside** shifts the graph of $f$ **LEFT** 3 (inside changes are horizontal and backwards), so the point $(2,7)$ on $f$ moves to $x=2-3=-1$ on $g$. The outside $2\cdot$ then doubles the output and the $-1$ drops it 1: $(2,7)\mapsto(-1,13)$.
+</details>
+<!-- key: 13 -->
+<!-- accept: g(-1) = 13 -->
+<!-- topic: 1.9 -->
+
+**P14 (medium, no-calc).** $f$ is piecewise-defined: $f(x)=3x+4$ for $x<2$, and $f(x)=x^2-1$ for $x\ge 2$. Find $f(2)+f(-1)$.
+<details><summary>Solution</summary>
+
+$x=2$: the interval $x\ge 2$ **owns the endpoint**, so use the second piece — $f(2)=2^2-1=3$.
+$x=-1$: that is in $x<2$, so use the first piece — $f(-1)=3(-1)+4=1$.
+$f(2)+f(-1)=3+1=\mathbf{4}$. (Take the boundary with the wrong piece and you get $f(2)=3(2)+4=10$ and a total of 11 — the **≤ vs <** check at the breakpoint is the whole question.)
+</details>
+<!-- key: 4 -->
+<!-- accept: f(2) + f(-1) = 4 -->
+<!-- topic: 1.10 -->
 
 ---
 
