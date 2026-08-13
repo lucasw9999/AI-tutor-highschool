@@ -158,8 +158,10 @@ test('PC5 REGRESSION: no section with a Worked example line ends up with a null 
   // silently dropped topics 3.9 and 3.11 to null. Check every section whose
   // raw markdown contains a "**Worked example" line directly against its
   // parsed output, and pin the count of rows that are genuinely incomplete in
-  // the source (verified by hand, not just trusted): 1.10, 1.11, 2.11, 3.3,
-  // 4.3, 4.9 — six, not the eight that shipped with the cap bug live.
+  // the source (verified by hand, not just trusted): 4.3 and 4.9 — the two
+  // unit-4 sections with no plain-idea label. It was six while units 1-3 still
+  // had gaps (1.10, 1.11, 2.11, 3.3); those four sections now carry every label,
+  // so no exam-tested topic is missing teaching material at all.
   const r = parseAll(read)
   for (const pack of PACKS) {
     const text = read(`ap_precalc/study-packs/${pack.file}`)
@@ -174,10 +176,15 @@ test('PC5 REGRESSION: no section with a Worked example line ends up with a null 
     })
   }
 
-  assert.equal(r.incomplete.length, 6, `expected 6 genuinely-incomplete rows, got ${r.incomplete.length}`)
+  assert.equal(r.incomplete.length, 2, `expected 2 genuinely-incomplete rows, got ${r.incomplete.length}`)
   assert.deepEqual(
     r.incomplete.map((row) => row.topic).sort(),
-    ['1.10', '1.11', '2.11', '3.3', '4.3', '4.9'],
+    ['4.3', '4.9'],
+  )
+  assert.deepEqual(
+    r.incomplete.filter((row) => !row.topic.startsWith('4.')),
+    [],
+    'every exam-tested topic (units 1-3) must have all three teaching fields',
   )
 })
 
@@ -226,21 +233,26 @@ test('PC2 REGRESSION: lettered worked examples (A/B/C) are all kept, not just th
 })
 
 test('PC3 REGRESSION: a duplicated P number is a hard error even though the item count still matches', () => {
-  // Renumbering unit 1's P6 to P5 (a plausible hand-edit slip) yields 12 items
-  // parsed — the count check alone is satisfied — but only 11 unique ids,
+  // Renumbering unit 1's P6 to P5 (a plausible hand-edit slip) parses to the same
+  // number of items — the count check alone is satisfied — but one id fewer,
   // and items.id is a PRIMARY KEY, so one problem silently vanishes on
   // INSERT OR REPLACE. Use an injected readFile so real content is untouched.
+  //
+  // Counted against the pack as it stands rather than against a literal 12: the
+  // pack may gain problems (it has), and this test is about the collision, not
+  // about how many items unit 1 ships.
   const real = read('ap_precalc/study-packs/unit-1-polynomial-rational.md')
   const dup = real.replace('**P6 (medium, no-calc).**', '**P5 (medium, no-calc).**')
   assert.notEqual(dup, real, 'the fixture substitution must actually apply')
   const readInjected = (f) => (f.includes('unit-1') ? dup : read(f))
 
+  const shipped = parsePrecalcItems(read).items.filter((i) => i.unit === '1').length
   const r = parsePrecalcItems(readInjected)
   const unit1Items = r.items.filter((i) => i.unit === '1')
-  assert.equal(unit1Items.length, 12, 'the plain count check is satisfied — that is exactly the blind spot')
+  assert.equal(unit1Items.length, shipped, 'the plain count check is satisfied — that is exactly the blind spot')
   assert.equal(
     new Set(unit1Items.map((i) => i.id)).size,
-    11,
+    shipped - 1,
     'two items now share an id, proving the collision',
   )
   assert.ok(

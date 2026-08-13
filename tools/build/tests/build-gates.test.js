@@ -122,7 +122,10 @@ test('B3: an exam-tested topic with no items of its own is a build ERROR', () =>
     expected,
     'compile() must report exactly the exam-tested topics no item can reach',
   )
-  assert.ok(expected.length > 0, 'precondition: current content has unreachable topics')
+  // No "expected.length > 0" precondition: that pinned a CONTENT gap, and the
+  // content has since closed it (every exam-tested Precalc topic now has an item
+  // of its own). The invariant above is the permanent claim — the gate reports
+  // exactly the unreachable topics, however many there are, including none.
   const text = r.errors.join('\n')
   for (const u of r.unreachable) {
     assert.ok(text.includes(u.id), `unreachable topic ${u.id} must be named in the error output`)
@@ -241,12 +244,20 @@ test('B4: a teaching row with every content field null is a build ERROR', () => 
   }
 })
 
-test('B4: the real content ships exactly one all-blank teaching row, and it errors', () => {
-  // ap_precalc 1.11 ("Model domain & range restrictions") has plain_idea,
-  // worked_example and common_mistake all null in the pack.
+test('B4: the real content ships NO all-blank teaching row', () => {
+  // ap_precalc 1.11 ("Model domain & range restrictions") used to have plain_idea,
+  // worked_example and common_mistake all null, and this test pinned that fact. The
+  // pack now labels all three fields, so the assertion is inverted into the
+  // regression guard it should always have been: strip those labels again and this
+  // fails. That the gate ERRORS on a blank row is proved by the injected fixture
+  // above, which does not depend on the content staying broken.
   const r = compile()
-  assert.deepEqual(r.blankTeaching.map((t) => `${t.subject}:${t.topic}`), ['ap_precalc:1.11'])
-  assert.ok(r.errors.some((e) => e.includes('1.11') && /no teaching content/.test(e)))
+  assert.deepEqual(r.blankTeaching.map((t) => `${t.subject}:${t.topic}`), [])
+  assert.equal(
+    r.errors.some((e) => /no teaching content/.test(e)),
+    false,
+    'no blank row exists, so nothing may claim one does',
+  )
 })
 
 test('B4: a topic that has items must have a teaching row of its own', () => {
@@ -308,8 +319,15 @@ test('B5: the INCOMPLETE list names every class of gap, not just untagged items'
   const withUntagged = incompleteReport(compile(patched(U1, (t) => t.replace('<!-- topic: 1.1 -->', '')))).join('\n')
   assert.match(withUntagged, /bucketed at <unit>\.0/, 'an untagged item must still be disclosed')
   assert.match(withUntagged, /no teaching row/, 'and so must the bucket it lands in, which has no teaching row')
-  assert.match(lines, /1\.11/, 'the blank teaching row')
-  assert.match(lines, /cannot reach readiness|unreachable/, 'unreachable exam-tested topics')
+  // The blank-teaching and unreachable-topic disclosures are asserted the same way
+  // as the untagged one above — present exactly when the gap is, absent exactly when
+  // it is not. Pinning them as always-present pinned the content defects themselves,
+  // and both have since been fixed (1.11 now has all three teaching fields; every
+  // exam-tested Precalc topic now has an item).
+  if (r.blankTeaching.length) assert.match(lines, /entirely blank/, 'blank teaching rows')
+  else assert.doesNotMatch(lines, /entirely blank/, 'no teaching row is blank, so nothing may claim otherwise')
+  if (r.unreachable.length) assert.match(lines, /cannot reach readiness/, 'unreachable exam-tested topics')
+  else assert.doesNotMatch(lines, /cannot reach readiness/, 'no topic is unreachable, so nothing may claim otherwise')
   for (const u of r.unreachable) {
     assert.ok(lines.includes(u.id), `unreachable topic ${u.id} must appear in the INCOMPLETE list`)
   }
@@ -364,7 +382,10 @@ test('B6: by default a failing build still writes absolutely nothing', (t) => {
   assert.deepEqual(wroteFiles(dir), [], 'the default invocation must not write an artifact')
   assert.equal(existsSync(join(dir, 'content')), false, 'not even the output directory')
   assert.ok(errorLines(r.output).length > 0, 'the gates must still speak')
-  assert.match(r.output, /exam-tested topic\(s\) have NO items/, 'the coverage gate')
+  // Which gate is firing is a fact about today's content, not about this test's
+  // subject (that a failing build writes nothing), so no specific gate is named
+  // here: the coverage gate used to be, and it went quiet when the content stopped
+  // tripping it. B3 owns the coverage gate's own contract.
   assert.doesNotMatch(r.output, /Build OK/)
 })
 
@@ -397,7 +418,11 @@ test(`B6: ${FLAG} downgrades no gate — the ERROR lines are identical either wa
     errorLines(strict.output),
     'writing anyway must not silence, soften or reword a single gate',
   )
-  assert.ok(errorLines(strict.output).length >= 6, 'precondition: the real content trips several gates')
+  // A floor of ONE, not of six: the comparison above is the test's subject, and it
+  // only means something while at least one gate is firing. The old floor of six
+  // counted today's content defects, so every defect fixed brought this test closer
+  // to failing for the best possible reason.
+  assert.ok(errorLines(strict.output).length >= 1, 'precondition: the real content still trips a gate')
 })
 
 test('B6: nothing but the explicit flag can force a write', (t) => {
