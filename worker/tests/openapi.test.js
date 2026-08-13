@@ -207,6 +207,42 @@ test('the shared parameters block is gone, so no one can reintroduce a ref', () 
   assert.equal(SPEC.components.parameters, undefined)
 })
 
+// --- the instructions have to FIT in a Custom GPT ----------------------------
+//
+// ChatGPT caps a Custom GPT's Instructions field at 8000 characters and rejects
+// the whole draft above it: the editor refuses to save, the Update button stays
+// disabled, and the only visible symptom is `422` on an autosave request plus the
+// line "GPT instructions cannot be longer than 8000 characters."
+//
+// Measured on 13 Aug 2026, and this file is the reason the gate exists: the body
+// had grown to 13,292 characters — 66% over the cap — so it could not be pasted
+// into the GPT AT ALL. A deploy therefore shipped a Worker whose behavioural
+// contract could not be installed alongside it, and the GPT kept running the
+// previous, much shorter instructions while the schema moved on. Silent drift
+// between the two is exactly what the doc-vs-schema tests below exist to stop, so
+// it is worth failing the build for.
+//
+// The cap applies to what is PASTED, which is the body after the human-facing
+// preamble (everything up to and including the first `---`). The preamble is
+// instructions-for-Luyao, never for the model.
+test('gpt-instructions.md fits the 8000-character Custom GPT limit', () => {
+  const CAP = 8000
+  const sep = '\n---\n'
+  const i = INSTRUCTIONS.indexOf(sep)
+  assert.notEqual(i, -1, 'the preamble/body separator `---` is missing, so the pasteable body cannot be identified')
+  const body = INSTRUCTIONS.slice(i + sep.length).replace(/^\n+/, '')
+  assert.ok(
+    body.startsWith('You are'),
+    `the body after the first \`---\` should be the text pasted into the GPT, but it starts: ${body.slice(0, 60)}`,
+  )
+  assert.ok(
+    body.length <= CAP,
+    `the pasteable body is ${body.length} characters, over ChatGPT's ${CAP} limit by ${body.length - CAP}. ` +
+      'ChatGPT will refuse to save the draft and the Update button stays disabled, so this cannot be installed. ' +
+      'Cut it, or move reference material into an attached knowledge file.',
+  )
+})
+
 // --- gpt-instructions.md against the schema ----------------------------------
 //
 // The instructions are the GPT's conduct and the schema is its only contract, so
