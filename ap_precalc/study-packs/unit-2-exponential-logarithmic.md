@@ -500,6 +500,41 @@ Why the others are there: **A** drops the $+1$ at the last step and uses $\ln 9$
 
 ---
 
+**P21 [NC] — Hard — quadratic in disguise, and the root you must throw away.** Solve $e^{2x} - 3e^{x} - 10 = 0$.
+A) $x = 5$ only   B) $x = \ln 5$ and $x = \ln 2$   C) $x = \ln 5$ only   D) $x = \ln 5$ and $x = -\ln 2$
+<details><summary>Solution</summary>
+
+Let $u = e^{x}$, so $e^{2x} = (e^{x})^{2} = u^{2}$:
+$u^{2} - 3u - 10 = 0 \Rightarrow (u-5)(u+2) = 0 \Rightarrow u = 5$ or $u = -2$.
+Now **undo the substitution and test both**. $e^{x} = 5 \Rightarrow x = \ln 5$. And $e^{x} = -2$ is **impossible** — $e^{x}$ is positive for every real $x$, so that root is rejected, not converted.
+So there is exactly **one** solution, $x = \ln 5$ (leave it exact; this is a no-calculator question).
+Check: $e^{2\ln 5} - 3e^{\ln 5} - 10 = 25 - 15 - 10 = 0$ ✓.
+
+Why the others are there: **B** keeps the rejected root and quietly drops its minus sign, reading $e^x = -2$ as $x = \ln 2$; substituting gives $4 - 6 - 10 = -12$, not 0. **D** keeps it and reads $\ln(-2)$ as $-\ln 2$, which is $\ln\frac12$ — substituting gives $0.25 - 1.5 - 10 = -11.25$, not 0. Neither is a near miss; both are answers to a different equation. **A** solves the quadratic correctly and then forgets that $u$ was $e^{x}$, reporting $u = 5$ as $x$.
+</details>
+<!-- key: C -->
+<!-- practice: 1.A -->
+<!-- topic: 2.8 -->
+
+---
+
+**P22 [C] — Hard — a ratio over a three-year step is not a yearly rate.** A chemical's mass is recorded every three years: at $x = 0, 3, 6, 9$ years the mass is $240, 168, 117.6, 82.32$ grams. The data is exponential. What is the decay factor **per year**, rounded to three decimal places?
+A) 0.888   B) 0.900   C) 0.700   D) 0.233
+<details><summary>Solution</summary>
+
+The ratios confirm it is exponential: $168/240 = 0.7$, $117.6/168 = 0.7$, $82.32/117.6 = 0.7$ — constant. But each of those ratios spans **three** years, so 0.7 is the *three-year* factor, not the yearly one.
+Write $y = 240b^{x}$ with $x$ in years. Then $b^{3} = 0.7$, so
+$b = 0.7^{1/3} = 0.887904\ldots \to \mathbf{0.888}$.
+Check: $240(0.887904)^{3} = 168.0$ ✓, and $240(0.887904)^{9} = 82.32$ ✓.
+
+Why the others are there: **C** reports the three-year ratio as the yearly factor — the whole point of the question; $240(0.7)^{3} = 82.32$, which is the mass after **nine** years, not three. **B** spreads the 30% loss evenly as 10% a year, $1 - 0.30/3 = 0.900$; that is linear thinking applied to a ratio, and it predicts $240(0.9)^{9} = 92.98$ g at year 9 instead of 82.32. **D** divides the ratio by the step, $0.7/3 \approx 0.233$, treating a multiplier as though it were a difference; the mass would be down to 3 g by year 3.
+</details>
+<!-- key: A -->
+<!-- practice: 2.A -->
+<!-- topic: 2.2 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
