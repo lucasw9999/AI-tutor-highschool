@@ -482,20 +482,19 @@ Why the others are there — all three are the fake rules this topic warns about
 
 ---
 
-**P20 [C] — Hard — building a log model and predicting with it.** A restocked lake's fish population is modeled by $P(t) = a + b\ln(t+1)$, where $t$ is years since the restocking. $P(0) = 800$ and $P(4) = 1300$. To the nearest whole fish, what does the model predict for $t = 9$?
-A) 1483   B) 1515   C) 1925   D) 2385
+**P20 [C] — Hard — using a log model backwards.** A city's water use, in millions of gallons per day, is modeled by $W(t) = 18 + 7\ln(t+2)$, where $t$ is the number of years since 2020. According to this model, in which year does daily water use **first** exceed 30 million gallons?
+A) 2023   B) 2024   C) 2026   D) 2070
 <details><summary>Solution</summary>
 
-**Use $t=0$ first — it kills $b$**, because $\ln(0+1) = \ln 1 = 0$:
-$P(0) = a + b\ln 1 = a = \mathbf{800}$.
-Then $P(4) = 800 + b\ln 5 = 1300 \Rightarrow b = \dfrac{500}{\ln 5} = \dfrac{500}{1.60944} \approx 310.667$.
-Now evaluate at $t=9$, remembering the **$+1$ inside**: $P(9) = 800 + 310.667\ln(10) = 800 + 310.667(2.302585) \approx 1515.3 \to \mathbf{1515}$.
-Don't round $b$ to a couple of decimals on the way through — carry it, and round only at the end.
+Solve the inequality, then translate the answer back into a year — the second step is where the point is won.
+$18 + 7\ln(t+2) > 30 \Rightarrow \ln(t+2) > \dfrac{12}{7} = 1.714286 \Rightarrow t+2 > e^{1.714286} = 5.5527 \Rightarrow t > \mathbf{3.5527}$.
+$t$ counts whole years since 2020, so the first year that clears the threshold is $t = 4$, which is **2024**.
+Check both sides of the crossing: $W(3) = 18 + 7\ln 5 = 29.27$ (still under 30) and $W(4) = 18 + 7\ln 6 = 30.54$ (over) ✓.
 
-Why the others are there: **A** drops the $+1$ at the last step and uses $\ln 9$ instead of $\ln 10$ ($800 + 310.667(2.1972) \approx 1483$) — the single most common slip on a $\ln(t+1)$ model. **C** extrapolates **linearly** at the average rate of $500/4 = 125$ fish per year, giving $800 + 125(9) = 1925$; a log curve is concave down, so its growth is already slowing and the straight line overshoots. **D** fits an **exponential** $800r^{t}$ instead of the log model the stem hands you: $r = (1300/800)^{1/4} \approx 1.129$ and $800(1.129)^{9} \approx 2385$ — right technique, wrong family of function.
+Why the others are there: **A** rounds $t = 3.55$ **down** to $t = 3$ and answers 2023 — but the model has water use at 29.27 million gallons that year, still below the line; "first exceeds" always rounds **up**. **C** drops the $+2$ inside the log, solving $\ln t > 1.714$ to get $t > 5.55$ and $t = 6$; the shift inside a $\ln(t+c)$ model is not decoration. **D** uses $\log_{10}$ where the model says $\ln$: $t + 2 = 10^{1.714} = 51.79$ gives $t \approx 49.8$ and the year 2070 — the change-of-base rule cannot be skipped, and a sanity check kills it instantly, since $W(49.8) = 45.6$, far past 30.
 </details>
 <!-- key: B -->
-<!-- practice: 1.C -->
+<!-- practice: 3.B -->
 <!-- topic: 2.9 -->
 
 ---
