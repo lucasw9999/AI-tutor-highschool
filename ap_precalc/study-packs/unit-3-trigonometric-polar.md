@@ -597,7 +597,7 @@ Why the others are there: **A** is the calculator's raw output, quadrant never f
 
 ---
 
-**P25 [C] — Hard — rate of change in a polar function.** For the polar function r = 2 + 3 cos θ, what is the average rate of change of r with respect to θ on the interval π/3 ≤ θ ≤ π?
+**P25 [C] — Hard — rate of change in a polar function.** For the polar function r = 2 + 3 cos θ, what is the average rate of change of r with respect to θ on the interval π/3 ≤ θ ≤ π, to three decimal places?
 A) 2.149   B) -1.194   C) -2.149   D) -4.500
 <details><summary>Solution</summary>
 
