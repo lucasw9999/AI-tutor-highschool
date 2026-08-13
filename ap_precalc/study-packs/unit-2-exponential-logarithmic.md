@@ -569,6 +569,38 @@ Why the others are there: **B** is $\log_{27} 9 = 2/3$ — base and argument swa
 
 ---
 
+**P25 [C] — Hard — un-logging a semi-log line.** A data set is plotted as $\log_{10} y$ against $x$, and the points lie on the line $\log_{10} y = 0.15x + 0.8$. Which exponential model $y = ab^{x}$ fits the data, with $a$ and $b$ rounded to three decimal places?
+A) $y = 0.800(0.150)^{x}$   B) $y = 6.310(1.413)^{x}$   C) $y = 1.413(6.310)^{x}$   D) $y = 6.310(1.150)^{x}$
+<details><summary>Solution</summary>
+
+Take $y = ab^{x}$ and log both sides: $\log_{10} y = \log_{10} a + (\log_{10} b)x$. Matching that against $\log_{10} y = 0.15x + 0.8$:
+**intercept** $\log_{10} a = 0.8 \Rightarrow a = 10^{0.8} = 6.30957\ldots \to \mathbf{6.310}$
+**slope** $\log_{10} b = 0.15 \Rightarrow b = 10^{0.15} = 1.41254\ldots \to \mathbf{1.413}$
+So $y = 6.310(1.413)^{x}$. Check at $x = 4$: the line gives $\log_{10} y = 0.15(4)+0.8 = 1.4$, so $y = 10^{1.4} = 25.119$; and $6.310(1.413)^{4} \approx 25.15$ ✓ (the small gap is the rounding, which is why the stem states it).
+
+Why the others are there: **A** reads the intercept and slope as $a$ and $b$ directly and never un-logs them — the #1 mistake for this topic; that model gives $y \approx 0.0004$ at $x = 4$. **C** un-logs both correctly and then swaps them, putting the initial value in the base's seat; $y \approx 2240$ at $x = 4$. **D** un-logs $a$ but treats the slope 0.15 as a **percent rate** and writes $b = 1 + 0.15$ — the rule from topic 2.3 applied where it does not belong; that gives $y \approx 11.0$ at $x = 4$.
+</details>
+<!-- key: B -->
+<!-- practice: 2.B -->
+<!-- topic: 2.10 -->
+
+---
+
+**P26 [NC] — Med/Hard — what a residual plot is actually for.** A model is fitted to five data points. Its residuals, computed as predicted $-$ actual, are $+0.4,\ -1.1,\ -2.6,\ -4.0,\ -5.3$ at $t = 1, 2, 3, 4, 5$. Which conclusion do these residuals support?
+A) The model is appropriate, because each residual is small next to the data values.   B) The model is appropriate, because the residuals are consistent — it underestimates almost everywhere.   C) The model is inappropriate, because the first residual is positive and the rest are negative.   D) The model is inappropriate, because the residuals drift steadily downward instead of scattering about 0.
+<details><summary>Solution</summary>
+
+The residual plot answers one question: **is there a pattern?** Scattered randomly about 0 → the family of function fits. Any systematic shape — a drift, a curve, a fan — → the wrong *type* of model was fitted, and no amount of small individual errors rescues it.
+Here the residuals march in one direction the whole way: $+0.4 \to -1.1 \to -2.6 \to -4.0 \to -5.3$, each about 1.2 to 1.5 below the last. That is a **trend, not scatter**, so the model is **inappropriate**.
+
+Why the others are there: **A** judges the residuals by **size** rather than by pattern — the "the curve looks close enough" error; and they are not even staying small, growing from 0.4 to 5.3. **B** treats *consistency* as evidence **for** the model, when consistently signed residuals are exactly the pattern that condemns it. **C** reaches the right verdict from the wrong evidence: one sign change proves nothing on its own, and a good residual plot is *full* of sign changes — it is the steady drift, not the single flip, that is the finding.
+</details>
+<!-- key: D -->
+<!-- practice: 3.B -->
+<!-- topic: 2.11 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
