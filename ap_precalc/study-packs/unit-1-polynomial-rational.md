@@ -401,6 +401,41 @@ Why the others are there: **D** counts only the two zeros the stem printed and f
 <!-- practice: 3.B -->
 <!-- topic: 1.4 -->
 
+**P20 (exam-level, calculator) — what a table says about concavity.** A function $f$ is given by a table of values at equally spaced inputs: $f(0)=8$, $f(2.5)=14.5$, $f(5)=19.2$, $f(7.5)=22.4$. A student estimates $f(2.5)$ by starting at $f(0)$ and applying $f$'s average rate of change on $[0, 7.5]$. Compared with the table's value of $f(2.5)$, that estimate is:
+A) too high, and f is concave up on [0, 7.5]   B) too low, and f is concave up on [0, 7.5]   C) too high, and f is concave down on [0, 7.5]   D) too low, and f is concave down on [0, 7.5]
+<details><summary>Solution</summary>
+
+**Two separate claims, so settle them separately — and the table decides both.**
+
+*Concavity first.* Average rate of change over each successive interval (all of them 2.5 wide):
+$$\frac{14.5-8}{2.5}=2.6,\qquad \frac{19.2-14.5}{2.5}=1.88,\qquad \frac{22.4-19.2}{2.5}=1.28$$
+The outputs are **increasing** (8 → 22.4) but the **rates are decreasing** (2.6 → 1.88 → 1.28): rising, and levelling off. Decreasing rate of change is **concave down**. Note that increasing and concave down happen together here — they are independent ideas.
+
+*Now the estimate.* AROC on $[0,7.5]=\dfrac{22.4-8}{7.5}=\dfrac{14.4}{7.5}=1.92$, so the estimate is $8+1.92(2.5)=8+4.8=\mathbf{12.8}$, against the table's $f(2.5)=14.5$. The estimate is **too low** — by 1.7.
+
+That is not a coincidence, and it is the general rule the FRQ pays for: on a **concave down** stretch the secant line lies **below** the curve, so any linear estimate taken from it is an **underestimate**. The table's own numbers show why — the function did most of its climbing early (2.6 per unit at the start), and the flat single average of 1.92 cannot keep up over the first interval.
+
+Why the others are there: **C** has the concavity right and the direction memorized backwards — concave *up* is the one that overestimates. **B** has the direction right and reads the *outputs* going up as "concave up"; increasing is about the outputs, concavity is about the **rates**. **A** makes both errors at once, which is the standard chain "it's increasing, so it's concave up, so the secant is above" — the conflation the Chief Reader flags every year.
+</details>
+<!-- key: D -->
+<!-- practice: 2.A -->
+<!-- topic: 1.2 -->
+
+**P21 (medium, no-calc) — a transformation moves the asymptote too.** The graph of $y=f(x)$ has a vertical asymptote at $x=2$. Where is the vertical asymptote of the graph of $y=f(2x)-5$?
+A) x = 4   B) x = 2   C) x = 1   D) x = -3
+<details><summary>Solution</summary>
+
+**An asymptote is at an input the function cannot take, so ask which $x$ feeds the forbidden input into $f$.** The new graph evaluates $f$ at $2x$, and $f$ blows up when its input is 2:
+$$2x=2\ \Rightarrow\ x=1$$
+So the vertical asymptote is at $\mathbf{x=1}$. The $-5$ is **outside** $f$, a vertical shift, and shifting a graph down cannot move a vertical line sideways.
+Sanity check with a concrete $f$: take $f(u)=\dfrac{1}{u-2}$, which has its asymptote at $u=2$. Then $f(2x)-5=\dfrac{1}{2x-2}-5$, whose denominator vanishes at $x=1$ ✓ — and the whole graph is the original squeezed **toward** the $y$-axis by a factor of $\tfrac12$, which is what carries the asymptote from 2 to 1.
+
+Why the others are there: **A** multiplies by 2 instead of dividing — the "$f(2x)$ stretches by 2" mistake that section 2.9 names, when $f(bx)$ **compresses** by $1/|b|$. **B** treats the asymptote as a fixed feature of $f$ that transformations leave alone; the inside change moves it. **D** applies the $-5$ to the input, $2-5=-3$, reading an outside change as a horizontal one. Inside the parentheses is horizontal and backwards; outside is vertical.
+</details>
+<!-- key: C -->
+<!-- practice: 1.C -->
+<!-- topic: 1.9 -->
+
 ---
 
 ## 4. Quick self-check
