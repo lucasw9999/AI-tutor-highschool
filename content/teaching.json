@@ -561,19 +561,19 @@
     "topic": "1.10",
     "subject": "ap_precalc",
     "plain_idea": "A **piecewise function** is built from different rules on **non-overlapping** intervals of the domain — one formula here, a different one there.",
-    "worked_example": null,
+    "worked_example": "A shop charges \\$5 for up to 10 items, then \\$0.40 for each item beyond 10. Write $C(n)$ and find $C(25)$.\n$$C(n)=\\begin{cases} 5, & 0\\le n\\le 10\\\\ 5+0.40(n-10), & n>10\\end{cases}$$\n$C(25)=5+0.40(25-10)=5+0.40(15)=5+6=\\mathbf{11}$ dollars. Note the $n-10$: the per-item charge starts counting only *after* the 10th item, so it multiplies the items in EXCESS of 10, not all 25.",
     "common_mistake": "Using the wrong piece at a boundary — watch the **≤ vs <** at each breakpoint to see which rule owns the endpoint.",
     "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "1.11",
     "subject": "ap_precalc",
-    "plain_idea": null,
-    "worked_example": null,
-    "common_mistake": null,
+    "plain_idea": "A model is only true over the inputs the situation actually allows, so the model is the formula *plus* its **valid domain and range** — give both.\n- **Domain restriction** — from the context (time can't be negative; you can't have a fraction of a person), a math constraint (no division by zero / no log of ≤0), or an extreme-value clue.\n- **Range restriction** — e.g., a count must be a whole number (round), or a quantity can't exceed a physical max.",
+    "worked_example": "A 200-litre rain barrel drains at 8 L per minute, so $V(t)=200-8t$ litres after $t$ minutes. State the model's domain and range.\nAlgebraically $200-8t$ is defined for every real $t$, so nothing here is a *math* restriction — both ends come from the **context**: $t$ cannot be negative, and the barrel is empty when $200-8t=0 \\Rightarrow t=25$, after which the formula would report a negative volume. **Domain: $0\\le t\\le 25$. Range: $0\\le V\\le 200$.**",
+    "common_mistake": "Handing in the formula and stopping. Q2's reasoning parts pay for *where the model is valid and why* — and \"all real numbers\" is almost always wrong on a context problem. Check **both** ends: the one the context sets ($t\\ge 0$) and the one the model sets (where it stops describing the situation).",
     "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "2.1",
@@ -669,10 +669,10 @@
     "topic": "2.11",
     "subject": "ap_precalc",
     "plain_idea": "Once you fit a model, you judge how good it is.\n- **Error (residual)** at a point = **predicted − actual** value. Positive error = the model **overestimates** there; negative = **underestimates**.\n- **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*\n- **Context can make an over- or under-estimate preferable.** The exam may ask which is \"better\" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn't a universal \"right\" choice, it depends on the scenario. Justify with the context.",
-    "worked_example": null,
+    "worked_example": "A model predicts 84.2 thousand downloads on day 30; the app actually had 88.0 thousand. Find the error and say whether the model over- or underestimates.\nError $=$ predicted $-$ actual $=84.2-88.0=\\mathbf{-3.8}$ thousand. The error is **negative**, so the model **underestimates** on day 30.\nAnd one error is not a verdict on the model *type*: if the residuals on days 10, 20, 30, 40 ran $+2.1,\\ -0.9,\\ -3.8,\\ -7.2$ — sliding steadily downward instead of scattering about 0 — that **pattern** says the wrong family of function was fitted, however small any single error looks.",
     "common_mistake": "Calling a model \"good\" because the curve looks close, ignoring the residual plot — or saying an estimate is \"wrong\" when the question wants *over vs under* and *why that's appropriate here*.",
     "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "3.1",
@@ -695,11 +695,11 @@
   {
     "topic": "3.3",
     "subject": "ap_precalc",
-    "plain_idea": null,
+    "plain_idea": "A sinusoid's graph is five landmark points per cycle, spaced a **quarter period** apart, alternating between the midline and an extreme. Pin down the midline, the amplitude and the quarter period and the picture draws itself — twice, because Part A asks for two cycles.",
     "worked_example": "max 40, min 2, period 60, max at t = 0.\nd = 21, a = 19, quarter-period = 15. Points: **(0, 40) → (15, 21) → (30, 2) → (45, 21) → (60, 40)** [cycle 1], then **(75, 21) → (90, 2) → (105, 21) → (120, 40)** [cycle 2]. Draw the midline at **y = 21**.",
     "common_mistake": "plotting only one cycle, or forgetting to **draw/label the midline** — both are explicitly required.",
     "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "3.4",
@@ -794,11 +794,11 @@
   {
     "topic": "4.3",
     "subject": "ap_precalc",
-    "plain_idea": null,
+    "plain_idea": "A circle and a straight line each have one standard parametric recipe, and both are worth memorizing outright. For a circle you walk around the rim: `cos` drives the `x`-coordinate, `sin` drives the `y`-coordinate, both scaled by the radius, and you add the centre so the circle sits where it belongs. For a line you start at a point and add the *same* fixed step to `x` and to `y` on every tick of `t`.",
     "worked_example": "Circle centered `(2, −1)`, radius 3:\n`x = 2 + 3cos t`, `y = −1 + 3sin t`. Check: `(x−2)² + (y+1)² = 9cos²t + 9sin²t = 9`. ✓",
     "common_mistake": "Putting `sin` on `x` and `cos` on `y`, or forgetting to add the center `(h, k)`. Convention: `cos → x`, `sin → y`.",
     "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "4.4",
@@ -848,11 +848,11 @@
   {
     "topic": "4.9",
     "subject": "ap_precalc",
-    "plain_idea": null,
+    "plain_idea": "The determinant is one number, squeezed out of the four entries, that says whether a matrix can be undone. If it isn't zero the matrix has an **inverse** — the matrix that cancels it, the way dividing by 3 cancels multiplying by 3 — and there's a fill-in-the-blanks formula for it. If the determinant is 0, no inverse exists at all.",
     "worked_example": "`A = [[4, 3], [2, 1]]`.\n- `det = (4)(1) − (3)(2) = 4 − 6 = −2`.\n- `A⁻¹ = (1/−2)·[[1, −3], [−2, 4]] = [[−1/2, 3/2], [1, −2]]`.\n- Check `det ≠ 0` ✓, so the inverse exists.",
     "common_mistake": "Forgetting to **divide by the determinant**, or mis-placing the swap/negate pattern. Memorize: *\"swap the diagonal, negate the off-diagonal, over det.\"*",
     "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
-    "complete": false
+    "complete": true
   },
   {
     "topic": "4.10",
