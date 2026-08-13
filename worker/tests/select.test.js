@@ -1164,17 +1164,43 @@ test('a full sitting samples the exam rather than a corner of it', async (t) => 
   })
 
   await t.test('a proctored sitting is never padded with material the exam does not test', () => {
-    // Precalc: 48 items on 4 topics, and topic 4.0 (unit 4, tested_on_exam 0)
-    // holds 12 of them. A full paper wants 42 and the on-exam bank has 36, so
-    // the lower fallback tiers used to make up the difference out of unit 4 —
-    // with the sitting's "the way the exam weights it" reason attached, on every
-    // single sitting. handleMockSubmit scores every server-graded answer in a
-    // sitting with no unit filter, so that lands straight in composite_pct.
+    // Precalc's unit 4 is class-only (tested_on_exam 0). When the paper asks for
+    // more questions than the exam-tested bank can supply, the lower fallback
+    // tiers used to make up the difference out of unit 4 — with the sitting's
+    // "the way the exam weights it" reason attached, on every single sitting.
+    // handleMockSubmit scores every server-graded answer in a sitting with no
+    // unit filter, so that lands straight in composite_pct.
+    //
+    // RETIRED PRECONDITION: `assert.equal(supply, 36, 'the on-exam Precalc bank
+    // is shorter than one full paper')`, with the paper then sat at
+    // fullPaperLength (42). Both halves were a frozen snapshot of a bank that has
+    // since grown: the Precalc packs gained items on the last uncovered
+    // exam-tested topics, so the on-exam bank is now LONGER than a full paper and
+    // 42 questions no longer exhaust it. Nothing about the selector changed —
+    // 42 of 55 simply never reaches for a 56th question, so the padding defence
+    // would have gone untested while the assertion stayed green.
+    //
+    // The paper is therefore sat PAST the exam-tested supply instead of at a fixed
+    // length, so exhaustion is reached whatever the bank's size: it is asked for
+    // exactly enough questions that every class-only item in the bank would be
+    // needed to fill it. Both pinned truths survive — the paper stops at the
+    // on-exam supply, and the next serve is refused rather than padded — and
+    // neither depends on the bank staying short.
     const bank = bankOf('ap_precalc')
     const supply = onExamItems(bank).length
-    assert.equal(supply, 36, 'precondition: the on-exam Precalc bank is shorter than one full paper')
+    const classOnly = bank.items.length - supply
+    assert.ok(
+      classOnly > 0,
+      'precondition: the bank must hold class-only material, or there is nothing this paper could be padded WITH',
+    )
+    const questions = supply + classOnly
+    assert.ok(
+      questions > supply,
+      `precondition: the paper must ask for more than the ${supply} questions the exam-tested bank can supply, ` +
+        'or the fallback tiers are never reached and this proves nothing',
+    )
     const { paper, refusedAt } = sitPaper({
-      bank, attempts: [], mockId: 1, questions: fullPaperLength(bank.config),
+      bank, attempts: [], mockId: 1, questions,
       startMs: new Date('2026-09-01T12:00:00Z').getTime(),
     })
     for (const it of paper) {
