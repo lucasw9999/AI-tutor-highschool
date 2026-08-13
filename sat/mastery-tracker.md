@@ -2,7 +2,7 @@
 
 **The persistent memory.** The tutor reads this at the start of each session, targets the weakest spots + the error log, and updates it at the end.
 
-- **Goal:** **1500+** Digital SAT, ready by spring 2027
+- **Goal:** **1500+** Digital SAT at the **Sat 6 March 2027** sitting (register by **Fri 19 Feb 2027**; retake slot Aug/Oct 2027)
 - **Background:** rising 10th grader; just finished Algebra 2 (Math content mostly in hand); English "okay" (RW is the bigger growth area)
 - **Status legend:** ⬜ not started · 🟡 learning · 🟠 shaky · 🟢 solid · ⭐ automatic (fast + accurate under time)
 - **Last session:** _(none yet — start with the diagnostic)_

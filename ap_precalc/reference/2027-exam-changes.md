@@ -21,14 +21,16 @@ Plus two FRQ content tweaks (same task types, just adjusted):
 - **FRQ Q1 (Function Concepts):** minor Part C(i) tweak, **no scoring change**.
 
 ## What does NOT change
-- Section weighting stays ~**63% MCQ / ~37% FRQ** (College Board didn't announce a weight change — confirm in the summer-2026 CED).
+- Section weighting **confirmed** on the official AP Central exam page (verified 2026-08-11): **MCQ 62.5%** (Part A 43.75% + Part B 18.75%) / **FRQ 37.5%** (Part A 18.75% + Part B 18.75%). Section I total time is **1 hr 45 min** (65 + 40); Section II is **1 hr 10 min** (35 + 35). Course content unchanged.
 - Still a **hybrid digital** exam (MCQ in Bluebook; FRQs handwritten on paper) — **not** fully digital.
-- Calculator policy (see `graphing-calculator-skills.md`): an **approved physical graphing calculator is permitted, and a built-in Desmos is available in Bluebook** — use either or both.
+- Calculator policy (see `graphing-calculator-skills.md`) — ⚠️ **a graphing calculator is REQUIRED, not merely "permitted."** College Board's words, verbatim (verified 12 August 2026): **"The AP Precalculus Exam requires using a graphing calculator on Part B of Section I Multiple Choice and Part A of Section II Free Response."** He satisfies that with an approved **handheld** (the calculator-policies page allows **up to 2 permitted handheld calculators**) *and/or* the **built-in Desmos in Bluebook** — but **only the Bluebook-built-in Desmos counts**: *"Only the built-in Desmos graphing calculator through Bluebook can be used during an AP Exam, not the web-based or app-based calculator."* Same policy page, the other half: *"Technology should not replace the development of symbolic manipulation skills"* and **"Most of the AP Exam will need to be completed without the use of technology."**
 
 ## So what should Lucas actually do?
 Nothing changes about *what to learn*. The only practical effects: there are **2 more MCQs**, **Part A is tighter on time** (29 Q in 65 min ≈ 2.2 min/Q, down from ~2.85), the **FRQ section is a bit roomier** (35 min/part), and **Q2 looks slightly different**. Prep is identical — master Units 1–3, no-calculator fluency, the formula sheet, and the 4 FRQ types.
 
-## ⚠️ Don't be confused by the CED PDF
-The **main CED PDF body** (the big "Course and Exam Description," version Oct 2025) **still prints the OLD format** (40 MCQ, 28/12 split, 80/40/30/30-min timing, old FRQ 2) — it was *not* rewritten for the change. The 2027 format lives **only** in the separate **"CED Clarification and Guidance — Effective Fall 2026"** PDF (and the exam-page notice). So: trust the numbers on *this* page for May 2027, not the CED body.
+## ✅ The CED itself now prints the new format
+The **current CED is the "Effective Fall 2026" edition, and its exam-overview table already prints the NEW figures** — verbatim from that PDF: **29 · 13 · 2 · 2** questions, at **43.75% · 65 minutes**, **18.75% · 40 minutes**, **18.75% · 35 minutes**, **18.75% · 35 minutes**. The CED body, the AP Central exam page, and this document therefore all agree, and there is no old-vs-new discrepancy left to work around.
+
+This page used to warn the reader off the CED body, because the earlier **Oct 2025** printing did still show the old 40-question / 28–12 / 80-40-30-30 format. That warning is now wrong and has been removed. The only thing left to watch: if you are reading a **downloaded** PDF, check the cover says *Effective Fall 2026* before you trust its exam table — an old local copy will still show the 2026-and-earlier format.
 
 *Source: College Board AP Central — AP Precalculus exam page + the CED Clarifications & Corrections PDF (effective Fall 2026). Recheck the updated CED when College Board posts it in summer 2026 in case any figure is fine-tuned.*

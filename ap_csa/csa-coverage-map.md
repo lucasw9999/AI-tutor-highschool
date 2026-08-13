@@ -50,6 +50,7 @@
 - [ ] **Method signatures** (name + parameter types); calling class (static) methods
 - [ ] The `Math` class: `abs`, `pow`, `sqrt`, `random`
 - [ ] Creating & initializing objects with `new` + constructors; the idea of a reference
+- [ ] **Class vs. object; superclass / subclass / class hierarchy — the words** (topic 1.12). Know that a superclass holds what related classes share, that a class which extends it is called a subclass, and that **every class in Java is a subclass of `Object`** (so every object already has `toString` and `equals`). *Describe/identify level only — see the Inheritance section below.*
 - [ ] Calling instance methods: void vs. return value, with/without parameters
 - [ ] 🔥 **`String` methods**: `length`, `substring`, `indexOf`, `equals`, `compareTo`, concatenation
 - [ ] 🔥 **`==` vs `.equals()` for Strings** — top trap (reference vs. content)
@@ -80,7 +81,7 @@
 - [ ] Scope & access — `public` vs **`private`**
 - [ ] `this` keyword
 - [ ] 🔥 **Encapsulation rule:** never access a private field from outside; use the accessor (FRQ point-killer)
-- [ ] `toString` (commonly used in Q2)
+- [ ] `toString` — *the CED places this in **Unit 1 (topic 1.15)**, not Unit 3. Commonly used in Q2, but **overriding** it is an explicit exclusion.*
 
 ## Unit 4 — Data Collections · **30–40% of MCQ** 🔥🔥 (the big one)
 *(Official CED topics 4.1–4.17.)*
@@ -113,22 +114,32 @@
 - [ ] ◽ Merge sort (recognize behavior)
 - [ ] ⭐ **Recursion** basics (read & trace recursive methods)
 - [ ] ◽ Recursive search/sort (lighter — mostly tracing)
-- [ ] ◽ `HashMap` (optional in curriculum)
+- [ ] ❌ `HashMap` — **NOT on the exam.** Zero occurrences in the official CED: absent, not "optional."
 
-## Inheritance — ❌ NOT ON THE REDESIGNED EXAM (do not study for the AP)
-The official CED (Effective Fall 2025) contains **zero** inheritance, polymorphism, interface, or abstract-class content — verified by full-text search of the CED. These were **removed** in the redesign.
-- ❌ Subclasses / `extends` / `super` — *not tested*
-- ❌ Method overriding & polymorphism — *not tested*
-- ❌ Abstract classes / interfaces — *not tested*
-> CSAwesome keeps an "Inheritance (optional)" unit as general enrichment, **but it is not on the AP exam.** Skip it for exam prep. (Your school class may still touch it; that's fine, just not a scoring priority.)
+## Inheritance — the WORDS are required Unit 1 content; WRITING it is excluded
+Read this one carefully, because the line is not where people assume it is.
+
+**The CED draws the line itself, in one sentence (topic 1.12, verified 12 August 2026):**
+
+> "Designing and implementing inheritance relationships are outside the scope of the AP Computer Science A course and exam."
+
+That exclusion is about *building* a hierarchy. The **concept and vocabulary** are required course content in Unit 1 — which is 15–25% of the MCQ — and are fair game at **describe/identify** level:
+
+- ✅ **Superclass / subclass / class hierarchy** — a superclass holds attributes and behaviors that related classes share; a class that extends it is called a subclass and can use the superclass's attributes and behaviors without re-writing them. That's the inheritance *relationship*, subclass → superclass.
+- ✅ **Every class in Java is a subclass of `Object`** — which is *why* every object you ever touch already has `toString` and `equals` available.
+- ❌ **Designing or implementing a hierarchy** — you will never be asked to write `extends`, call `super`, or split a class into a superclass and subclasses. Don't practice that for the AP.
+- ❌ **Method overriding** (including overriding `toString` or `equals`) — an explicit CED exclusion.
+- ❌ **Polymorphism** and **abstract classes** — these appear nowhere in the CED at all. (The word "interface" is in the CED only as "Application Program **Interface** (API)", topic 1.7 — never as the Java `interface` construct.)
+
+**What that means for study time:** spend ~10 minutes learning the four words and the `Object` fact. Spend zero minutes learning to *write* inheritance for the AP. CSAwesome's "Inheritance (optional)" unit and every pre-redesign book teach the writing half at length — that part is not your exam. (Your school class may still test it; `ap_csa_exam/reference/inheritance-hashmap-supplement.md` is the hedge for that, not AP prep.)
 
 ---
 
 ## What is NOT on this exam (don't waste time)
-- 🚫 **Inheritance, polymorphism, interfaces, abstract classes** — *removed in the redesign* (verified: 0 occurrences in the official CED)
+- 🚫 **Writing inheritance** — designing/implementing a class hierarchy, `extends`, `super`, method overriding, and along with it **polymorphism** and **abstract classes**. The *vocabulary* (superclass, subclass, every class is a subclass of `Object`) IS required Unit 1 content — see the Inheritance section above for the exact line.
 - GUIs / Swing (CSAwesome marks these optional)
 - Generics beyond `ArrayList<E>`, lambdas, streams, enums, varargs, annotations
-- File *writing*, networking, threads, `HashMap` (HashMap is optional enrichment only)
+- File *writing*, networking, threads, `HashMap`/`HashSet` (**zero occurrences in the CED — absent from the exam, not "optional enrichment"**)
 - Heavy recursion proofs / binary trees (those were the old discontinued "AB" course)
 
 ---

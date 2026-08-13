@@ -195,9 +195,9 @@ if (y != 0 && x / y > 1) {
     System.out.println("B");
 }
 ```
-A) `A`   B) An `ArithmeticException` is thrown.   C) `B`   D) Nothing.
+A) `A`   B) `B`   C) An `ArithmeticException` is thrown.   D) Nothing.
 
-**Answer: C.** `y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.
+**Answer: B.** `y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.
 `[topic 2.5][practice P3]`
 
 ---
@@ -485,7 +485,7 @@ What is the result?
 String s = "abc";
 System.out.println(s.substring(2, 4));
 ```
-A) `c`   B) `bc`   C) An empty string   D) A `StringIndexOutOfBoundsException` is thrown.
+A) `bc`   B) An empty string   C) `c`   D) A `StringIndexOutOfBoundsException` is thrown.
 
 **Answer: D.** `s` has length 3 (valid indices 0..2). `substring(2, 4)` needs index up to 3, which is out of range → `StringIndexOutOfBoundsException`.
 `[topic 2.10][practice P3]`

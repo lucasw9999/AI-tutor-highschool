@@ -1,3 +1,10 @@
 venv/
 __pycache__/
 .DS_Store
+
+# Local worker secrets — never commit
+worker/.dev.vars
+worker/.wrangler/
+
+# Just-in-time deploy credential — never commit
+.secrets/

@@ -6,7 +6,7 @@
 
 ## 1. Why it matters / exam weight
 
-Unit 2 is the **single heaviest MCQ unit: 27–40% of the multiple-choice section.** Exponential/log questions show up everywhere on the no-calculator Part A *and* power FRQ Q2 (Non-Periodic Modeling) and FRQ Q4 (Symbolic Manipulation) — the two **lowest-scoring** free-response questions on the whole exam. Master logs and you move the needle on a 4→5 more than any other unit.
+Unit 2 is **one of the two heaviest MCQ units (25–40% of the multiple-choice section).** Exponential/log questions show up everywhere on the no-calculator Part A *and* power FRQ Q2 (Non-Periodic Modeling) and FRQ Q4 (Symbolic Manipulation) — the two **lowest-scoring** free-response questions on the whole exam. Master logs and you move the needle on a 4→5 more than any other unit.
 
 ---
 
@@ -199,101 +199,133 @@ This is **linear in** $x$: $Y = mx + B$ where $Y=\log y$, slope $m=\log b$, inte
 - **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*
 - **Context can make an over- or under-estimate preferable.** The exam may ask which is "better" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn't a universal "right" choice, it depends on the scenario. Justify with the context.
 
+**Worked example:** A model predicts 84.2 thousand downloads on day 30; the app actually had 88.0 thousand. Find the error and say whether the model over- or underestimates.
+Error $=$ predicted $-$ actual $=84.2-88.0=\mathbf{-3.8}$ thousand. The error is **negative**, so the model **underestimates** on day 30.
+And one error is not a verdict on the model *type*: if the residuals on days 10, 20, 30, 40 ran $+2.1,\ -0.9,\ -3.8,\ -7.2$ — sliding steadily downward instead of scattering about 0 — that **pattern** says the wrong family of function was fitted, however small any single error looks.
+
 **#1 mistake:** Calling a model "good" because the curve looks close, ignoring the residual plot — or saying an estimate is "wrong" when the question wants *over vs under* and *why that's appropriate here*.
 
 ---
 
 ## 3. Graduated Practice Set (easy → exam-level)
 
-> Try each before opening the solution. Tags: **[NC]** = no-calculator (Part A style), **[C]** = calculator allowed (Part B style).
+> Try each before opening the solution. Tags: **[NC]** = no-calculator (Part A style), **[C]** = calculator allowed (Part B style); the word after that is the **difficulty** (Easy → Med → Hard → Exam-level), same convention as the Unit 3 pack.
 
 ---
 
-**P1 [NC] — Linear vs. exponential.** A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model.
+**P1 [NC] — Easy — Linear vs. exponential.** A table: x = 0,1,2,3 → y = 50, 40, 32, 25.6. Linear or exponential? Write the model. Answer as two comma-separated entries: the model type, then the model — e.g. quadratic, y=2x^2+1.
 
 <details><summary>Solution</summary>
 
 Differences: −10, −8, −6.4 → not constant → not linear. Ratios: 40/50 = 0.8, 32/40 = 0.8, 25.6/32 = 0.8 → constant → **exponential**. Initial value 50, base 0.8: $y = 50(0.8)^x$.
 </details>
+<!-- part 1: exponential -->
+<!-- part 2: y=50(0.8)^x -->
+<!-- part 2: 50(0.8)^x -->
+<!-- part 2: y=50*0.8^x -->
+<!-- part 2: 50*0.8^x -->
+<!-- part 2: y=50*(0.8)^x -->
+<!-- part 2: 50*(0.8)^x -->
+<!-- format: Answer as two comma-separated entries: the model type, then the model — e.g. quadratic, y=2x^2+1. -->
+<!-- topic: 2.2 -->
 
 ---
 
-**P2 [NC] — Geometric sequence.** $g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.
+**P2 [NC] — Easy — Geometric sequence.** $g_1 = 7$, common ratio $r = 2$. Find $g_5$ and a formula for $g_n$.
 
 <details><summary>Solution</summary>
 
 $g_n = 7\cdot 2^{\,n-1}$. $g_5 = 7\cdot 2^{4} = 7\cdot 16 = 112$.
 </details>
+<!-- topic: 2.1 -->
+<!-- note: deliberately NOT keyed. 7*2^(n-1) has correct forms a string match cannot reconcile — 3.5*2^n is the same sequence, and a required shape stated in the stem would hand over the a_1-vs-a_0 indexing that IS the skill (see 2.1's #1 mistake). g_5 alone is not the whole answer the stem asks for. -->
 
 ---
 
-**P3 [NC] — Evaluate logs.** Compute (a) $\log_3 81$, (b) $\log_5 \frac{1}{25}$, (c) $\ln e^{7}$.
+**P3 [NC] — Easy — Evaluate logs.** Compute (a) $\log_3 81$, (b) $\log_5 \frac{1}{25}$, (c) $\ln e^{7}$.
 
 <details><summary>Solution</summary>
 
 (a) $3^4 = 81 \Rightarrow 4$. (b) $5^{-2} = \frac{1}{25} \Rightarrow -2$. (c) $7$.
 </details>
+<!-- topic: 2.6 -->
+<!-- note: not keyable — three lettered sub-parts. -->
 
 ---
 
-**P4 [NC] — Exponential ↔ log form.** Rewrite $\log_2 x = 5$ in exponential form and solve.
+**P4 [NC] — Easy — Exponential ↔ log form.** Rewrite $\log_2 x = 5$ in exponential form and solve.
 
 <details><summary>Solution</summary>
 
 $x = 2^5 = 32$.
 </details>
+<!-- topic: 2.6 -->
+<!-- note: deliberately NOT keyed. "x = 2^5 = 32" is one natural chain and "2^5 = x, 32" is another, and no required shape can be stated in the stem without giving away the b^c = x equivalence the item exists to test. -->
 
 ---
 
-**P5 [NC] — Solve a clean exponential.** Solve $2^{3x} = 16$.
+**P5 [NC] — Easy/Med — Solve a clean exponential.** Solve $2^{3x} = 16$.
 
 <details><summary>Solution</summary>
 
 $16 = 2^4$, so $3x = 4 \Rightarrow x = \dfrac{4}{3}$.
 </details>
+<!-- key: 4/3 -->
+<!-- accept: \dfrac{4}{3} -->
+<!-- accept: \frac{4}{3} -->
+<!-- topic: 2.8 -->
 
 ---
 
-**P6 [C] — Exponential growth model.** A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?
+**P6 [C] — Med — Exponential growth model.** A town of 12,000 grows 3% per year. Population after 8 years (round to whole)? When does it reach 18,000?
 
 <details><summary>Solution</summary>
 
 $P(t)=12000(1.03)^t$. $P(8)=12000(1.03)^8 \approx 12000(1.26677) \approx \mathbf{15{,}201}$.
 Reach 18,000: $1.03^t = 1.5 \Rightarrow t = \dfrac{\ln 1.5}{\ln 1.03} \approx \dfrac{0.405465}{0.029559} \approx \mathbf{13.717}$ years.
 </details>
+<!-- topic: 2.3 -->
+<!-- note: deliberately NOT keyed. The population is five figures, so a correct answer is as likely to be typed "15,201" as "15201" — and a comma cannot appear inside one part of a compound key, because it is also how the parts are separated. Marking a right answer wrong over a thousands separator is exactly the defect this bank must not ship. -->
 
 ---
 
-**P7 [NC] — Condense logs.** Write as one logarithm: $\dfrac{1}{2}\log x + 2\log y - \log z$.
+**P7 [NC] — Med — Condense logs.** Write as one logarithm: $\dfrac{1}{2}\log x + 2\log y - \log z$.
 
 <details><summary>Solution</summary>
 
 $\log x^{1/2} + \log y^2 - \log z = \log\!\left(\dfrac{\sqrt{x}\,y^2}{z}\right)$.
 </details>
+<!-- topic: 2.7 -->
+<!-- note: deliberately NOT keyed. log(sqrt(x)y^2/z) is equally correct as log(x^(1/2)y^2/z), log((x^0.5)(y^2)/z) and half a dozen other typeable spellings, none of them enumerable with confidence. -->
 
 ---
 
-**P8 [NC] — Solve a log equation (watch domain).** Solve $\log_2(x) + \log_2(x-2) = 3$.
+**P8 [NC] — Med — Solve a log equation (watch domain).** Solve $\log_2(x) + \log_2(x-2) = 3$.
 
 <details><summary>Solution</summary>
 
 Combine: $\log_2[x(x-2)] = 3 \Rightarrow x(x-2) = 2^3 = 8 \Rightarrow x^2 - 2x - 8 = 0 \Rightarrow (x-4)(x+2)=0$.
 $x = 4$ or $x = -2$. Domain requires $x>2$, so reject $x=-2$. **$x = 4$.**
 </details>
+<!-- key: 4 -->
+<!-- accept: 4 only -->
+<!-- topic: 2.8 -->
 
 ---
 
-**P9 [NC] — Composition + inverse (FRQ Q1 flavor).** $f(x)=\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.
+**P9 [NC] — Med/Hard — Composition + inverse (FRQ Q1 flavor).** $f(x)=\ln x$, $g(x)=e^{x}+1$. Find (a) $f(g(0))$, (b) $g^{-1}(x)$.
 
 <details><summary>Solution</summary>
 
 (a) $g(0)=e^0+1=2$; $f(2)=\ln 2 \approx 0.693$ (or leave exact $\ln 2$).
 (b) $y=e^x+1 \Rightarrow$ swap: $x=e^y+1 \Rightarrow x-1=e^y \Rightarrow y=\ln(x-1)$. So $g^{-1}(x)=\ln(x-1)$.
 </details>
+<!-- topic: 2.5 -->
+<!-- note: not keyable — two lettered sub-parts. (Its other half, composition, is topic 2.4, which no practice item in this pack covers.) -->
 
 ---
 
-**P10 [C] — Semi-log plot.** Data plotted as $\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.
+**P10 [C] — Hard — Semi-log plot.** Data plotted as $\log_{10}y$ vs $x$ lies on a line through $(0, 0.301)$ and $(4, 1.505)$. Find the exponential model $y=ab^x$.
 
 <details><summary>Solution</summary>
 
@@ -301,10 +333,16 @@ Slope $=\dfrac{1.505-0.301}{4-0}=\dfrac{1.204}{4}=0.301=\log_{10}b \Rightarrow b
 Intercept $=0.301=\log_{10}a \Rightarrow a=10^{0.301}\approx 2$.
 Model: $y = 2\cdot 2^{x}$.
 </details>
+<!-- key: y = 2(2)^x -->
+<!-- accept: y = 2*2^x -->
+<!-- accept: y = 2(2^x) -->
+<!-- accept: y = 2^(x+1) -->
+<!-- accept: a=2, b=2 -->
+<!-- topic: 2.10 -->
 
 ---
 
-**P11 [NC] — FRQ Q4-style (Symbolic Manipulation).** (a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\log_3(9x^4) - \log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.
+**P11 [NC] — Exam-level — FRQ Q4-style (Symbolic Manipulation).** (a) Solve $e^{x+2}=7$ exactly. (b) Rewrite $\log_3(9x^4) - \log_3(x)$ as a single logarithm in simplest form. (c) Solve $e^{2x} - 5e^{x} + 6 = 0$ exactly.
 
 <details><summary>Solution</summary>
 
@@ -313,10 +351,12 @@ Model: $y = 2\cdot 2^{x}$.
 (c) Let $u=e^x$: $u^2-5u+6=0 \Rightarrow (u-2)(u-3)=0 \Rightarrow e^x=2$ or $e^x=3 \Rightarrow x=\ln 2$ or $x=\ln 3$.
 *(Show every step — answers without work earn 0 on Q4.)*
 </details>
+<!-- topic: 2.7 -->
+<!-- note: not keyable — three lettered sub-parts, and Q4 is scored on the work, not the final line. -->
 
 ---
 
-**P12 [C] — FRQ Q2-style (Non-Periodic Modeling).** Downloads of an app are modeled by $D(t)=a+b\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$.
+**P12 [C] — Exam-level — FRQ Q2-style (Non-Periodic Modeling).** Downloads of an app are modeled by $D(t)=a+b\ln(t+1)$ thousand downloads, $t$ = days. $D(0)=10$ and $D(30)=58$.
 (a) Find $a$ and $b$.
 (b) Find the average rate of change of $D$ from $t=0$ to $t=30$.
 (c) The true number of downloads at $t=15$ is *greater* than the value predicted by the average rate of change line from (b). Explain why, using concavity.
@@ -327,6 +367,281 @@ Model: $y = 2\cdot 2^{x}$.
 (b) AROC $=\dfrac{D(30)-D(0)}{30-0}=\dfrac{58-10}{30}=\dfrac{48}{30}=\mathbf{1.6}$ thousand/day.
 (c) $D$ is a logarithmic function with $b>0$, so it is **increasing and concave down**. A concave-down curve lies **above** its secant line between the two endpoints. The average-rate line is that secant from $t=0$ to $t=30$, so at the interior point $t=15$ the actual curve value is **greater than** the linear estimate. *(This explanation is the part most students lose — say "concave down → curve above secant.")*
 </details>
+<!-- topic: 2.9 -->
+<!-- note: not keyable — three lettered sub-parts, and (c) asks for an explanation. -->
+
+---
+
+**P13 [NC] — Med — Composition.** $f(x)=\ln x$ and $g(x)=e^{2x}$. Find $f(g(3))$.
+
+<details><summary>Solution</summary>
+
+Inside first: $g(3)=e^{2\cdot 3}=e^{6}$. Then the outside: $f(e^{6})=\ln(e^{6})=\mathbf{6}$ (same base — $\ln$ and $e^x$ undo each other).
+Order matters, and the other composition is a different number: $g(f(3))=e^{2\ln 3}=(e^{\ln 3})^{2}=3^{2}=9$. So $f(g(3))=6$ while $g(f(3))=9$ — always work inside-out from the value the stem names.
+</details>
+<!-- key: 6 -->
+<!-- accept: f(g(3)) = 6 -->
+<!-- topic: 2.4 -->
+
+---
+
+**P14 [C] — Med — Model error & residuals.** Daily active users, in thousands, are modeled by $U(t)=12(1.5)^t$ with $t$ in weeks. At $t=4$ the app actually had 58.5 thousand users. Find the model's error at $t=4$, where error $=$ predicted $-$ actual. Give the number only.
+
+<details><summary>Solution</summary>
+
+Predicted: $U(4)=12(1.5)^4=12(5.0625)=60.75$.
+Error $=60.75-58.5=\mathbf{2.25}$ (thousand users). It is **positive**, so the model **overestimates** at $t=4$.
+A single error never settles whether the model TYPE is right — that is the **residual plot's** job: residuals scattered about 0 with no pattern → the exponential model is appropriate; a curve or a fan shape → the wrong family was fitted, no matter how small this one error is.
+</details>
+<!-- key: 2.25 -->
+<!-- topic: 2.11 -->
+
+---
+
+> **Exam-format questions (P15–P28).** P15–P27 are **multiple choice**, written to the May 2027 paper: MCQ Part A is 29 questions with **no calculator** and Part B is 13 **with** a calculator, so these run 9 no-calc to 4 calculator. Pick a letter, then read why the other three are there — every wrong option is a mistake someone actually makes. P28 is the **free-response** question Unit 2 owns: **Q2 Modeling a Non-Periodic Context**, which is sat **with a calculator** on the real exam.
+
+**P15 [NC] — Med — sequences, and which index you are standing on.** A geometric sequence has $g_3 = 12$ and $g_6 = 96$. What is $g_1$?
+A) 1.5   B) 3   C) 6   D) -44
+<details><summary>Solution</summary>
+
+From $g_3$ to $g_6$ is **three** steps, so $g_6 = g_3\cdot r^{3}$: $96 = 12r^3 \Rightarrow r^3 = 8 \Rightarrow r = 2$ (the only real cube root).
+From $g_3$ back to $g_1$ is **two** steps, so divide by $r$ twice: $g_1 = \dfrac{12}{2^2} = \mathbf{3}$.
+Check: 3, 6, **12**, 24, 48, **96** ✓ — $g_3 = 12$ and $g_6 = 96$, as the stem says.
+
+Why the others are there: **C** steps back only once and reports $g_2 = 6$ — off-by-one on the index, which is this topic's #1 mistake. **A** reuses the *gap* of 3 on the way back and divides by $r$ three times, $12/8 = 1.5$; that sequence has $g_3 = 6$, not 12. **D** treats the sequence as **arithmetic**: $d = (96-12)/3 = 28$, so $g_1 = 12 - 2(28) = -44$. The differences really are constant for 12, 40, 68, 96 — but the stem says *geometric*, so it is the **ratio** that is fixed, not the difference.
+</details>
+<!-- key: B -->
+<!-- practice: 1.A -->
+<!-- topic: 2.1 -->
+
+---
+
+**P16 [NC] — Med — reading an exponential graph straight off its equation.** $f(x) = 5(0.4)^{x} - 3$. Which statement describes the graph of $f$?
+A) Decreasing, with horizontal asymptote $y = 0$   B) Increasing, with horizontal asymptote $y = -3$   C) Decreasing, with horizontal asymptote $y = -3$   D) Decreasing, with horizontal asymptote $y = 5$
+<details><summary>Solution</summary>
+
+Two separate reads, and the exam scores them separately.
+**Direction, from the base.** $b = 0.4$ and $0 < b < 1$, so $f$ is **decreasing** for every $x$.
+**Asymptote, from the shift.** $a\cdot b^{x}$ flattens toward 0, so $a\cdot b^{x} + k$ flattens toward $k$. Here $k = -3$: as $x\to\infty$, $5(0.4)^x \to 0$ and $f(x)\to\mathbf{-3}$.
+Check: $f(10) = 5(0.4)^{10} - 3 = 5(0.00010486) - 3 \approx -2.99948$ — sinking onto $y=-3$ from above ✓.
+
+Why the others are there: **A** gives the *parent* function's asymptote and forgets the vertical shift, which is the #1 mistake for this topic. **D** reads the coefficient 5 as the asymptote; 5 is not even the $y$-intercept, since $f(0) = 5 - 3 = 2$. **B** reads $0.4$ as a growth factor because it is positive — growth needs $b > 1$, and $0.4$ is decay.
+</details>
+<!-- key: C -->
+<!-- practice: 3.A -->
+<!-- topic: 2.3 -->
+
+---
+
+**P17 [NC] — Med/Hard — inverse of a shifted exponential.** $f(x) = 3^{\,x-1} + 4$. Which of these is $f^{-1}(x)$?
+A) $\log_3(x-1)+4$   B) $\dfrac{1}{3^{\,x-1}+4}$   C) $\log_3(x-4)-1$   D) $\log_3(x-4)+1$
+<details><summary>Solution</summary>
+
+Swap and solve, one layer at a time — **undo the outside operation first**.
+$y = 3^{\,x-1}+4 \Rightarrow$ swap: $x = 3^{\,y-1}+4 \Rightarrow x-4 = 3^{\,y-1} \Rightarrow \log_3(x-4) = y-1 \Rightarrow y = \log_3(x-4)+\mathbf{1}$.
+Check the definition, don't just trust the algebra: with $x = 13$, $f^{-1}(13) = \log_3 9 + 1 = 2+1 = 3$, and $f(3) = 3^{2}+4 = 13$ ✓.
+
+Why the others are there: **B** is the **reciprocal** $1/f(x)$, not the inverse — the #1 mistake for this topic ($1/f(13) = 1/13$, nowhere near 3). **C** subtracts the 1 instead of adding it, moving the inner shift across the wrong way; $f(\log_3 9 - 1) = f(1) = 3^{0}+4 = 5 \neq 13$. **A** shuffles the two constants into the log without ever solving — it is what you write if you pattern-match "$-1$ inside, $+4$ outside" straight over; $f(\log_3 12 + 4) \approx f(6.262) = 328$, not 13.
+</details>
+<!-- key: D -->
+<!-- practice: 1.C -->
+<!-- topic: 2.5 -->
+
+---
+
+**P18 [NC] — Med — domain and asymptote of a reflected log.** $g(x) = \log_2(3-x)$. What is the domain of $g$, and the equation of its vertical asymptote?
+A) $x < 3$, asymptote $x = 3$   B) $x > 3$, asymptote $x = 3$   C) $x > -3$, asymptote $x = -3$   D) all real numbers, asymptote $x = 0$
+<details><summary>Solution</summary>
+
+A log's argument must be **positive**, so set the inside $> 0$ and solve: $3 - x > 0 \Rightarrow 3 > x \Rightarrow \mathbf{x < 3}$.
+The asymptote sits where the argument hits **0**: $3 - x = 0 \Rightarrow \mathbf{x = 3}$. As $x\to 3^{-}$ the argument shrinks to 0 and $\log_2$ of it dives to $-\infty$.
+Check: $g(2) = \log_2 1 = 0$ ✓ defined; $g(2.9) = \log_2 0.1 \approx -3.32$ (heading down) ✓; $g(4) = \log_2(-1)$, undefined ✓.
+
+Why the others are there: **B** solves $3-x>0$ as though the $-x$ were a $+x$ and lands on the wrong side of 3; at $x=4$ the function does not exist. **C** reads the $3$ as a horizontal shift of $\log_2(x+3)$ and answers for that function instead — but $x = 4$ is greater than $-3$ and still undefined here. **D** gives the *parent* $\log_2 x$'s asymptote and forgets the domain restriction altogether, which is this topic's #1 mistake.
+</details>
+<!-- key: A -->
+<!-- practice: 3.A -->
+<!-- topic: 2.6 -->
+
+---
+
+**P19 [NC] — Med/Hard — condense to one logarithm.** For $x > 0$, which single logarithm equals $3\log_2 x - \log_2(x+4)$?
+A) $\log_2\!\dfrac{3x}{x+4}$   B) $\dfrac{\log_2 x^3}{\log_2 (x+4)}$   C) $\log_2(x^3 - x - 4)$   D) $\log_2\!\dfrac{x^3}{x+4}$
+<details><summary>Solution</summary>
+
+**Power rule first, then combine** — that order is the whole trick.
+$3\log_2 x = \log_2 x^{3}$ (the coefficient becomes an **exponent**), and a **difference** of logs is the log of a **quotient**:
+$\log_2 x^3 - \log_2(x+4) = \log_2\!\dfrac{x^{3}}{x+4}$.
+Check at $x = 4$: the original is $3\log_2 4 - \log_2 8 = 6 - 3 = 3$, and $\log_2\frac{64}{8} = \log_2 8 = 3$ ✓.
+
+Why the others are there — all three are the fake rules this topic warns about, and the check at $x=4$ kills each one. **A** multiplies the 3 in as a coefficient instead of raising to a power: $\log_2\frac{12}{8} \approx 0.585$. **B** turns a *difference of logs* into a *quotient of logs*; $\frac{\log_2 64}{\log_2 8} = \frac{6}{3} = 2$, and $\frac{\log M}{\log N}\neq \log M-\log N$. **C** subtracts the arguments instead of dividing them: $\log_2(64-4-4) = \log_2 56 \approx 5.807$.
+</details>
+<!-- key: D -->
+<!-- practice: 1.B -->
+<!-- topic: 2.7 -->
+
+---
+
+**P20 [C] — Hard — using a log model backwards.** A city's water use, in millions of gallons per day, is modeled by $W(t) = 18 + 7\ln(t+2)$, where $t$ is the number of years since 2020. According to this model, in which year does daily water use **first** exceed 30 million gallons?
+A) 2023   B) 2024   C) 2026   D) 2070
+<details><summary>Solution</summary>
+
+Solve the inequality, then translate the answer back into a year — the second step is where the point is won.
+$18 + 7\ln(t+2) > 30 \Rightarrow \ln(t+2) > \dfrac{12}{7} = 1.714286 \Rightarrow t+2 > e^{1.714286} = 5.5527 \Rightarrow t > \mathbf{3.5527}$.
+$t$ counts whole years since 2020, so the first year that clears the threshold is $t = 4$, which is **2024**.
+Check both sides of the crossing: $W(3) = 18 + 7\ln 5 = 29.27$ (still under 30) and $W(4) = 18 + 7\ln 6 = 30.54$ (over) ✓.
+
+Why the others are there: **A** rounds $t = 3.55$ **down** to $t = 3$ and answers 2023 — but the model has water use at 29.27 million gallons that year, still below the line; "first exceeds" always rounds **up**. **C** drops the $+2$ inside the log, solving $\ln t > 1.714$ to get $t > 5.55$ and $t = 6$; the shift inside a $\ln(t+c)$ model is not decoration. **D** uses $\log_{10}$ where the model says $\ln$: $t + 2 = 10^{1.714} = 51.79$ gives $t \approx 49.8$ and the year 2070 — the change-of-base rule cannot be skipped, and a sanity check kills it instantly, since $W(49.8) = 45.6$, far past 30.
+</details>
+<!-- key: B -->
+<!-- practice: 3.B -->
+<!-- topic: 2.9 -->
+
+---
+
+**P21 [NC] — Hard — quadratic in disguise, and the root you must throw away.** Solve $e^{2x} - 3e^{x} - 10 = 0$.
+A) $x = 5$ only   B) $x = \ln 5$ and $x = \ln 2$   C) $x = \ln 5$ only   D) $x = \ln 5$ and $x = -\ln 2$
+<details><summary>Solution</summary>
+
+Let $u = e^{x}$, so $e^{2x} = (e^{x})^{2} = u^{2}$:
+$u^{2} - 3u - 10 = 0 \Rightarrow (u-5)(u+2) = 0 \Rightarrow u = 5$ or $u = -2$.
+Now **undo the substitution and test both**. $e^{x} = 5 \Rightarrow x = \ln 5$. And $e^{x} = -2$ is **impossible** — $e^{x}$ is positive for every real $x$, so that root is rejected, not converted.
+So there is exactly **one** solution, $x = \ln 5$ (leave it exact; this is a no-calculator question).
+Check: $e^{2\ln 5} - 3e^{\ln 5} - 10 = 25 - 15 - 10 = 0$ ✓.
+
+Why the others are there: **B** keeps the rejected root and quietly drops its minus sign, reading $e^x = -2$ as $x = \ln 2$; substituting gives $4 - 6 - 10 = -12$, not 0. **D** keeps it and reads $\ln(-2)$ as $-\ln 2$, which is $\ln\frac12$ — substituting gives $0.25 - 1.5 - 10 = -11.25$, not 0. Neither is a near miss; both are answers to a different equation. **A** solves the quadratic correctly and then forgets that $u$ was $e^{x}$, reporting $u = 5$ as $x$.
+</details>
+<!-- key: C -->
+<!-- practice: 1.A -->
+<!-- topic: 2.8 -->
+
+---
+
+**P22 [C] — Hard — a ratio over a three-year step is not a yearly rate.** A chemical's mass is recorded every three years: at $x = 0, 3, 6, 9$ years the mass is $240, 168, 117.6, 82.32$ grams. The data is exponential. What is the decay factor **per year**, rounded to three decimal places?
+A) 0.888   B) 0.900   C) 0.700   D) 0.233
+<details><summary>Solution</summary>
+
+The ratios confirm it is exponential: $168/240 = 0.7$, $117.6/168 = 0.7$, $82.32/117.6 = 0.7$ — constant. But each of those ratios spans **three** years, so 0.7 is the *three-year* factor, not the yearly one.
+Write $y = 240b^{x}$ with $x$ in years. Then $b^{3} = 0.7$, so
+$b = 0.7^{1/3} = 0.887904\ldots \to \mathbf{0.888}$.
+Check: $240(0.887904)^{3} = 168.0$ ✓, and $240(0.887904)^{9} = 82.32$ ✓.
+
+Why the others are there: **C** reports the three-year ratio as the yearly factor — the whole point of the question; $240(0.7)^{3} = 82.32$, which is the mass after **nine** years, not three. **B** spreads the 30% loss evenly as 10% a year, $1 - 0.30/3 = 0.900$; that is linear thinking applied to a ratio, and it predicts $240(0.9)^{9} = 92.98$ g at year 9 instead of 82.32. **D** divides the ratio by the step, $0.7/3 \approx 0.233$, treating a multiplier as though it were a difference; the mass would be down to 3 g by year 3.
+</details>
+<!-- key: A -->
+<!-- practice: 2.A -->
+<!-- topic: 2.2 -->
+
+---
+
+**P23 [NC] — Med — composition does not commute.** $f(x) = 2^{x}$ and $g(x) = x - 3$. What is $(g\circ f)(5) - (f\circ g)(5)$?
+A) 25   B) -25   C) 0   D) 28
+<details><summary>Solution</summary>
+
+Work each composition **inside-out**, and keep track of which function is on the inside.
+$(g\circ f)(5) = g(f(5))$: inside is $f(5) = 2^{5} = 32$, then $g(32) = 32 - 3 = \mathbf{29}$.
+$(f\circ g)(5) = f(g(5))$: inside is $g(5) = 5 - 3 = 2$, then $f(2) = 2^{2} = \mathbf{4}$.
+Difference: $29 - 4 = \mathbf{25}$.
+The two compositions are $2^{x}-3$ and $2^{\,x-3}$ — a vertical shift and a horizontal shift, different functions.
+
+Why the others are there: **C** is what you get if you believe $g(f(x)) = f(g(x))$; the fact that the answer is *not* 0 is the whole point, and order-swapping is this topic's #1 mistake. **B** does both compositions correctly and then subtracts them the other way round, $4 - 29$. **D** computes $g(f(5))$ as $32$ — the outer $-3$ never applied — giving $32 - 4$.
+</details>
+<!-- key: A -->
+<!-- practice: 1.C -->
+<!-- topic: 2.4 -->
+
+---
+
+**P24 [NC] — Med — a log whose base is not the obvious one.** What is the exact value of $\log_9 27$?
+A) 1/3   B) 2/3   C) 3/2   D) 3
+<details><summary>Solution</summary>
+
+A log asks **"the base to what power?"** — so: 9 to what power is 27? Neither number is a power of the other, so put **both over a common base 3**:
+$9 = 3^{2}$ and $27 = 3^{3}$. If $9^{y} = 27$ then $3^{2y} = 3^{3} \Rightarrow 2y = 3 \Rightarrow y = \mathbf{\dfrac{3}{2}}$.
+Check: $9^{3/2} = (\sqrt9)^{3} = 3^{3} = 27$ ✓. Sanity check the size first: $9^{1} = 9$ and $9^{2} = 81$, so the answer has to sit between 1 and 2 — which already rules out three of the options.
+
+Why the others are there: **B** is $\log_{27} 9 = 2/3$ — base and argument swapped, so the question was answered upside down. **D** is $27 \div 9$: dividing the two numbers instead of asking what exponent links them, which is also what "$\log 27 - \log 9$" turns into if you read the difference as an answer rather than as $\log 3$. **A** is the same numeric shortcut with the ratio inverted, $9 \div 27$. Test any of them: $9^{2/3} \approx 4.33$, $9^{3} = 729$, $9^{1/3} \approx 2.08$ — none is 27.
+</details>
+<!-- key: C -->
+<!-- practice: 1.B -->
+<!-- topic: 2.6 -->
+
+---
+
+**P25 [C] — Hard — un-logging a semi-log line.** A data set is plotted as $\log_{10} y$ against $x$, and the points lie on the line $\log_{10} y = 0.15x + 0.8$. Which exponential model $y = ab^{x}$ fits the data, with $a$ and $b$ rounded to three decimal places?
+A) $y = 0.800(0.150)^{x}$   B) $y = 6.310(1.413)^{x}$   C) $y = 1.413(6.310)^{x}$   D) $y = 6.310(1.150)^{x}$
+<details><summary>Solution</summary>
+
+Take $y = ab^{x}$ and log both sides: $\log_{10} y = \log_{10} a + (\log_{10} b)x$. Matching that against $\log_{10} y = 0.15x + 0.8$:
+**intercept** $\log_{10} a = 0.8 \Rightarrow a = 10^{0.8} = 6.30957\ldots \to \mathbf{6.310}$
+**slope** $\log_{10} b = 0.15 \Rightarrow b = 10^{0.15} = 1.41254\ldots \to \mathbf{1.413}$
+So $y = 6.310(1.413)^{x}$. Check at $x = 4$: the line gives $\log_{10} y = 0.15(4)+0.8 = 1.4$, so $y = 10^{1.4} = 25.119$; and $6.310(1.413)^{4} \approx 25.15$ ✓ (the small gap is the rounding, which is why the stem states it).
+
+Why the others are there: **A** reads the intercept and slope as $a$ and $b$ directly and never un-logs them — the #1 mistake for this topic; that model gives $y \approx 0.0004$ at $x = 4$. **C** un-logs both correctly and then swaps them, putting the initial value in the base's seat; $y \approx 2240$ at $x = 4$. **D** un-logs $a$ but treats the slope 0.15 as a **percent rate** and writes $b = 1 + 0.15$ — the rule from topic 2.3 applied where it does not belong; that gives $y \approx 11.0$ at $x = 4$.
+</details>
+<!-- key: B -->
+<!-- practice: 2.B -->
+<!-- topic: 2.10 -->
+
+---
+
+**P26 [NC] — Med/Hard — what a residual plot is actually for.** A model is fitted to five data points. Its residuals, computed as predicted $-$ actual, are $+0.4,\ -1.1,\ -2.6,\ -4.0,\ -5.3$ at $t = 1, 2, 3, 4, 5$. Which conclusion do these residuals support?
+A) The model is appropriate, because each residual is small next to the data values.   B) The model is appropriate, because the residuals are consistent — it underestimates almost everywhere.   C) The model is inappropriate, because the first residual is positive and the rest are negative.   D) The model is inappropriate, because the residuals drift steadily downward instead of scattering about 0.
+<details><summary>Solution</summary>
+
+The residual plot answers one question: **is there a pattern?** Scattered randomly about 0 → the family of function fits. Any systematic shape — a drift, a curve, a fan — → the wrong *type* of model was fitted, and no amount of small individual errors rescues it.
+Here the residuals march in one direction the whole way: $+0.4 \to -1.1 \to -2.6 \to -4.0 \to -5.3$, each about 1.2 to 1.5 below the last. That is a **trend, not scatter**, so the model is **inappropriate**.
+
+Why the others are there: **A** judges the residuals by **size** rather than by pattern — the "the curve looks close enough" error; and they are not even staying small, growing from 0.4 to 5.3. **B** treats *consistency* as evidence **for** the model, when consistently signed residuals are exactly the pattern that condemns it. **C** reaches the right verdict from the wrong evidence: one sign change proves nothing on its own, and a good residual plot is *full* of sign changes — it is the steady drift, not the single flip, that is the finding.
+</details>
+<!-- key: D -->
+<!-- practice: 3.B -->
+<!-- topic: 2.11 -->
+
+---
+
+**P27 [C] — Hard — half-life from a percent decay rate.** A radioactive sample loses 12% of its mass each year. To the nearest hundredth of a year, how long until only half of the original mass remains?
+A) 5.42   B) 0.33   C) 4.17   D) 6.12
+<details><summary>Solution</summary>
+
+**Get the base right first.** Losing 12% a year leaves 88%, so $b = 1 - 0.12 = \mathbf{0.88}$ — not 0.12, and not 1.12.
+Let $M_0$ be the starting mass. "Half remains" means $M_0(0.88)^{t} = 0.5M_0$, so the $M_0$ cancels and
+$0.88^{t} = 0.5 \Rightarrow t = \dfrac{\ln 0.5}{\ln 0.88} = \dfrac{-0.693147}{-0.127833} \approx 5.4223 \to \mathbf{5.42}$ years.
+Check: $0.88^{5.42} = 0.5001$ ✓. Notice both logs are negative and the quotient comes out positive — if your answer is negative, you used the wrong base.
+
+Why the others are there: **D** uses $b = 1.12$, reading "loses 12%" as a growth factor: $\ln 0.5/\ln 1.12 = -6.12$, and dropping the sign hides that the model was growing, not decaying ($0.88^{6.12} = 0.457$, already past half). **B** uses $b = 0.12$ — the decay base written as the *rate* instead of $1 -$ rate, this unit's #1 mistake: $\ln 0.5/\ln 0.12 = 0.33$, which would have the sample halving in four months. **C** is linear thinking: "12% a year, so 50% takes $50/12 = 4.17$ years"; the percent is of what is *left* each year, not of the original, and $0.88^{4.17} = 0.587$ — still well over half.
+</details>
+<!-- key: A -->
+<!-- practice: 1.A -->
+<!-- topic: 2.3 -->
+
+---
+
+**P28 [C] — Exam-level — FRQ Q2 (Modeling a Non-Periodic Context).**
+A patient is given a single dose of a drug. The concentration of the drug in the patient's bloodstream is modeled by $C(t) = A\,b^{\,t}$, where $C$ is measured in mg/L and $t$ is the number of hours after the dose. Measurements give $C(1) = 48$ and $C(5) = 12$.
+(a) Find $b$, rounded to three decimal places, and then $A$, rounded to three decimal places. Interpret the value of $b$ in the context of this problem.
+(b) Use the model to find $C(6)$, to the nearest tenth of a mg/L. Find the average rate of change of $C$ on the interval $1 \le t \le 5$, with units.
+(c) The patient is due another dose as soon as the concentration first falls below 5 mg/L. Using the model, give the first whole hour $t$ at which the concentration is below 5 mg/L. A nurse instead extends the straight line through $(1, 48)$ whose slope is the average rate of change from (b), and reads off a much earlier time. Explain, using the concavity of $C$, why that straight line reaches 5 mg/L too soon.
+(d) The model predicts a positive concentration for every $t > 0$, however large $t$ becomes. Explain what that means about $C$ as a long-run description of the drug in the bloodstream, and give one feature of the real situation that this model does not capture.
+<details><summary>Solution</summary>
+
+**(a)** Divide the two measurements so $A$ cancels — that is the move this part rewards:
+$\dfrac{C(5)}{C(1)} = \dfrac{Ab^{5}}{Ab^{1}} = b^{4} = \dfrac{12}{48} = 0.25 \Rightarrow b = 0.25^{1/4} = 0.707107\ldots \to \mathbf{b \approx 0.707}$.
+Then from $C(1) = Ab = 48$: $A = \dfrac{48}{0.707107} = 67.882251\ldots \to \mathbf{A \approx 67.882}$.
+**Interpretation:** each hour the concentration is multiplied by about 0.707 — that is, roughly **29.3% of the drug present is cleared every hour**, and the same *proportion* goes each hour, not the same amount.
+**(b)** $C(6) = 67.882251(0.707107)^{6} = 8.4853 \to \mathbf{8.5}$ mg/L. (Carry the unrounded $A$ and $b$; rounding them first shifts this answer.)
+Average rate of change on $[1,5] = \dfrac{C(5)-C(1)}{5-1} = \dfrac{12-48}{4} = \mathbf{-9}$ **mg/L per hour**.
+**(c)** Solve $67.882251(0.707107)^{t} = 5$: $\;(0.707107)^{t} = 0.073658 \Rightarrow t = \dfrac{\ln 0.073658}{\ln 0.707107} = 7.526$ hours. So the concentration is still above 5 at $t = 7$ ($C(7) = 6.0$ mg/L) and below it at $t = 8$ ($C(8) = 4.2$ mg/L): the first whole hour is $\mathbf{t = 8}$.
+The nurse's line is $L(t) = 48 - 9(t-1)$, which reaches 5 when $t - 1 = 43/9$, i.e. $t \approx 5.8$ hours — more than two hours early.
+**Why:** $C$ is an exponential decay function, so it is **decreasing and concave up**. Concave up means the rate of change, while negative, is **increasing toward 0** — the drug clears more and more slowly as less of it is left. The nurse's line removes a flat 9 mg/L every hour forever. Past the right end of the interval a concave-up curve lies **above** the extended secant line ($C(6) = 8.5$ against $L(6) = 3$), so the line drops through 5 mg/L while the true concentration is still well above it.
+**(d)** $A > 0$ and $b > 0$, so $Ab^{t} > 0$ for every $t$: the model has the horizontal asymptote $C = 0$ and **never reaches it**. At $t = 24$ it still predicts $C = 0.017$ mg/L. So the model says the drug is never *completely* cleared — as a long-run description it can only mean the concentration becomes negligibly small, not that some drug remains forever, and past some point the prediction is far below anything measurable or clinically meaningful.
+One feature it does not capture (any one of these earns the point): the **next dose**, which would jump the concentration straight back up and end this model's validity; or the **absorption phase** — the model puts the maximum at $t = 0$ ($C(0) = 67.9$ mg/L), as if the whole dose arrived in the blood instantly, whereas a real concentration rises first and only then decays; or a **detection floor**, below which the concentration is reported as zero.
+
+*Grader notes.* Q2 is the second-lowest-scoring free-response question, and the points go missing in (c) and (d), not in the algebra. Two habits pay for themselves: **state units** on every rate ("mg/L per hour", not "−9"), and when you claim a concavity, **say what it implies** — "concave up, so the rate of change is increasing toward 0, so the straight line falls too fast." A concavity named without a consequence scores nothing. Round only at the end; the 2027 layout expanded Part C, which is exactly this justification work.
+</details>
+<!-- frq: Q2 -->
+<!-- practice: 3.C -->
+<!-- topic: 2.9 -->
 
 ---
 

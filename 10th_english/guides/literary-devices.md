@@ -238,6 +238,28 @@ A **strong pause IN THE MIDDLE of a line** (often marked by a period, comma, das
 
 ---
 
+## The May Poetry Project — a Structure to Use Until Mrs. P Says Otherwise
+
+*`coverage-map.md` lists this project as graded ("speaking + creativity points"), but nothing in the source material specifies whether it's writing an original poem, analyzing an existing one, or both — or exactly what the rubric weighs. **Confirm with Mrs. P before starting:** original poem, analysis of a chosen/assigned poem, or both? Solo or group? What's actually turned in — poem + written analysis, a presentation, a portfolio? And what specifically earns the "creativity" points?*
+
+**Why this guide already gets you most of the way there:** whichever format it turns out to be, the device vocabulary above (Group 3, and Group 1 if the poem is persuasive) is exactly what a poetry project tests — you can't analyze or deliberately write with alliteration, assonance, consonance, meter, enjambment, or caesura without being able to name them.
+
+**Defensible structure — if it's poetry ANALYSIS:**
+1. Choose (or use the assigned) poem; state its overall **theme** as a claim, not a word — same rule as an essay thesis (see `essay-writing.md`).
+2. Find ≥5–6 devices from Group 3 (and Group 1 if it's persuasive/rhetorical) that are actually present in the poem — don't force a device that isn't there.
+3. For each device, use the sentence pattern from the bottom of this guide: *"[Poet] uses [device] to [effect], which shows [bigger meaning/theme]."*
+4. If presenting aloud: read a key line or two with attention to its rhythm and pauses — a flat reading undersells strong device analysis, and this is likely where "speaking" points come from.
+
+**Defensible structure — if it's an ORIGINAL poem:**
+1. Pick one **theme** (an idea about life) before writing a single line — the same discipline as an essay thesis.
+2. Deliberately build in ≥3 sound devices from Group 3 (e.g., alliteration + a controlled meter + one enjambment or caesura) and be ready to name and explain each choice — that's what turns "I liked writing this" into gradable craft.
+3. Pair it with a short self-analysis (a few sentences) naming the devices used and why, in case the rubric wants your thinking shown, not just the poem.
+4. If reading aloud is part of it: rehearse pacing and emphasis — creativity/speaking points very likely reward a deliberate, expressive reading over a rushed one.
+
+**Self-check either way:** Can every named device actually be pointed to in the text? Does the theme/claim go beyond "the poem is about ___"? If performing, does the reading show understanding of the poem's rhythm, not just its words?
+
+---
+
 ## ⭐ RECOGNITION QUIZ (20 questions) — identify the device
 
 *Cover the answer key. For each, name the device. Then check yourself.*

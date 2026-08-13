@@ -1,0 +1,133 @@
+-- Production schema for the tutor backend.
+--
+-- The governing rule: nothing is stored that can be derived. Every number the
+-- student or parent sees is a query over `attempts`, joined to `topics` for
+-- weights.
+--
+-- MIGRATING A DATABASE THAT ALREADY EXISTS. Every CREATE TABLE below is
+-- IF NOT EXISTS, which is what makes reloading this file (and worker/seed.sql,
+-- which embeds it verbatim) safe against real evidence — and it also means a
+-- table that already exists does NOT gain a column that was added here later.
+-- Each such column is listed below with the ALTER an existing database needs;
+-- there is no `ADD COLUMN IF NOT EXISTS` in SQLite, so it cannot be expressed
+-- as part of this file without breaking the reload guarantee.
+--
+--   ALTER TABLE attempts ADD COLUMN picked TEXT;   -- the option a graded mcq
+--                                                  -- answer resolved to
+--
+-- db.js detects that column's absence and keeps recording answers without it
+-- rather than failing every /log, so an unmigrated database degrades to "the
+-- distractor was not recorded" instead of "the answer was not recorded".
+
+CREATE TABLE IF NOT EXISTS items (
+  id            TEXT PRIMARY KEY,
+  subject       TEXT NOT NULL,
+  topic         TEXT,
+  unit          TEXT,
+  practice      TEXT,
+  kind          TEXT NOT NULL,          -- mcq | constructed | frq | constructed_model_graded
+  stem          TEXT NOT NULL,
+  options_json  TEXT,                   -- {"A":"..","B":".."} for mcq
+  answer        TEXT,                   -- keyed letter, or canonical short answer
+  answer_variants_json TEXT,            -- accepted alternate spellings/forms
+  explanation   TEXT,
+  rubric_json   TEXT,                   -- frq only
+  difficulty    TEXT,
+  calc_allowed  INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_items_subject_topic ON items(subject, topic);
+
+CREATE TABLE IF NOT EXISTS topics (
+  id            TEXT NOT NULL,
+  subject       TEXT NOT NULL,
+  name          TEXT,
+  unit          TEXT,
+  ek            TEXT,
+  exam_weight_low  REAL,
+  exam_weight_high REAL,
+  tested_on_exam   INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (subject, id)
+);
+
+CREATE TABLE IF NOT EXISTS teaching (
+  topic          TEXT NOT NULL,
+  subject        TEXT NOT NULL,
+  plain_idea     TEXT,
+  worked_example TEXT,
+  common_mistake TEXT,
+  source_file    TEXT,
+  PRIMARY KEY (subject, topic)
+);
+
+-- What the server handed out, and when. This is what makes it impossible for the
+-- model to fabricate an item id or invent an elapsed time.
+CREATE TABLE IF NOT EXISTS serves (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject    TEXT NOT NULL,
+  item_id    TEXT NOT NULL,
+  served_at  TEXT NOT NULL,
+  mock_id    INTEGER,
+  logged     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_serves_open ON serves(subject, logged, id);
+
+-- One row per answer. THE source of every number in the system.
+CREATE TABLE IF NOT EXISTS attempts (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts         TEXT NOT NULL,             -- server clock
+  subject    TEXT NOT NULL,
+  item_id    TEXT NOT NULL,
+  topic      TEXT,
+  unit       TEXT,
+  practice   TEXT,
+  response   TEXT,
+  correct    INTEGER NOT NULL,
+  picked     TEXT,                      -- for an mcq, the option letter the answer RESOLVED to, as
+                                         -- grade.js read it. The distractor is the misconception: 'D'
+                                         -- on a short-circuit question is a different error from 'A'
+                                         -- on the same question, and `response` (what he typed) does
+                                         -- not carry it, because reading it back would depend on
+                                         -- whatever the grader's parsing rules are by then. NULL
+                                         -- whenever there was no option to record: a blank, a
+                                         -- response no grader could read as one answer, an unkeyed
+                                         -- item, model-graded work, or any non-mcq item.
+                                         -- Added after the table shipped — see the migration note at
+                                         -- the top of this file.
+  graded_by  TEXT NOT NULL,             -- 'server' (mechanical verdict) | 'model' (rubric-scored FRQ,
+                                         -- quarantined from readiness) | 'unkeyed' (item has no usable
+                                         -- answer key) | 'unparsed' (response could not be read as one
+                                         -- answer) -- see isServerGraded() in grade.js, the only place
+                                         -- that may treat one of these as a countable verdict
+  seconds    INTEGER,                   -- server measured
+  hints_used INTEGER NOT NULL DEFAULT 0,
+  conditions TEXT NOT NULL,             -- cold | tutored | proctored_mock
+  mock_id    INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_attempts_subject ON attempts(subject, ts);
+CREATE INDEX IF NOT EXISTS idx_attempts_topic ON attempts(subject, topic);
+CREATE INDEX IF NOT EXISTS idx_attempts_mock ON attempts(mock_id);
+
+-- A proctored sitting. Only attempts tied to one of these can move readiness.
+CREATE TABLE IF NOT EXISTS mocks (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  subject       TEXT NOT NULL,
+  section       TEXT,                   -- 'I' | 'II' | 'full'
+  started_at    TEXT NOT NULL,
+  ended_at      TEXT,
+  proctored     INTEGER NOT NULL DEFAULT 0,
+  source        TEXT NOT NULL DEFAULT 'bank',   -- bank | official
+  composite_pct REAL,
+  blanks        INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_mocks_subject ON mocks(subject, started_at);
+
+-- Teaching gaps the server has ordered, and whether the lesson has been given
+-- and then re-tested cold. A gap clears only on an unaided correct answer.
+CREATE TABLE IF NOT EXISTS gaps (
+  subject    TEXT NOT NULL,
+  topic      TEXT NOT NULL,
+  opened_at  TEXT NOT NULL,
+  taught_at  TEXT,
+  cleared_at TEXT,
+  PRIMARY KEY (subject, topic, opened_at)
+);

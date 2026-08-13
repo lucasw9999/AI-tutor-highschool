@@ -118,6 +118,11 @@ Both wives see clearly (Portia senses the plot; Calpurnia foresees death) but ar
 | 13 | **"Caesar, now be still: / I kill'd not thee with half so good a will."** | Brutus, dying (5.5) | Guilt; tragic hero (#2) | Brutus dies more willingly than he killed — shows his remorse and downfall. |
 | 14 | **"This was the noblest Roman of them all."** | Antony, eulogizing Brutus (5.5) | Hero vs. villain (#5); tragic hero | The play's final verdict on Brutus — use to argue he is hero, not villain. |
 | 15 (bonus) | **"the elements / So mix'd in him that…'This was a man!'"** | Antony of Brutus (5.5) | Tragic hero (#2) | Brutus as the balanced ideal man — perfect tragic-hero closer. |
+| 16 | **"Brutus, thou sleep'st: awake, and see thyself…Speak, strike, redress!"** | Anonymous letter Cassius has planted for Brutus to find (2.1) | Deception/manipulation; the written word | A forged, unsigned document — not honest persuasion — is what finally tips Brutus toward the conspiracy. |
+| 17 | **"This dream is all amiss interpreted; / It was a vision fair and fortunate."** | Decius Brutus, reinterpreting Calpurnia's blood-dream (2.2) | Deception; fate ignored | Shows a flattering lie overriding an accurate warning — and Caesar believing it because it's what he wants to hear. |
+| 18 | **"To every several man, seventy-five drachmas" / "his private arbours and new-planted orchards"** | Antony, reading Caesar's will (3.2) | Rhetoric (#1); power of the written word | The will's generosity, revealed on paper, is what turns the crowd's grief into a riot — writing, not just oratory, moves Rome. |
+
+*(Quotes 16–18 verified against the MIT Shakespeare full text, shakespeare.mit.edu/julius_caesar, cross-checked in two separate passes.)*
 
 ---
 
@@ -185,6 +190,8 @@ Both wives see clearly (Portia senses the plot; Calpurnia foresees death) but ar
 
 > **Reminders baked into every model below:** the *intro's first sentence must NOT mention the text* — open with a broad THEME statement; name title + author before any text content; thesis is the LAST sentence of the intro. Topic sentences name a character/scene (not title/author), tie to the thesis, contain commentary + NO quotes. ≥2 short, blended quotes per body paragraph, 2:1 commentary-to-evidence. Concluding sentence restates the topic sentence in new words and does NOT transition. **NO** "this shows," "really," "very," "I/we/you," "in conclusion," etc.
 
+> **All 10 official topics, covered.** `Caesar Essay Topics.txt` (in the folder root) is Mrs. P's actual assignment sheet — 10 topics, and her own note on it: *"you can always create your own topic," "every topic can be adapted... to make it your own,"* and the whole point is thematic depth, not which topic you pick. Prompts A–D below match topics 1–4 (tragic hero/flaw, villain-or-hero, omens/fate, role of women). Prompts E–J below cover topics 5–10 (single hero/villain, power of speech/writing, deception/manipulation, public vs. private, loyalty, idealism's root cause) so every real topic on her sheet has a worked model.
+
 ### Prompt A — Brutus as Tragic Hero & His Flaw
 
 **Model thesis (last line of intro):** *In Shakespeare's* The Tragedy of Julius Caesar, *Brutus embodies the tragic hero whose unbending idealism — his belief that noble intent can purify any act — blinds him to human nature and drives him to the very destruction he hoped to prevent.*
@@ -218,6 +225,62 @@ Both wives see clearly (Portia senses the plot; Calpurnia foresees death) but ar
 - **TS idea 2 (Portia's exclusion):** Brutus's wife proves her strength and judgment only to be shut out of the secret, and her unraveling mirrors the disorder her husband unleashes. → Portia's self-wound + her death by swallowing fire.
 - **TS idea 3 (the cost):** Both women perceive the danger their husbands cannot, and both are destroyed, binding the silencing of women to the ruin of the state.
 
+### Prompt E — Is There a Single Hero or Villain? (Topic 5)
+
+**Model thesis:** *In* The Tragedy of Julius Caesar, *Shakespeare withholds a single hero or villain from the reader, suggesting instead that the real antagonist is the political system itself — a fickle public and a hunger for power that corrupts every man who touches it.*
+
+- **TS idea 1 (the mob decides, and reverses):** The plebeians hand the title of "hero" to whoever is speaking last, which proves that "hero" and "villain" are labels the crowd assigns in the moment, not stable truths about a person. → "**Friends, Romans, countrymen, lend me your ears**" + the "**honourable man**" refrain (both turn the same crowd twice in one scene).
+- **TS idea 2 (Antony: loyal avenger, ruthless operator):** The man who avenges Caesar with real grief is the same man who coldly unleashes chaos on Rome, proving devotion and villainy can share one body. → "**Cry 'Havoc,' and let slip the dogs of war**."
+- **TS idea 3 (Caesar: victim, but not innocent):** Even the assassinated man contributes to his own death through the pride of believing himself untouchable. → "**I am constant as the northern star**."
+- **Avoid summary:** don't just sort characters into "good" and "bad" columns — argue for *why* the play refuses that sorting.
+
+### Prompt F — The Power of Speech and the Written Word (Topic 6)
+
+**Model thesis:** *In* The Tragedy of Julius Caesar, *Shakespeare argues that words — spoken and written — move Rome more decisively than truth or force, and that this power is exactly what makes them dangerous: a forged letter or a persuasive speech can carry as much authority as an honest one.*
+
+- **TS idea 1 (spoken word — the funeral speeches):** Brutus's honest, logical prose loses the crowd to Antony's ironic, emotional verse, proving that *how* something is said outweighs *whether it's true*. → "**Not that I loved Caesar less, but that I loved Rome more**" vs. the "**honourable man**" refrain.
+- **TS idea 2 (written word — the forged letter):** An anonymous, planted letter — not a face-to-face argument — is what finally pushes Brutus toward the conspiracy, showing that writing can carry a counterfeit authority its author never earned. → "**Brutus, thou sleep'st: awake, and see thyself…Speak, strike, redress!**"
+- **TS idea 3 (written word — the will):** Antony turns a legal document into the spark that ignites a riot, proving the written word can move a crowd even faster than the spoken one that preceded it. → "**seventy-five drachmas**" + "**new-planted orchards**."
+- **Avoid summary:** don't just list examples of speeches/letters — argue *why* Shakespeare keeps handing power to language over truth.
+
+### Prompt G — The Power of Deception and Manipulation (Topic 7)
+
+**Model thesis:** *In* The Tragedy of Julius Caesar, *Shakespeare shows that deception triumphs not by defeating the truth outright but by disguising itself as honor, loyalty, or good fortune — making manipulation most dangerous exactly when it looks like honesty.*
+
+- **TS idea 1 (Cassius manipulates Brutus):** Cassius wins Brutus over with flattering argument and a forged letter rather than force, dressing a political scheme as Brutus's own moral conclusion. → "**not in our stars, / But in ourselves**" + "**Speak, strike, redress!**"
+- **TS idea 2 (Decius manipulates Caesar):** Decius overrides an accurate warning by relabeling it as good news, proving a flattering lie can beat a true one simply because it's what the listener wants to hear. → "**a vision fair and fortunate**."
+- **TS idea 3 (Antony manipulates Rome):** Antony's claim that he has "**come to bury Caesar, not to praise him**" while doing exactly that is the play's clearest proof that the most effective manipulation wears the mask of reluctant honesty.
+- **Avoid summary:** don't just catalogue the lies — analyze *why* each one works on its specific target.
+
+### Prompt H — Public vs. Private: Brutus and Caesar (Topic 8)
+
+**Model thesis:** *In* The Tragedy of Julius Caesar, *Shakespeare builds both Brutus and Caesar around a fracture between the self each man performs for Rome and the self he hides from it, arguing that a public role built on image rather than truth cannot survive contact with reality.*
+
+- **TS idea 1 (Caesar's fracture):** Caesar's public claim to permanence sits directly beside a private body that is deaf, epileptic, and rattled enough by a dream to nearly stay home — and the gap is fatal. → "**I am constant as the northern star**" + Calpurnia's dream (his near-agreement to stay home).
+- **TS idea 2 (Brutus's fracture):** Brutus performs calm, ritual justification in public ("**sacrificers, but not butchers**") while his private orchard reasoning is far colder and more speculative — condemning Caesar for what he *might* become. → "**think him as a serpent's egg…kill him in the shell**."
+- **TS idea 3 (what the gap costs):** Both men's private uncertainty gets papered over by the role Rome demands of them — the invincible leader, the honorable conspirator — and Shakespeare argues that this erasure of the private self is what dooms them both.
+- **Avoid summary:** don't just describe each man twice (public, then private) — argue what the *gap itself* proves about image versus truth.
+
+### Prompt I — Is Genuine Loyalty Possible? (Antony, Brutus, Cassius — Topic 9)
+
+**Model thesis:** *In* The Tragedy of Julius Caesar, *Shakespeare suggests that loyalty is genuine only when it costs the loyal person something, so that Antony's vengeful devotion to Caesar stands as the play's one uncorrupted loyalty, while Brutus's and Cassius's loyalties are constantly strained by competing claims of friendship, principle, and hierarchy.*
+
+- **TS idea 1 (Antony's loyalty, tested and real):** Antony's devotion to Caesar survives the assassination and costs him real danger — shaking bloody hands with killers before turning on them — which proves loyalty by the price it demands, not the words that declare it. → "**Cry 'Havoc,' and let slip the dogs of war**."
+- **TS idea 2 (Brutus: loyalty in conflict, not absent):** Brutus's loyalty to Rome overrides his loyalty to a friend, and the play frames this as a genuine, tragic cost rather than a betrayal in disguise. → "**Not that I loved Caesar less, but that I loved Rome more**."
+- **TS idea 3 (Cassius: loyalty as the fatal weakness):** Cassius repeatedly abandons his own better judgment — sparing Antony, granting the funeral speech — purely out of loyalty to Brutus, and this loyalty, not cowardice, is what dooms the conspiracy.
+- **Avoid summary:** don't just say "everyone is loyal to someone" — argue whether hierarchy (friend vs. Rome vs. cause) makes loyalty impossible to give whole.
+
+### Prompt J — Idealism and Downfall: Naming the Root Cause (Topic 10)
+
+**Model thesis:** *In* The Tragedy of Julius Caesar, *Shakespeare traces Brutus's idealism to a specific root — a Stoic faith that noble intention can be cleanly separated from real-world consequence — and argues that this faith, not ambition, is the flaw that destroys him.*
+
+*(This deliberately builds on Prompt A. Topic 10 specifically asks "from what societal or human flaw does this idealism stem" — so unlike Prompt A, name the* source *of the idealism, not just its results.)*
+
+- **TS idea 1 (the root: principle over evidence):** Brutus's habit of reasoning from abstract principle rather than observed fact is what lets him condemn Caesar for what he might become rather than what he is. → "**think him as a serpent's egg…kill him in the shell**."
+- **TS idea 2 (the root, applied again):** The same faith that noble motive purifies an act convinces Brutus that honorable treatment will be met with honor, so he grants Antony exactly what destroys the conspiracy. → "**Not that I loved Caesar less**" + the "**honourable man**" refrain.
+- **TS idea 3 (the root never corrects):** Brutus dies still trusting his own good will, proving the flaw is a fixed structure of his character, not a one-time misjudgment. → "**I kill'd not thee with half so good a will**."
+- **Avoid summary:** the topic wants the *cause* of the idealism (a philosophy/upbringing that trusts principle over people), not another retelling that Brutus "has good intentions but fails."
+
 ---
 
 ## 11. "Sound Like You Read It Deeply"
@@ -239,4 +302,35 @@ Both wives see clearly (Portia senses the plot; Calpurnia foresees death) but ar
 
 ---
 
-*All quotations above were verified against the MIT/Folger Shakespeare full text. The study pack is keyed to Mrs. Pagtakhan's A-essay rules (broad-theme intro, thesis-last, quote-blending, 2:1 commentary, RIP-word ban).*
+## 12. The Ancient Rome Presentation — a Structure to Use Until Mrs. P Says Otherwise
+
+*This project is named in `coverage-map.md` as part of this unit, but nothing in the source material specifies its exact prompt, grouping, format, or rubric — the structure below is defensible, not her rubric. **Confirm with Mrs. P (or the class site) before building anything:** is the topic assigned or student-chosen? Solo or group? Slides, poster, or oral-only? Time limit? Is a checklist/rubric posted? Does she want sources cited?*
+
+**Why it exists here:** an Ancient Rome presentation at the start of a Shakespeare-history unit almost always exists to give the class shared context before the play gets hard to follow — Roman government, the Senate, patrician/plebeian class structure, Roman religion/omens, or daily life. Whatever the topic, build it *toward* the play, not away from it.
+
+**Defensible structure (6 pieces):**
+1. **Hook + topic naming:** one sentence on why this slice of Rome matters, then name the topic clearly (e.g., "the Roman Senate," "omens and augury," "the plebeian class").
+2. **3–4 researched facts**, each from a source you could name if asked — this is a research project, not a recitation of what you already know.
+3. **The direct link to the play** — the piece a generic report skips and an A presentation doesn't. Name one specific scene or character choice the fact explains. (Example: if the topic is Roman augury/omens, link straight to the Soothsayer, the augurers finding "no heart" in the sacrifice, and Calpurnia's dream — §5 above.)
+4. **One visual** that supports the facts rather than burying them (a map, a diagram, an image — not a wall of text).
+5. **Delivery notes, not a script** — bullet points or note cards; know it well enough to talk *to* the class, not read *at* it.
+6. **Self-check before presenting:** Is every fact accurate and sourceable? Does it connect explicitly to *Julius Caesar*? Is the visual clean? Is the timing controlled?
+
+## 13. The Eulogy / Speech Assignment (Antony vs. Brutus) — a Structure to Use Until Mrs. P Says Otherwise
+
+*Same warning applies: this is not her rubric. **Confirm:** do you choose your speaker, or is it assigned? Written only, or performed aloud? Time limit if performed? Does it need to echo Shakespeare's language, or can it be modernized? Is the "audience" the Roman crowd (i.e., persuade your classmates), or is this closer to a solo monologue performance?*
+
+**Why it exists here:** `coverage-map.md` lists "Eulogy (Antony vs Brutus)" as its own graded piece for this unit, separate from the essay — almost certainly an assignment to write and/or deliver a eulogy **in character as Antony or Brutus**, applying what the unit teaches about rhetoric (§4 Theme 1, §7 Devices, and `guides/literary-devices.md` Group 1).
+
+**Defensible structure (5 pieces):**
+1. **Lock in your speaker and goal first.** Brutus's goal: justify the killing to a skeptical crowd. Antony's goal: turn that same crowd against the conspirators without ever *saying* that's what he's doing.
+2. **Match the real voice — don't invent one.** Brutus = plain, logical, restrained, ethos + logos, prose. Antony = ironic, escalating, pathos-heavy, verse. (Both are modeled in §4 Theme 1 and the funeral-speech walk-through in §2, Act III.)
+3. **Use devices on purpose.** Pick ≥3 from `guides/literary-devices.md` Group 1 (anaphora, apostrophe, verbal irony, synecdoche, paralepsis, antithesis) and build specific lines around them. If the assignment grades on device use, this is where those points live; if it doesn't, the speech is still sharper for it.
+4. **Structure the speech itself** the way Antony's real one runs: open with a claim of humility/credibility (ethos) → introduce emotional or logical evidence → build to the turn (the moment the crowd should flip).
+5. **If performing aloud:** practice pacing and pauses (a caesura works live as well as on the page), make eye contact, and don't rush the turn — it's the whole point of the speech.
+
+**Self-check:** Does it sound like the character, not like Lucas doing a book report? Are the devices intentional and namable? Does the speech actually *achieve* the persuasive goal on the page, rather than just describing the historical outcome?
+
+---
+
+*All quotations above were verified against the MIT/Folger Shakespeare full text — the Folger edition is free and online at [folger.edu/explore/shakespeares-works/julius-caesar/read/](https://www.folger.edu/explore/shakespeares-works/julius-caesar/read/) (entire play, per-scene navigation, no login; link checked 12 August 2026), so you can check any quote in this pack yourself before it goes into an essay. The study pack is keyed to Mrs. Pagtakhan's A-essay rules (broad-theme intro, thesis-last, quote-blending, 2:1 commentary, RIP-word ban).*

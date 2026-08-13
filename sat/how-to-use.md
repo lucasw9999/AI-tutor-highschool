@@ -1,6 +1,10 @@
 # How To Use This — Plain Instructions (for Lucas)
 
-Your SAT catch-up. Goal: **1500+**, ready by spring 2027 — fast, dense, and **by doing questions**, not reading textbooks. You're busy, so this is built to take the *shortest* time for the *most* points.
+Your SAT catch-up. Goal: **1500+** at the **Saturday 6 March 2027 sitting** — fast, dense, and **by doing questions**, not reading textbooks. You're busy, so this is built to take the *shortest* time for the *most* points.
+
+> **⏰ The one date that matters: registration for 6 March 2027 closes Friday 19 February 2027.** Miss it and the next clean sitting is a year of waiting, because the May 2027 SAT lands 10 days before your AP exams. Full table in `README.md`.
+
+> **🎓 Sooner than that: the PSAT, sometime in 1–30 October 2026.** Your **school** signs you up for that one — there's nothing for you to register for, which is why people miss it. As a sophomore it's your **free official dress rehearsal** for March: real room, real timing, real proctor. Ask your counselor in the first week of school whether you're on the roster, which date, and whether it's the PSAT/NMSQT or PSAT 10. (The National Merit one is widely understood to be *next* October, junior year — `README.md` spells out what's verified and what isn't.)
 
 ## The big idea
 The SAT is a **finite set of repeating question types** + not making mistakes. So you don't "study" it — you **drill question types** until they're automatic, learn the one rule/trick on each miss, and keep an **error log** so you never miss the same thing twice. That error log is the single biggest reason people break 1500.

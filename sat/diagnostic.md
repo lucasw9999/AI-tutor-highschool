@@ -11,7 +11,7 @@ Not a test you can fail — it places you so the tutor targets your real weak sp
 - **Grammar (punctuation):** "Choose the answer that conforms to Standard English conventions" — comma vs semicolon vs colon vs dash; sentence boundaries.
 - **Agreement/verbs/modifiers/parallelism.**
 - **Central idea / main purpose** of a short passage.
-- **Command of evidence** — textual ("which quote best supports…") and **quantitative** (read a graph/table to support a claim).
+- **Command of evidence** — textual ("which quote best supports…") and **quantitative** (read a table to support a claim — see `study-packs/rw-reading.md` Q4, Q12, Q13 for the real format).
 - **Words-in-context** — best word for the blank.
 - **Transitions** — best logical connector.
 - **Rhetorical synthesis** — given bullet notes + a goal, pick the choice that meets the goal.
@@ -19,9 +19,11 @@ Not a test you can fail — it places you so the tutor targets your real weak sp
 ## Part B — Math (10 Qs, mixed; Desmos allowed)
 - **Algebra:** solve a linear system; interpret slope/intercept in context.
 - **Advanced Math:** solve a quadratic; evaluate/transform a function; an exponential-growth setup.
-- **Problem-Solving & Data Analysis:** a percent/ratio word problem; read a scatterplot / two-way table; mean vs median.
+- **Problem-Solving & Data Analysis:** a percent/ratio word problem; a **two-way table** (see `study-packs/math-problem-solving-data.md` P9–P11); mean vs median.
 - **Geometry & Trig:** a triangle (special-right or Pythagorean); a circle (area/arc); one right-triangle trig (SOH-CAH-TOA).
 - Include **1 grid-in** (no answer choices) to practice the format.
+
+> ⚠️ **One thing this paper diagnostic cannot do:** show you a real **bar graph, line graph or scatterplot**, or a geometry **figure**. Those are on the test and this repo can't draw them (see the gap note at the end of `coverage-map.md`). If you want that rep on day one, do a **Bluebook** practice test instead — that's the honest version.
 
 ---
 

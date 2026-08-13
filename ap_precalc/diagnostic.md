@@ -1,6 +1,29 @@
 # Day-1 Diagnostic — AP Precalc Placement Check (~30 min, for Lucas)
 
-Not a test you can fail — it places you so the tutor never wastes your time. It checks (A) a few **Algebra-2 foundations** precalc leans on, then (B) **one probe per unit** to see where you already stand. Work it in your tutor (paste it in) or on paper, then tell the tutor how it went. **Show your work.**
+**This is Phase 0 of `study-plan.md`. Sit it by Sat 15 August 2026.** Everything in the plan after it is
+sequenced off what this tells us, so a week's delay here is a week's delay everywhere.
+
+Not a test you can fail — it places you so the tutor never wastes your time. It checks (A) a few
+**Algebra-2 foundations** precalc leans on, then (B) **one probe per unit** to see where you already stand.
+Work it in your tutor (paste it in) or on paper, then tell the tutor how it went. **Show your work.**
+
+> **What this measures, and what it doesn't.** This places you. It is **not** a baseline exam score and it
+> cannot move the readiness number — that needs full-length proctored mocks against a working item bank, and
+> the Precalc bank does not exist yet (`study-plan.md`, top section). Your real exam baseline is **mock 0,
+> Sat 20 March 2027**. This is 30 minutes to find the starting line, not a verdict.
+>
+> **Deliberately unlike CSA's Phase 0.** `../ap_csa/ap_csa_exam/diagnostic-exam.md` is a full timed
+> exam-format paper, because CSA's content is already covered and the question there is *"can he convert it
+> to points?"* Precalc is a catch-up: the content is genuinely new, so a timed 42-question paper would return
+> a floor score and teach us nothing beyond "hasn't learned it yet". A short placement probe is the right
+> instrument at this stage; the timed full paper arrives on 20 March 2027, when there is something to time.
+
+**A single miss is not a gap.** A weakness inferred from one missed question is provisional. Re-test it with
+2–3 fresh problems in the next two sessions before it drives more than one session of work — treat a lone slip
+as a careless error (micro-teach plus reps), not a hole in your knowledge.
+
+**Re-run this diagnostic twice more:** at the **end of Unit 3 (target: Feb 2027)** to re-rank what's left, and
+that's it — from March the mocks take over as the measurement.
 
 ---
 
@@ -39,3 +62,5 @@ Not a test you can fail — it places you so the tutor never wastes your time. I
 - **B5:** Unit 4 is class-only and comes last; no worries if it's blank.
 
 **Then:** tell the tutor *"diagnostic done,"* paste your answers, and it sets your levels in `mastery-tracker.md` and picks your first problem. After that: **"let's continue"** each day.
+
+**And then open `study-plan.md`** — it has the dated calendar from here to the exam on Tue 11 May 2027, including the two dates that are not negotiable: the AP Classroom join code in the first week of school, and exam registration by Fri 13 Nov 2026.

@@ -5,24 +5,44 @@
 ## The best-of (resource → signature strength → best use)
 | Resource | Cost | Signature strength | Best use |
 |---|---|---|---|
-| **Bluebook (College Board)** 🔥 | **Free** | It **IS the test-day app** — 4 free full-length **official adaptive** practice tests, same interface/format/scoring | **The single most important resource.** Your baseline diagnostic + periodic full-length rehearsal. Do all 4 (ration them). |
+| **Bluebook (College Board)** 🔥 | **Free** | It **IS the test-day app** — full-length **official adaptive** practice tests, same interface/format/scoring | **The single most important resource.** Your baseline diagnostic + periodic full-length rehearsal. Ration them — open the app and count how many it currently offers (see the note below). |
+| **Tailored Practice (College Board)** 🔥 | **Free** | The official version of what this tutor does by hand: it pulls questions from the official **Student Question Bank** and aims them at you **based on how you actually performed** on real and practice tests | Your between-tests drilling. Also lets you build a **flexible quiz**, filtering **80 questions across each Knowledge and Skill domain** — so you can hammer one weak domain directly instead of guessing what to review. |
 | **Khan Academy "Official Digital SAT Prep"** | **Free** | Official partner; lessons + targeted practice questions by skill | Skill-by-skill practice + video explanations. *(Note: Khan no longer hosts full-length digital tests — those moved to Bluebook as of Jan 2024.)* |
 | **College Board Question Bank / official practice** | Free | Official discrete practice questions | Drilling specific question types with authentic items. |
 | **The College Panda (Nielson Phu)** | ~$20–25/book | The consensus **core Math** resource for high scorers (*SAT Math: Advanced Guide*, 3rd ed., updated for the Digital SAT; depth over tricks; 500+ topic-grouped Qs) | **Math only.** ⚠️ Its *Writing/grammar* book isn't Digital-SAT-updated yet (new ed. ~2026/27) — use **Meltzer** for grammar instead. |
-| **Erica Meltzer / The Critical Reader** | free rules PDF; ~$30 books | The **rule-systematic authority for Reading & Writing** — her free *"Complete SAT Grammar & Punctuation Rules"* + *"Ultimate Guide to SAT Grammar"* and reading guide | **Grammar + reading** depth, organized by rule. The most-recommended grammar pick. |
+| **Erica Meltzer / The Critical Reader** | free rules **web page**; ~$30 books | The **rule-systematic authority for Reading & Writing** — her free *"Complete SAT Grammar & Punctuation Rules"* at **[thecriticalreader.com/complete-sat-grammar-rules/](https://thecriticalreader.com/complete-sat-grammar-rules/)**, which says in its own words *"these rules have been updated for the digital SAT"* — plus *"Ultimate Guide to SAT Grammar"* and her reading guide | **Grammar + reading** depth, organized by rule. The most-recommended grammar pick. **It's a web page you read in a browser, not a PDF** — nothing is downloaded and nothing is stored in this repo. ⚠️ And it sits one wrong click from a decade-stale page — see the AVOID list. |
 | **UWorld SAT** | paid subscription | Large question bank with **detailed explanations** for every choice | High-volume drilling when you want lots of items + explanations. |
-| **Princeton Review / Kaplan** | ~$20–30 | All-in-one, strategy-heavy overview | A structured starting overview if you want a single book. |
+| **Princeton Review / Kaplan** | ~$20–30 | All-in-one, strategy-heavy overview | A structured starting overview if you want a single book. ⚠️ **Check the cover says "Digital SAT" before you buy.** The test changed format in 2024, and both publishers still have pre-digital editions in circulation and on used-book shelves — those drill a paper test with a no-calculator math section and long passages that no longer exists. Same edition trap as the College Panda row above. |
 | **r/SAT community** | Free | Real student strategy, score reports, links | Strategy/experience — but **vet advice; favor official material.** |
+
+> **Why Tailored Practice matters:** it is the same idea as this tutor's error log and mastery tracker — practice aimed at your demonstrated weak spots rather than at whatever you feel like doing — except the questions are College Board's own. Use both: Tailored Practice for authentic items, the error log for *why* you missed them.
 
 ## How to actually use them (the efficient stack)
 1. **Diagnose** with one **Bluebook** full test → get your baseline + weakest areas.
-2. **Drill** weak question types with **Khan / Question Bank** (official) + the relevant tutor study pack; for Math depth use **College Panda**, for grammar/reading use **Meltzer**.
+2. **Drill** weak question types with **Tailored Practice / Khan / Question Bank** (all official) + the relevant tutor study pack; for Math depth use **College Panda**, for grammar/reading use **Meltzer**.
 3. **Re-test** every ~2–3 weeks with another **Bluebook** full-length (adaptive, scored) to track progress.
 4. **Review every test with the error log** (`error-log.md`) — classify each miss, fix the pattern, re-do it. This is the highest-leverage habit near 1500+.
 
-> **Two Bluebook things to know:** (1) After a practice test, Bluebook shows only an **estimated score** in-app — the **detailed skill-by-skill report** is in the separate **"My Practice"** web tool (mypractice.collegeboard.org); pull your weak skills from there into the error log. (2) The on-screen **reference sheet is geometry-only** (areas/volumes, special right triangles, etc.) — **algebra, Advanced-Math, and statistics formulas are NOT provided**, so memorize those (see the study packs).
+> **Two Bluebook things to know:** (1) After a practice test, Bluebook shows only an **estimated score** in-app — the **detailed skill-by-skill report** is in the separate **"My Practice"** web tool (mypractice.collegeboard.org); pull your weak skills from there into the error log. (2) A **reference sheet is provided** on the Math section — College Board's spec describes it as "a list of common formulas." See the caveat below before you decide what not to memorize.
+
+> ### ⚠️ Two things this file does NOT claim to have verified (checked 12 August 2026)
+> Both of these were previously stated here as fact. They're flagged rather than deleted, because the practical advice still holds — but don't quote the numbers.
+>
+> 1. **How many full-length practice tests Bluebook contains.** This file used to say "4." That number could **not** be confirmed on any College Board page as of 12 August 2026 — two Bluebook practice URLs returned 404, and the page that does load gives no count. **Open the app and count.** The advice that survives regardless: they're the most valuable practice you have, so space them out instead of burning them early.
+> 2. **That the reference sheet is geometry-only.** The spec says only that "a list of common formulas" is provided — it does **not** say the list is restricted to geometry. So the safe working assumption is unchanged: **don't count on finding an algebra, Advanced-Math or statistics formula there**, memorize those (see the study packs). But verify what's actually on the sheet by looking at it in Bluebook, and don't repeat "geometry-only" as fact.
+
+## ⛔ The AVOID list — things that load fine and are still wrong
+
+*All checked 12 August 2026. The danger isn't broken links; it's pages and books that work perfectly and teach a test that no longer exists.*
+
+| Avoid | Why | What to use instead |
+|---|---|---|
+| **thecriticalreader.com/grammar-rules/** | Returns HTTP 200 and looks like the resource you wanted. Its actual title is **"Grammar rules NOT tested on the SAT (pre-2016)"** — a list of what *isn't* on the test, from a decade ago. It is **one hop** from the good page and the URLs look almost identical. | **thecriticalreader.com/complete-sat-grammar-rules/** — the digital-SAT-updated one, linked in the table above. Check the URL says `complete-`. |
+| **Any prep book whose cover doesn't say "Digital SAT"** | The test changed format in 2024. Pre-digital editions drill a no-calculator math section and long passages that don't exist any more. | See the College Panda and Princeton/Kaplan rows above — both carry the same edition trap. |
+
+> **Nothing in this project is a bundled file.** Every resource above is a link you open or a book you buy — there is not a single PDF stored in this repo. If a note ever says "the PDF," it means a page on someone else's website, and that page can change.
 
 ## Priority order (don't overcomplicate)
-**Official first.** Bluebook + Khan + the Question Bank are free and authentic — that's 80% of what you need. Add **one** Math book (College Panda) and **one** RW book (Meltzer) for depth. Don't buy five books; buy two and *use* them with the error log.
+**Official first.** Bluebook + Tailored Practice + Khan + the Question Bank are free and authentic — that's 80% of what you need. Add **one** Math book (College Panda) and **one** RW book (Meltzer) for depth. Don't buy five books; buy two and *use* them with the error log.
 
 > **The "don't miss this" essentials** (from the research, all confirmed): cover all **four RW domains** (Information & Ideas, Craft & Structure, Expression of Ideas, Standard English Conventions) *and* all **four Math domains** as distinct buckets; train the **Module-1 → Module-2 adaptive mechanic** (you can't return to a module; Module-1 accuracy gates the hard Module 2); and **review every practice test**. All of these are built into this tutor.

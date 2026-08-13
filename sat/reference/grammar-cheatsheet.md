@@ -2,6 +2,13 @@
 
 **Why this matters for your score:** Standard English Conventions is ~26% of your Reading & Writing section (11-15 questions). These are the *most learnable* points on the whole SAT — every question follows the exact same prompt ("Which choice completes the text so that it conforms to the conventions of Standard English?"), and there are only about a dozen rules. Memorize this page and you can answer most SEC questions in under 20 seconds, banking time for the hard reading. Easy points. Take them all.
 
+> ### 🔁 You are already being graded on six of these in English class
+> **Commas · Semicolon vs. Colon vs. Dash (and the 5 ways to join clauses) · Subject-Verb Agreement · Pronoun Agreement & Case · Verb Tense & Form · Parallelism** are the same rules as **§3, §7, §10, §11, §12 and §6** of [`../../10th_english/guides/grammar.md`](../../10th_english/guides/grammar.md), which is built from Mrs. Pagtakhan's actual cumulative grammar exams. Six of that file's thirteen sections and this cheat-sheet's list are the *same content in two formats* — hers explains the rule and drills it in essay context; this one drills it in SAT answer-choice format.
+>
+> **So this work is never spent once.** Study it here and your grammar-exam grade goes up; study it there and your SAT RW score goes up. The difference is the clock: **English grammar exams are cumulative and continuous all year, the SAT has one hard date (Sat 6 March 2027).** Do it early and both get paid. Erica Meltzer's free rules page (digital-SAT-updated) covers exactly this ground — see `practice-resources.md`.
+>
+> Reading skill goes **one way only**, though: sustained close reading of a real play builds SAT Craft & Structure inference, but SAT passages are a few sentences long and won't teach you to hold an argument across five paragraphs. Don't expect SAT reading practice to carry the English essays.
+
 ---
 
 ## THE 20-SECOND METHOD (do this on every SEC question)
@@ -116,7 +123,7 @@ Words like *however, therefore, for example, in fact, meanwhile, nevertheless* t
    A) `fly` B) `flies` C) `are flying` D) `have flown`
 
 3. ______ from the summit, the entire valley looked impossibly small.
-   A) `Viewing` B) `Viewed` C) `To view` D) `When we viewed it`
+   A) `Viewing` B) `Viewed` C) `To view` D) `Having viewed`
 
 4. My oldest sister, a marine biologist ______ studies coral reefs off the coast of Belize.
    A) `, who` B) `who` C) `—` D) `,`
@@ -153,7 +160,7 @@ Words like *however, therefore, for example, in fact, meanwhile, nevertheless* t
 
 2. **B** (`flies`). Subject = *flock* (singular collective noun), not *geese*. Ignore the prepositional phrase "of geese." A singular subject needs *flies*. *Rule: subject-verb agreement + ignore the middle phrase.*
 
-3. **B** (`Viewed`). *Viewed from the summit, the entire valley looked impossibly small* — the past-participial opener correctly modifies the noun right after the comma (*the entire valley*, which is what's viewed), and it's the concise, SAT-preferred phrasing. A (*Viewing*) makes the valley do the viewing (dangling); C (*To view*) dangles; D (*When we viewed it*) is grammatical but wordier and adds the redundant pronoun *it*. *Rule: a participial opener must modify the noun directly after the comma — and prefer the concise, non-dangling option.*
+3. **B** (`Viewed`). *Viewed from the summit, the entire valley looked impossibly small* — the past-participial opener correctly modifies the noun right after the comma (*the entire valley*, which is the thing being viewed). Every other choice leaves a **dangling modifier**, because the valley cannot do the viewing: A (*Viewing*), C (*To view*), and D (*Having viewed*) all attach the act of viewing to *the entire valley*. *Rule: a participial opener must modify the noun directly after the comma — and only one choice here is grammatical.*
 
 4. **D** (`,`). The appositive *a marine biologist* is non-essential and must be **closed with a comma** (matching the comma after *sister*), leaving *studies* as the sentence's main verb: *My oldest sister, a marine biologist, studies coral reefs off the coast of Belize.* A (`, who`) turns the rest into a subordinate *who*-clause, so the sentence is left with **no main verb → a fragment**; B (`who`, no comma) also fragments it; C (dash) mismatches the opening comma. *Rule: close a non-essential appositive with matching punctuation, and every sentence needs a main verb.*
 

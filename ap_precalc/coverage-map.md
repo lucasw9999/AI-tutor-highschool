@@ -4,8 +4,11 @@
 
 ---
 
-## The exam (what a 4–5 is made of) — **May 2027 format**
+## The exam (what a 4–5 is made of) — **Tue, May 11, 2027** (Session 1)
+
+> ⚠️ **AP CSA is the very next day — Wed, May 12, 2027.** Two AP exams back to back; plan the final week around both.
 > ⚠️ **The exam format changed for May 2027** (Lucas's year). Numbers below are the new format (College Board CED Clarifications, effective Fall 2026). **Course content is unchanged** — all study packs stay valid. Details + source: `reference/2027-exam-changes.md`.
+> ⚠️ **AP Precalculus credit is inconsistent, and zero at UC.** UC's own admissions site: "No credit is awarded for the Precalculus exam offered in 2024 and beyond" — at any score — while CSU and USC do credit it. A 4 or a 5 does not buy the same thing at every school, and this can change year to year. Score-cancellation/withholding deadlines + where to check a specific school's policy: `../docs/ap-scores-and-credit.md` (verified 12 August 2026).
 
 | Section | Count | Weight | Calculator |
 |---|---|---|---|
@@ -18,9 +21,9 @@
 3. **Modeling a Periodic Context** (no calculator)
 4. **Symbolic Manipulation** (no calculator) — **lowest-scoring FRQ both years (mean 1.28/6 in 2024, 1.93/6 in 2025); biggest point-gain opportunity**
 
-Hybrid digital: MCQ in Bluebook; FRQs handwritten. **Calculator: an approved physical graphing calculator is permitted, *and* a built-in Desmos is available in Bluebook** → see `reference/graphing-calculator-skills.md`.
+Hybrid digital: MCQ in Bluebook; FRQs handwritten. **Calculator: a graphing calculator is REQUIRED — not merely "permitted" — on the calculator parts, MCQ Part B and FRQ Part A.** College Board, verbatim (verified 12 August 2026): *"The AP Precalculus Exam requires using a graphing calculator on Part B of Section I Multiple Choice and Part A of Section II Free Response."* An approved **handheld** satisfies it (**up to 2 permitted handhelds**) *and/or* the **built-in Desmos in Bluebook** — and **only the Bluebook-built-in Desmos is allowed on exam day, not the web or app version.** Conversely, *"Most of the AP Exam will need to be completed without the use of technology."* → see `reference/graphing-calculator-skills.md`.
 
-**Encouraging:** ~**50% (2024) → ~54% (2025) of all students score a 4 or 5** (mean ≈ 3.5). A strong score is genuinely achievable with focused prep.
+**Encouraging:** ~**50% (2024) → ~54% (2025) → 58% (2026) of all students score a 4 or 5** — the 2026 breakdown was 5 = 29%, 4 = 29%, 3 = 24%, 2 = 11%, 1 = 7%, so **82% scored 3 or higher** (verified 2026-08-11). A strong score is genuinely achievable with focused prep.
 
 > **Key fact:** the AP exam tests **Units 1–3 only.** Unit 4 is required for the *class* but never appears on the *exam* — so we learn it for the A, but don't drill exam-format questions on it.
 
@@ -41,7 +44,7 @@ All three exam units carry roughly equal weight — **none is skippable.**
 - **graphing-calculator-skills.md** — the exact calculator moves the exam rewards (zeros, intersections, regressions for the modeling FRQs).
 - **exam-strategy-and-scoring.md** — timing, the 4 FRQ types, what graders reward, common point-losers, what earns a 4–5.
 - **skills-and-weightings.md** — the 3 Mathematical Practices / 8 skills + their exam weights + per-FRQ skill map (where to spend time: 1.C "construct functions" + Practice 1 are heaviest).
-- **practice-resources-and-exam-day.md** — where to get real released items (AP Central / AP Classroom), Bluebook + handwritten-FRQ mechanics, the rehearsable sample booklet.
+- **practice-resources-and-exam-day.md** — where to get real released items (AP Central / AP Classroom), the verified third-party stack + the AVOID list, Bluebook + handwritten-FRQ mechanics, and the sample FRQ booklet (⚠️ **posts early 2027** — a diarised task, not a download you can do today).
 - **2027-exam-changes.md** — the verified May-2027 format change (read first).
 
 ---

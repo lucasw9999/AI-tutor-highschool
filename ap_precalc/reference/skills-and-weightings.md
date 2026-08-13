@@ -31,3 +31,5 @@
 - **By function type:** General Functions 15–23% · Polynomial & Rational 20–25% · Exponential & Logarithmic 22–28% · **Trigonometric & Polar 30–35%**.
 - **By unit:** Unit 1 30–40% · Unit 2 27–40% · **Unit 3 30–35%** · Unit 4 = 0% (not assessed).
 - **Trig & Polar (Unit 3) is the single heaviest area either way** → give it the most reps.
+
+> ⚠️ **Do not let SAT Math practice stand in for Unit 3.** The SAT Math ↔ Precalc overlap is real but **narrow — Units 1–2 only** (polynomial, rational, exponential, logarithmic ↔ SAT Advanced Math). **SAT Math does not test trig or polar at all**, so the heaviest Precalc unit gets **zero** benefit from SAT reps, and Precalc trig work earns nothing back on the SAT. Budget Unit 3 time **separately**, and never trade it away on a felt sense of overlap. (Full note: `practice-resources-and-exam-day.md` § "Cross-subject leverage.")

@@ -14,6 +14,9 @@ Same idea as the CSA tutor. Requires **ChatGPT Plus** (no Plus? see bottom).
   - `mastery-tracker.md`
   - All 5 study packs (in `study-packs/`): `01-julius-caesar` · `02-night` · `03-the-book-thief` · `04-the-kite-runner` · `05-life-of-pi`
   - All in **`guides/`** (essay-writing, literary-devices, grammar, vocabulary, **vocab-word-bank** (all 24 weeks), research-mla)
+  - **`reference/practice-resources.md`** — the verified outside links (Folger *Julius Caesar* full text, official AP English Literature rubric + FRQs, Purdue OWL grammar) so the tutor can point Lucas at real material instead of inventing URLs
+  - **`Caesar Essay Topics.txt`** — Mrs. P's real 10-topic list for the Julius Caesar essay
+  - **`sample_omm_essay_short.txt`** — her real annotated A-range sample essay (shows her rubric in action)
   - *(optional)* `diagnostic.md`
 
 ## Step 3 — Test (right "Preview" panel)
