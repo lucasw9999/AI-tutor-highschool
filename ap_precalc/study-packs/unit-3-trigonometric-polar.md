@@ -59,6 +59,8 @@ Unit 3 is **30–35% of the MCQ** — the single biggest function-type category 
 ### 2.2b The five key points + midline, over TWO cycles (FRQ Q3 **Part A** — scorable points you can't skip)
 FRQ Q3 **Part A literally asks you to identify and plot the coordinates of five labeled points on the sinusoid and draw its midline, across *two full cycles*.** It's procedural points (skills 2.A/2.B) that students leave on the table by jumping to the equation.
 
+**Plain idea:** A sinusoid's graph is five landmark points per cycle, spaced a **quarter period** apart, alternating between the midline and an extreme. Pin down the midline, the amplitude and the quarter period and the picture draws itself — twice, because Part A asks for two cycles.
+
 **The five points within one cycle** are at the **quarter-period** marks: **max → midline (going down) → min → midline (going up) → max.** Steps:
 1. Midline **d = (max+min)/2** (draw this horizontal line); amplitude **a = (max−min)/2**; period **P**; quarter-period **= P/4**.
 2. Start at a known point (e.g., a max at t₀). Step forward by **P/4** each time, alternating value: **max (d+a) → midline (d) → min (d−a) → midline (d) → max (d+a)** — that's one cycle (5 points). Continue another full period for the **second cycle**.
@@ -400,6 +402,24 @@ A pendulum's horizontal displacement from center is +6 cm at t = 0, swings to �
 </details>
 <!-- topic: 3.4 -->
 <!-- note: not keyable — three lettered sub-parts, and (a) is a sinusoid with several correct forms. -->
+
+---
+
+**P13 [NC] — Med — five key points.** $f(x)=4\sin(\pi x/3)-1$ is graphed over two full cycles starting at $x=0$. Give the $x$-value of the first minimum. Give the $x$-value only.
+
+<details><summary>Solution</summary>
+
+Period $=2\pi/(\pi/3)=6$, so the quarter-period step is $6/4=1.5$. Midline $d=-1$; amplitude $a=4$, so the max is $-1+4=3$ and the min is $-1-4=-5$.
+A plain sine starts **on the midline going up**, so cycle 1's five key points are
+$(0,-1) \to (1.5,\,3) \to (3,-1) \to (\mathbf{4.5},\,-5) \to (6,-1)$,
+and cycle 2 continues $(7.5,\,3) \to (9,-1) \to (10.5,\,-5) \to (12,-1)$ — two full cycles end at $x=12$.
+First minimum: $x=\mathbf{4.5}$ (where $f=-5$). Check: $\sin(\pi(4.5)/3)=\sin(3\pi/2)=-1$, so $f(4.5)=4(-1)-1=-5$ ✓.
+On the real Part A, draw and label the midline $y=-1$ too — that is a separate point.
+</details>
+<!-- key: 4.5 -->
+<!-- accept: 9/2 -->
+<!-- accept: (4.5, -5) -->
+<!-- topic: 3.3 -->
 
 ---
 
