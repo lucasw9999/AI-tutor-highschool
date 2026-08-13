@@ -2,7 +2,15 @@
 
 **Why this matters:** ~37.5% of your AP Precalc score sits on calculator-active sections (MC Part B + FRQ Q1 & Q2). Those questions are *designed* to be slow or impossible by hand — they reward fast, correct calculator moves. Knowing the exact button paths is free points toward your A and 4/5.
 
-> **Which calculator?** On the AP Precalc exam you may use an **approved physical graphing calculator (e.g., TI-84)**, **and/or** the **built-in Desmos graphing calculator inside Bluebook** — College Board's words: "in place of or in addition to a handheld." Since the **Desmos calculator is always there in Bluebook (free, nothing to buy/charge), practice with Desmos too** — the *moves* below (graph, find zeros/intersections, regressions) are the same idea in either tool; only the button paths differ. The skills, not the device, are what score points.
+> ⚠️ **A graphing calculator is REQUIRED — not merely "permitted."** AP Central's *Graphing Calculators* policy page, verbatim (verified 12 August 2026): **"The AP Precalculus Exam requires using a graphing calculator on Part B of Section I Multiple Choice and Part A of Section II Free Response."** Showing up without either a handheld or Desmos fluency is not a small handicap — it is walking into ~37.5% of the score unequipped.
+>
+> **Two ways to satisfy it, and he may use both:**
+> 1. An **approved physical graphing calculator** (e.g., TI-84). The calculator-policies page allows **"up to 2 permitted handheld calculators"** — so a spare is legal, and worth bringing.
+> 2. The **built-in Desmos graphing calculator inside Bluebook** — College Board's words: "in place of or in addition to a handheld." Nothing to buy or charge; it is always there.
+>
+> ⚠️ **Bluebook's Desmos ONLY.** Verbatim: **"A built-in Desmos graphing calculator is available through Bluebook during the AP Exam"** … **"Only the built-in Desmos graphing calculator through Bluebook can be used during an AP Exam, not the web-based or app-based calculator."** So **desmos.com and the Desmos app are practice tools, not exam tools** — the only Desmos that exists on exam day is the one inside Bluebook. Rehearse inside Bluebook itself via the ungated **test preview** (see `practice-resources-and-exam-day.md`), not just on the website.
+>
+> **And the flip side, from the same policy page:** *"Technology should not replace the development of symbolic manipulation skills"* and **"Most of the AP Exam will need to be completed without the use of technology."** Two of the four parts — ~44% of the score — are no-calculator. The *moves* below (graph, zeros/intersections, regressions) are the same idea in either tool; only the button paths differ. **The skills, not the device, are what score points.**
 
 ---
 
@@ -21,15 +29,17 @@
 - MC is in **Bluebook**; FRQs are **handwritten** on paper. Practice writing your calculator setup + result by hand.
 - **You may bring two calculators.** Bring fresh/charged batteries.
 
-### The 6 capabilities College Board says you MUST be able to do (verbatim from the CED)
+### The 6 capabilities College Board says you MUST be able to do (verbatim from the CED; re-confirmed on the *Graphing Calculators* policy page, 12 August 2026)
+
+**Treat this as a checklist and tick each one off in *both* tools** (handheld and Bluebook Desmos) before the first timed mock:
 1. Find **real zeros** of functions
 2. Find **points of intersection** of graphs
 3. Find **minima/maxima** of functions
 4. Find **numerical solutions** to equations in one variable
-5. Find **regression equations** (linear, quadratic, cubic, quartic, exponential, logarithmic, sinusoidal) and **plot residuals**
+5. Find **regression equations to model data** — **linear, quadratic, cubic, quartic, exponential, logarithmic, and sinusoidal — and plot residuals**. *All seven, plus residuals; the policy page names them individually, so none is optional. §7 below is the drill.*
 6. Perform **matrix operations** (multiplication, inverses)
 
-> The CED stresses: technology does **not** replace algebra. On no-calc parts you must do zeros/solving by hand. Use the calculator only where it's allowed.
+> The CED stresses: technology does **not** replace algebra. On no-calc parts you must do zeros/solving by hand — and per the policy page, **"most of the AP Exam will need to be completed without the use of technology."** Use the calculator only where it's allowed.
 
 ---
 
@@ -189,4 +199,4 @@ Almost every modeling FRQ follows with: "predict the value at x = …" or "find 
 
 ---
 
-*Verified against the College Board AP Precalculus Course and Exam Description (effective through May 2026) and AP Central exam pages. Button paths are for the TI-84 Plus / TI-84 Plus CE; TI-Nspire and Casio equivalents differ in menus but have all six required capabilities.*
+*Verified against the College Board AP Precalculus Course and Exam Description (effective through May 2026), AP Central's* **Graphing Calculators** *and* **Calculator Policies** *policy pages (both re-verified 12 August 2026), and AP Central exam pages. Button paths are for the TI-84 Plus / TI-84 Plus CE; TI-Nspire and Casio equivalents differ in menus but have all six required capabilities.*

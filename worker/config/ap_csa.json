@@ -1,0 +1,64 @@
+{
+  "subject": "ap_csa",
+  "display_name": "AP Computer Science A",
+  "goal": "5",
+  "exam_date": "2027-05-12",
+  "exam_session": "Session 2",
+  "note": "AP Precalculus is the day before, 2027-05-11.",
+  "exam": {
+    "mcq_count": 42,
+    "mcq_minutes": 90,
+    "mcq_weight": 0.55,
+    "frq_count": 4,
+    "frq_minutes": 90,
+    "frq_weight": 0.45,
+    "frq_points": { "Q1": 7, "Q2": 7, "Q3": 5, "Q4": 6 },
+    "pace_seconds_per_mcq": 129,
+    "unit_weights": {
+      "1": [15, 25],
+      "2": [25, 35],
+      "3": [10, 18],
+      "4": [30, 40]
+    },
+    "_note": "mcq_weight, frq_weight, and unit_weights describe the REAL AP exam's official section and unit weighting, for reference only. The readiness engine does not apply them: composite_pct is a flat percent-correct across all server-graded attempts with no section weighting, and readiness.per_unit_min holds every unit to the same floor regardless of its exam weight."
+  },
+  "units": ["1", "2", "3", "4"],
+  "practices": ["P1", "P2", "P3", "P4", "P5"],
+  "readiness": {
+    "composite_mean_min": 82,
+    "composite_floor_min": 78,
+    "max_decline_between_mocks": 5,
+    "mcq_overall_min": 80,
+    "per_unit_min": 75,
+    "dominant_practice": "P3",
+    "dominant_practice_min": 85,
+    "other_practice_min": 70,
+    "frq_min_pct": 85,
+    "max_blanks": 1,
+    "consecutive_qualifying_mocks": 3,
+    "total_logged_mocks_min": 6,
+    "window_span_days_min": 10,
+    "window_span_days_max": 42,
+    "reuse_days": 28,
+    "reuse_days_note": "How long a question stays 'already answered' before it counts as evidence again, read by select.js. Sized to THIS bank, not picked round: 218 items at the ~8 answers a day of ordinary drilling is about 27 days to work through, so 28 lets the bank cycle instead of locking. It is also inside select.js's longest spaced-review interval (35 days) — a window longer than that would stop a due review being served with the very item that was missed — and below window_span_days_max / (consecutive_qualifying_mocks - 1) = 21... which it is NOT, deliberately: 218 items covers 2 disjoint 42-question sittings (84) with room to spare, so the qualifying window is satisfiable at 28. tools/build/validate.js checks that arithmetic on every build. Beyond the window select.js still serves the least-recently-seen question rather than refusing, and labels it a repeat.",
+    "freshness_days": 42,
+    "burnout_drop_points": 8,
+    "require_official_mock": true
+  },
+  "_documentation_only": {
+    "_note": "Keys below are not read anywhere in worker/src. They record intent that was never wired into the readiness engine; treat every value here as reference, not as an enforced rule.",
+    "frq_calibrated": {
+      "value": false,
+      "note": "Meant to say whether the FRQ grader has been validated against an officially scored College Board response. NOT read by anything: api.js passes `calibrated: false` as a literal at all three computeReadiness call sites (summarize, handleStatus, handleDashboard), so editing this key changes no output whatsoever. It sat under `readiness` with a note asserting runtime behaviour it does not have. To make it live, api.js's owner replaces those three literals with `config.readiness.frq_calibrated === true` and moves this key back up into `readiness`; readiness.js already takes `calibrated` as a parameter and needs no change. Until then the engine is hard-wired to the safe state: the frq criterion is reported as pending rather than failed, free-response evidence cannot move the number, and 100% is unreachable."
+    },
+    "reduced_confidence_mocks_min": {
+      "value": 4,
+      "note": "Meant to raise the required mock count when the evidence is weak (e.g. still bank-only). Not implemented — no criterion or advisory reads it."
+    },
+    "difficulty_gap_max": {
+      "value": 7,
+      "note": "Meant to cap how far the question bank's difficulty can drift from the official exam's. Not implemented — no criterion or advisory reads it."
+    }
+  },
+  "historical_note": "2026 redesigned exam: 5=25%, 4=26%, 3=15%, 2=11%, 1=23%. Distribution published; raw-to-composite conversion is NOT, so C5 is unknown and these floors stay conservative."
+}

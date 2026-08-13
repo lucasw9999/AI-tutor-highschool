@@ -93,9 +93,9 @@ else if (score >= 80) System.out.println("B");
 else if (score >= 70) System.out.println("C");
 else                  System.out.println("F");
 ```
-A) `C`   B) `B`   C) `F`   D) `A`
+A) `A`   B) `B`   C) `C`   D) `F`
 
-**Answer: A.** `70 >= 90` false; `70 >= 80` false; `70 >= 70` true → `C` (boundary is inclusive). The chain stops there.
+**Answer: C.** `70 >= 90` false; `70 >= 80` false; `70 >= 70` true → `C` (boundary is inclusive). The chain stops there.
 `[topic 2.4][practice P3]`
 
 ---

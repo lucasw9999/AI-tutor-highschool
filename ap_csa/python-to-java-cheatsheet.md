@@ -2,12 +2,13 @@
 
 You already know how to program (Python). Java is mostly the **same ideas with different spelling** + a few traps. Skim this once before Day 2, then keep it open for your first week. You do **not** need to memorize it — you'll absorb it by solving problems.
 
-## The 5 traps that bite Python people (read these twice)
+## The 6 traps that bite Python people (read these twice)
 1. **Integer division:** `7 / 2` is **`3`** in Java, not `3.5`. To get `3.5`, cast first: `(double) 7 / 2`. (Cast *before* dividing: `(double) total / count`, **not** `(double)(total / count)`.)
 2. **`==` vs `.equals()`:** for **Strings/objects**, `==` compares *memory location*, not contents. Use **`.equals()`** to compare contents. (Python's `==` does contents — Java's does not.)
 3. **You must declare types:** `int x = 5;` not `x = 5`.
 4. **Semicolons + braces:** every statement ends with `;`. Blocks use `{ }`, not indentation.
 5. **Length is three different things:** `s.length()` (String, parens), `arr.length` (array, **no** parens), `list.size()` (ArrayList). And the last index is `length - 1`.
+6. **No `charAt` on the exam.** Java has `s.charAt(i)`, but it is **not on the Java Quick Reference** you get during the exam, and it returns a `char` — a primitive that is excluded from the course (only `int`, `double`, `boolean` are in scope). Read one character with **`s.substring(i, i+1)`**, which gives you a one-character `String` — the right type for comparing with `.equals()`.
 
 ## Side-by-side
 
@@ -33,7 +34,7 @@ You already know how to program (Python). Java is mostly the **same ideas with d
 | | Python | Java |
 |---|---|---|
 | Length | `len(s)` | `s.length()` |
-| Char at i | `s[i]` | `s.charAt(i)` |
+| Char at i | `s[i]` | `s.substring(i, i+1)` ⚠️ |
 | Slice | `s[a:b]` | `s.substring(a, b)` |
 | Find | `s.find(x)` | `s.indexOf(x)` |
 | Equal contents | `s1 == s2` | `s1.equals(s2)` ⚠️ |

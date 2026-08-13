@@ -1,0 +1,875 @@
+[
+  {
+    "topic": "1.1",
+    "subject": "ap_csa",
+    "plain_idea": "Types of errors: syntax (compile-time), logic, run-time, exception; algorithms as step-by-step instructions",
+    "worked_example": "It compiles and runs without crashing but produces wrong output — that is a **logic error**. Syntax errors stop compilation; run-time errors (C, D) throw exceptions during execution.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.2",
+    "subject": "ap_csa",
+    "plain_idea": "Three primitive types; variable declaration and assignment; literals; naming rules",
+    "worked_example": "`double rate = 5;` widens the `int` literal `5` to `5.0` — legal. (A) loses precision assigning a `double` to `int`; (B) assigns a String to a boolean; (C) has an illegal identifier (starts with a digit).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.3",
+    "subject": "ap_csa",
+    "plain_idea": "Output with `System.out.print`/`println`; string/char literals and escapes (`\\\"` `\\\\` `\\n`); `+ - * / %`; **integer division truncates**; **modulo** semantics; operator precedence; `int ÷ 0` → `ArithmeticException`",
+    "worked_example": "Integer division `17 / 5 = 3`; `17 % 5 = 2`; concatenated with `\".\"` (string mode once a String appears) → `\"3.2\"`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.4",
+    "subject": "ap_csa",
+    "plain_idea": "`=` assignment; variable must be initialized before use; `null` as reference literal",
+    "worked_example": "A **local** variable must be explicitly initialized before use (no default); `total = 0;` assigns it. (A) won't compile — locals have no default. (B) redeclares (duplicate). (D) assigns a `double` to an `int` — type mismatch.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.5",
+    "subject": "ap_csa",
+    "plain_idea": "`(int)` / `(double)` casts; truncation vs rounding `(int)(x + 0.5)`; `Integer.MIN_VALUE` / `Integer.MAX_VALUE`; **integer overflow** wrap-around",
+    "worked_example": "`(int)` **truncates** toward zero (it does not round): `9.99 → 9`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.6",
+    "subject": "ap_csa",
+    "plain_idea": "`+= -= *= /= %=`; post-increment `x++` / post-decrement `x--`; value returned is original",
+    "worked_example": "`x++` returns the **original** value (5) to `y`, then increments `x` to 6. So `x` is 6, `y` is 5.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.7",
+    "subject": "ap_csa",
+    "plain_idea": "Concept of API; library/package import; attributes (state) vs behaviors (methods)",
+    "worked_example": "**Attributes** are the object's state (data); **behaviors** are the methods that act on it. An API documents the behaviors a class offers without exposing implementation.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.8",
+    "subject": "ap_csa",
+    "plain_idea": "`//`, `/* */`, `/** */`; **preconditions** (assumed true on entry) and **postconditions** (guaranteed on return)",
+    "worked_example": "A **precondition** is what must be true **on entry** — the caller's responsibility. A postcondition is what the method guarantees on return; throwing is not promised unless stated.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.9",
+    "subject": "ap_csa",
+    "plain_idea": "Method signature (name + param types); void vs return-type; args passed **by value** (copy); **overloading** = same name, different params; flow of control through method calls",
+    "worked_example": "Primitives are passed **by value** (a copy). `bump` changes its local copy only; `x` in `main` is still `5`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.10",
+    "subject": "ap_csa",
+    "plain_idea": "`static` methods belong to class not instance; call via `ClassName.method()`; dot operator",
+    "worked_example": "A `static` method belongs to the **class**, so it is called `ClassName.method(args)` — `MathUtil.twice(5)`. No object is needed (so C, not A). D omits the argument.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.11",
+    "subject": "ap_csa",
+    "plain_idea": "`Math.abs`, `Math.pow`, `Math.sqrt`, `Math.random` [0.0, 1.0); range manipulation: `(int)(Math.random() * n)` → [0, n−1]",
+    "worked_example": "`Math.pow(2, 5)` returns a **double**, `2^5 = 32.0` (printed with the decimal point).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.12",
+    "subject": "ap_csa",
+    "plain_idea": "Object vs class distinction; reference variables; **all classes extend `Object`** (inherit `toString`, `equals`)",
+    "worked_example": "All classes extend `Object` (inheriting `toString`/`equals`). A **class** is the blueprint; an **object** is an instance; a reference variable stores the **address** of an object, and `null` means \"no object\".",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.13",
+    "subject": "ap_csa",
+    "plain_idea": "Constructor syntax; `new`; overloaded constructors; object initialization",
+    "worked_example": "`new Point(3, 8)` runs the constructor with `a=3, b=8`, setting `x=3, y=8`. `getX()` returns `x` = `3`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.14",
+    "subject": "ap_csa",
+    "plain_idea": "Calling instance methods; **`NullPointerException`** when method called on `null` reference",
+    "worked_example": "Calling an instance method (`length()`) on a `null` reference throws `NullPointerException`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.15",
+    "subject": "ap_csa",
+    "plain_idea": "Immutable; `+` concatenation; 0-based indexing; `StringIndexOutOfBoundsException`; 8 String methods (see §2)",
+    "worked_example": "Indices 3,4,5,6 (the `to` index 7 is **excluded**). `p(0)r(1)o(2)g(3)r(4)a(5)m(6)` → `gram` (length = 7−3 = 4).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.1",
+    "subject": "ap_csa",
+    "plain_idea": "Three control flow categories; sequential execution",
+    "worked_example": "**Selection** chooses between paths — `if`/`if-else`. Sequencing = straight-line order (A); repetition = loops (B).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.2",
+    "subject": "ap_csa",
+    "plain_idea": "`== != < > <= >=`; comparing **primitives** (value) vs **references** (address); do not use `==` on Strings",
+    "worked_example": "For **primitives**, `==` compares values; `3 == 3` is `true`. (`==` is the value test for primitives — only for *objects* does it compare references.)",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.3",
+    "subject": "ap_csa",
+    "plain_idea": "Syntax; one- and two-way selection; boolean test",
+    "worked_example": "`-4 >= 0` is `false`, so the `else` runs → `neg`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.4",
+    "subject": "ap_csa",
+    "plain_idea": "Multi-way selection; boundary conditions; nested `if` inside `if-else`",
+    "worked_example": "`5 > 10` false; `5 > 3` true → prints `mid` and the chain **stops** (later branches are skipped even though `5 > 0` is also true).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.5",
+    "subject": "ap_csa",
+    "plain_idea": "Logical NOT/AND/OR; precedence (`!` > `&&` > `||`); **short-circuit evaluation** stops early",
+    "worked_example": "`y != 0` is `false`, so `&&` **short-circuits**: `x / y` is never evaluated, no exception. The `else` prints `B`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.6",
+    "subject": "ap_csa",
+    "plain_idea": "Truth tables; **De Morgan's laws** (`!(A&&B)` = `(!A||!B)`); `==` compares references; use `.equals()` for String/object content; `null` check",
+    "worked_example": "De Morgan: `!(A && B)` = `!A || !B`. `!(x>0)` = `x<=0`, `!(x<10)` = `x>=10`, joined by `||`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.7",
+    "subject": "ap_csa",
+    "plain_idea": "`while` syntax; loop body; infinite loop risk; **off-by-one** boundary errors",
+    "worked_example": "n: 1→2→4→8→16→32→64→128, one `count++` per step. The loop multiplies 7 times (128 is the first value ≥ 100). `count = 7`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.8",
+    "subject": "ap_csa",
+    "plain_idea": "`for` loop anatomy; converting `for` ↔ `while`; loop variable scope",
+    "worked_example": "i = 2,4,6,8,10; sum = 2+4+6+8+10 = `30`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.9",
+    "subject": "ap_csa",
+    "plain_idea": "Divisibility test, digit extraction, count occurrences, find min/max, accumulate sum/average",
+    "worked_example": "Peels off last digits: 9, 2, 7, 4 → sum = 9+2+7+4 = `22`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.10",
+    "subject": "ap_csa",
+    "plain_idea": "Traverse with `substring`; count substrings; reverse a string; **substring property** (len = to − from)",
+    "worked_example": "Each char (`s.substring(i, i+1)`) is prepended, reversing the string: `olleh`. (This is the in-syllabus reverse algorithm; there is no `charAt`.)",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.11",
+    "subject": "ap_csa",
+    "plain_idea": "Nested iteration over 2D-like structures; tracing row-column patterns",
+    "worked_example": "Inner runs i+1 times: 1+2+3+4+5 = `15` (the inner condition is `j <= i`).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "2.12",
+    "subject": "ap_csa",
+    "plain_idea": "Count how many times a statement executes; compare loop structures (linear vs quadratic); no Big-O notation required",
+    "worked_example": "Outer 6 × inner 6 = `36` executions (quadratic — n²). No Big-O needed, just the count.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.1",
+    "subject": "ap_csa",
+    "plain_idea": "Data abstraction vs procedural abstraction; instance var vs class var; **code reuse via methods + parameters**",
+    "worked_example": "Wrapping a repeated computation in a parameterized method is **procedural abstraction**, enabling **code reuse**. Data abstraction hides *data* representation; this hides a *process*.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.2",
+    "subject": "ap_csa",
+    "plain_idea": "**Reliability, unintended consequences, harm**; intellectual property; open-source permissions",
+    "worked_example": "Training on a non-representative data set causes **algorithmic bias** — the model learns and amplifies the skew (a data-fitness/ethics issue). (A) misframes it as privacy and (B) as overfitting — but more of the same skewed data deepens the bias; (D) is not the central concern.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.3",
+    "subject": "ap_csa",
+    "plain_idea": "Classes and constructors always `public`; instance variables `private`; hiding implementation details",
+    "worked_example": "**Encapsulation:** hide data by making instance variables `private`, and expose the type/constructor as `public`. Access to the data goes through accessor/mutator methods.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.4",
+    "subject": "ap_csa",
+    "plain_idea": "Constructors initialize **all** instance vars; **defensive copy of mutable parameters**; default constructor; default values (`0`, `0.0`, `false`, `null`)",
+    "worked_example": "With **no defensive copy**, the field aliases `arr`; mutating `arr[0]` changes the object's data too → prints `999`. (A defensive copy in the constructor would have printed `10`.)",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.5",
+    "subject": "ap_csa",
+    "plain_idea": "Return-by-value; **accessor** = non-void (returns a value without changing state); **mutator** = void (modifies state); primitive args copied",
+    "worked_example": "`bump()` runs once per even value: 2, 4, 6 → count = 3. Then `get() * 10 + data.length = 3*10 + 5 = 35`. (A) drops the `+ data.length`; (C) counts all five values as bumps then drops the length; (B) over-counts the evens.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.6",
+    "subject": "ap_csa",
+    "plain_idea": "**Object-reference params create aliases**; mutating through a parameter changes the original; returning a reference; **`private` members accessible only within the same class**",
+    "worked_example": "The parameter is an **alias** to the same object. Mutating it (`add(99)`) through the parameter changes the caller's list → `[1, 99]`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.7",
+    "subject": "ap_csa",
+    "plain_idea": "Class (static) vars/methods vs instance; rules for calling static from instance and vice versa; `final` = cannot reassign",
+    "worked_example": "The `static` field `made` is **shared** by the whole class; each constructor call increments it. Three objects → `3`. `count()` is `static`, called on the class.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.8",
+    "subject": "ap_csa",
+    "plain_idea": "Local vars and params have no access modifier; **shadowing** when a local name matches an instance var",
+    "worked_example": "The local parameter `size` **shadows** the field. `size = size` reassigns the parameter to itself; the field is untouched → still `10`. (`this.size = size` would have fixed it.)",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "3.9",
+    "subject": "ap_csa",
+    "plain_idea": "`this` refers to the current object; disambiguation from shadowed fields; **no `this` in static context**",
+    "worked_example": "`this.size` is the **field**; the bare `size` is the parameter. `this.size = size` copies the parameter into the field. (A) assigns the parameter to itself; (B)/(C) leave the field at default.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.1",
+    "subject": "ap_csa",
+    "plain_idea": "Privacy risks of data collection; **algorithmic bias**; fitness of data for a purpose",
+    "worked_example": "Collecting fine-grained personal data (location) and keeping it indefinitely is a classic **privacy** risk — the central data-collection ethics concern. (B) misframes it as bias, (C) as performance, and (D) as a coding bug — none is the core issue.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.2",
+    "subject": "ap_csa",
+    "plain_idea": "Concept of a data set; accessing elements sequentially",
+    "worked_example": "A data set is processed by accessing elements **one at a time** — by index or sequentially. None of the structures require simultaneous, reverse-only, or sorted access.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.3",
+    "subject": "ap_csa",
+    "plain_idea": "`new type[n]`; **`arr.length` is an attribute (not a method)**; default values; initializer list `{...}`; `[]` syntax; valid indices 0..length−1; `ArrayIndexOutOfBoundsException`",
+    "worked_example": "Valid indices are 0..3, but `i <= arr.length` lets `i` reach 4, so `arr[4]` throws `ArrayIndexOutOfBoundsException` (off-by-one). Note `arr.length` is an **attribute** — no parentheses.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.4",
+    "subject": "ap_csa",
+    "plain_idea": "Index-based `for`; **enhanced-for copies the element (primitive copy; object reference copy)**; method call on an object element mutates the object",
+    "worked_example": "Even elements: 4, 8, 16, 42 → 4+8+16+42 = `70` (15 and 23 are odd, skipped).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.5",
+    "subject": "ap_csa",
+    "plain_idea": "Max/min, sum/average, count, linear search, reverse in place, shift elements, copy array, replace elements, sort",
+    "worked_example": "Swaps ends inward (i = 0,1; the middle element index 2 stays): `{5,4,3,2,1}` → prints `54321`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.6",
+    "subject": "ap_csa",
+    "plain_idea": "`File(String)` + `Scanner(File)`; `throws IOException`; `java.io` import; **`hasNext()` loop**; `split(String del)` to parse columns; `close()`; no keyboard `Scanner`; no `nextLine` mixed with token methods; no regex in `split`",
+    "worked_example": "Two tokens `Ann,17` and `Ben,16`; `split(\",\")[1]` is the age; `Integer.parseInt` → 17 and 16; total = `33`. The `hasNext()` loop reads to end of file, then `close()`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.7",
+    "subject": "ap_csa",
+    "plain_idea": "`Integer` / `Double` are **immutable**; **autoboxing** (primitive → wrapper) / **unboxing** (wrapper → primitive); `Integer.parseInt(String)`, `Double.parseDouble(String)`",
+    "worked_example": "`parseInt(\"42\") = 42`; `42 + 8 = 50`; the `int` 50 **autoboxes** into the `Integer boxed`, printed as `50`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.8",
+    "subject": "ap_csa",
+    "plain_idea": "`ArrayList<E>`; mutable size; `java.util` import; 6 methods (see §2); valid indices 0..size−1",
+    "worked_example": "`[5]` → `[5,8]` → `add(1,6)` inserts at index 1 shifting right → `[5,6,8]` → `set(0,9)` replaces index 0 → `[9,6,8]`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.9",
+    "subject": "ap_csa",
+    "plain_idea": "Index-based and enhanced-for traversal; **delete-while-traversing: iterate backwards or use index adjustment**; `IndexOutOfBoundsException`; **enhanced-for + structural modify → `ConcurrentModificationException`**",
+    "worked_example": "`remove(1)` deletes `\"q\"` and shifts left → `[\"p\",\"r\"]`; `get(1)` is now `\"r\"`, `size()` is 2.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.10",
+    "subject": "ap_csa",
+    "plain_idea": "9 standard algorithms + insert-in-order + delete-by-condition; multi-structure simultaneous traversal",
+    "worked_example": "Elements > 5: 7 and 10 → count = `2` (4 and 3 are not). Enhanced-for unboxes each `Integer`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.11",
+    "subject": "ap_csa",
+    "plain_idea": "Array-of-arrays; `[row][col]` syntax; `a.length` = number of rows; `a[0].length` = number of columns; **no jagged arrays**",
+    "worked_example": "`g.length` = number of **rows** = 2; `g[0].length` = number of **columns** = 4.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.12",
+    "subject": "ap_csa",
+    "plain_idea": "Nested loops for row-major / col-major / custom order; **enhanced-for outer variable = a 1D array (one row)**",
+    "worked_example": "All six elements: 1+2+3+4+5+6 = `21`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.13",
+    "subject": "ap_csa",
+    "plain_idea": "Over whole array, individual row, individual column, or sub-section; sum, count, find max/min in 2D",
+    "worked_example": "Scans every cell, tracking the largest: max = `9`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.14",
+    "subject": "ap_csa",
+    "plain_idea": "Sequential scan from either end; returning index or -1 / element; 2D = linear search per row",
+    "worked_example": "Linear search from the front stops at the **first** match: `a[1] == 3` → returns index `1`.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.15",
+    "subject": "ap_csa",
+    "plain_idea": "Selection: find min of unsorted segment, swap to front; insertion: insert next element into sorted prefix; **trace-only — writing sort code is out of scope**",
+    "worked_example": "Pass 1 finds the min (1 at index 3) and swaps it with index 0: `{1, 2, 9, 5, 7}` (5 and 1 swap; the rest stay).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.16",
+    "subject": "ap_csa",
+    "plain_idea": "Base case; recursive case; each call has its own local variables; trace the call stack; **writing recursive code is out of scope**",
+    "worked_example": "`4 + (3 + (2 + (1 + (0)))) = 4+3+2+1 = 10` (base case at n≤0 returns 0).",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "4.17",
+    "subject": "ap_csa",
+    "plain_idea": "Binary search: sorted array, halve the search space each step; merge sort: recursive divide-and-merge; both **trace-only**",
+    "worked_example": "First `mid = (0+6)/2 = 3`; `a[3] = 7 < 11` → search the right half, `low = 4`. Next `mid = (4+6)/2 = 5`; `a[5] == 11` → found. The probed indices are `3, 5` (two probes). Binary search halves the space each step, not a linear scan.",
+    "common_mistake": null,
+    "source_file": "ap_csa/ap_csa_exam/topic-coverage-matrix.md",
+    "complete": true
+  },
+  {
+    "topic": "1.1",
+    "subject": "ap_precalc",
+    "plain_idea": "AROC over [a, b] is the slope of the straight line (secant) connecting the two endpoints on the graph. It's \"rise over run\" for a function.",
+    "worked_example": "$f(x)=x^2$, find AROC on [1, 4].\n$\\dfrac{f(4)-f(1)}{4-1}=\\dfrac{16-1}{3}=\\dfrac{15}{3}=5.$",
+    "common_mistake": "Flipping the order — numerator must match the denominator's direction. Always (top output − bottom output) over (top input − bottom input).",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.2",
+    "subject": "ap_precalc",
+    "plain_idea": "Concavity tells you whether the *rate of change itself* is speeding up or slowing down.\n- **Concave UP** (curls upward, like a cup): rate of change is **increasing**.\n- **Concave DOWN** (curls over, like a frown): rate of change is **decreasing**.\n\nA secant line on a concave-**down** graph lies **below** the curve between the points → a linear estimate **underestimates** the true value there. (This exact reasoning was Q2(B)(iii) in BOTH 2024 and 2025.)",
+    "worked_example": "$f$ is increasing and concave down on [0, 10]. You estimate $f(5)$ using the AROC from 0 to 10. Is your estimate too high or too low?\nConcave down → secant is below the curve → estimate is **too low** (an underestimate).",
+    "common_mistake": "Confusing \"increasing\" with \"concave up.\" A function can be increasing while concave down (rising but leveling off). *Increasing/decreasing* = is the output going up or down. *Concavity* = is the rate going up or down. They're independent.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.3",
+    "subject": "ap_precalc",
+    "plain_idea": "Far left and far right, a polynomial behaves like its **leading term** $a_nx^n$ only.",
+    "worked_example": "End behavior of $f(x)=-2x^3+5x^2-1$.\nLeading term $-2x^3$ (odd degree, negative coeff): $\\displaystyle\\lim_{x\\to\\infty}f(x)=-\\infty$ and $\\displaystyle\\lim_{x\\to-\\infty}f(x)=+\\infty$.",
+    "common_mistake": "Bad **limit notation**. The Chief Reader flagged this BOTH years — students got the behavior right but lost the point. You need ALL FOUR pieces: the word **lim**, the **x→(±∞)** underneath, the **function**, and the **value**. \"It goes to infinity\" earns zero.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.4",
+    "subject": "ap_precalc",
+    "plain_idea": "A zero is where $f(x)=0$ (an x-intercept if real). **Multiplicity** = how many times that factor repeats, and it controls how the graph behaves at that x-intercept.\n- **Odd multiplicity** (1, 3, …): graph **crosses** the x-axis.\n- **Even multiplicity** (2, 4, …): graph **touches and bounces** (tangent to axis).\n\nA degree-$n$ polynomial has exactly $n$ zeros counting multiplicity and complex ones. **Complex (non-real) zeros come in conjugate pairs** ($a+bi$ with $a-bi$).",
+    "worked_example": "$f(x)=(x-2)^2(x+1)$. Zeros and behavior?\n$x=2$ (multiplicity 2 → **bounces**), $x=-1$ (multiplicity 1 → **crosses**). Degree = 3.",
+    "common_mistake": "Assuming every zero crosses the axis. Even multiplicity bounces — getting this wrong means you draw the graph wrong and miss MCQs that ask to match equations to graphs.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.5",
+    "subject": "ap_precalc",
+    "plain_idea": "- **Even:** $f(-x)=f(x)$ → symmetric about the **y-axis** (e.g., $x^2$, $\\cos$). Even-power terms only.\n- **Odd:** $f(-x)=-f(x)$ → symmetric about the **origin** (e.g., $x^3$, $\\sin$). Odd-power terms only.",
+    "worked_example": "Is $f(x)=x^3-4x$ even, odd, or neither?\n$f(-x)=(-x)^3-4(-x)=-x^3+4x=-(x^3-4x)=-f(x)$ → **odd**.",
+    "common_mistake": "Stopping after computing $f(-x)$ without comparing it to **both** $f(x)$ and $-f(x)$. If it matches neither, the answer is \"neither.\"",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.6",
+    "subject": "ap_precalc",
+    "plain_idea": "Factor top and bottom first.\n- **Hole (removable):** a factor that cancels from both numerator and denominator. The hole is at that x-value.\n- **Vertical asymptote (VA):** a factor in the denominator that does **NOT** cancel. Output → ±∞ there.",
+    "worked_example": "$f(x)=\\dfrac{(x-3)(x+1)}{(x-3)(x-5)}$.\n$(x-3)$ cancels → **hole at $x=3$**. $(x-5)$ remains → **VA at $x=5$**. (Find the hole's y-value by plugging $x=3$ into the simplified form: $\\frac{3+1}{3-5}=-2$, hole at $(3,-2)$.)",
+    "common_mistake": "Calling every denominator zero a vertical asymptote. If it cancels, it's a HOLE, not a VA. Always factor and cancel first.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.7",
+    "subject": "ap_precalc",
+    "plain_idea": "Compare the degrees of numerator (N) and denominator (D):\n- **deg N < deg D** → horizontal asymptote **y = 0**.\n- **deg N = deg D** → horizontal asymptote **y = ratio of leading coefficients**.\n- **deg N = deg D + 1** → **slant (oblique) asymptote**; do polynomial long division, the quotient (drop remainder) is the line.\n- **deg N > deg D + 1** → no horizontal/slant asymptote (end behavior follows the quotient polynomial).",
+    "worked_example": "Slant asymptote of $f(x)=\\dfrac{x^2+1}{x-1}$.\nLong division: $x^2+1 \\div (x-1)=x+1$ remainder 2. Slant asymptote: **y = x + 1**.",
+    "common_mistake": "Reaching for a horizontal asymptote when the top degree is bigger. Equal degrees → ratio of leading coeffs (NOT y = 0); top one bigger → slant, do the division.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.8",
+    "subject": "ap_precalc",
+    "plain_idea": "Same function, different forms for different jobs:\n- **Factored form** reveals **zeros** instantly: $f(x)=2(x-3)(x+1)$.\n- **Standard form** reveals **end behavior / leading coefficient / y-intercept**: $f(x)=2x^2-4x-6$.",
+    "worked_example": "Quadratic model through (0, 25), (2, 30), (4, 34).\nFrom (0,25): $c=25$. From (2,30): $4a+2b+25=30 \\Rightarrow 4a+2b=5$. From (4,34): $16a+4b+25=34 \\Rightarrow 16a+4b=9$. Solve: double the first ($8a+4b=10$), subtract from second ($8a=-1$) → $a=-0.125$, then $b=2.75$.",
+    "common_mistake": "On modeling FRQs, students give answers with no work. Q2 is the 2nd-lowest-scoring FRQ. **Set up the equations explicitly**, and watch sign/decimal accuracy.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.9",
+    "subject": "ap_precalc",
+    "plain_idea": "Starting from $f(x)$, build $g(x)=a\\,f(b(x-h))+k$:\n- **k**: vertical shift (up if +).\n- **h**: horizontal shift (RIGHT if $x-h$ with +h — opposite of intuition).\n- **a**: vertical stretch (|a|>1) / compress; reflect over x-axis if a<0.\n- **b**: horizontal stretch/compress by 1/|b|; reflect over y-axis if b<0.",
+    "worked_example": "Describe $g(x)=-2f(x-3)+1$ vs $f$.\nRight 3, vertical stretch ×2, reflect over x-axis, up 1.",
+    "common_mistake": "Inside-the-parentheses changes are **horizontal and backwards**: $f(x-3)$ moves RIGHT 3 (not left), and $f(2x)$ **compresses** by ½ (not stretch). Outside changes are vertical and behave normally.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.10",
+    "subject": "ap_precalc",
+    "plain_idea": "A **piecewise function** is built from different rules on **non-overlapping** intervals of the domain — one formula here, a different one there.",
+    "worked_example": "A shop charges \\$5 for up to 10 items, then \\$0.40 for each item beyond 10. Write $C(n)$ and find $C(25)$.\n$$C(n)=\\begin{cases} 5, & 0\\le n\\le 10\\\\ 5+0.40(n-10), & n>10\\end{cases}$$\n$C(25)=5+0.40(25-10)=5+0.40(15)=5+6=\\mathbf{11}$ dollars. Note the $n-10$: the per-item charge starts counting only *after* the 10th item, so it multiplies the items in EXCESS of 10, not all 25.",
+    "common_mistake": "Using the wrong piece at a boundary — watch the **≤ vs <** at each breakpoint to see which rule owns the endpoint.",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "1.11",
+    "subject": "ap_precalc",
+    "plain_idea": "A model is only true over the inputs the situation actually allows, so the model is the formula *plus* its **valid domain and range** — give both.\n- **Domain restriction** — from the context (time can't be negative; you can't have a fraction of a person), a math constraint (no division by zero / no log of ≤0), or an extreme-value clue.\n- **Range restriction** — e.g., a count must be a whole number (round), or a quantity can't exceed a physical max.",
+    "worked_example": "A 200-litre rain barrel drains at 8 L per minute, so $V(t)=200-8t$ litres after $t$ minutes. State the model's domain and range.\nAlgebraically $200-8t$ is defined for every real $t$, so nothing here is a *math* restriction — both ends come from the **context**: $t$ cannot be negative, and the barrel is empty when $200-8t=0 \\Rightarrow t=25$, after which the formula would report a negative volume. **Domain: $0\\le t\\le 25$. Range: $0\\le V\\le 200$.**",
+    "common_mistake": "Handing in the formula and stopping. Q2's reasoning parts pay for *where the model is valid and why* — and \"all real numbers\" is almost always wrong on a context problem. Check **both** ends: the one the context sets ($t\\ge 0$) and the one the model sets (where it stops describing the situation).",
+    "source_file": "ap_precalc/study-packs/unit-1-polynomial-rational.md",
+    "complete": true
+  },
+  {
+    "topic": "2.1",
+    "subject": "ap_precalc",
+    "plain_idea": "A sequence is a list of numbers following a rule. **Arithmetic** = you *add* the same number each step (constant difference). **Geometric** = you *multiply* by the same number each step (constant ratio). Arithmetic ↔ linear; geometric ↔ exponential.",
+    "worked_example": "Geometric sequence with $g_1 = 5$, $g_4 = 135$. Find the rule.\n- $g_4 = g_1 r^{3} \\Rightarrow 135 = 5r^3 \\Rightarrow r^3 = 27 \\Rightarrow r = 3$.\n- Rule: $g_n = 5\\cdot 3^{\\,n-1}$.",
+    "common_mistake": "Mixing up the indexing. If it starts at $a_0$, the $n$-th listed term uses exponent/multiplier $n$; if it starts at $a_1$, use $n-1$. Always check what the first term's index is.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.2",
+    "subject": "ap_precalc",
+    "plain_idea": "Linear functions change by a **constant amount** over equal-length input intervals (add the same thing). Exponential functions change by a **constant proportion/ratio** (multiply by the same factor). This is the #1 conceptual idea the exam tests — including FRQ Q1 2025, which asked students to identify a table as exponential by checking ratios.",
+    "worked_example": "Which model fits? x = 0,1,2,3 → y = 4, 6, 9, 13.5.\n- Differences: +2, +3, +4.5 → not constant → not linear.\n- Ratios: 6/4 = 1.5, 9/6 = 1.5, 13.5/9 = 1.5 → constant → **exponential**, $y = 4(1.5)^x$.",
+    "common_mistake": "Only checking differences and declaring \"not linear, so I don't know.\" The exam wants you to immediately test the **ratio** next. Constant ratio = exponential, full stop.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.3",
+    "subject": "ap_precalc",
+    "plain_idea": "$f(x) = a\\cdot b^{x}$. Here $a$ = initial value (y-intercept, the value at $x=0$), $b$ = base = the growth/decay factor. $b>1$ → **growth**; $0<b<1$ → **decay**. The graph has a **horizontal asymptote** (default $y=0$).",
+    "worked_example": "A \\$2000 investment grows 5% per year. Value after $t$ years, and after 10 years?\n- $V(t) = 2000(1.05)^t$.\n- $V(10) = 2000(1.05)^{10} \\approx 2000(1.6289) \\approx \\$3257.79$.",
+    "common_mistake": "Writing the decay base wrong. \"Decreases 12% per year\" is $b = 1 - 0.12 = 0.88$, **not** $0.12$. And the asymptote of $a\\cdot b^x + k$ is $y=k$, not $y=0$.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.4",
+    "subject": "ap_precalc",
+    "plain_idea": "$(f\\circ g)(x) = f(g(x))$ — do the **inside first**, feed its output into the outside function. Order matters; $f(g(x)) \\neq g(f(x))$ in general.",
+    "worked_example": "$f(x)=x^2+1$, $g(x)=2^x$. Find $f(g(3))$.\n- Inside: $g(3) = 2^3 = 8$.\n- Outside: $f(8) = 8^2+1 = 65$.",
+    "common_mistake": "Composing in the wrong order, or — with a graph/table — misreading which value to look up. For $h(3)=g(f(3))$, you find $f(3)$ FIRST (from the graph/table), then plug that into $g$. Track inside-out.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.5",
+    "subject": "ap_precalc",
+    "plain_idea": "The inverse $f^{-1}$ undoes $f$: it swaps inputs and outputs. If $(a,b)$ is on $f$, then $(b,a)$ is on $f^{-1}$. A function has an inverse only if it's **one-to-one** (passes the horizontal line test). To find it algebraically: swap $x$ and $y$, solve for $y$.",
+    "worked_example": "$f(x) = 2^x - 5$. Find $f^{-1}(x)$.\n- $y = 2^x - 5 \\Rightarrow$ swap: $x = 2^y - 5 \\Rightarrow x+5 = 2^y \\Rightarrow y = \\log_2(x+5)$.\n- $f^{-1}(x) = \\log_2(x+5)$.",
+    "common_mistake": "Confusing $f^{-1}(x)$ with $\\dfrac{1}{f(x)}$. The inverse is NOT the reciprocal. Also, when asked \"does $f$ have an inverse?\", justify with the **horizontal line test / one-to-one**, not the vertical line test (that just checks it's a function at all).",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.6",
+    "subject": "ap_precalc",
+    "plain_idea": "A log answers \"what exponent?\" $\\log_b x = y$ means $b^y = x$. It's the inverse of $b^x$. $\\log$ (no base) = base 10; $\\ln$ = base $e$.",
+    "worked_example": "Evaluate $\\log_2 32$ and $\\ln(e^4)$.\n- $\\log_2 32$: \"2 to what power is 32?\" $2^5=32$, so $=5$.\n- $\\ln(e^4) = 4$ (log and exp same base undo each other).",
+    "common_mistake": "Forgetting the **domain restriction**. $\\log(x-3)$ requires $x>3$. On modeling FRQs, ignoring domain on a log model loses points.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.7",
+    "subject": "ap_precalc",
+    "plain_idea": "Three rules turn products into sums, quotients into differences, and exponents into coefficients. Used to **condense** to a single log or **expand** — both directions appear on FRQ Q4.",
+    "worked_example": "Condense $3\\log x + \\log y - 2\\log z$ into a single log.\n- Power rule first: $\\log x^3 + \\log y - \\log z^2$.\n- Product/quotient: $\\log\\!\\left(\\dfrac{x^3 y}{z^2}\\right)$.",
+    "common_mistake": "Inventing fake rules. $\\log(M+N) \\neq \\log M + \\log N$, and $\\dfrac{\\log M}{\\log N} \\neq \\log M - \\log N$. The sum rule applies to the log of a **product**, never a sum. Also apply the power rule **before** combining.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.8",
+    "subject": "ap_precalc",
+    "plain_idea": "To solve for a variable in an exponent, take a log of both sides. To solve a log equation, exponentiate (rewrite in exponential form) — then **check for extraneous solutions** (domain!).",
+    "worked_example": "Worked example — A (no calc)\nSolve $5\\cdot 3^{x}=45$.\n- $3^x = 9 = 3^2 \\Rightarrow x = 2$.\n\n**Worked example B (calc, 3 decimals):** Solve $4^{x}=20$.\n- $x = \\dfrac{\\ln 20}{\\ln 4} = \\dfrac{2.9957}{1.3863} \\approx 2.161$.\n\n**Worked example C (quadratic-in-disguise — this was 2025 FRQ Q4):** Solve $e^{2x}-e^{x}-12=0$.\n- Let $u=e^x$: $u^2-u-12=0 \\Rightarrow (u-4)(u+3)=0 \\Rightarrow u=4$ or $u=-3$.\n- $e^x = 4 \\Rightarrow x=\\ln 4$. ($e^x=-3$ is **rejected** — $e^x$ is never negative.)",
+    "common_mistake": "Not checking domain after solving log equations — solutions that make any log's argument $\\le 0$ must be thrown out. And on Part A, leave exact ($\\ln 4$, not 1.386).",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.9",
+    "subject": "ap_precalc",
+    "plain_idea": "Fit a model to data/context, then use it to predict or interpret. **Exponential model** $y=ab^t$ when there's a constant percent rate. **Logarithmic model** $y=a+b\\ln(t+c)$ when growth is fast-then-leveling. This is FRQ Q2 territory (the second-hardest FRQ).",
+    "worked_example": "Worked example — (log model, like 2024 FRQ Q2)\n$G(t)=a+b\\ln(t+1)$ with $G(0)=40$ and $G(91)=76$.\n- $t=0$: $a + b\\ln(1) = a + 0 = 40 \\Rightarrow a=40$.\n- $t=91$: $40 + b\\ln(92) = 76 \\Rightarrow b = \\dfrac{36}{\\ln 92} \\approx \\dfrac{36}{4.5218} \\approx 7.961$.\n- Model: $G(t)=40+7.961\\ln(t+1)$.",
+    "common_mistake": "Failing to **explain reasoning** about concavity / model limits. E.g., \"the average rate of change estimate is *less than* the true value because the graph is **concave down**, so the secant line lies below the curve.\" Memorize this concavity-vs-secant argument — it's near-zero-scoring on the exam, so it's free points if you nail it.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.10",
+    "subject": "ap_precalc",
+    "plain_idea": "A **semi-log plot** puts the y-axis on a **log scale** (and x linear). On this plot, **exponential data becomes a straight line.** That's the whole point: it's a visual test for \"is this exponential?\"\n\n> **Exam scope (important):** On the AP exam, semi-log means the **log scale is on the y-axis ONLY, to linearize EXPONENTIAL data.** Putting the *x*-axis on a log scale (to linearize logarithmic data) and full **log-log** plots are **OUT of scope** — don't study them. The exam writes the linearized form as $y=(\\log_n b)x+\\log_n a$ for a log base $n>1$.",
+    "worked_example": "A semi-log plot ($\\log_{10} y$ vs $x$) is a line through $(0, 1)$ and $(2, 3)$. Find the exponential model.\n- Slope $=\\dfrac{3-1}{2-0}=1=\\log b \\Rightarrow b=10^{1}=10$.\n- Intercept $=1=\\log a \\Rightarrow a=10^{1}=10$.\n- Model: $y = 10\\cdot 10^{x}$.",
+    "common_mistake": "Thinking the points on a semi-log plot are the actual data values. They're the **logs** of the data. Slope is $\\log b$, not $b$ — you must un-log to recover the base and initial value.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "2.11",
+    "subject": "ap_precalc",
+    "plain_idea": "Once you fit a model, you judge how good it is.\n- **Error (residual)** at a point = **predicted − actual** value. Positive error = the model **overestimates** there; negative = **underestimates**.\n- **Residual plot test:** a model is **appropriate only if the residual plot has NO pattern** (points scattered randomly around 0). A clear pattern (curve, fan shape) means the model type is wrong. *(This is a classic MCQ.)*\n- **Context can make an over- or under-estimate preferable.** The exam may ask which is \"better\" for a situation — e.g., for ordering enough supplies, an **overestimate** is safer; there isn't a universal \"right\" choice, it depends on the scenario. Justify with the context.",
+    "worked_example": "A model predicts 84.2 thousand downloads on day 30; the app actually had 88.0 thousand. Find the error and say whether the model over- or underestimates.\nError $=$ predicted $-$ actual $=84.2-88.0=\\mathbf{-3.8}$ thousand. The error is **negative**, so the model **underestimates** on day 30.\nAnd one error is not a verdict on the model *type*: if the residuals on days 10, 20, 30, 40 ran $+2.1,\\ -0.9,\\ -3.8,\\ -7.2$ — sliding steadily downward instead of scattering about 0 — that **pattern** says the wrong family of function was fitted, however small any single error looks.",
+    "common_mistake": "Calling a model \"good\" because the curve looks close, ignoring the residual plot — or saying an estimate is \"wrong\" when the question wants *over vs under* and *why that's appropriate here*.",
+    "source_file": "ap_precalc/study-packs/unit-2-exponential-logarithmic.md",
+    "complete": true
+  },
+  {
+    "topic": "3.1",
+    "subject": "ap_precalc",
+    "plain_idea": "A radian measures angle by arc length on a circle of radius 1. Once around = 2π radians = 360°. On the unit circle, the point at angle θ is **(cos θ, sin θ)**.",
+    "worked_example": "Worked example — exact value of cos(5π/6)\n5π/6 is in QII (between π/2 and π). Reference angle = π − 5π/6 = π/6. cos is **negative** in QII. cos(π/6) = √3/2 → **cos(5π/6) = −√3/2.**",
+    "common_mistake": "Wrong sign because you skipped the quadrant check. Always do **reference angle first, then slap on the quadrant sign.**",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.2",
+    "subject": "ap_precalc",
+    "plain_idea": "Sine and cosine make repeating \"waves.\" Four numbers fully describe any wave.",
+    "worked_example": "Worked example — build the sinusoid\nMax 18, min 0, one full cycle every 2 units, max occurs at x = 1.\n- d = (18+0)/2 = **9**; a = (18−0)/2 = **9**; b = 2π/2 = **π**.\n- Cosine peaks at its shift, and the max is at x = 1, so **f(x) = 9 cos(π(x − 1)) + 9.**",
+    "common_mistake": "Forgetting to **factor b out** before reading the phase shift. In sin(πx − π) the shift is c where πx − π = π(x − 1) → shift = 1, not π.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.3",
+    "subject": "ap_precalc",
+    "plain_idea": "A sinusoid's graph is five landmark points per cycle, spaced a **quarter period** apart, alternating between the midline and an extreme. Pin down the midline, the amplitude and the quarter period and the picture draws itself — twice, because Part A asks for two cycles.",
+    "worked_example": "max 40, min 2, period 60, max at t = 0.\nd = 21, a = 19, quarter-period = 15. Points: **(0, 40) → (15, 21) → (30, 2) → (45, 21) → (60, 40)** [cycle 1], then **(75, 21) → (90, 2) → (105, 21) → (120, 40)** [cycle 2]. Draw the midline at **y = 21**.",
+    "common_mistake": "plotting only one cycle, or forgetting to **draw/label the midline** — both are explicitly required.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.4",
+    "subject": "ap_precalc",
+    "plain_idea": "On any piece of a wave the exam asks two things: is the function **positive/negative** and **increasing/decreasing**, AND is the **rate of change increasing or decreasing** (concavity — no calculus needed, just read the curve).",
+    "worked_example": "On an interval a sinusoid is below the midline and heading from the midline down toward the minimum. Describe it.\n→ Function is **negative and decreasing**; it's the valley region so it's **concave up**, meaning the **rate of change is increasing** (the descent is slowing as it nears the bottom).",
+    "common_mistake": "Conflating \"decreasing\" (the value going down) with \"rate of change decreasing\" (the slope getting smaller). Different claims — Chief Reader flags this every year.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.5",
+    "subject": "ap_precalc",
+    "plain_idea": "tan θ = sin θ/cos θ. It has **no amplitude**, repeats every **π** (not 2π), and shoots to ±∞ (vertical asymptotes) where cos = 0.",
+    "worked_example": "Worked example — period of y = tan(2x)\nperiod = π/|2| = **π/2.** Asymptotes where 2x = π/2 + πk → x = π/4 + πk/2.",
+    "common_mistake": "Using 2π/b (the sine rule) for tangent's period. Tangent's base period is **π.**",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.6",
+    "subject": "ap_precalc",
+    "plain_idea": "arcsin/arccos/arctan undo trig, but only on a restricted piece so the answer is unique. **The range restriction is the whole game.**",
+    "worked_example": "Worked example — exact value of arcsin(−1/2)\nNeed an angle in [−π/2, π/2] with sine −1/2. That's **−π/6.** (Not 7π/6 — out of range.)",
+    "common_mistake": "Giving an answer outside the inverse function's range (e.g., arccos returning a negative angle). arccos output is **never negative.**",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.7",
+    "subject": "ap_precalc",
+    "plain_idea": "Find ALL angles that work, not just the one the calculator/unit circle hands you. Sine/cosine repeat every 2π; tangent every π.",
+    "worked_example": "Worked example — solve 2 sin x = √3 (all solutions)\nsin x = √3/2 → in [0, 2π): x = **π/3** and x = **2π/3** (sine positive in QI and QII).\nAll solutions: **x = π/3 + 2πk** and **x = 2π/3 + 2πk.**",
+    "common_mistake": "Reporting only one solution. sin x = √3/2 has **two** per cycle. Forgetting the \"+2πk / +πk\" loses the generality point.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.8",
+    "subject": "ap_precalc",
+    "plain_idea": "Just flips. **sec = 1/cos, csc = 1/sin, cot = 1/tan = cos/sin.**",
+    "worked_example": "Worked example — sec(π/3)\nsec = 1/cos. cos(π/3) = 1/2 → **sec(π/3) = 2.**",
+    "common_mistake": "Mixing up the pairs — **sec goes with cos** (both start with the \"co\"-cross-up rule: se**c**↔**c**os... easiest is just memorize sec=1/cos, csc=1/sin).",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.9",
+    "subject": "ap_precalc",
+    "plain_idea": "Algebra rewrite rules. The exam's #1 use: simplify a messy expression to \"a single term\" or solve an equation by substituting an identity.",
+    "worked_example": "Worked example — simplify k(x) = [(1 − sin²x)/sin x]·sec x to a single term in tan x\n1 − sin²x = cos²x, and sec x = 1/cos x.\n→ (cos²x / sin x)·(1/cos x) = cos x / sin x = **1/tan x** (= cot x). *(This is the actual 2024 FRQ Q4B answer.)*",
+    "common_mistake": "Reaching for sum/double-angle when a **Pythagorean swap** (1 − sin²x = cos²x) is what's needed. Look for \"1 ± (squared trig)\" patterns first.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.10",
+    "subject": "ap_precalc",
+    "plain_idea": "Locate a point by **distance r from origin and angle θ**, instead of (x, y). A polar function r = f(θ) traces a curve as θ sweeps around.",
+    "worked_example": "Worked example — convert (r, θ) = (4, 2π/3) to rectangular\nx = 4 cos(2π/3) = 4·(−1/2) = **−2**; y = 4 sin(2π/3) = 4·(√3/2) = **2√3.** Point: **(−2, 2√3).**",
+    "common_mistake": "Letting the calculator drift into **degree mode** — every polar/trig value comes out wrong. Lock RADIAN mode.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "3.11",
+    "subject": "ap_precalc",
+    "plain_idea": "As θ increases, watch whether **r (distance from origin) grows or shrinks**, and how fast. The exam asks this verbally — \"is the distance from the origin increasing?\" — and via average rate of change of r.",
+    "worked_example": "Worked example — for r = 3 + 2cos θ, is the distance from origin increasing on (0, π)?\nr(0) = 3 + 2(1) = 5; r(π) = 3 + 2(−1) = 1. As θ goes 0 → π, cos θ decreases from 1 to −1, so r **decreases** from 5 to 1 → the point moves **toward** the origin. Average rate of change = (1 − 5)/(π − 0) = **−4/π ≈ −1.27.**",
+    "common_mistake": "Confusing \"r increasing\" with \"the curve moving up.\" In polar, increasing r means moving **away from the origin**, regardless of direction.",
+    "source_file": "ap_precalc/study-packs/unit-3-trigonometric-polar.md",
+    "complete": true
+  },
+  {
+    "topic": "4.1",
+    "subject": "ap_precalc",
+    "plain_idea": "Instead of `y = f(x)`, both `x` and `y` are written in terms of a third variable `t` (often \"time\"): `x = f(t)`, `y = g(t)`. As `t` increases, the point `(x, y)` traces a path — this captures **direction and timing**, which a plain `y = f(x)` can't.",
+    "worked_example": "`x = t + 1`, `y = t² ` for `t` in `[-2, 2]`. Eliminate `t`:\n- From the first: `t = x − 1`.\n- Substitute: `y = (x − 1)²`. → a parabola with vertex at `(1, 0)`.\n- Direction: at `t = −2`, `(x,y) = (−1, 4)`; at `t = 0`, `(1, 0)`; at `t = 2`, `(3, 4)`. So it moves **left-to-right** through the vertex.",
+    "common_mistake": "Forgetting the **domain restriction**. The parameter's range limits which part of the curve exists. Here `t ∈ [−2,2]` means `x ∈ [−1, 3]` only — not the whole parabola.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.2",
+    "subject": "ap_precalc",
+    "plain_idea": "In a parametric path, `x` and `y` each change as `t` changes. Compare their **average rates of change over a `t`-interval**.",
+    "worked_example": "`x = t²`, `y = 3t`. On `t ∈ [1, 3]`:\n- ARoC of `x` = `(9 − 1)/(3 − 1) = 4`.\n- ARoC of `y` = `(9 − 3)/(3 − 1) = 3`.\n- Both positive → point moves right and up over this interval.",
+    "common_mistake": "Treating `t` like `x`. The rate of `y` with respect to `t` is **not** the slope of the curve; it's how fast `y` changes per unit `t`.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.3",
+    "subject": "ap_precalc",
+    "plain_idea": "A circle and a straight line each have one standard parametric recipe, and both are worth memorizing outright. For a circle you walk around the rim: `cos` drives the `x`-coordinate, `sin` drives the `y`-coordinate, both scaled by the radius, and you add the centre so the circle sits where it belongs. For a line you start at a point and add the *same* fixed step to `x` and to `y` on every tick of `t`.",
+    "worked_example": "Circle centered `(2, −1)`, radius 3:\n`x = 2 + 3cos t`, `y = −1 + 3sin t`. Check: `(x−2)² + (y+1)² = 9cos²t + 9sin²t = 9`. ✓",
+    "common_mistake": "Putting `sin` on `x` and `cos` on `y`, or forgetting to add the center `(h, k)`. Convention: `cos → x`, `sin → y`.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.4",
+    "subject": "ap_precalc",
+    "plain_idea": "An equation like `x² + y² = 25` defines a relationship between `x` and `y` without `y` being isolated. It may **fail the vertical line test** (not a function), so you often split it into pieces.",
+    "worked_example": "`x² + y² = 25` → `y = ±√(25 − x²)`. The `+` branch is the top semicircle (a function); the full circle is **not** a function of `x`.",
+    "common_mistake": "Dropping the `±` when solving — that silently throws away half the graph.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.5",
+    "subject": "ap_precalc",
+    "plain_idea": "Curves you get from slicing a cone: circle, ellipse, parabola, hyperbola. You identify them from their standard-form equations.\n\n| Conic | Standard form (centered at `(h,k)`) | Tell-tale sign |\n|---|---|---|\n| **Circle** | `(x−h)² + (y−k)² = r²` | both squared, **same coeff**, `+` |\n| **Ellipse** | `(x−h)²/a² + (y−k)²/b² = 1` | both squared, **different** coeffs, **same sign**, `+` |\n| **Parabola** | `y = a(x−h)² + k` (or `x = a(y−k)²+h`) | **only one** variable squared |\n| **Hyperbola** | `(x−h)²/a² − (y−k)²/b² = 1` | both squared, **opposite signs** (a `−`) |",
+    "worked_example": "Worked example — complete the square\n`x² + y² − 6x + 4y − 12 = 0`.\n- Group: `(x² − 6x) + (y² + 4y) = 12`.\n- Complete squares: `(x² − 6x + 9) + (y² + 4y + 4) = 12 + 9 + 4`.\n- → `(x − 3)² + (y + 2)² = 25`. **Circle**, center `(3, −2)`, radius `5`.",
+    "common_mistake": "When completing the square, forgetting to **add the same number to the right side**. And missing that **equal coefficients = circle** vs. unequal = ellipse.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.6",
+    "subject": "ap_precalc",
+    "plain_idea": "A vector has **magnitude (length) and direction**. Written in components `⟨a, b⟩` (from initial to terminal point).",
+    "worked_example": "`u = ⟨3, −4⟩`, `v = ⟨1, 2⟩`.\n- `u + v = ⟨4, −2⟩`.\n- `‖u‖ = √(9 + 16) = √25 = 5`.\n- Unit vector of `u` = `⟨3/5, −4/5⟩`.\n- `u · v = (3)(1) + (−4)(2) = 3 − 8 = −5` (not perpendicular).",
+    "common_mistake": "Subtracting points in the wrong order (`initial − terminal` instead of `terminal − initial`) — flips the vector's direction.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.7",
+    "subject": "ap_precalc",
+    "plain_idea": "A function whose **output is a vector** that changes with `t`: `p(t) = ⟨x(t), y(t)⟩`. This is just the parametric idea written in vector form — the position of a moving object at time `t`.",
+    "worked_example": "`p(t) = ⟨2t, t² − 1⟩`. At `t = 3`: `p(3) = ⟨6, 8⟩` — the object is at point `(6, 8)`.",
+    "common_mistake": "Confusing the **position vector** (where it is) with a direction/velocity vector. `p(t)` here gives location.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.8",
+    "subject": "ap_precalc",
+    "plain_idea": "A rectangular grid of numbers. Add/subtract entry-by-entry; multiply rows-by-columns.",
+    "worked_example": "`[[1,2],[3,4]] · [[5,6],[7,8]]`:\n- Top-left: `1·5 + 2·7 = 19`. Top-right: `1·6 + 2·8 = 22`.\n- Bottom-left: `3·5 + 4·7 = 43`. Bottom-right: `3·6 + 4·8 = 50`.\n- → `[[19, 22], [43, 50]]`.",
+    "common_mistake": "Multiplying matrices **entrywise** (like addition). Matrix multiplication is row-into-column dot products, and **order matters**.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.9",
+    "subject": "ap_precalc",
+    "plain_idea": "The determinant is one number, squeezed out of the four entries, that says whether a matrix can be undone. If it isn't zero the matrix has an **inverse** — the matrix that cancels it, the way dividing by 3 cancels multiplying by 3 — and there's a fill-in-the-blanks formula for it. If the determinant is 0, no inverse exists at all.",
+    "worked_example": "`A = [[4, 3], [2, 1]]`.\n- `det = (4)(1) − (3)(2) = 4 − 6 = −2`.\n- `A⁻¹ = (1/−2)·[[1, −3], [−2, 4]] = [[−1/2, 3/2], [1, −2]]`.\n- Check `det ≠ 0` ✓, so the inverse exists.",
+    "common_mistake": "Forgetting to **divide by the determinant**, or mis-placing the swap/negate pattern. Memorize: *\"swap the diagonal, negate the off-diagonal, over det.\"*",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.10",
+    "subject": "ap_precalc",
+    "plain_idea": "A 2×2 matrix can act as a **function** that takes an input vector and outputs a transformed vector: `A·v`. Geometrically it rotates / scales / reflects / shears the plane. The **determinant = area scaling factor** (and a negative det means orientation flips).",
+    "worked_example": "`A = [[0, −1], [1, 0]]` (a 90° rotation). Transform `v = ⟨2, 0⟩`:\n`A·v = ⟨(0)(2) + (−1)(0), (1)(2) + (0)(0)⟩ = ⟨0, 2⟩`. → point `(2,0)` rotated 90° CCW to `(0, 2)`. ✓",
+    "common_mistake": "Writing the vector as a row and multiplying on the wrong side. For `A·v`, the vector is a **column on the right**.",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  },
+  {
+    "topic": "4.11",
+    "subject": "ap_precalc",
+    "plain_idea": "A matrix can encode how a system moves between states each step (e.g., population, market share). Multiply the **state vector** by the **transition matrix** to advance one step; multiply repeatedly (or use `Aⁿ`) for `n` steps.",
+    "worked_example": "City/suburb populations. `A = [[0.9, 0.2], [0.1, 0.8]]`, start `⟨100, 50⟩` (city, suburb):\n- After 1 step: `A·⟨100,50⟩ = ⟨0.9·100 + 0.2·50, 0.1·100 + 0.8·50⟩ = ⟨100, 50⟩`... let's recompute: `⟨90 + 10, 10 + 40⟩ = ⟨100, 50⟩`. (This start happens to be steady.) Try start `⟨100, 0⟩`: `A·⟨100,0⟩ = ⟨90, 10⟩` — 90 stay in city, 10 move to suburb.",
+    "common_mistake": "Multiplying in the wrong order or transposing the transition matrix — columns must match how the state vector is laid out (here columns = \"where you're coming from\").",
+    "source_file": "ap_precalc/study-packs/unit-4-parametric-vectors-matrices.md",
+    "complete": true
+  }
+]

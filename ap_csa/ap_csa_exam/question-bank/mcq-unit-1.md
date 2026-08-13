@@ -236,7 +236,7 @@ Which expression returns the **first character** of a non-empty String `s` as a 
 A) `s.charAt(0)`   B) `s.substring(0, 1)`   C) `s.substring(1)`   D) `s.get(0)`
 
 **Answer: B.** `charAt` is **not** on the Quick Reference. The in-syllabus way to get a single character is `s.substring(0, 1)` (indices 0 inclusive, 1 exclusive). (C) drops the first char; (D) is not a String method.
-`[topic 1.15][practice P2]`
+`[topic 1.15][practice P2][allow-offsyllabus]`
 
 ---
 
@@ -266,6 +266,35 @@ A) `Util.label()` calls the instance method directly on the class.   B) `triple(
 
 ---
 
+> **The four items below are the in-scope half of inheritance (topic 1.12).** The CED's own exclusion is *"Designing and implementing inheritance relationships are outside the scope of the AP Computer Science A course and exam"* — so nothing here asks you to **write** a hierarchy. The **words** (superclass, subclass, class hierarchy) and the fact that **every class in Java is a subclass of `Object`** are required Unit 1 content, at describe/identify level. (verified 12 August 2026)
+
+**Q23. (Document Code · 1.12 superclass & subclass vocabulary)**
+`Cat`, `Dog`, and `Rabbit` each store a name and an age, and each has a `feed` behavior. A programmer moves those shared attributes and behaviors into one new class, `Pet`, and the other three then draw on `Pet`'s attributes and behaviors instead of repeating them. What is `Pet` called, and what is `Dog` called?
+A) `Pet` is the subclass; `Dog` is the superclass   B) `Pet` is the superclass; `Dog` is a subclass   C) `Pet` is a class; `Dog` is an object of it   D) `Pet` is a constructor; `Dog` is a parameter of it
+
+**Answer: B.** The class holding what related classes have in common is the **superclass**; a class that draws upon it is a **subclass**, and the inheritance relationship runs *from* the subclasses *to* the superclass. (A) reverses the two names; (C) confuses a class with an object — `Dog` is another class, not an instance; (D) is unrelated vocabulary. Naming the relationship is in scope; designing or implementing one is not, so you would never be asked to write these classes.
+`[topic 1.12][practice P4]`
+
+---
+
+**Q24. (Document Code · 1.12 every class is a subclass of `Object`)**
+A student writes a brand-new class `Ticket` that mentions no other class at all. Which statement is **true**?
+A) `Ticket` has no superclass, so a `Ticket` object has no methods until the student writes some.   B) `Ticket` must be told which class to draw upon before any `Ticket` object can be created.   C) A `Ticket` object has a `toString` only if the student writes one.   D) `Ticket` is a subclass of `Object`, so methods such as `toString` and `equals` are already available on a `Ticket` object.
+
+**Answer: D.** Every class in Java is a subclass of `Object`, so `Object`'s methods — `toString` and `equals` among them — come along automatically. That is exactly why `"Total: " + myTicket` prints something even though nobody wrote a `toString`. (A) and (C) miss those inherited methods; (B) is false — the `Object` relationship needs no declaration. (Writing or overriding a `toString` yourself is outside this course's scope; *having* an inherited one is topic 1.12.)
+`[topic 1.12][practice P4]`
+
+---
+
+**Q25. (Document Code · 1.12 what a class hierarchy buys a subclass)**
+In a class hierarchy, what does the inheritance relationship let a subclass do?
+A) Copy the superclass's code into itself, so the shared methods end up written twice in the program.   B) Reach into the superclass and change its attributes for every other subclass.   C) Draw upon the superclass's existing attributes and behaviors without replacing them in its own code.   D) Hand its own new behaviors up to the superclass, so the superclass can use them too.
+
+**Answer: C.** That is the whole point of the relationship: the shared attributes and behaviors live **once**, in the superclass, and a subclass uses them without re-declaring them. (A) describes copy-paste, which is what inheritance avoids — nothing is duplicated. (B) and (D) run the relationship the wrong way; it goes from the subclass **to** the superclass, not back down or sideways.
+`[topic 1.12][practice P4]`
+
+---
+
 ## Coverage note
 
-Unit 1 topics covered here: **1.1 (Q1,Q2), 1.2 (Q3), 1.3 (Q4), 1.4 (Q5,Q6), 1.5 (Q7), 1.6 (Q8), 1.7 (Q9,Q21), 1.8 (Q10), 1.9 (Q11,Q12), 1.10 (Q13,Q22), 1.11 (Q14), 1.12 (Q15), 1.13 (Q16,Q17), 1.14 (Q18), 1.15 (Q19,Q20)** — all 15 topics. Practices: **P2** (Q5, Q17, Q20), **P3** (most), **P4** (Q1, Q9, Q10, Q15, Q21). 22 items. The thin topics **1.7** (API/libraries/packages — what `import` does, Q21) and **1.10** (static vs instance calls — `ClassName.method()` vs needing an object, Q22) each now carry a second item.
+Unit 1 topics covered here: **1.1 (Q1,Q2), 1.2 (Q3), 1.3 (Q4), 1.4 (Q5,Q6), 1.5 (Q7), 1.6 (Q8), 1.7 (Q9,Q21), 1.8 (Q10), 1.9 (Q11,Q12), 1.10 (Q13,Q22), 1.11 (Q14), 1.12 (Q15,Q23,Q24,Q25), 1.13 (Q16,Q17), 1.14 (Q18), 1.15 (Q19,Q20)** — all 15 topics. Practices: **P2** (Q5, Q17, Q20), **P3** (most), **P4** (Q1, Q9, Q10, Q15, Q21, Q23, Q24, Q25). 25 items. The thin topics **1.7** (API/libraries/packages — what `import` does, Q21) and **1.10** (static vs instance calls — `ClassName.method()` vs needing an object, Q22) each now carry a second item. **1.12** carries four, because its in-scope inheritance vocabulary (superclass, subclass, class hierarchy, every class is a subclass of `Object`) is required Unit 1 content that used to be skipped as "not on the redesigned exam" — only *designing and implementing* inheritance is excluded.

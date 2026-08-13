@@ -2,7 +2,9 @@
 
 **Why this matters for your score:** ~**15% of Math**. The SAT **gives you a reference sheet** with most area/volume formulas — so the points come from *setting up* the right relationship (similar triangles, the Pythagorean theorem, circle facts, SOH-CAH-TOA), not memorizing formulas. Know what's on the sheet vs what you must memorize, and these are reliable points.
 
-> **On the provided reference sheet** (don't memorize these): area & circumference of a circle, area of triangle/rectangle, the Pythagorean theorem, **special right triangles (30-60-90 and 45-45-90)**, volumes (box, cylinder, sphere, cone, pyramid), and the facts "360° / 2π radians in a circle," "180° in a triangle." **Must memorize** (NOT on the sheet): SOH-CAH-TOA, the circle equation, arc/sector proportions, similar-triangle ratios, parallel-line angle rules.
+> **Reported contents of the reference sheet** (don't burn memory on these): area & circumference of a circle, area of triangle/rectangle, the Pythagorean theorem, **special right triangles (30-60-90 and 45-45-90)**, volumes (box, cylinder, sphere, cone, pyramid), and the facts "360° / 2π radians in a circle," "180° in a triangle." **Memorize regardless** (do not expect these on the sheet): SOH-CAH-TOA, the circle equation, arc/sector proportions, similar-triangle ratios, parallel-line angle rules.
+>
+> ⚠️ **Caveat, checked 12 August 2026:** College Board's spec confirms a reference sheet **is** provided but describes it only as "a list of common formulas" — it does not publish the itemised contents above, and does not say the sheet is geometry-only. So treat the first list as *probably there* and the second as *definitely your job*. **Look at the actual sheet in Bluebook** during a practice test and correct this file if it differs.
 
 ---
 

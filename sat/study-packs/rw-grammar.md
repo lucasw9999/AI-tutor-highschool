@@ -251,17 +251,19 @@ Words like *however, therefore, in fact, for example, meanwhile* are **Transitio
 
 *Do all 12 first. Difficulty rises. Then check the worked answers.*
 
+> **The correct letters are spread evenly across A–D on purpose.** Real SAT answer letters are random; "pick B when stuck" is a habit that loses marks. Apply the rule, not a hunch.
+
 **Q1.** The library renovated its reading room ______ the study carrels remain closed until spring.
-A) room, B) room; C) room D) room: but
+A) room, B) room, however, C) room: but D) room;
 
 **Q2.** Maria packed three things for the trip ______ a map, a compass, and a water bottle.
-A) : B) ; C) , D) ;
+A) : B) ; C) , D) (no punctuation)
 
 **Q3.** The novel's protagonist ______ a quiet bookkeeper — undergoes a dramatic transformation.
-A) , B) — C) ; D) (
+A) — B) , C) ; D) :
 
 **Q4.** A flock of geese ______ across the autumn sky each morning.
-A) fly B) flies C) are flying D) have flown
+A) fly B) are flying C) flying D) flies
 
 **Q5.** Neither of the proposals ______ enough funding to move forward.
 A) have B) were having C) has D) are
@@ -273,31 +275,31 @@ A) are B) is C) were D) have been
 A) their B) there C) his or her D) they're
 
 **Q8.** The mentor ______ the students admired most retired last year.
-A) who B) whom C) which D) whose
+A) who B) which C) whomever D) whom
 
 **Q9.** Before she became a senator, Chen ______ as a civil-rights attorney for two decades.
 A) works B) has worked C) had worked D) is working
 
 **Q10.** Determined to finish the marathon, ______ despite the cramping in her legs.
-A) the finish line was Ana's focus B) Ana pushed forward C) it was important to Ana to continue D) Ana's legs kept moving
+A) Ana pushed forward B) the finish line was Ana's focus C) her pace never slowed D) Ana's legs kept moving
 
 **Q11.** The workshop covered how to draft a résumé, how to network effectively, and ______ for interviews.
 A) preparing B) how to prepare C) you should prepare D) preparation
 
 **Q12.** The committee released ______ findings after months of deliberation, and the public welcomed the report.
-A) it's B) its C) their D) its'
+A) it's B) their C) its D) theirs
 
 ---
 
 ## Worked answers
 
-**Q1 — B.** "The library renovated its reading room" and "the study carrels remain closed" are both complete clauses. Two independent clauses need a legal join; a **semicolon** works. A is a comma splice; C is a run-on; D wrongly puts a conjunction after a colon. *(Rule 1/2)*
+**Q1 — D (semicolon).** "The library renovated its reading room" and "the study carrels remain closed" are both complete clauses, so they need a legal join; a **semicolon** does it. A is a plain comma splice. B is the same comma splice dressed up — *however* is an adverb, not a conjunction, so "room, however," still illegally welds two sentences (this is the version the SAT actually likes to test). C puts a coordinating conjunction after a colon, which is never legal. *(Rule 1/2)*
 
-**Q2 — A (colon).** "Maria packed three things for the trip" is a complete sentence, and a list of explanation follows → **colon**. The list items are separated by plain commas (none contain internal commas), so semicolons (B/D) are wrong. *(Rule 3)*
+**Q2 — A (colon).** "Maria packed three things for the trip" is a complete sentence, and a list of explanation follows → **colon**. The list items are separated by plain commas (none contain internal commas), so semicolons (B) are wrong, and C/D leave the list unannounced. *(Rule 3)*
 
-**Q3 — B (dash).** The nonessential phrase "a quiet bookkeeper" is **closed** by a dash ("— undergoes"), so it must be **opened** by a dash to match. A comma…dash mismatch (A) is illegal. *(Rule 4)*
+**Q3 — A (dash).** The nonessential phrase "a quiet bookkeeper" is **closed** by a dash ("— undergoes"), so it must be **opened** by a dash to match. B is the classic comma…dash mismatch — punctuation pairs must be the same on both sides. C and D can't open a mid-sentence interrupter at all. *(Rule 4)*
 
-**Q4 — B (flies).** Subject is **flock** (singular collective noun); "of geese" is a prepositional phrase. Singular → *flies*. The plural "geese" is a decoy. *(Rule 6)*
+**Q4 — D (flies).** Subject is **flock** (singular collective noun); "of geese" is a prepositional phrase, and the plural "geese" is the decoy. Singular → *flies*. A and B agree with "geese" instead of "flock." C isn't a finite verb at all, so it leaves a fragment. *(Rule 6)*
 
 **Q5 — C (has).** "Neither" is a **singular** indefinite pronoun; "of the proposals" is just a prepositional phrase. Singular → *has*. *(Rule 6/7)*
 
@@ -305,15 +307,15 @@ A) it's B) its C) their D) its'
 
 **Q7 — C (his or her).** "Every student" is **singular**, so the possessive must be singular. "their" is plural; "there"/"they're" are wrong words. *(Rule 7)*
 
-**Q8 — B (whom).** In the clause "the students admired ___ most," the students are the subject doing the admiring; the blank is the **object** of "admired." He/him test: "the students admired *him*" → *him* → **whom**. *(Rule 8)*
+**Q8 — D (whom).** In the clause "the students admired ___ most," the students are the subject doing the admiring; the blank is the **object** of "admired." He/him test: "the students admired *him*" → *him* → **whom**. A is the subject form. B uses "which" for a person. C ("whomever") is for an unspecified person — you can't hang it on a definite antecedent like "the mentor." *(Rule 8)*
 
 **Q9 — C (had worked).** "Before she became a senator" sets up an action completed **before** a past event → **past perfect** "had worked." The time cue "Before… became" drives it. *(Rule 9)*
 
-**Q10 — B (Ana pushed forward).** The opener "Determined to finish the marathon" must describe a **person** who is determined. A finish line, "it," and legs can't be "determined." Only "Ana" can — and she must come right after the comma. A, C, and D are dangling modifiers. *(Rule 10 — official sample type)*
+**Q10 — A (Ana pushed forward).** The opener "Determined to finish the marathon" must describe a **person** who is determined, and that person must come right after the comma. A finish line, a pace, and a pair of legs can't be "determined," so B, C and D are all dangling modifiers — C is the sneakiest, because "her" makes it *feel* like it's about Ana when the grammatical subject is "her pace." *(Rule 10 — official sample type)*
 
 **Q11 — B (how to prepare).** The list pattern is "how to draft… how to network… ___ ." Parallelism requires a third "**how to** + verb." The other forms break the pattern. *(Rule 11)*
 
-**Q12 — B (its).** Need a **possessive** meaning "the findings belonging to the committee" (a singular collective noun → *its*). "it's" = "it is" (fails the substitution test); "their" is plural; "its' " isn't a word. *(Rule 12)*
+**Q12 — C (its).** Need a **possessive** meaning "the findings belonging to the committee" (a singular collective noun → *its*). "it's" = "it is" (fails the substitution test); "their" is plural; "theirs" is a standalone possessive pronoun and can't sit in front of a noun. *(Rule 12)*
 
 ---
 

@@ -95,9 +95,11 @@
 ## ✏️ Practice Set (12 questions — graduated easy → hard; MC + grid-in)
 
 > Grid-in (student-produced response) = type your own answer, no choices. Do these timed-ish (~1.5 min each).
+>
+> **The MC answer letters are spread across A–D deliberately** — the real test has no letter pattern, so don't let one form here train a bad reflex.
 
 **Q1 (MC).** If `4x − 7 = 2x + 9`, what is the value of `x`?
-(A) 1  (B) 4  (C) 8  (D) 16
+(A) 1  (B) −1  (C) 16  (D) 8
 
 **Q2 (MC).** What is the slope of the line `3x + 6y = 12`?
 (A) 3  (B) 1/2  (C) −1/2  (D) −3
@@ -108,7 +110,7 @@
 (A) y = 3x + 5  (B) y = 6x + 5  (C) y = 3x + 11  (D) y = 2x + 5
 
 **Q5 (MC).** Solve: `−3x + 4 < 13`.
-(A) x < −3  (B) x > −3  (C) x < 3  (D) x > 3
+(A) x > −3  (B) x < −3  (C) x < 3  (D) x > −17/3
 
 **Q6 (grid-in).** Solve the system: `x + 2y = 10` and `x − y = 1`. What is the value of `y`?
 
@@ -120,7 +122,7 @@
 
 **Q8 (MC).** For what value of `k` does the system below have **no solution**?
 `2x + 3y = 8`  and  `4x + ky = 5`
-(A) k = 3  (B) k = 6  (C) k = 8  (D) k = 12
+(A) k = 3  (B) k = 12  (C) k = 3/2  (D) k = 6
 
 **Q9 (grid-in).** If `|3x − 1| = 11` and `x > 0`, what is the value of `x`?
 
@@ -136,7 +138,7 @@
 
 ## ✅ Worked Answers
 
-**Q1 — (C) 8.** `4x − 7 = 2x + 9` → `2x = 16` → `x = 8`. *(Move variables left, constants right.)*
+**Q1 — (D) 8.** `4x − 7 = 2x + 9` → `2x = 16` → `x = 8`. Check: 4(8)−7 = 25 and 2(8)+9 = 25 ✓. *(A) 1 and (B) −1 come from botching the constants (`9 − 7 = 2` instead of `9 + 7 = 16`); (C) 16 is stopping at `2x = 16` and forgetting to divide.*
 
 **Q2 — (C) −1/2.** Standard form `Ax + By = C` → slope = `−A/B = −3/6 = −1/2`. *Trap caught: slope is −A/B, not 3.* Desmos check: type `3x + 6y = 12`, it's a downward line.
 
@@ -144,13 +146,13 @@
 
 **Q4 — (A) y = 3x + 5.** Slope = `(11 − 5)/(2 − 0) = 6/2 = 3`; y-intercept is 5 (the point with x = 0). → `y = 3x + 5`. *(B) used run instead of slope.*
 
-**Q5 — (B) x > −3.** `−3x < 9` → divide by −3 and **flip**: `x > −3`. *Trap caught: the flip.*
+**Q5 — (A) x > −3.** `−3x < 9` → divide by −3 and **flip**: `x > −3`. Test it: x = 0 gives 4 < 13 ✓; x = −4 gives 16 < 13 ✗. *Trap caught: the flip.* *(B) is exactly the no-flip answer; (C) drops the minus sign and solves `3x < 9`; (D) x > −17/3 comes from **adding** 4 instead of subtracting it (`−3x < 17`) — and x = −4 satisfies it while failing the original inequality, so it's genuinely wrong.*
 
 **Q6 — 3.** Subtract equations: `(x + 2y) − (x − y) = 10 − 1` → `3y = 9` → `y = 3`. Grid in **3**. *(Desmos: graph both, intersection at (4, 3).)*
 
 **Q7 — (C).** Slope (−1.5) = rate of change per hour → temperature drops 1.5°C each hour. *(The starting value 18 is the intercept; don't confuse the two.)*
 
-**Q8 — (B) k = 6.** No solution = parallel = proportional coefficients: `2/4 = 3/k` → `2k = 12` → `k = 6`. Check constants: `8/5` ≠ `2/4`, so it's truly "no solution," not "infinitely many." ✓
+**Q8 — (D) k = 6.** No solution = parallel = proportional coefficients: `2/4 = 3/k` → `2k = 12` → `k = 6`. Check constants: `8/5` ≠ `2/4`, so it's truly "no solution," not "infinitely many." ✓ *(A) k = 3 just copies the coefficient across without scaling (3/3 = 1 ≠ ½). (B) k = 12 scales 3 by the wrong factor (×4 instead of ×2), giving 3/12 = ¼ ≠ ½. (C) k = 3/2 inverts the proportion (`2/4 = k/3`). All three leave the lines non-parallel, so the system would have exactly one solution.*
 
 **Q9 — 4.** `3x − 1 = 11` → `x = 4`, or `3x − 1 = −11` → `x = −10/3`. Since `x > 0`, answer is **4**. *Trap caught: both cases considered, then filtered.*
 

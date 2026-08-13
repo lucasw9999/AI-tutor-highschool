@@ -40,7 +40,7 @@ System.out.println(sum);
 String a = "cat";
 System.out.println(a.length());
 System.out.println(a.substring(1));
-System.out.println(a.charAt(0));
+System.out.println(a.substring(0, 1));
 ```
 
 **B4.**
@@ -80,7 +80,7 @@ public int countEvens(int[] arr) {
 **Part B**
 - B1 → **3**  *(integer division — the #1 trap. Not 3.5!)*
 - B2 → **10**  *(1+2+3+4)*
-- B3 → **3**, then **`at`**, then **`c`**
+- B3 → **3**, then **`at`**, then **`c`**  *(`substring(0, 1)` is the exam-legal way to read one character — `charAt` is **not** on the Java Quick Reference and returns `char`, an excluded primitive)*
 - B4 → **4**, then **15**  *(`.length` has no parens for arrays; index 2 is the 3rd element)*
 
 **Part C**

@@ -1,7 +1,11 @@
 # AP CSA Exam Blueprint
 
 **Course:** AP Computer Science A — Redesigned (Effective Fall 2025, CED V.1)
-**Target:** Score 5 on the May 2027 exam · Digital (Bluebook) · Java Quick Reference provided · No calculator
+**Target:** Score 5 on the **Wed, May 12, 2027** exam (Session 2) · Digital (Bluebook) · Java Quick Reference provided · No calculator
+
+> ⚠️ **AP Precalculus is the day before — Tue, May 11, 2027 (Session 1).** Two AP exams on
+> consecutive days. Plan the taper in `reference/exam-day-protocol.md` around both, and do
+> not schedule a heavy CSA mock the day before Precalc.
 
 ---
 
@@ -126,15 +130,33 @@ Ready = scoring well into 5 territory with margin on repeated full timed mocks, 
 
 ## (f) Scoring Caveat
 
-**The only published AP CSA score distribution is from the OLD exam** (pre-redesign; 2025: 5 = 25.6%). The College Board has **not yet published** a score curve or raw→5 mapping for the redesigned exam (effective Fall 2025).
+### 2026 score distribution — the first redesigned exam (verified 2026-08-11)
 
-Historically, AP CSA has required roughly **65–72% of the composite** to earn a 5 (this is the historical 5-cutoff, not our readiness target). Our readiness bar deliberately sits above this to absorb test-day variance and redesigned-curve uncertainty.
+College Board has now published results for the **first redesigned administration (May 2026)**:
 
-**Update this file when College Board publishes:**
-- The redesigned-exam score distribution (watch `apstudents.collegeboard.org/about-ap-scores/score-distributions` — CSA columns blank as of 2026-06-27; expected later in summer 2026)
-- The 2026 Scoring Guidelines (watch `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` — 404 as of 2026-06-27; expected ~fall 2026)
+| Score | 5 | 4 | 3 | 2 | 1 |
+|---|---|---|---|---|---|
+| % of all takers | **25%** | 26% | 15% | 11% | 23% |
 
-Until the real curve is published, readiness is determined by the **multi-criterion bar in `exam-skill-tracker.md` §(f)** — not by composite alone.
+**3 or higher: 66%. 4 or 5: 51%.**
+
+Two things to take from this:
+
+1. **The redesign did not make a 5 rarer.** 25% earned a 5 on the redesigned exam versus 25.6% on the old one — still one of the highest 5-rates of any AP exam.
+2. **The distribution is bimodal.** 23% score a 1 while 51% score 4–5; very few land in the middle. Unprepared students crater on this exam and prepared ones do well. That argues for drilling to genuine fluency rather than settling for partial coverage.
+
+### What is STILL unpublished — and why the conservative bar stays
+
+The score **distribution** is out. The **raw → composite → score conversion is not.** Knowing that 25% earned a 5 tells you nothing about *what composite* earns one, so criterion F's `C5` value remains unavailable.
+
+- **`exam-skill-tracker.md` §(f) is unchanged: mean ≥82%, lowest ≥78%.** Do not relax it on the strength of the distribution alone.
+- Historical AP CSA 5-cutoffs have run roughly **65–72% of the composite**. The readiness bar sits deliberately above that to absorb test-day variance and the remaining curve uncertainty.
+
+**Still monitoring:**
+- **2026 Scoring Guidelines** — `apcentral.collegeboard.org/media/pdf/ap26-sg-computer-science-a.pdf` still returns **404 as of 2026-08-11**; expected ~fall 2026. Fold the exact rubric rows into `reference/frq-rubric-and-penalties.md` when posted.
+- **Raw→score conversion** — College Board does not routinely publish this. If one appears, run criterion F's recalibration.
+
+Readiness is determined by the **multi-criterion bar in `exam-skill-tracker.md` §(f)** — never by composite alone.
 
 ---
 

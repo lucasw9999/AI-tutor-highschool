@@ -52,6 +52,10 @@ Factor; **zeros** are where each factor = 0. A factor `(x − r)` ↔ root r ↔
 **P6.** If `g(x) = x²` and `h(x) = g(x − 2) + 3`, what is `h(5)`?
 **P7 [C].** Solve `x² + 4x − 6 = 2x + 2` (give all solutions, rounded to 0.01 if needed).
 **P8.** `√(x + 6) = x`. Solve and check for extraneous roots.
+**P9.** `f(x) = 2x² − 12x + 7`. What is the **minimum** value of `f`?
+**P10.** `g(x) = 3^x` and `g(a) = 81`. What is `g(a + 1)`? `[GI]`
+**P11.** A culture of 50 cells doubles every 6 hours. How many cells after 30 hours? `[GI]`
+**P12.** `p(x) = x³ − 4x² + x + 6`, and `p(3) = 0`. Find **all** the roots.
 
 ### Answers
 - **P1:** vertex x = average of roots = (3 + (−5))/2 = **−1**.
@@ -62,6 +66,10 @@ Factor; **zeros** are where each factor = 0. A factor `(x − r)` ↔ root r ↔
 - **P6:** `h(5) = g(3) + 3 = 9 + 3 =` **12**.
 - **P7:** `x² + 2x − 8 = 0 → (x+4)(x−2)=0 → x = −4, 2`.
 - **P8:** square: `x + 6 = x² → x² − x − 6 = 0 → (x−3)(x+2)=0 → x = 3 or −2`. Check: x = 3 works (√9 = 3); x = −2 fails (√4 = 2 ≠ −2). **x = 3 only.**
+- **P9:** **−11.** Vertex at x = −b/2a = 12/4 = **3**, then f(3) = 2(9) − 36 + 7 = **−11**. Since a = 2 > 0 the parabola opens **up**, so the vertex is a minimum. *(Check either side: f(2) = −9 and f(4) = −9, both above −11.)* *#1 trap: answering **3** — that's *where* the minimum happens, not the minimum value.*
+- **P10:** **243.** `3^a = 81` so a = 4, and `g(5) = 3^5 = 243`. *Faster: g(a+1) = 3^(a+1) = 3^a · 3 = 81 · 3 = **243** — you never need to find a.*
+- **P11:** **1600.** 30 ÷ 6 = **5** doublings → `50 · 2^5 = 50 · 32 =` **1600**. *#1 trap: using 30 as the exponent. The exponent is the number of **doubling periods**, not the number of hours.*
+- **P12:** **x = 3, 2, −1.** `p(3) = 27 − 36 + 3 + 6 = 0`, so `(x − 3)` is a factor. Divide it out: `x³ − 4x² + x + 6 = (x − 3)(x² − x − 2) = (x − 3)(x − 2)(x + 1)`. Roots **3, 2, −1** — all three check to 0. *#1 trap: stopping at x = 3 once you've confirmed the given root; the question asks for **all** of them.*
 
 ## Don't get these wrong
 1. **Roots vs vertex** — use factored form for roots, vertex form / −b/2a for the vertex.
