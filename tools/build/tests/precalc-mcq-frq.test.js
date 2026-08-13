@@ -536,10 +536,29 @@ test('a declared MCQ and FRQ pass every build gate, and grade from the compiled 
 
   // And the feasibility gate now counts them into the halves they belong to,
   // instead of reporting a bank that cannot assemble a sitting at all.
+  //
+  // Asserted as a BICONDITIONAL per half, because the earlier version demanded
+  // the message name BOTH halves unconditionally. That pinned a transitional
+  // world -- both halves short -- which this campaign is deliberately ending: the
+  // moment the free-response half was supplied, `incompleteReport` correctly
+  // stopped printing a free-response clause and the assertion failed for the
+  // right reason. A clause must appear exactly when its half is short, and must
+  // name the real count when it does; the fixture's own injected item counts
+  // toward that, which is why the totals are read off the compile.
   const pc = r.items.filter((i) => i.subject === 'ap_precalc')
-  const half = r.errors.find((e) => /^ap_precalc: the bank holds/.test(e))
-  assert.match(half, new RegExp(`${pc.filter((i) => i.kind === 'mcq').length} of the 38 multiple choice`), half)
-  assert.match(half, new RegExp(`${pc.filter((i) => i.kind === 'frq').length} of the 4 free-response`), half)
+  const half = r.errors.find((e) => /^ap_precalc: the bank holds/.test(e)) ?? ''
+  for (const [kind, need, label] of [['mcq', 38, 'multiple choice'], ['frq', 4, 'free-response']]) {
+    const held = pc.filter((i) => i.kind === kind).length
+    const clause = new RegExp(`${held} of the ${need} ${label}`)
+    if (held < need) {
+      assert.match(half, clause, `the ${label} half holds ${held} of ${need} and the gate must say so: ${half}`)
+    } else {
+      assert.ok(
+        !new RegExp(`of the ${need} ${label}`).test(half),
+        `the ${label} half is supplied (${held} of ${need}), so the gate must not still report it short: ${half}`,
+      )
+    }
+  }
 })
 
 test('38 declared MCQs and 4 declared FRQs make a Precalc sitting assemblable and scorable', () => {
