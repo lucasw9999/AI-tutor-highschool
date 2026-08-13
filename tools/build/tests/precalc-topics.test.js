@@ -152,16 +152,12 @@ test('real worked examples are substantial, proving the truncation fix holds', (
   assert.ok(aroc.worked_example.includes('\n'), 'a two-line example must keep both lines')
 })
 
-test('PC5 REGRESSION: no section with a Worked example line ends up with a null field, and the incomplete count is pinned', () => {
+test('PC5 REGRESSION: no section with a Worked example line ends up with a null field, and every row is complete', () => {
   // The test above only averages length over rows that ALREADY have an
   // example, so it is blind to a whole-field loss — it passed even while PC1
   // silently dropped topics 3.9 and 3.11 to null. Check every section whose
   // raw markdown contains a "**Worked example" line directly against its
-  // parsed output, and pin the count of rows that are genuinely incomplete in
-  // the source (verified by hand, not just trusted): 4.3 and 4.9 — the two
-  // unit-4 sections with no plain-idea label. It was six while units 1-3 still
-  // had gaps (1.10, 1.11, 2.11, 3.3); those four sections now carry every label,
-  // so no exam-tested topic is missing teaching material at all.
+  // parsed output.
   const r = parseAll(read)
   for (const pack of PACKS) {
     const text = read(`ap_precalc/study-packs/${pack.file}`)
@@ -176,15 +172,50 @@ test('PC5 REGRESSION: no section with a Worked example line ends up with a null 
     })
   }
 
-  assert.equal(r.incomplete.length, 2, `expected 2 genuinely-incomplete rows, got ${r.incomplete.length}`)
+  // RETIRED ASSERTIONS: `assert.equal(r.incomplete.length, 2)` and
+  // `assert.deepEqual(r.incomplete.map((row) => row.topic).sort(), ['4.3', '4.9'])`.
+  //
+  // 4.3 and 4.9 were the last two sections with no plain-idea label, and they were
+  // precisely the gap an agent was assigned to close. Both now carry all three
+  // fields, so the count is 0 and the list is empty — and an assertion naming them
+  // was an assertion that they stay unwritten. It had already been walked down once
+  // (six rows, then four, then two) which is the shape of a test that pins a content
+  // gap rather than a contract.
+  //
+  // Inverted into the regression guard it should always have been, in two halves so
+  // it cannot pass by the reporting having quietly stopped: EVERY row is complete
+  // today, and removing one label in memory must put that row back on the list with
+  // the lost field named. The parse-precalc-topics contract is that `incomplete`
+  // reports exactly the rows missing a field, however many that is — including none.
   assert.deepEqual(
     r.incomplete.map((row) => row.topic).sort(),
-    ['4.3', '4.9'],
-  )
-  assert.deepEqual(
-    r.incomplete.filter((row) => !row.topic.startsWith('4.')),
     [],
-    'every exam-tested topic (units 1-3) must have all three teaching fields',
+    'every Precalc section now carries all three teaching fields, so nothing may be reported incomplete',
+  )
+  assert.equal(
+    r.teaching.filter((t) => t.complete !== true).length, 0,
+    'and the per-row `complete` flag must agree with the list, or one of the two is lying',
+  )
+
+  // Strip the FIRST "#1 mistake" label in unit 4, keeping its prose. Matched by
+  // shape rather than by wording, so an edit to that sentence cannot turn this guard
+  // into a silent no-op — and the two preconditions below fail loudly if it does.
+  const U4_FILE = `ap_precalc/study-packs/${PACKS.find((p) => p.unit === '4').file}`
+  const stripped = read(U4_FILE).replace(/^\*\*#1 mistake[^*]*\*\*/m, '')
+  assert.notEqual(stripped, read(U4_FILE), 'precondition: the patch must actually remove a label')
+  const gap = parseAll((f) => (f === U4_FILE ? stripped : read(f)))
+  assert.equal(
+    gap.teaching.length, r.teaching.length,
+    'precondition: losing a field loses no ROW — the row is still written, incomplete',
+  )
+  assert.equal(gap.incomplete.length, 1, 'exactly the one row whose label was removed must be reported')
+  assert.deepEqual(
+    gap.incomplete[0].missing, ['common_mistake'],
+    'and the report must name the field that was actually lost',
+  )
+  assert.equal(
+    gap.teaching.find((t) => t.topic === gap.incomplete[0].topic).complete, false,
+    'the row itself must be flagged incomplete too, so build.js and D1 both see it',
   )
 })
 
