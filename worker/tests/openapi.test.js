@@ -497,13 +497,20 @@ async function realResponses(env) {
   // needs, and a keyed one answered with its own key for the graded one.
   const pdb = makeDb(env.DB)
   const pq = record('Next', 'getNext', await call(env, '/next', { s: 'ap_precalc' }), 'getNext(ap_precalc)')
-  const plogged = record('Log', 'logAnswer', await call(env, '/log', { s: 'ap_precalc', v: pq.serve, a: '3' }), 'logAnswer(ap_precalc)')
   const pserved = env.sqlite.prepare(
     `SELECT i.kind, i.answer FROM serves s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
   ).get(pq.serve)
+  // Answered with the served item's OWN key when it has one, for the same reason as
+  // the mock below: the literal this used to send ('3') is a right answer only for
+  // whichever item selection happens to serve first, and an answer of the wrong
+  // shape for an `mcq` is booked `unparsed` — which would make the keyed branch
+  // below fail for a reason that has nothing to do with the schema.
+  const pAnswer = isKeyed(pserved) ? pserved.answer : 'my working, in prose'
+  const plogged = record('Log', 'logAnswer', await call(env, '/log', { s: 'ap_precalc', v: pq.serve, a: pAnswer }), 'logAnswer(ap_precalc)')
   if (isKeyed(pserved)) {
     assert.equal(plogged.graded, true, 'a keyed Precalc item must be graded, not routed to the model')
     assert.equal(typeof plogged.correct, 'boolean', 'and it must reach a real verdict')
+    assert.equal(plogged.correct, true, 'and its own key must be marked RIGHT')
   } else {
     assert.equal(plogged.correct, null, 'the server must not claim a verdict it did not reach')
     assert.equal(plogged.graded, false)
@@ -550,22 +557,43 @@ async function realResponses(env) {
   record('Status', 'getStatus', await call(env, '/status', { s: 'ap_csa' }), 'getStatus')
 
   // A Precalc mock. It still cannot be COUNTED, and the reason is not that nothing
-  // in it can be marked: it is that every Precalc item is kind `constructed`, which
-  // fills neither the mcq half nor the frq half api.js builds a paper from, so the
-  // sitting can never reach the coverage floor.
+  // in it can be marked: it is that the bank cannot supply a full 42-question
+  // multiple choice half or a 4-question free-response one, so the sitting can never
+  // reach the coverage floor.
   //
   // RETIRED ASSERTION: `assert.equal(submitted.scored, 0, 'nothing in a Precalc
   // sitting can be graded mechanically')`. With 19 keyed items a Precalc sitting can
   // now contain graded answers, so `scored` is a function of what was served — and
   // it is derived from the served item here instead of being pinned at zero, while
   // `counted` and `composite_pct`, which are what actually reach him, stay pinned.
+  //
+  // RETIRED RESPONSE: the literal `'some work'`. That was written when a Precalc
+  // sitting could only be served model-graded drills, for which any prose is a
+  // legitimate answer. A section I paper is now served `mcq` items, and 'some work'
+  // against a four-option key is correctly booked `unparsed` — the never-mark-a-
+  // right-answer-wrong guarantee doing its job — so `scored` was 0 while `isKeyed`
+  // said 1. The served item is therefore looked up BEFORE the answer is sent and
+  // answered with its own key, as smoke.test.js already does. Sending a wrong-shaped
+  // answer here would have quietly turned this into a test that a keyed mock
+  // question is NOT scored.
   const mock = record('MockStart', 'startMock', await call(env, '/mock/start', { s: 'ap_precalc', sec: 'I', src: 'bank' }), 'startMock')
   const mq = await call(env, '/next', { s: 'ap_precalc', m: mock.mock })
   assert.equal(mq.body.type, 'question', `a Precalc sitting must be servable: ${JSON.stringify(mq.body)}`)
-  await call(env, '/log', { s: 'ap_precalc', v: mq.body.serve, a: 'some work' })
   const mockServed = env.sqlite.prepare(
     `SELECT i.kind, i.answer FROM serves s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
   ).get(mq.body.serve)
+  const mockAnswer = isKeyed(mockServed) ? mockServed.answer : 'my working, in prose'
+  const mockLogged = await call(env, '/log', { s: 'ap_precalc', v: mq.body.serve, a: mockAnswer })
+  // The answer sent is the right one for the item served, so a keyed question inside
+  // a mock has to reach a verdict — not be declined as unreadable.
+  assert.equal(
+    mockLogged.body.graded, isKeyed(mockServed),
+    `a mock question of kind ${mockServed.kind} answered with ${JSON.stringify(mockAnswer)} must be graded exactly ` +
+      'when it carries a key; anything else means the answer form and the grader disagree',
+  )
+  if (isKeyed(mockServed)) {
+    assert.equal(mockLogged.body.correct, true, 'and its own key must be marked RIGHT, inside a mock as anywhere else')
+  }
   const submitted = record('MockSubmit', 'submitMock', await call(env, '/mock/submit', { s: 'ap_precalc', m: mock.mock }), 'submitMock')
   assert.equal(
     submitted.scored, isKeyed(mockServed) ? 1 : 0,
@@ -1298,13 +1326,12 @@ test('a full sitting reports both section budgets', async () => {
 // every colliding item the seed actually contains.
 const MARKED_FORM = (letter) => `choice ${letter}`
 
-/** Items where a bare letter is genuinely ambiguous, drawn from the shipped bank. */
-function letterCollisions(sqlite) {
+/** Items where a bare letter is genuinely ambiguous, drawn from a set of items. */
+function letterCollisions(rows) {
   const out = []
-  const rows = sqlite.prepare(`SELECT id, kind, answer, options_json FROM items WHERE options_json IS NOT NULL`).all()
   for (const row of rows) {
     let options
-    try { options = JSON.parse(row.options_json) } catch { continue }
+    try { options = typeof row.options_json === 'string' ? JSON.parse(row.options_json) : row.options } catch { continue }
     if (!options || typeof options !== 'object') continue
     const labels = new Set(Object.keys(options).map((l) => l.toUpperCase()))
     for (const [label, text] of Object.entries(options)) {
@@ -1321,17 +1348,48 @@ function letterCollisions(sqlite) {
   return out
 }
 
+/**
+ * A synthetic item that IS ambiguous: option C's text reads "B", so a bare "B"
+ * names two different options on the same question.
+ *
+ * The shipped bank used to contain three of these (csa-ac-q14, csa-ac-q33,
+ * csa-u2-q7) and this test drew its fixtures from them. The content has since been
+ * fixed — those items' options were reordered so every letter-text sits on its own
+ * label — which is a better bank and a WORSE fixture, because it left the grader's
+ * refusal proved only by content that no longer exists.
+ *
+ * So the grader's contract is proved here instead, on an item that cannot be fixed
+ * out from under it, and the bank is separately swept for a relapse below.
+ */
+const AMBIGUOUS = {
+  kind: 'mcq',
+  answer: 'C',
+  options: { A: 'A four-element array', B: 'An index out of bounds', C: 'B', D: 'Nothing.' },
+}
+
 withSeed('the answer form the instructions ask for is the one the grader can actually read', () => {
   const env = freshEnv()
-  const collisions = letterCollisions(env.sqlite)
 
-  assert.ok(
-    collisions.length,
-    'no shipped item collides a bare letter with an option label any more. The instructions warn him about this ' +
-      'case, so if the bank really has stopped containing it, revisit that paragraph rather than deleting this test.',
+  // RETIRED PRECONDITION: `assert.ok(collisions.length, 'no shipped item collides a
+  // bare letter with an option label any more...')`, over the shipped bank.
+  //
+  // Its own message asked for exactly this: the bank really has stopped containing
+  // the case, so the paragraph is revisited rather than the test deleted. The
+  // grader's two obligations are now proved on a fixture that is ambiguous BY
+  // CONSTRUCTION, so no content fix can take the proof away, and the sweep over the
+  // shipped bank is kept as a relapse guard: if a colliding item ever comes back,
+  // the grader must still decline the bare letter rather than guess. Both directions
+  // stay pinned, and neither depends on the bank staying broken.
+  const fixtures = letterCollisions([{ ...AMBIGUOUS, id: 'FIXTURE(ambiguous by construction)' }])
+  assert.equal(
+    fixtures.length, 1,
+    'precondition: the fixture must be genuinely ambiguous, or this test proves nothing about the grader',
+  )
+  const shipped = letterCollisions(
+    env.sqlite.prepare(`SELECT id, kind, answer, options_json FROM items WHERE options_json IS NOT NULL`).all(),
   )
 
-  for (const { item, id, letter } of collisions) {
+  for (const { item, id, letter } of [...fixtures, ...shipped]) {
     // The shape that fails, and why the instruction to send "just the letter" was wrong.
     assert.equal(
       grade(item, letter).graded_by, 'unparsed',
