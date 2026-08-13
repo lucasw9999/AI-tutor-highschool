@@ -314,31 +314,166 @@ const byId = (id) => {
   return it
 }
 
+// ---------------------------------------------------------------------------
+// Which (item, letter) pairs are genuinely unreadable — DERIVED FROM THE BANK
+//
+// A letter names one option as a LABEL and a DIFFERENT option as a VALUE. Both
+// readings are live and lead to different options, so the grader declines rather
+// than guess. Every such pair is a CONTENT defect, not a grading one.
+//
+// RETIRED PRECONDITION: this used to be `AMBIGUOUS_BY_DESIGN`, a hand-written list
+// of the four pairs the audit found — csa-ac-q14:B, csa-ac-q33:C, csa-u2-q7:A,
+// csa-u2-q7:C — and 'Q4' below asserted the bank still held EXACTLY those. The
+// content has since been fixed: every letter-valued option now sits at the label
+// whose letter it is, and the three items' keys moved with them (q14 C -> B,
+// q7 A -> C, q33's key stays D). The shipped bank contains no collision at all,
+// and 28 response forms that could not be read now reach a verdict.
+//
+// That is a better bank and a worse fixture — it left the grader's refusal proved
+// only by content that no longer exists. So:
+//
+//   - the list is DERIVED, which turns the sweep below from "a declined letter is
+//     one of these four" into the stronger "a declined letter is genuinely
+//     ambiguous in the bank as it stands";
+//   - the refusal itself is proved on AMBIGUOUS, an item that is ambiguous BY
+//     CONSTRUCTION, so no content fix can take the proof away (the same move
+//     openapi.test.js made in cdddfd8 for the same three items);
+//   - AUDITED_COLLISIONS keeps the four as a relapse ALLOWLIST. The direction that
+//     matters is unchanged: no NEW colliding item may appear. The direction that
+//     fired here — "and these four must still exist" — is the one that treats a
+//     content fix as a regression, and it is the one retired.
+// ---------------------------------------------------------------------------
+
+/**
+ * Every (item, letter, owner, item) tuple in `items` where `letter` names one
+ * option as a LABEL and exactly one DIFFERENT option as a VALUE.
+ */
+const collisionsIn = (items) => items.flatMap((item) =>
+  Object.keys(item.options).flatMap((label) => {
+    const owners = Object.entries(item.options)
+      .filter(([, text]) => String(text).trim().toUpperCase() === label)
+      .map(([owner]) => owner)
+    return owners.length === 1 && owners[0] !== label ? [[item.id, label, owners[0], item]] : []
+  }),
+)
+
+const LETTER_COLLISIONS = collisionsIn(SHIPPED_MCQ)
+const COLLIDING = new Set(LETTER_COLLISIONS.map(([id, label]) => `${id}:${label}`))
+
+/** The collisions the audit found. Nothing outside this set may ever appear. */
+const AUDITED_COLLISIONS = new Set([
+  'csa-ac-q14:B', // option C's text was 'B'
+  'csa-ac-q33:C', // option A's text was 'c'
+  'csa-u2-q7:A', // option D's text was 'A'
+  'csa-u2-q7:C', // option A's text was 'C'
+])
+
+/**
+ * An item that IS ambiguous, and cannot be fixed out from under the tests that
+ * need it: a faithful copy of csa-u2-q7 as it shipped when the audit ran. The
+ * program prints 'C' and the key is A, option D's text is 'A' and option A's text
+ * is 'C' — so a bare 'A' names both the key's label and option D's value, and a
+ * bare 'C' names option C's label and the key's own value.
+ *
+ * Both of the grader's obligations live on those two letters: never credit for an
+ * answer he did not give, and never a miss on an answer he may well have got
+ * right. csa-ac-q14 was the same shape with the key on the other side of the
+ * collision, so one fixture proves both.
+ */
+const AMBIGUOUS = {
+  id: 'FIXTURE(a letter-valued option, as csa-u2-q7 shipped)',
+  kind: 'mcq',
+  answer: 'A',
+  options: { A: 'C', B: 'B', C: 'F', D: 'A' },
+}
+
+/** The same letter, however he decorated it. LETTER_ONLY accepts all of these. */
+const decorations = (letter) => [
+  letter,
+  letter.toLowerCase(),
+  `${letter}.`,
+  ` ${letter} `,
+  `"${letter}"`,
+  `'${letter}'`,
+  `${letter},`,
+  `${letter}!`,
+  `${letter};`,
+  `${letter}:`,
+  `[${letter}]`,
+  `(${letter})`,
+  `${letter})`,
+  `${letter}?`,
+  `answer: ${letter}`,
+  `the answer is ${letter}`,
+  `I think ${letter}`,
+  `${letter} I think`,
+]
+
+/**
+ * Every letter-shaped way of naming an item's OWN key, read off the item rather
+ * than written down.
+ *
+ * The explicitly-marked forms are unconditional — a named label is readable
+ * whatever the options say. A BARE or decorated letter is demanded only where this
+ * bank leaves it readable: where the letter collides, the grader MUST decline it
+ * (Q4-G1/G2 pins that direction over the fixture and the whole bank), so
+ * demanding credit here would demand the opposite of the same behaviour.
+ */
+function letterForms(item) {
+  const key = normalizeChoice(item.answer)
+  const marked = [`choice ${key}`, `option ${key}`, `I pick ${key}`]
+  return COLLIDING.has(`${item.id}:${key}`) ? marked : [...marked, ...decorations(key)]
+}
+
 test('the shipped bank really is the thing under test', () => {
   assert.ok(SHIPPED_MCQ.length >= 200, `only ${SHIPPED_MCQ.length} shipped mcq items`)
 })
 
 test('G7: real shipped items credit the answer the student actually gave', async (t) => {
+  // RETIRED RESPONSES: 'C', 'c', 'answer: C' on csa-ac-q14, and 'choice A',
+  // 'option A' on csa-u2-q7. Those letters were the keys those two items shipped
+  // with when the audit ran. The content fix moved their keys (q14 C -> B,
+  // q7 A -> C), so a frozen 'C' on q14 now names a WRONG option — asserting credit
+  // for it would assert that a wrong answer is right, which is the one thing this
+  // project may never do. The letter forms are therefore read off each item's own
+  // key by letterForms(), which demands the same forms of the same items either
+  // side of the content fix.
+  //
+  // The VALUE forms below are untouched. They resolve through the option's text,
+  // and the text of every key option here is unchanged — 'it prints B' is q14's
+  // answer both when option C read 'B' and now that option B does.
   const table = [
-    // [item id, responses that MUST be graded correct]
-    ['csa-ac-q60', ['C', 'c', '(C)', 'answer: C', 'the answer is C', 'I think C',
-      'A NullPointerException is thrown.', 'A `NullPointerException` is thrown.',
+    // [item id, responses that name the key through its option TEXT]
+    ['csa-ac-q60', ['A NullPointerException is thrown.', 'A `NullPointerException` is thrown.',
       'it throws a NullPointerException', 'it throws a `NullPointerException`']],
-    ['csa-ac-q33', ['D', 'd', 'answer: D', 'choice D',
-      'A StringIndexOutOfBoundsException is thrown.', 'a StringIndexOutOfBoundsException',
+    ['csa-ac-q33', ['A StringIndexOutOfBoundsException is thrown.', 'a StringIndexOutOfBoundsException',
       'it throws a StringIndexOutOfBoundsException']],
-    ['csa-ac-q14', ['C', 'c', 'answer: C', 'it prints B', 'the output is B', 'prints B']],
-    ['csa-ac-q30', ['B', 'b', 'answer: B', 'ef', 'it prints ef', 'the output is ef']],
-    ['csa-u2-q7', ['choice A', 'option A', 'it prints C', 'the output is C']],
+    ['csa-ac-q14', ['it prints B', 'the output is B', 'prints B']],
+    ['csa-ac-q30', ['ef', 'it prints ef', 'the output is ef']],
+    ['csa-u2-q7', ['it prints C', 'the output is C']],
   ]
-  for (const [id, responses] of table) {
+  for (const [id, values] of table) {
     await t.test(id, () => {
       const item = byId(id)
-      for (const raw of responses) {
+      for (const raw of [...letterForms(item), ...values]) {
         const r = grade(item, raw)
         assert.equal(r.graded_by, 'server', `${id} ${JSON.stringify(raw)} was not graded`)
         assert.equal(r.correct, 1, `${id} marked ${JSON.stringify(raw)} wrong (picked ${r.picked}, key ${r.keyed})`)
       }
+      // AND THE CORRECTED TRUTH, in the one form that holds whichever way the
+      // content goes: the bare key letter earns credit exactly when no other
+      // option's text is that letter. It is what the content fix bought — on all
+      // three repaired items the bare key is now credited where it was declined —
+      // and it fails in both directions, so neither a relapse in the bank nor a
+      // grader that starts guessing at a collision can pass it.
+      const key = normalizeChoice(item.answer)
+      const bare = grade(item, key)
+      assert.equal(
+        bare.graded_by === 'server' && bare.correct === 1,
+        !COLLIDING.has(`${id}:${key}`),
+        `${id}: a bare '${key}' was ${bare.graded_by}/${bare.correct}, and option ` +
+          `${COLLIDING.has(`${id}:${key}`) ? 'text collides with that letter' : 'texts do not collide with it'}`,
+      )
     })
   }
 })
@@ -366,6 +501,15 @@ test('G7: the responses the audit reproduced are never scored as misses', () => 
   // Each of these was `correct: 0, graded_by: 'server'` before the fix. Being
   // credited is best; being left unparsed is acceptable. Being called wrong is
   // the one outcome this project may never produce.
+  //
+  // RETIRED RESPONSE: the literal `['csa-u2-q7', 'A']`. 'A' was q7's KEY when the
+  // audit reproduced it, and the reason it may never be booked a miss was that it
+  // was the right answer. The content fix moved that key to C and gave option A the
+  // text 'A', so a student who now types 'A' is unambiguously claiming the program
+  // prints A, which it does not: the miss is CORRECT, and demanding it be withheld
+  // would be demanding that a wrong answer go unmarked. The entry is therefore read
+  // off the item's own key — which is what the audit was actually about — and holds
+  // either side of the fix: declined while the letter collided, credited now.
   const reproduced = [
     ['csa-ac-q60', 'it throws a NullPointerException'],
     ['csa-ac-q33', 'a StringIndexOutOfBoundsException'],
@@ -373,28 +517,19 @@ test('G7: the responses the audit reproduced are never scored as misses', () => 
     ['csa-ac-q14', 'B'],
     ['csa-ac-q14', 'it prints B'],
     ['csa-ac-q30', 'ef'],
-    ['csa-u2-q7', 'A'],
+    ['csa-u2-q7', (item) => normalizeChoice(item.answer)],
     ['csa-u2-q7', 'it prints C'],
   ]
-  for (const [id, raw] of reproduced) {
-    const r = grade(byId(id), raw)
+  for (const [id, response] of reproduced) {
+    const item = byId(id)
+    const raw = typeof response === 'function' ? response(item) : response
+    const r = grade(item, raw)
     assert.ok(
       !(r.graded_by === 'server' && r.correct === 0),
       `${id}: ${JSON.stringify(raw)} was scored as a miss (picked ${r.picked}, key ${r.keyed})`,
     )
   }
 })
-
-// Which letters on which items genuinely cannot be read: both readings of the
-// response are live and lead to different options, so the grader declines rather
-// than guess. Every entry is an item whose option TEXT is a bare letter — a
-// content defect, not a grading one. Nothing else in the bank may join this list.
-const AMBIGUOUS_BY_DESIGN = new Set([
-  'csa-ac-q14:B', // option C's text is 'B'
-  'csa-ac-q33:C', // option A's text is 'c'
-  'csa-u2-q7:A', // option D's text is 'A'
-  'csa-u2-q7:C', // option A's text is 'C'
-])
 
 test('G7: across the whole shipped bank, a letter answer is never misread', () => {
   for (const item of SHIPPED_MCQ) {
@@ -431,8 +566,9 @@ test('G7: across the whole shipped bank, a letter answer is never misread', () =
           assert.equal(r.correct, label === r.keyed ? 1 : 0, `${item.id} ${JSON.stringify(form)}`)
         } else {
           assert.ok(
-            AMBIGUOUS_BY_DESIGN.has(`${item.id}:${label}`),
-            `${item.id}: ${JSON.stringify(form)} was left ungraded and is not a known collision`,
+            COLLIDING.has(`${item.id}:${label}`),
+            `${item.id}: ${JSON.stringify(form)} was left ungraded and the bank makes it perfectly readable — ` +
+              `no option's text is '${label}', so there is nothing to be ambiguous about`,
           )
         }
       }
@@ -478,58 +614,51 @@ test('G7: across the whole shipped bank, an option value is never misread', () =
 
 // ---------------------------------------------------------------------------
 // Q4-G1 / Q4-G2 — the collision guard, and the punctuation that slipped past it
+//
+// LETTER_COLLISIONS, COLLIDING, AUDITED_COLLISIONS, AMBIGUOUS and decorations()
+// are all defined with the G7 fixtures above, because the whole-bank sweeps there
+// need them too.
 // ---------------------------------------------------------------------------
 
-/**
- * Every shipped (item, letter) pair where the letter names one option as a
- * LABEL and a DIFFERENT option as a VALUE. Both readings are live, so the
- * grader declines — and it has to go on declining however the student decorated
- * the letter. Derived from the bank rather than listed, so a new colliding item
- * cannot quietly appear and be graded by a coin flip.
- */
-const LETTER_COLLISIONS = SHIPPED_MCQ.flatMap((item) =>
-  Object.keys(item.options).flatMap((label) => {
-    const owners = Object.entries(item.options)
-      .filter(([, text]) => String(text).trim().toUpperCase() === label)
-      .map(([owner]) => owner)
-    return owners.length === 1 && owners[0] !== label ? [[item.id, label, owners[0]]] : []
-  }),
-)
-
-/** The same letter, however he decorated it. LETTER_ONLY accepts all of these. */
-const decorations = (letter) => [
-  letter,
-  letter.toLowerCase(),
-  `${letter}.`,
-  ` ${letter} `,
-  `"${letter}"`,
-  `'${letter}'`,
-  `${letter},`,
-  `${letter}!`,
-  `${letter};`,
-  `${letter}:`,
-  `[${letter}]`,
-  `(${letter})`,
-  `${letter})`,
-  `${letter}?`,
-  `answer: ${letter}`,
-  `the answer is ${letter}`,
-  `I think ${letter}`,
-  `${letter} I think`,
-]
-
-test('Q4: the bank still contains the collisions these tests are about', () => {
+test('Q4: the fixture is ambiguous by construction, and no NEW collision has reached the bank', () => {
+  // RETIRED PRECONDITION: `assert.deepEqual(LETTER_COLLISIONS, [...the four the
+  // audit found])`, under the name 'Q4: the bank still contains the collisions
+  // these tests are about'. It was doing two jobs at once and only one of them was
+  // a gate.
+  //
+  // The gate — no colliding item may appear that nobody has looked at — is kept
+  // below, as containment rather than equality. The other half required the four
+  // known collisions to STILL BE THERE, which made a content fix indistinguishable
+  // from a regression: the bank was repaired, 28 unreadable response forms started
+  // reaching a verdict, and this went red. Whether the artifacts match the markdown
+  // is B8's job, and B8 does it over the whole bank rather than over four items.
+  //
+  // What the equality was really protecting is that the tests below have something
+  // ambiguous to run against. That is now guaranteed by construction instead of by
+  // the bank staying broken, and asserted here as a precondition.
   assert.deepEqual(
-    LETTER_COLLISIONS.map(([id, label]) => `${id}:${label}`).sort(),
-    [...AMBIGUOUS_BY_DESIGN].sort(),
-    'the set of letter collisions in the shipped bank has changed',
+    collisionsIn([AMBIGUOUS]).map(([, label, owner]) => `${label} vs option ${owner}`).sort(),
+    ['A vs option D', 'C vs option A'],
+    'precondition: the fixture must be genuinely ambiguous, or the tests below prove nothing about the grader',
   )
+  for (const [id, label, owner] of LETTER_COLLISIONS) {
+    assert.ok(
+      AUDITED_COLLISIONS.has(`${id}:${label}`),
+      `${id} gives option ${owner} the text '${label}', which is also option ${label}'s label — a bare '${label}' on ` +
+        `that item names two different options and cannot be read. That is a CONTENT defect: move the letter-valued ` +
+        `option to the label whose letter it is, and move the key with it, as csa-ac-q14, csa-ac-q33 and csa-u2-q7 ` +
+        `already were. Do not add it to AUDITED_COLLISIONS.`,
+    )
+  }
 })
 
 test('Q4-G1/G2: a decorated letter never outranks the value reading it collides with', async (t) => {
-  for (const [id, letter, owner] of LETTER_COLLISIONS) {
+  // The fixture first, so the obligation is proved whatever the bank holds, then
+  // the bank itself as a relapse guard: if a colliding item ever comes back, the
+  // grader must still decline the bare letter rather than guess. Neither direction
+  // depends on the bank staying broken.
+  for (const [id, letter, owner, item] of [...collisionsIn([AMBIGUOUS]), ...LETTER_COLLISIONS]) {
     await t.test(`${id} ${letter} (label ${letter} vs option ${owner})`, () => {
-      const item = byId(id)
       for (const raw of decorations(letter)) {
         const r = grade(item, raw)
         assert.equal(
@@ -545,12 +674,19 @@ test('Q4-G1/G2: a decorated letter never outranks the value reading it collides 
 })
 
 test('Q4-G1: quoting the character the program printed is not a wrong answer', () => {
-  // csa-u2-q7 prints 'C' when score is 70; option A's text IS 'C' and the key
-  // is A. Quoting a printed character is a natural thing to do, and the student
-  // who writes "C" is RIGHT. LETTER_ONLY strips the quotes and reads a label,
+  // csa-u2-q7 prints 'C' when score is 70, and 'C' is also an option label.
+  // Quoting a printed character is a natural thing to do, and the student who
+  // writes "C" is RIGHT. LETTER_ONLY strips the quotes and reads a label,
   // canonAnswer keeps them so the competing value reading found nothing, and
   // matchFragment ignores anything under three characters — so the label won a
   // confident verdict and he was told he was wrong. One comma was enough.
+  //
+  // On the bank as the audit found it the best obtainable outcome was a DECLINE:
+  // option A's text was 'C' and the key was A, so nothing could tell the two
+  // readings apart. The content fix put 'C' at label C and moved the key there, so
+  // '"C"' on q7 — and '"B"' on csa-ac-q14, the same shape — are now CREDITED
+  // outright. Same assertion, satisfied the better way, which is what it always
+  // asked for: never a miss.
   for (const raw of ['"C"', "'C'", '(C)', 'C)', 'C,', 'C!', 'C;', 'C:', '[C]']) {
     const r = grade(byId('csa-u2-q7'), raw)
     assert.ok(
@@ -558,7 +694,6 @@ test('Q4-G1: quoting the character the program printed is not a wrong answer', (
       `csa-u2-q7 ${JSON.stringify(raw)} was scored as a miss (picked ${r.picked}, key ${r.keyed})`,
     )
   }
-  // Same shape on csa-ac-q14: the key is C and option C's text is the printed 'B'.
   for (const raw of ['"B"', "'B'", '(B)', 'B)', 'B,', 'B!', 'B;', 'B:', '[B]']) {
     const r = grade(byId('csa-ac-q14'), raw)
     assert.ok(
@@ -566,27 +701,52 @@ test('Q4-G1: quoting the character the program printed is not a wrong answer', (
       `csa-ac-q14 ${JSON.stringify(raw)} was scored as a miss (picked ${r.picked}, key ${r.keyed})`,
     )
   }
+  // And the declining direction, on the item as it shipped: quoting the printed
+  // character while the bank still collides it must never be booked a miss either.
+  for (const raw of decorations('C')) {
+    const r = grade(AMBIGUOUS, raw)
+    assert.ok(
+      !(r.graded_by === 'server' && r.correct === 0),
+      `${AMBIGUOUS.id} ${JSON.stringify(raw)} was scored as a miss (picked ${r.picked}, key ${r.keyed})`,
+    )
+  }
 })
 
 test('Q4-G2: a decorated letter that happens to equal the key is not credit', () => {
-  // The mirror of Q4-G1, and it feeds readiness. On csa-u2-q7 the key is A and
-  // option D's text is 'A', so a student who miscomputed the output as A and
-  // typed '(A)' was told he was right and it counted toward being ready.
+  // The mirror of Q4-G1, and it feeds readiness. On csa-u2-q7 as the audit found
+  // it the key was A and option D's text was 'A', so a student who miscomputed the
+  // output as A and typed '(A)' was told he was right and it counted toward being
+  // ready.
+  //
+  // RETIRED ASSERTION: `assert.equal(isServerGraded(r), false)` against the shipped
+  // csa-u2-q7. That half was never about decoration — it was the consequence of the
+  // letter being AMBIGUOUS, and it is the collision that has been fixed away: q7's
+  // key is now C, its option A really does read 'A', and a decorated 'A' is a
+  // confidently recorded MISS. Refusing to record it would be refusing to mark a
+  // wrong answer wrong.
+  //
+  // So the obligation moves to the item as it shipped, where the letter both equals
+  // the key and collides, and cannot be repaired out from under it. What the shipped
+  // item still owes is the half that has nothing to do with ambiguity: decoration
+  // must never turn a wrong option into credit.
   for (const raw of ['"A"', "'A'", '(A)', 'A)', 'A,', 'A!', 'A;', 'A:', '[A]', 'answer: A']) {
-    const r = grade(byId('csa-u2-q7'), raw)
-    assert.notEqual(r.correct, 1, `csa-u2-q7 ${JSON.stringify(raw)} was credited (picked ${r.picked})`)
-    assert.equal(isServerGraded(r), false, `csa-u2-q7 ${JSON.stringify(raw)} must not feed readiness`)
+    const r = grade(AMBIGUOUS, raw)
+    assert.notEqual(r.correct, 1, `${AMBIGUOUS.id} ${JSON.stringify(raw)} was credited (picked ${r.picked})`)
+    assert.equal(isServerGraded(r), false, `${AMBIGUOUS.id} ${JSON.stringify(raw)} must not feed readiness`)
+    const q7 = grade(byId('csa-u2-q7'), raw)
+    assert.notEqual(q7.correct, 1, `csa-u2-q7 ${JSON.stringify(raw)} was credited (picked ${q7.picked})`)
   }
 })
 
 test('Q4-G1: decoration still resolves on every item that has no letter-valued option', () => {
-  // The collision guard must stay confined to the four items that collide. On
-  // the rest, a decorated letter is just a letter and still earns its verdict.
-  const colliding = new Set(LETTER_COLLISIONS.map(([id, label]) => `${id}:${label}`))
+  // The collision guard must stay confined to the items that actually collide —
+  // today, none of them. On every other (item, letter) pair a decorated letter is
+  // just a letter and still earns its verdict, so a guard that over-fires is
+  // throwing real evidence away.
   let resolved = 0
   for (const item of SHIPPED_MCQ) {
     for (const label of Object.keys(item.options)) {
-      if (colliding.has(`${item.id}:${label}`)) continue
+      if (COLLIDING.has(`${item.id}:${label}`)) continue
       for (const raw of decorations(label)) {
         const r = grade(item, raw)
         assert.equal(r.graded_by, 'server', `${item.id} ${JSON.stringify(raw)} => ${r.graded_by} (${r.detail})`)
@@ -642,17 +802,38 @@ test('Q4-G3: the word that carries the option keeps its verdict', () => {
   assert.equal(grade(byId('csa-ac-q4'), 'ArithmeticException').correct, 1)
   assert.equal(grade(byId('csa-ac-q81'), 'Change the loop condition').correct, 1)
   assert.equal(grade(byId('csa-ac-q81'), 'condition').correct, 1)
-  for (const [id, raw, picked] of [
-    ['csa-ac-q60', 'an empty line', 'B'],
-    ['csa-ac-q60', 'empty', 'B'],
-    ['csa-ac-q14', 'ArithmeticException', 'B'],
-    ['csa-ac-q4', 'Infinity', 'D'],
-    ['csa-ac-q4', 'it prints Infinity', 'D'],
-    ['csa-ac-q33', 'An empty string', 'C'],
-  ]) {
-    const r = grade(byId(id), raw)
+  // RETIRED EXPECTATIONS: the LABELS 'B' for csa-ac-q14's ArithmeticException
+  // option and 'C' for csa-ac-q33's 'An empty string'. Those two items had their
+  // options reordered to stop a letter-valued option colliding with another
+  // option's label, so the same option texts now sit at different labels ('C' and
+  // 'B' respectively) — and a frozen label would have made this test insist the
+  // grader read a response as an option that no longer holds those words.
+  //
+  // Each case therefore names the option by its TEXT, which is what the response
+  // is actually reaching for, and the label is looked up on the item. The verdict
+  // pinned is unchanged and is the one that matters: the response resolves to the
+  // option whose substance it names, that option is not the key, and it is
+  // recorded as a real miss.
+  const wrongOption = [
+    ['csa-ac-q60', 'an empty line', 'An empty line'],
+    ['csa-ac-q60', 'empty', 'An empty line'],
+    ['csa-ac-q14', 'ArithmeticException', 'An `ArithmeticException` is thrown.'],
+    ['csa-ac-q4', 'Infinity', 'It prints `Infinity`.'],
+    ['csa-ac-q4', 'it prints Infinity', 'It prints `Infinity`.'],
+    ['csa-ac-q33', 'An empty string', 'An empty string'],
+  ]
+  for (const [id, raw, optionText] of wrongOption) {
+    const item = byId(id)
+    const owners = Object.entries(item.options).filter(([, text]) => text === optionText).map(([label]) => label)
+    assert.equal(
+      owners.length, 1,
+      `${id}: ${JSON.stringify(optionText)} names ${owners.length} options, so there is no one verdict to pin`,
+    )
+    const [picked] = owners
+    assert.notEqual(picked, normalizeChoice(item.answer), `${id}: ${JSON.stringify(optionText)} is the KEY, not a miss`)
+    const r = grade(item, raw)
     assert.equal(r.graded_by, 'server', `${id} ${JSON.stringify(raw)} was declined (${r.detail})`)
-    assert.equal(r.picked, picked, `${id} ${JSON.stringify(raw)} read as ${r.picked}`)
+    assert.equal(r.picked, picked, `${id} ${JSON.stringify(raw)} read as ${r.picked}, not as option ${picked}`)
     assert.equal(r.correct, 0, `${id} ${JSON.stringify(raw)} names a wrong option and is a real miss`)
   }
 })
@@ -707,14 +888,37 @@ test('Q4-G4: a label and a text that disagree are as unreadable as any collision
 })
 
 test('Q4-G4: the printed form disambiguates the items whose option text is a letter', () => {
-  // csa-u2-q7's bare 'A' cannot be read: label A, or option D's text 'A'. Print
-  // the whole option — 'A. C', the label and the character the program prints —
-  // and both halves say A. Giving more of the answer must not be punished.
-  assert.equal(grade(byId('csa-u2-q7'), 'A. C').correct, 1)
-  assert.equal(grade(byId('csa-u2-q7'), '(A) C').correct, 1)
-  assert.equal(grade(byId('csa-u2-q7'), 'D. A').picked, 'D')
-  assert.equal(grade(byId('csa-ac-q14'), 'C. B').correct, 1)
-  assert.equal(grade(byId('csa-ac-q14'), 'C) B').correct, 1)
+  // A bare 'A' on the item below cannot be read: label A, or option D's text 'A'.
+  // Print the whole option — 'A. C', the label and the character the program prints
+  // — and both halves say A. Giving MORE of the answer must not be punished.
+  //
+  // RETIRED FIXTURES: csa-u2-q7 ('A. C', '(A) C', 'D. A') and csa-ac-q14 ('C. B',
+  // 'C) B'), the two shipped items that had a letter-valued option when the audit
+  // ran. The content fix moved every such option to the label whose letter it is
+  // and moved the keys with it, so on the repaired bank q7's key is C and its
+  // printed form is 'C. C' — a form in which nothing was ever ambiguous, and which
+  // therefore cannot demonstrate disambiguation at all. Keeping the literals would
+  // have asserted credit for what is now a wrong option; re-deriving them from the
+  // new keys would have left the test passing while proving nothing.
+  //
+  // So this runs on the item as it shipped, preserved as a fixture that cannot be
+  // repaired out from under it. The relapse guard over the real bank is the sweep
+  // below ('the printed form of the key resolves'), which covers every shipped
+  // item including any future letter-valued option, and needs no collision to
+  // exist in order to mean something.
+  assert.equal(grade(AMBIGUOUS, 'A. C').correct, 1, 'the label and the printed character both say A')
+  assert.equal(grade(AMBIGUOUS, '(A) C').correct, 1)
+  assert.equal(grade(AMBIGUOUS, 'D. A').picked, 'D', "option D's own printed form is option D, not the letter A")
+  assert.equal(grade(AMBIGUOUS, 'D. A').correct, 0, 'and D is not the key, so it is a real miss')
+  // The precondition the whole test rests on: the bare letters really are
+  // unreadable here, so the printed form is adding the information that resolves
+  // them rather than repeating what was already clear.
+  for (const letter of ['A', 'C']) {
+    assert.equal(
+      grade(AMBIGUOUS, letter).graded_by, 'unparsed',
+      `precondition: a bare '${letter}' on the fixture must be unreadable, or 'A. C' disambiguates nothing`,
+    )
+  }
 })
 
 test('Q4-G4: across the whole shipped bank, the printed form of the key resolves', () => {
