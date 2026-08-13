@@ -495,6 +495,37 @@ Why the others are there: **A** applies the $\deg N<\deg D$ rule, or reasons "th
 <!-- practice: 3.B -->
 <!-- topic: 1.7 -->
 
+**P26 (exam-level, calculator) — building the second piece of a tariff.** A gym charges a flat \$27.50 a month for up to 8 visits, and \$3.75 for each visit beyond the 8th. Let $M(v)$ be the charge in dollars for a month with $v$ visits. Which pair gives the rule for $M(v)$ when $v>8$, together with the correct value of $M(14)$?
+A) 27.50 + 3.75v, and M(14) = 80.00   B) 3.75(v - 8), and M(14) = 22.50   C) 27.50 + 3.75(v - 8), and M(14) = 50.00   D) 27.50 + 3.75(v - 8), and M(14) = 46.25
+<details><summary>Solution</summary>
+
+**The \$3.75 buys only the visits in EXCESS of 8, and the \$27.50 never goes away.** So the second piece keeps the flat fee and adds the per-visit charge on the excess count $v-8$:
+$$M(v)=\begin{cases}27.50, & 0\le v\le 8\\ 27.50+3.75(v-8), & v>8\end{cases}$$
+At $v=14$ the excess is $14-8=6$ visits, so $M(14)=27.50+3.75(6)=27.50+22.50=\mathbf{50.00}$ dollars. **C.**
+**Two checks worth thirty seconds each.** First, the pieces must agree at the boundary or the bill would jump for no reason: the second rule at $v=8$ gives $27.50+3.75(0)=27.50$, the same as the flat fee ✓. Second, one extra visit must cost exactly \$3.75: $M(9)=27.50+3.75=31.25$, and $31.25-27.50=3.75$ ✓.
+
+Why the others are there: **A** charges \$3.75 for **every** visit rather than only the ones past the 8th, which is this section's #1 modelling error — it gives $27.50+3.75(14)=80.00$, and it also breaks the boundary check badly ($M(8)$ would be $57.50$, over twice the flat fee for a month that is supposed to cost \$27.50). **B** drops the flat fee the moment the extra visits start, as if the two tiers **replaced** each other instead of stacking; $3.75(6)=22.50$ is less than the \$27.50 a member pays for **fewer** visits, so this rule charges more people less the more they come. **D** has the rule exactly right and then counts the excess wrong: "beyond the 8th" means the 9th through the 14th, and a student who computes that as $14-9=5$ gets $27.50+3.75(5)=46.25$. Count them — 9, 10, 11, 12, 13, 14 is **six** visits, and the count of integers from $9$ to $14$ is $14-9+1=6$, which is $14-8$. **This off-by-one at a breakpoint is the same ≤-versus-< care the boundary check enforces**, and it is why the algebra says $v-8$ and not $v-9$.
+</details>
+<!-- key: C -->
+<!-- practice: 1.C -->
+<!-- topic: 1.10 -->
+
+**P27 (medium, no-calc) — making the two pieces meet.** A piecewise function is defined by $f(x)=2x+k$ for $x<5$ and $f(x)=x^2-4x$ for $x\ge 5$, where $k$ is a constant. For which value of $k$ is $f$ continuous at $x=5$ — that is, for which $k$ do the two pieces meet instead of leaving a jump?
+A) k = -5   B) k = 0   C) k = 5   D) k = 15
+<details><summary>Solution</summary>
+
+**Evaluate both rules at the breakpoint and force them to agree.** The piece that owns $x=5$ is the second one, since $x\ge 5$ includes it:
+$$f(5)=5^2-4(5)=25-20=5$$
+The first rule never gets to $x=5$, but its outputs approach $2(5)+k=10+k$ as $x$ climbs towards 5, and that is the height the graph arrives at from the left. No jump means the two heights are the same number:
+$$10+k=5\ \Longrightarrow\ k=\mathbf{-5}$$
+Check it: with $k=-5$ the left rule is $2x-5$, which at $x=4.9$ gives $4.8$ and at $x=4.99$ gives $4.98$ — closing on $5$, exactly where the parabola piece starts. **A.**
+
+Why the others are there: **D** solves $10+k=5$ by **adding** 10 instead of subtracting it, the single commonest slip in isolating a constant; $k=15$ makes the left side arrive at $25$ against the parabola's $5$, a jump of 20. **C** reads the constant $k$ as the piece's value at the breakpoint and copies $f(5)=5$ straight into it, forgetting that the $2x$ term contributes $10$ of its own; the left side then arrives at $15$. **B** matches the two rules at $x=0$ instead of at $x=5$ — both rules pass through the origin when $k=0$, which is a true and completely irrelevant fact, because $x=0$ is not where the pieces hand over. **Continuity is checked only at the breakpoint**; the left rule then arrives at $10$ against the parabola's $5$, a jump of 5.
+</details>
+<!-- key: A -->
+<!-- practice: 1.A -->
+<!-- topic: 1.10 -->
+
 ---
 
 ## 4. Quick self-check
