@@ -36,33 +36,18 @@ originate inside the page.
 ## Re-deploying after a code change
 
 ```bash
-npm test && { npm run build -- --write-despite-incomplete; npm run seed:sql && npm run worker:check; }
+npm test && npm run build && npm run seed:sql && npm run worker:check
 ```
 
-**`npm run build` with no flag exits 1 and writes nothing today, by design.**
-Content validation gates the build on completeness, and ap_precalc is not
-complete: 33 of its 36 exam-tested topics have no items at all, none of its 48
-items can be graded mechanically, four topics have items but no teaching row,
-one teaching row (1.11) is entirely blank, and three CSA items (csa-ac-q14,
-csa-ac-q33, csa-u2-q7) have an option whose text collides with another
-option's label. Run `npm run build` alone to see the current, authoritative
-list under "INCOMPLETE CONTENT" — it is generated from the content itself, so
-it will not go stale the way a hand-written list here would.
-
-`--write-despite-incomplete` writes `content/items.json`, `topics.json` and
-`teaching.json` from the markdown anyway, so a real fix elsewhere in the
-content is not stranded behind an unrelated gap (see the flag's own comment in
-`tools/build/build.js`). **It still exits 1 and prints "Build FAILED"** — the
-flag changes what gets written, not the exit code — so the command above
-deliberately runs it inside `{ ; }` rather than chaining it with `&&`. A bare
-`&&` here stops before `seed:sql` and `worker:check` ever run, which is exactly
-what the literal old command did: silently skip both with no error at all.
-
-Shipping on these artifacts means ap_precalc readiness stays effectively
-unreachable (see "Still not done" below), which is the same thing
-gpt-instructions.md already discloses to the student for the Precalc mock
-specifically. Re-run `npm run build` with no flag after any content fix — once
-these gaps are closed it exits 0, and the flag above can come out again.
+**`npm run build` now exits 0.** It used to exit 1 and write nothing, because
+ap_precalc content was incomplete. That is fixed: exam-tested topic coverage is
+100%, every exam-tested topic has at least one KEYED item, and the bank holds 38
+`mcq` + 4 `frq`, which is what `api.js` needs to cover both halves of a
+42-question paper at its 90% floor. `--write-despite-incomplete` still exists as
+an escape hatch (it changes what gets written, never the exit code) but is no
+longer needed for a normal deploy. Run `npm run build` with no flag and read
+"INCOMPLETE CONTENT" if it ever fails again — that list is generated from the
+content, so it does not go stale the way a hand-written list here did, twice.
 
 Then, from an ego-browser session logged into Cloudflare, upload
 `/tmp/ap-tutor-build/index.js` with `PUT /api/v4/accounts/{acc}/workers/scripts/ap-tutor`
@@ -72,7 +57,21 @@ as multipart: a `metadata` part (`main_module`, `compatibility_date`, and the D1
 
 **Bindings must be re-sent on every upload.** The API replaces the binding set
 wholesale, so omitting `STUDENT_KEY` silently unsets it and every request starts
-returning 401.
+returning 401. Two ways to satisfy that:
+
+- `{"type":"inherit","name":"STUDENT_KEY"}` — keeps the existing secret without
+  knowing its value. Use this for an ordinary code deploy; the key never has to
+  be read, so it cannot leak into a transcript.
+- `{"type":"secret_text","name":"STUDENT_KEY","text":"<value>"}` — sets a new
+  value. This is also **how you rotate a key**, because
+  `PUT /workers/scripts/ap-tutor/secrets` returns **403 with an HTML body** from
+  the dashboard origin (WAF-blocked, measured 13 Aug 2026). Re-uploading the
+  script with the value inline is the working path.
+
+Relative `fetch('/api/v4/...')` only works while the active tab is on
+`dash.cloudflare.com`. If the tab has moved to another origin the request hits
+that origin and comes back as HTML, which parses as
+`SyntaxError: Unexpected token '<'`. Switch tabs first, or use an absolute URL.
 
 ## Reloading content
 
@@ -128,13 +127,13 @@ ALTER TABLE attempts ADD COLUMN picked TEXT;
 DELETE FROM topics WHERE subject = 'ap_precalc' AND id IN ('1.0', '2.0', '3.0', '4.0');
 ```
 
-Then verify against the artifacts: `items` = 289, `topics` = 97, `teaching` =
-97, `SELECT count(*) FROM items i LEFT JOIN topics t ON t.id = i.topic AND
-t.subject = i.subject WHERE t.id IS NULL` = 0, and
-`SELECT count(*) FROM items WHERE subject='ap_precalc' AND kind='constructed'`
-= 19. The whole sequence has been rehearsed against a copy of the deployed seed
-in `node:sqlite`: it lands exactly on the artifacts and disturbs no row of
-`attempts` or `serves`.
+Then verify against the artifacts. **Numbers as deployed 13 Aug 2026** — read
+them off `content/*.json` rather than trusting this list, which has drifted
+before: `items` = 336, `topics` = 97, `teaching` = 97,
+`SELECT count(*) FROM items i LEFT JOIN topics t ON t.id = i.topic AND
+t.subject = i.subject WHERE t.id IS NULL` = 0, and for ap_precalc
+`constructed` = 24, `constructed_model_graded` = 29, `mcq` = 38, `frq` = 4 (62
+of the 95 keyed). All of that was confirmed live after the migration below.
 
 **One honest consequence.** Any Precalc attempt logged before this migration was
 recorded against a `<unit>.0` placeholder, and `attempts.topic` is stored as it
@@ -212,6 +211,40 @@ loop was exercised in the published GPT, not just the builder preview.
 
 All three are enforced by `worker/tests/openapi.test.js`.
 
+### The Instructions field is capped at 8000 characters
+
+**This blocked a deploy on 13 Aug 2026 and is the fourth undocumented limit.**
+ChatGPT rejects the whole draft above 8000 characters in the Instructions box.
+The failure is nearly silent: autosave returns **422**, the **Update button stays
+disabled**, and the only text on screen is a small "Error saving draft" plus
+"GPT instructions cannot be longer than 8000 characters."
+
+`gpt-instructions.md` had grown to a 13,277-character body — 66% over — so it
+could not be installed at all, while the Worker and the schema deployed fine.
+That is silent drift between conduct and contract, which is the exact thing the
+doc-vs-schema tests exist to stop. `worker/tests/openapi.test.js` now gates the
+length, so the build fails before a deploy can.
+
+**The cap applies to the body that is pasted**, i.e. everything after the first
+`---`; the preamble above it is for a human and is free. Substituting the real
+32-character key for `PASTE_STUDENT_KEY` makes the installed text ~14 characters
+longer than the file measures, so leave headroom rather than landing on 7999.
+
+### Pasting it in, mechanically
+
+The Instructions and Schema fields are React-controlled `<textarea>`s, and
+setting `.value` through the native property setter **does not** make the editor
+register a change — the content updates on screen and the Update button stays
+disabled. Focus the field, select its own content with
+`el.setSelectionRange(0, el.value.length)`, then send the text with CDP
+`Input.insertText`, which fires an event React accepts. Do NOT use `Meta+a`
+first: it does not scope to the field, and the insert then appends rather than
+replaces, silently doubling the content.
+
+Publish with the **Update** button in the editor's persistent header. Do not
+click a "back" control first — the only back affordance is *Back to GPTs page*,
+which navigates out and discards an unsaved draft.
+
 ### The consent prompt: what actually happens
 
 The original assumption was that a GET with query parameters raises no prompt.
@@ -228,20 +261,48 @@ Note that the prompt **displays the outgoing query parameters, including the
 access key**. Treat any screenshot or transcript of that prompt as exposing the
 key. The first student key was rotated for exactly this reason.
 
+**The student key was rotated again on 13 Aug 2026, for a second instance of the
+same class.** The GPT stores the key in plaintext in its Instructions, so a
+DOM snapshot of the editor — taken by an agent to find the Actions section —
+printed the live key into a transcript. Rotating it is a script re-upload with
+`{"type":"secret_text","name":"STUDENT_KEY","text":"<new>"}` plus
+`{"type":"inherit","name":"PARENT_KEY"}`, then pasting the new key into the GPT
+Instructions. Verified after: old key → 401, new key → 200, `/dash` still 200 on
+the parent key and 403 on the student key.
+
+**Do not snapshot the GPT editor page while the Instructions field is populated.**
+Query the specific DOM nodes you need instead. This is the third distinct way
+this one key has leaked, and all three were reading something that happened to
+contain it rather than reading the key itself.
+
 ## Still not done
-- ap_precalc content is the real blocker on readiness: 33 of its 36
-  exam-tested topics have no items at all, and none of its 48 items
-  (`constructed_model_graded` throughout, all bucketed at `<unit>.0` rather
-  than tagged to a real topic) can be graded mechanically, so no Precalc mock
-  can ever produce a composite until items are tagged and, where an
-  unambiguous answer exists, keyed. Four topics (1.0, 2.0, 3.0, 4.0) have
-  items but no teaching row, and one teaching row (1.11) is entirely blank.
-  `npm run build` regenerates this exact list under "INCOMPLETE CONTENT" from
-  the content itself — read it there rather than trusting this paragraph,
-  which will drift the way it already did once.
-- Three CSA items (csa-ac-q14, csa-ac-q33, csa-u2-q7) have an option whose
-  text is itself another option's label. grade.js and gpt-instructions.md
-  handle the ambiguity at answer time (ask for "choice B", not a bare letter);
-  the content fix is to reword those options so the collision stops existing.
-- FRQ grading stays quarantined until calibrated against an officially scored
-  College Board response. Until then 100% readiness is unreachable by design.
+- **FRQ grading stays quarantined** until calibrated against an officially scored
+  College Board response, so 100% readiness is unreachable by design. Measured
+  13 Aug 2026: with a perfect record — 6 official mocks at 100, full coverage,
+  no blanks — ap_precalc caps at **93%**, `ready: false`, `first_unmet: 'frq'`.
+  `calibrated: false` is a literal at all three `computeReadiness` call sites,
+  and flipping it changes nothing, because `grade.js` books every rubric item
+  `{correct: 0, graded_by: 'model'}` and nothing ever writes a verdict back.
+  Both locks understate rather than overstate, which is the correct direction.
+- **Precalc topic ids are positional** — `<unit>.<index of the ### section>` in
+  `parse-precalc-topics.js`. Inserting, removing or reordering a `###` heading in
+  a study pack silently renumbers every topic after it and re-points every later
+  item's tag at the wrong concept. Load-bearing fragility; the packs' own `2.N`
+  headings already diverge from the ids in units 2 and 3.
+- ap_precalc units 4.2 and 4.4 have no items. Class-only, off-exam, so they do
+  not gate readiness.
+- CSA's 20 free-response items all carry the FIRST topic their file declares,
+  because the markdown declares topics per FRQ file rather than per item, so
+  topic-level selection sees each question type as a single topic.
+
+### Closed since the last deploy (13 Aug 2026)
+- ap_precalc content was **the** blocker and no longer is. Exam-tested topic
+  coverage 100% (33/33), every exam-tested topic has a KEYED item, and the bank
+  holds 38 `mcq` + 4 `frq`. A section I sitting now assembles and scores —
+  measured `counted: true`, `composite_pct: 90.5` on a 38-answer paper.
+- The four `<unit>.0` placeholder topics are deleted from the live database.
+- The three CSA letter-collision items are fixed in content: every
+  letter-valued option now sits at the label whose letter it is, so the grader's
+  two readings agree. 28 previously unreadable response forms now grade.
+- `attempts.picked` exists in the live database.
+
