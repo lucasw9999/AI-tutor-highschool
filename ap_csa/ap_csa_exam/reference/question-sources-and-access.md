@@ -1,6 +1,6 @@
 # AP CSA — Question Sources & Access Guide
 
-**Why this matters:** the right sources = authentic, redesign-aligned practice. The wrong sources teach inheritance, HashMap, and other topics **not on the exam**, which wastes time and builds wrong instincts. Every source below is flagged for alignment to the redesigned CED (Effective Fall 2025).
+**Why this matters:** the right sources = authentic, redesign-aligned practice. The wrong sources teach how to **write** inheritance — designing/implementing a class hierarchy, `extends`, `super`, overriding (excluded; the vocabulary itself is required Unit 1 content, see [`../../csa-coverage-map.md`](../../csa-coverage-map.md) → Inheritance) — plus HashMap and other topics **not on the exam at all**, which wastes time and builds wrong instincts. Every source below is flagged for alignment to the redesigned CED (Effective Fall 2025).
 
 > 📥 **Just want the files?** A single consolidated **download list covering both subjects in priority order** — every official PDF worth having, with exact filenames and the 2024 material that expires first — lives in [`../../../ap_precalc/README.md`](../../../ap_precalc/README.md) under "**THE DOWNLOAD LIST**". It's written for a parent doing one download pass. This file is the *why* behind those choices.
 
@@ -35,7 +35,7 @@ Past FRQs are valuable for rubric practice, but the format changed. Apply these 
 - **Q1 (Methods & Control)** — ✅ usable across years (always methods + conditions + String work).
 - **Q3 (ArrayList / Data Analysis)** — ✅ usable; ArrayList shape is consistent.
 - **Q4 (2D Array)** — ✅ usable; 2D array work is consistent.
-- **Q2 (Class Design)** — ⚠️ use **only post-redesign (2026+)** Q2. Pre-redesign Q2 was often "design a subclass" — inheritance, which is **off the exam**. Old "GridWorld" and subclass FRQs: skip entirely.
+- **Q2 (Class Design)** — ⚠️ use **only post-redesign (2026+)** Q2. Pre-redesign Q2 was often "design a subclass" — **designing** a class hierarchy, which is **off the exam**. Old "GridWorld" and subclass FRQs: skip entirely.
 - **Old scoring (pre-redesign):** prior FRQs were 9/9/9/9 pts. The new format is **7/7/5/6 = 25 pts**. Practice the rubric structure but don't over-weight the point values.
 
 ### Officially scored sample responses — live now, and they unblock grader calibration
@@ -203,6 +203,8 @@ Sitting the AP exam requires being registered through an AP-administering school
 
 ⚠️ **The ledger cannot answer the Foothill question in time, so don't wait on it.** College Board **refreshes the ledger each November** — essentially at the Nov 13 order deadline — so a lookup in **August or September 2026 returns 2025-26 offerings**, not the 2026-27 year Lucas will sit. Use it to shortlist *other* schools that have offered AP CSA before; but the only instrument that answers "does Foothill administer AP CSA in May 2027" **before** Nov 13 is the **direct question to the AP Coordinator** above.
 
+⚠️ **Separately, the ledger may not open for you at all.** An earlier lookup in this pass hit **"Session Expired / Please sign into your AP Professional Learning account"** — the same College Board **professional-login gate** already noted above for provider-authorization checks — which a parent typically does not have. Between the November refresh and the login gate, treat the ledger as a maybe, not a plan: **the one instrument that reliably works, for Foothill or for any other school, is a direct question to that school's AP Coordinator in the first week of school.**
+
 > **The real May 2027 deadline structure** (College Board AP school-year timeline, verified 12 August 2026):
 > - **October 2, 2026** — *preferred* deadline to submit AP exam orders.
 > - **November 13, 2026, 11:59 PM ET** — **final** deadline. Ordering any time up to here carries **no extra charge**. The **$40 per exam late order fee** (on top of the base fee) applies only to exams ordered **between November 14, 2026 and March 12, 2027, 11:59 p.m. ET**.
@@ -222,7 +224,7 @@ Sitting the AP exam requires being registered through an AP-administering school
 
 | Source | Inheritance alignment | Cost | What it covers | Use / skip notes |
 |---|---|---|---|---|
-| **CSAwesome2** (Runestone, 2025–26 edition) | ✅ Aligned | Free | Units 0–4 — full redesigned CED scope with interactive exercises and Parsons problems | **Primary free practice anchor.** Use Units 0–4. **Skip "Unit 5 Inheritance"** (labeled optional; not on the exam). |
+| **CSAwesome2** (Runestone, 2025–26 edition) | ✅ Aligned | Free | Units 0–4 — full redesigned CED scope with interactive exercises and Parsons problems | **Primary free practice anchor.** Use Units 0–4. **Skip "Unit 5 Inheritance"** (labeled optional; it teaches *writing* a hierarchy — excluded). The in-scope topic 1.12 vocabulary (superclass/subclass/`Object`) lives in CSAwesome's **Unit 1**, which you're already using — skipping Unit 5 does not skip that. |
 | **CodingBat Java** | ✅ Aligned (with skips) | Free | Method-level Java drills: String, Array, Logic, List, Recursion problems | Great for method-level fluency. **Skip Map-1/Map-2** (HashMap — off exam) and **Functional-1/Functional-2** (lambdas — off exam). Everything else is fair game. |
 | **CodeHS "Cortado"** free tier | ✅ Aligned | Free (core tier) | Redesign-aligned AP CSA course — updated to match the new CED | Use the **Cortado** course. **Avoid "Nitro"** (old course; still teaches inheritance). If CodeHS prompts a course selection, confirm you're on Cortado. |
 
