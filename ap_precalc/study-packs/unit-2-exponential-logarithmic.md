@@ -601,6 +601,51 @@ Why the others are there: **A** judges the residuals by **size** rather than by 
 
 ---
 
+**P27 [C] — Hard — half-life from a percent decay rate.** A radioactive sample loses 12% of its mass each year. To the nearest hundredth of a year, how long until only half of the original mass remains?
+A) 5.42   B) 0.33   C) 4.17   D) 6.12
+<details><summary>Solution</summary>
+
+**Get the base right first.** Losing 12% a year leaves 88%, so $b = 1 - 0.12 = \mathbf{0.88}$ — not 0.12, and not 1.12.
+Let $M_0$ be the starting mass. "Half remains" means $M_0(0.88)^{t} = 0.5M_0$, so the $M_0$ cancels and
+$0.88^{t} = 0.5 \Rightarrow t = \dfrac{\ln 0.5}{\ln 0.88} = \dfrac{-0.693147}{-0.127833} \approx 5.4223 \to \mathbf{5.42}$ years.
+Check: $0.88^{5.42} = 0.5001$ ✓. Notice both logs are negative and the quotient comes out positive — if your answer is negative, you used the wrong base.
+
+Why the others are there: **D** uses $b = 1.12$, reading "loses 12%" as a growth factor: $\ln 0.5/\ln 1.12 = -6.12$, and dropping the sign hides that the model was growing, not decaying ($0.88^{6.12} = 0.457$, already past half). **B** uses $b = 0.12$ — the decay base written as the *rate* instead of $1 -$ rate, this unit's #1 mistake: $\ln 0.5/\ln 0.12 = 0.33$, which would have the sample halving in four months. **C** is linear thinking: "12% a year, so 50% takes $50/12 = 4.17$ years"; the percent is of what is *left* each year, not of the original, and $0.88^{4.17} = 0.587$ — still well over half.
+</details>
+<!-- key: A -->
+<!-- practice: 1.A -->
+<!-- topic: 2.3 -->
+
+---
+
+**P28 [C] — Exam-level — FRQ Q2 (Modeling a Non-Periodic Context).**
+A patient is given a single dose of a drug. The concentration of the drug in the patient's bloodstream is modeled by $C(t) = A\,b^{\,t}$, where $C$ is measured in mg/L and $t$ is the number of hours after the dose. Measurements give $C(1) = 48$ and $C(5) = 12$.
+(a) Find $b$, rounded to three decimal places, and then $A$, rounded to three decimal places. Interpret the value of $b$ in the context of this problem.
+(b) Use the model to find $C(6)$, to the nearest tenth of a mg/L. Find the average rate of change of $C$ on the interval $1 \le t \le 5$, with units.
+(c) The patient is due another dose as soon as the concentration first falls below 5 mg/L. Using the model, give the first whole hour $t$ at which the concentration is below 5 mg/L. A nurse instead extends the straight line through $(1, 48)$ whose slope is the average rate of change from (b), and reads off a much earlier time. Explain, using the concavity of $C$, why that straight line reaches 5 mg/L too soon.
+(d) The model predicts a positive concentration for every $t > 0$, however large $t$ becomes. Explain what that means about $C$ as a long-run description of the drug in the bloodstream, and give one feature of the real situation that this model does not capture.
+<details><summary>Solution</summary>
+
+**(a)** Divide the two measurements so $A$ cancels — that is the move this part rewards:
+$\dfrac{C(5)}{C(1)} = \dfrac{Ab^{5}}{Ab^{1}} = b^{4} = \dfrac{12}{48} = 0.25 \Rightarrow b = 0.25^{1/4} = 0.707107\ldots \to \mathbf{b \approx 0.707}$.
+Then from $C(1) = Ab = 48$: $A = \dfrac{48}{0.707107} = 67.882251\ldots \to \mathbf{A \approx 67.882}$.
+**Interpretation:** each hour the concentration is multiplied by about 0.707 — that is, roughly **29.3% of the drug present is cleared every hour**, and the same *proportion* goes each hour, not the same amount.
+**(b)** $C(6) = 67.882251(0.707107)^{6} = 8.4853 \to \mathbf{8.5}$ mg/L. (Carry the unrounded $A$ and $b$; rounding them first shifts this answer.)
+Average rate of change on $[1,5] = \dfrac{C(5)-C(1)}{5-1} = \dfrac{12-48}{4} = \mathbf{-9}$ **mg/L per hour**.
+**(c)** Solve $67.882251(0.707107)^{t} = 5$: $\;(0.707107)^{t} = 0.073658 \Rightarrow t = \dfrac{\ln 0.073658}{\ln 0.707107} = 7.526$ hours. So the concentration is still above 5 at $t = 7$ ($C(7) = 6.0$ mg/L) and below it at $t = 8$ ($C(8) = 4.2$ mg/L): the first whole hour is $\mathbf{t = 8}$.
+The nurse's line is $L(t) = 48 - 9(t-1)$, which reaches 5 when $t - 1 = 43/9$, i.e. $t \approx 5.8$ hours — more than two hours early.
+**Why:** $C$ is an exponential decay function, so it is **decreasing and concave up**. Concave up means the rate of change, while negative, is **increasing toward 0** — the drug clears more and more slowly as less of it is left. The nurse's line removes a flat 9 mg/L every hour forever. Past the right end of the interval a concave-up curve lies **above** the extended secant line ($C(6) = 8.5$ against $L(6) = 3$), so the line drops through 5 mg/L while the true concentration is still well above it.
+**(d)** $A > 0$ and $b > 0$, so $Ab^{t} > 0$ for every $t$: the model has the horizontal asymptote $C = 0$ and **never reaches it**. At $t = 24$ it still predicts $C = 0.017$ mg/L. So the model says the drug is never *completely* cleared — as a long-run description it can only mean the concentration becomes negligibly small, not that some drug remains forever, and past some point the prediction is far below anything measurable or clinically meaningful.
+One feature it does not capture (any one of these earns the point): the **next dose**, which would jump the concentration straight back up and end this model's validity; or the **absorption phase** — the model puts the maximum at $t = 0$ ($C(0) = 67.9$ mg/L), as if the whole dose arrived in the blood instantly, whereas a real concentration rises first and only then decays; or a **detection floor**, below which the concentration is reported as zero.
+
+*Grader notes.* Q2 is the second-lowest-scoring free-response question, and the points go missing in (c) and (d), not in the algebra. Two habits pay for themselves: **state units** on every rate ("mg/L per hour", not "−9"), and when you claim a concavity, **say what it implies** — "concave up, so the rate of change is increasing toward 0, so the straight line falls too fast." A concavity named without a consequence scores nothing. Round only at the end; the 2027 layout expanded Part C, which is exactly this justification work.
+</details>
+<!-- frq: Q2 -->
+<!-- practice: 3.C -->
+<!-- topic: 2.9 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
