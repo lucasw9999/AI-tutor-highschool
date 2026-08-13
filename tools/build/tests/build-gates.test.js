@@ -300,9 +300,39 @@ test('B5: the per-subject table reports rows written and rows complete separatel
   // rows shipped).
   assert.equal(rows.ap_precalc.teachingWritten, pc.length)
   assert.equal(rows.ap_precalc.teachingComplete, pc.filter((t) => t.complete !== false).length)
+
+  // RETIRED PRECONDITION: `assert.ok(rows.ap_precalc.teachingWritten >
+  // rows.ap_precalc.teachingComplete, 'precondition: some Precalc teaching rows are
+  // still incomplete')`.
+  //
+  // All 44 Precalc teaching rows now carry all three fields (44 written, 44
+  // complete), so that line demanded the content stay incomplete. It was not idle,
+  // though: it was the only thing proving summary() reports TWO numbers rather than
+  // printing one figure twice — which is the whole subject of this test, and the
+  // defect it was written for ("teaching= 36" while 44 rows shipped). So it is
+  // replaced by the same claim made where it cannot rot: on today's content the two
+  // numbers are equal AND that equality is a fact about the content, and stripping
+  // one teaching label in memory must pull them apart again.
+  assert.equal(
+    rows.ap_precalc.teachingWritten, rows.ap_precalc.teachingComplete,
+    'every Precalc teaching row is complete today, so the two counts must agree',
+  )
+  // Strip the FIRST "#1 mistake" label in unit 1, keeping its prose: the row is
+  // still written, and is no longer complete. Matched by shape, not by wording, so
+  // an edit to that sentence cannot silently turn this guard into a no-op.
+  const gap = compile(patched(U1, (t) => t.replace(/^\*\*#1 mistake[^*]*\*\*/m, '')))
+  const gapRows = summary(gap).ap_precalc
+  assert.equal(
+    gapRows.teachingWritten, rows.ap_precalc.teachingWritten,
+    'precondition: losing a field loses no ROW — the row still ships, incomplete',
+  )
+  assert.equal(
+    gapRows.teachingComplete, rows.ap_precalc.teachingComplete - 1,
+    'precondition: the patch must make exactly one row incomplete, or this guard proves nothing',
+  )
   assert.ok(
-    rows.ap_precalc.teachingWritten > rows.ap_precalc.teachingComplete,
-    `precondition: some Precalc teaching rows are still incomplete (written ${rows.ap_precalc.teachingWritten}, complete ${rows.ap_precalc.teachingComplete})`,
+    gapRows.teachingWritten > gapRows.teachingComplete,
+    `an incomplete row must make the table's two counts differ (written ${gapRows.teachingWritten}, complete ${gapRows.teachingComplete})`,
   )
 })
 
@@ -470,10 +500,21 @@ test('B7: the compiled CSA bank holds all 20 free-response items, five per quest
 
 test('B7: an FRQ item takes its unit from the topics table, as to-sql.js does', () => {
   const r = compile()
-  const units = new Map(r.topics.filter((t) => t.subject === 'ap_csa').map((t) => [t.id, t.unit]))
-  for (const it of r.items.filter((i) => i.kind === 'frq')) {
+  // KEYED BY SUBJECT, not just by topic id. 42 of 48 Precalc topic ids collide with
+  // CSA ids (see B2), so a CSA-only lookup applied to every `kind: frq` item in the
+  // bank was checking the Precalc free-response items against CSA's topic rows and
+  // passing purely because Precalc 3.3 and 3.7 happen to be CSA topics in unit 3
+  // too. One Precalc FRQ tagged at a topic id CSA does not have, and this failed
+  // with a message about the wrong subject's parser.
+  const units = new Map(r.topics.map((t) => [`${t.subject}:${t.id}`, t.unit]))
+  const frq = r.items.filter((i) => i.kind === 'frq')
+  assert.ok(frq.length > 0, 'precondition: the bank holds free-response items to check')
+  for (const it of frq) {
     assert.ok(it.unit, `${it.id} must land in a unit or it is invisible to every per-unit floor`)
-    assert.equal(it.unit, units.get(it.topic), `${it.id}: unit must come from the topic row, not the id's prefix`)
+    assert.equal(
+      it.unit, units.get(`${it.subject}:${it.topic}`),
+      `${it.id}: unit must come from ITS OWN subject's topic row, not the id's prefix`,
+    )
   }
 })
 
@@ -519,12 +560,29 @@ test('B7: a refused FRQ parse is a build ERROR and yields NO free-response items
   // parse-frq.js does not return a partial bank, and build.js must not invent one:
   // a bank silently missing one of twenty FRQs is the failure mode that shipped 22
   // of 48 Precalc items under a "success" line.
+  //
+  // SCOPED TO ap_csa, which is a bug fix and not a narrowing. The patched file is a
+  // CSA question bank, so a refused parse of it says nothing whatever about
+  // ap_precalc — whose own packs now legitimately carry `kind: frq` items of their
+  // own. The unscoped filter read those two Precalc items as CSA free-response
+  // survivors of the refusal and failed, which is the test blaming one subject's
+  // parser for another subject's content. `r.frq` on the next line was already
+  // CSA-only (parse-frq.js reads ap_csa/ap_csa_exam/question-bank/frq-q*.md and
+  // nothing else), and the sibling test below already scopes the same way.
   const r = compile(patched(Q1, (t) => t.replace(/### Practice FRQ 5 — [\s\S]*?(?=## \(c\))/, '')))
-  assert.equal(r.items.filter((i) => i.kind === 'frq').length, 0, 'all or nothing')
+  assert.equal(r.items.filter((i) => i.subject === 'ap_csa' && i.kind === 'frq').length, 0, 'all or nothing')
   assert.equal(r.frq.items, 0)
   assert.ok(
     r.errors.some((e) => /FRQ ingestion refused/.test(e) && e.includes(Q1)),
     `expected the refusal to be a build error, got:\n  ${brief(r.errors)}`,
+  )
+  // And the refusal is confined to the subject whose file was broken. Stated as a
+  // comparison against the clean compile rather than as a literal, so this holds
+  // however many free-response items the Precalc packs come to carry.
+  assert.deepEqual(
+    r.items.filter((i) => i.subject === 'ap_precalc' && i.kind === 'frq').map((i) => i.id),
+    compile().items.filter((i) => i.subject === 'ap_precalc' && i.kind === 'frq').map((i) => i.id),
+    'a refused CSA parse may not take the Precalc free-response items down with it',
   )
 })
 
