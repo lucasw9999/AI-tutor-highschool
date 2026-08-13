@@ -398,6 +398,41 @@ A single error never settles whether the model TYPE is right — that is the **r
 
 ---
 
+> **Exam-format questions (P15–P28).** P15–P27 are **multiple choice**, written to the May 2027 paper: MCQ Part A is 29 questions with **no calculator** and Part B is 13 **with** a calculator, so these run 9 no-calc to 4 calculator. Pick a letter, then read why the other three are there — every wrong option is a mistake someone actually makes. P28 is the **free-response** question Unit 2 owns: **Q2 Modeling a Non-Periodic Context**, which is sat **with a calculator** on the real exam.
+
+**P15 [NC] — Med — sequences, and which index you are standing on.** A geometric sequence has $g_3 = 12$ and $g_6 = 96$. What is $g_1$?
+A) 1.5   B) 3   C) 6   D) -44
+<details><summary>Solution</summary>
+
+From $g_3$ to $g_6$ is **three** steps, so $g_6 = g_3\cdot r^{3}$: $96 = 12r^3 \Rightarrow r^3 = 8 \Rightarrow r = 2$ (the only real cube root).
+From $g_3$ back to $g_1$ is **two** steps, so divide by $r$ twice: $g_1 = \dfrac{12}{2^2} = \mathbf{3}$.
+Check: 3, 6, **12**, 24, 48, **96** ✓ — $g_3 = 12$ and $g_6 = 96$, as the stem says.
+
+Why the others are there: **C** steps back only once and reports $g_2 = 6$ — off-by-one on the index, which is this topic's #1 mistake. **A** reuses the *gap* of 3 on the way back and divides by $r$ three times, $12/8 = 1.5$; that sequence has $g_3 = 6$, not 12. **D** treats the sequence as **arithmetic**: $d = (96-12)/3 = 28$, so $g_1 = 12 - 2(28) = -44$. The differences really are constant for 12, 40, 68, 96 — but the stem says *geometric*, so it is the **ratio** that is fixed, not the difference.
+</details>
+<!-- key: B -->
+<!-- practice: 1.A -->
+<!-- topic: 2.1 -->
+
+---
+
+**P16 [NC] — Med — reading an exponential graph straight off its equation.** $f(x) = 5(0.4)^{x} - 3$. Which statement describes the graph of $f$?
+A) Decreasing, with horizontal asymptote $y = 0$   B) Increasing, with horizontal asymptote $y = -3$   C) Decreasing, with horizontal asymptote $y = -3$   D) Decreasing, with horizontal asymptote $y = 5$
+<details><summary>Solution</summary>
+
+Two separate reads, and the exam scores them separately.
+**Direction, from the base.** $b = 0.4$ and $0 < b < 1$, so $f$ is **decreasing** for every $x$.
+**Asymptote, from the shift.** $a\cdot b^{x}$ flattens toward 0, so $a\cdot b^{x} + k$ flattens toward $k$. Here $k = -3$: as $x\to\infty$, $5(0.4)^x \to 0$ and $f(x)\to\mathbf{-3}$.
+Check: $f(10) = 5(0.4)^{10} - 3 = 5(0.00010486) - 3 \approx -2.99948$ — sinking onto $y=-3$ from above ✓.
+
+Why the others are there: **A** gives the *parent* function's asymptote and forgets the vertical shift, which is the #1 mistake for this topic. **D** reads the coefficient 5 as the asymptote; 5 is not even the $y$-intercept, since $f(0) = 5 - 3 = 2$. **B** reads $0.4$ as a growth factor because it is positive — growth needs $b > 1$, and $0.4$ is decay.
+</details>
+<!-- key: C -->
+<!-- practice: 3.A -->
+<!-- topic: 2.3 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
