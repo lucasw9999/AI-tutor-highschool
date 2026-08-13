@@ -433,6 +433,38 @@ Why the others are there: **A** gives the *parent* function's asymptote and forg
 
 ---
 
+**P17 [NC] — Med/Hard — inverse of a shifted exponential.** $f(x) = 3^{\,x-1} + 4$. Which of these is $f^{-1}(x)$?
+A) $\log_3(x-1)+4$   B) $\dfrac{1}{3^{\,x-1}+4}$   C) $\log_3(x-4)-1$   D) $\log_3(x-4)+1$
+<details><summary>Solution</summary>
+
+Swap and solve, one layer at a time — **undo the outside operation first**.
+$y = 3^{\,x-1}+4 \Rightarrow$ swap: $x = 3^{\,y-1}+4 \Rightarrow x-4 = 3^{\,y-1} \Rightarrow \log_3(x-4) = y-1 \Rightarrow y = \log_3(x-4)+\mathbf{1}$.
+Check the definition, don't just trust the algebra: with $x = 13$, $f^{-1}(13) = \log_3 9 + 1 = 2+1 = 3$, and $f(3) = 3^{2}+4 = 13$ ✓.
+
+Why the others are there: **B** is the **reciprocal** $1/f(x)$, not the inverse — the #1 mistake for this topic ($1/f(13) = 1/13$, nowhere near 3). **C** subtracts the 1 instead of adding it, moving the inner shift across the wrong way; $f(\log_3 9 - 1) = f(1) = 3^{0}+4 = 5 \neq 13$. **A** shuffles the two constants into the log without ever solving — it is what you write if you pattern-match "$-1$ inside, $+4$ outside" straight over; $f(\log_3 12 + 4) \approx f(6.262) = 328$, not 13.
+</details>
+<!-- key: D -->
+<!-- practice: 1.C -->
+<!-- topic: 2.5 -->
+
+---
+
+**P18 [NC] — Med — domain and asymptote of a reflected log.** $g(x) = \log_2(3-x)$. What is the domain of $g$, and the equation of its vertical asymptote?
+A) $x < 3$, asymptote $x = 3$   B) $x > 3$, asymptote $x = 3$   C) $x > -3$, asymptote $x = -3$   D) all real numbers, asymptote $x = 0$
+<details><summary>Solution</summary>
+
+A log's argument must be **positive**, so set the inside $> 0$ and solve: $3 - x > 0 \Rightarrow 3 > x \Rightarrow \mathbf{x < 3}$.
+The asymptote sits where the argument hits **0**: $3 - x = 0 \Rightarrow \mathbf{x = 3}$. As $x\to 3^{-}$ the argument shrinks to 0 and $\log_2$ of it dives to $-\infty$.
+Check: $g(2) = \log_2 1 = 0$ ✓ defined; $g(2.9) = \log_2 0.1 \approx -3.32$ (heading down) ✓; $g(4) = \log_2(-1)$, undefined ✓.
+
+Why the others are there: **B** solves $3-x>0$ as though the $-x$ were a $+x$ and lands on the wrong side of 3; at $x=4$ the function does not exist. **C** reads the $3$ as a horizontal shift of $\log_2(x+3)$ and answers for that function instead — but $x = 4$ is greater than $-3$ and still undefined here. **D** gives the *parent* $\log_2 x$'s asymptote and forgets the domain restriction altogether, which is this topic's #1 mistake.
+</details>
+<!-- key: A -->
+<!-- practice: 3.A -->
+<!-- topic: 2.6 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
