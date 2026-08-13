@@ -465,6 +465,41 @@ Why the others are there: **B** solves $3-x>0$ as though the $-x$ were a $+x$ an
 
 ---
 
+**P19 [NC] — Med/Hard — condense to one logarithm.** For $x > 0$, which single logarithm equals $3\log_2 x - \log_2(x+4)$?
+A) $\log_2\!\dfrac{3x}{x+4}$   B) $\dfrac{\log_2 x^3}{\log_2 (x+4)}$   C) $\log_2(x^3 - x - 4)$   D) $\log_2\!\dfrac{x^3}{x+4}$
+<details><summary>Solution</summary>
+
+**Power rule first, then combine** — that order is the whole trick.
+$3\log_2 x = \log_2 x^{3}$ (the coefficient becomes an **exponent**), and a **difference** of logs is the log of a **quotient**:
+$\log_2 x^3 - \log_2(x+4) = \log_2\!\dfrac{x^{3}}{x+4}$.
+Check at $x = 4$: the original is $3\log_2 4 - \log_2 8 = 6 - 3 = 3$, and $\log_2\frac{64}{8} = \log_2 8 = 3$ ✓.
+
+Why the others are there — all three are the fake rules this topic warns about, and the check at $x=4$ kills each one. **A** multiplies the 3 in as a coefficient instead of raising to a power: $\log_2\frac{12}{8} \approx 0.585$. **B** turns a *difference of logs* into a *quotient of logs*; $\frac{\log_2 64}{\log_2 8} = \frac{6}{3} = 2$, and $\frac{\log M}{\log N}\neq \log M-\log N$. **C** subtracts the arguments instead of dividing them: $\log_2(64-4-4) = \log_2 56 \approx 5.807$.
+</details>
+<!-- key: D -->
+<!-- practice: 1.B -->
+<!-- topic: 2.7 -->
+
+---
+
+**P20 [C] — Hard — building a log model and predicting with it.** A restocked lake's fish population is modeled by $P(t) = a + b\ln(t+1)$, where $t$ is years since the restocking. $P(0) = 800$ and $P(4) = 1300$. To the nearest whole fish, what does the model predict for $t = 9$?
+A) 1483   B) 1515   C) 1925   D) 2385
+<details><summary>Solution</summary>
+
+**Use $t=0$ first — it kills $b$**, because $\ln(0+1) = \ln 1 = 0$:
+$P(0) = a + b\ln 1 = a = \mathbf{800}$.
+Then $P(4) = 800 + b\ln 5 = 1300 \Rightarrow b = \dfrac{500}{\ln 5} = \dfrac{500}{1.60944} \approx 310.667$.
+Now evaluate at $t=9$, remembering the **$+1$ inside**: $P(9) = 800 + 310.667\ln(10) = 800 + 310.667(2.302585) \approx 1515.3 \to \mathbf{1515}$.
+Don't round $b$ to a couple of decimals on the way through — carry it, and round only at the end.
+
+Why the others are there: **A** drops the $+1$ at the last step and uses $\ln 9$ instead of $\ln 10$ ($800 + 310.667(2.1972) \approx 1483$) — the single most common slip on a $\ln(t+1)$ model. **C** extrapolates **linearly** at the average rate of $500/4 = 125$ fish per year, giving $800 + 125(9) = 1925$; a log curve is concave down, so its growth is already slowing and the straight line overshoots. **D** fits an **exponential** $800r^{t}$ instead of the log model the stem hands you: $r = (1300/800)^{1/4} \approx 1.129$ and $800(1.129)^{9} \approx 2385$ — right technique, wrong family of function.
+</details>
+<!-- key: B -->
+<!-- practice: 1.C -->
+<!-- topic: 2.9 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
