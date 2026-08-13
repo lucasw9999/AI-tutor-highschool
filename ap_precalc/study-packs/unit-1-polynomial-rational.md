@@ -467,6 +467,34 @@ Why the others are there: **A** is a cube, and "odd exponent, so odd function" i
 <!-- practice: 3.A -->
 <!-- topic: 1.5 -->
 
+**P24 (exam-level, no-calc) — when a rational function has no asymptote at all.** The graph of $f(x)=\dfrac{x^4-1}{x^2+2}$ has which of the following?
+A) a horizontal asymptote at y = 1   B) a slant asymptote y = x^2 - 2   C) neither a horizontal asymptote nor a slant asymptote   D) a horizontal asymptote at y = 0
+<details><summary>Solution</summary>
+
+**Compare the degrees first; the answer is decided before any dividing.** Here $\deg N=4$ and $\deg D=2$, so the top is bigger by **two**, not by one. That is the fourth case in section 2.7 and the only one that ends in nothing: a horizontal asymptote needs $\deg N\le\deg D$, and a slant asymptote needs $\deg N=\deg D+1$. Neither holds, so **C**.
+What the graph does instead: divide, and $f(x)=x^2-2+\dfrac{3}{x^2+2}$. The remainder term dies away, so far from the origin $f$ behaves like the **parabola** $x^2-2$ — it runs off to $+\infty$ at both ends, and $\displaystyle\lim_{x\to\pm\infty}f(x)=\infty$. A graph that runs to infinity cannot be levelling off at a horizontal line, and it cannot be hugging a straight line either.
+Watch it happen: $f(5)=\frac{624}{27}\approx23.1$, $f(10)=\frac{9999}{102}\approx98.0$, $f(100)\approx9998.0$. Those outputs are not approaching any number, and they are not approaching any line of the form $y=mx+b$ — divide by $x$ and $f(100)/100\approx100$, so there is no fixed slope to settle on.
+
+Why the others are there: **A** takes the ratio of the leading coefficients, $1/1$, which is the rule for **equal** degrees — applied without ever checking that the degrees are equal. **D** is the opposite misreading, the $\deg N<\deg D$ rule, and behind it the reflex that a fraction must shrink as its denominator grows; the numerator here grows far faster. Both A and D also fail the one-second sanity check: $f(10)\approx98$ is nowhere near $1$ or $0$. **B** does the division correctly and then calls the quotient a slant asymptote regardless of what it is. **A slant asymptote is a LINE** — that is what "slant" means — and $x^2-2$ is a parabola. It is a true statement about the end behaviour wearing the wrong name, which is exactly why the degree check comes before the division.
+</details>
+<!-- key: C -->
+<!-- practice: 2.A -->
+<!-- topic: 1.7 -->
+
+**P25 (medium, calculator) — the long run of an equal-degree model.** A tank holds 200 litres of water in which 5 grams of salt are dissolved. Brine carrying 0.25 grams of salt per litre is then pumped in at 1 litre per minute, and nothing leaves, so after $t$ minutes the salt concentration is $C(t)=\dfrac{5+0.25t}{200+t}$ grams per litre. As $t$ grows without bound, what happens to $C(t)$?
+A) 0 g/L   B) 0.25 g/L   C) 0.025 g/L   D) no limiting value: the concentration increases without bound
+<details><summary>Solution</summary>
+
+**Write the model in standard form and the degrees are equal.** Numerator $0.25t+5$ and denominator $t+200$ are both degree 1, so the horizontal asymptote is the **ratio of the leading coefficients**: $\dfrac{0.25}{1}=0.25$. So $C(t)\to\mathbf{0.25}$ g/L.
+Check it on a calculator, and watch it crawl: $C(0)=\frac{5}{200}=0.025$, $C(100)=\frac{30}{300}=0.100$, $C(1000)=\frac{255}{1200}=0.2125$, $C(10000)\approx0.2456$. Climbing towards $0.25$ and never reaching it — the asymptote is approached, not attained.
+**And the answer makes physical sense, which is the check worth doing on a modelling item.** In the long run almost all of the liquid in the tank is brine that was pumped in, so the mixture must end up at the brine's own concentration, $0.25$ g/L. The original 5 g of salt and 200 L of water are a fixed head start that the growing pump-in eventually swamps.
+
+Why the others are there: **A** applies the $\deg N<\deg D$ rule, or reasons "the volume $200+t$ grows without bound, so the concentration must go to $0$." The salt grows without bound too, and at a matched rate — this is why the degree comparison is done on the standard forms and not on a feeling about which part is bigger. **C** is $C(0)=5/200=0.025$: the concentration **now**, not in the long run. Evaluating at $t=0$ when the question asks about end behaviour is the commonest way to lose this point. **D** confuses the total salt with the concentration. The total salt $5+0.25t$ genuinely does increase without bound; the concentration is that total shared over a volume growing just as fast, and it is trapped below $0.25$ forever. Diluted salt and total salt are different quantities, and only one of them is a ratio.
+</details>
+<!-- key: B -->
+<!-- practice: 3.B -->
+<!-- topic: 1.7 -->
+
 ---
 
 ## 4. Quick self-check
