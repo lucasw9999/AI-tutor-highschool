@@ -322,6 +322,52 @@ $f(2)+f(-1)=3+1=\mathbf{4}$. (Take the boundary with the wrong piece and you get
 <!-- accept: f(2) + f(-1) = 4 -->
 <!-- topic: 1.10 -->
 
+**P15 (medium, no-calc) — end behaviour from factored form.** Which pair of limit statements describes the end behaviour of $f(x)=(2-x)(x+3)^2$?
+A) lim x→-∞ f(x) = -∞ and lim x→∞ f(x) = ∞   B) lim x→-∞ f(x) = ∞ and lim x→∞ f(x) = -∞   C) lim x→-∞ f(x) = ∞ and lim x→∞ f(x) = ∞   D) lim x→-∞ f(x) = -∞ and lim x→∞ f(x) = -∞
+<details><summary>Solution</summary>
+
+**Never expand the whole thing — find the leading term.** Multiply only the highest-degree piece of each factor: $(-x)\cdot(x^2)=-x^3$. So the degree is $1+2=3$ (**odd**, exponents **add**) and the leading coefficient is $-1$ (**negative**).
+Odd degree with a negative leading coefficient means the two ends go **opposite** ways, with the right-hand end going **down**: $\displaystyle\lim_{x\to-\infty}f(x)=\infty$ and $\displaystyle\lim_{x\to\infty}f(x)=-\infty$.
+Check with two big inputs: $f(-10)=(12)(49)=588$ (large positive on the left) and $f(10)=(-8)(169)=-1352$ (large negative on the right) ✓. Expanded, $f(x)=-x^3-4x^2+3x+18$ — same leading term.
+
+Why the others are there: **A** is the odd-degree, *positive* shape — it reads the $2$ in $(2-x)$ as the leading piece and misses that $(2-x)$ contributes $-x$. That hidden minus sign is the whole question. **D** gets an even degree by **multiplying** the exponents ($1\times2=2$) instead of adding them; an even degree with a negative leading coefficient does send both ends to $-\infty$. **C** makes both errors at once — even degree *and* a positive leading coefficient.
+</details>
+<!-- key: B -->
+<!-- practice: 3.A -->
+<!-- topic: 1.3 -->
+
+**P16 (medium, no-calc) — building a polynomial from its zeros.** $p$ is a polynomial of degree 3 with real coefficients. Its only zeros are $x=-2$ with multiplicity 1 and $x=3$ with multiplicity 2, and $p(0)=-18$. Which of these is $p(x)$?
+A) (x + 2)(x - 3)^2   B) -(x - 2)(x + 3)^2   C) -(x + 2)^2(x - 3)   D) -(x + 2)(x - 3)^2
+<details><summary>Solution</summary>
+
+**A zero at $x=r$ is the factor $(x-r)$** — subtract the zero, don't copy its sign. So $x=-2$ gives $(x+2)$ and $x=3$ gives $(x-3)$, and the multiplicities are the exponents:
+$$p(x)=a(x+2)(x-3)^2$$
+The multiplicities already total $1+2=3$, which is the whole degree, so there is nothing left but the constant $a$ — and that is what $p(0)=-18$ pins down:
+$$p(0)=a(0+2)(0-3)^2=a(2)(9)=18a=-18\Rightarrow a=-1$$
+So $p(x)=-(x+2)(x-3)^2$. Check by expanding: $-(x+2)(x^2-6x+9)=-x^3+4x^2+3x-18$, whose value at $x=0$ is $-18$ ✓, and whose factored form still shows $x=-2$ once and $x=3$ twice ✓.
+
+Why the others are there: **A** has the right factors but assumes the leading coefficient is $1$ and never uses $p(0)$ at all — $A(0)=(2)(9)=+18$, the wrong sign. **B** copies each zero's sign straight into the factor, so its zeros are $2$ and $-3$, not $-2$ and $3$ (and $B(0)=18$). **C** hangs the multiplicity on the wrong zero — it has $x=-2$ twice and $x=3$ once — and $C(0)=-(4)(-3)=12$, so it fails the $p(0)$ check as well. **Always test a candidate at $x=0$; it takes one line and it eliminates three of these.**
+</details>
+<!-- key: D -->
+<!-- practice: 1.C -->
+<!-- topic: 1.8 -->
+
+**P17 (medium, calculator) — the range a context allows.** A poster must have an area of exactly 750 cm². If its width is $w$ cm then its height is $H(w)=\dfrac{750}{w}$ cm. The printer only accepts widths from 12 cm to 50 cm, so the model's domain is $12\le w\le 50$. What is the range of the model on that domain?
+A) 0 < H ≤ 62.5   B) 15 ≤ H ≤ 750   C) 15 ≤ H ≤ 62.5   D) every real number except 0
+<details><summary>Solution</summary>
+
+**The range of a model is what the function actually outputs over the domain the context allows — so find the outputs at the ends of that domain.** $H(w)=750/w$ is decreasing for $w>0$ (a bigger width forces a shorter poster), so the two domain endpoints give the two range endpoints, swapped:
+- $H(12)=750/12=62.5$ cm — the **tallest** poster (narrowest width);
+- $H(50)=750/50=15$ cm — the **shortest** poster (widest width).
+
+Nothing in between escapes those bounds, because $H$ is continuous and decreasing on $[12,50]$. **Range: $15\le H\le 62.5$.** Both numbers are exact, and both check against the area: $12\times62.5=750$ and $50\times15=750$ ✓.
+
+Why the others are there: **A** takes the horizontal asymptote $y=0$ as the bottom of the range. That is where $H$ heads as $w\to\infty$ — but the printer stops at $w=50$, and the model never gets below $15$. **B** uses the area constant $750$ as the tallest height; a 750 cm poster would need a width of 1 cm, which the domain excludes. **D** is the range of $H(w)=750/w$ with **no domain restriction at all** — a true fact about the bare formula, and the wrong answer to a question about a model, which is exactly the "all real numbers" reflex that costs Q2 Part C points.
+</details>
+<!-- key: C -->
+<!-- practice: 3.B -->
+<!-- topic: 1.11 -->
+
 ---
 
 ## 4. Quick self-check
