@@ -512,13 +512,17 @@ test('a keyed item passes every build gate, and grade.js marks it from the compi
 
 test('a unit may gain items without failing the build', () => {
   const real = read(`ap_precalc/study-packs/${U1}`)
-  const grown = `${real}\n${block({ n: 13, stem: 'A brand new problem.', solution: 'the solution' })}`
+  // One PAST the last problem the pack ships, computed rather than hard-coded: a
+  // literal 13 collided with the real P13 once unit 1 grew, and the collision made
+  // this test fail for the duplicate id instead of proving what it is about.
+  const shipped = parseAll(read).items.filter((i) => i.unit === '1').length
+  const grown = `${real}\n${block({ n: shipped + 1, stem: 'A brand new problem.', solution: 'the solution' })}`
   const r = parseAll((f) => (f.includes(U1) ? grown : read(f)))
-  assert.equal(r.items.filter((i) => i.unit === '1').length, 13)
+  assert.equal(r.items.filter((i) => i.unit === '1').length, shipped + 1)
   assert.deepEqual(
     r.errors.filter((e) => e.includes(U1)),
     [],
-    'adding a 13th problem must not be an error — the old check asserted exactly 12',
+    'adding one more problem must not be an error — the old check asserted exactly 12',
   )
 })
 
@@ -535,13 +539,16 @@ test('a unit that LOSES an item is still a build ERROR', () => {
 })
 
 test('a MISSING P number is a build ERROR even when the count clears the minimum', () => {
-  // The blind spot a bare count leaves: renumber P7 to P13 and unit 1 still has
-  // 12 items, all with unique ids, while P7 has vanished from the pack.
+  // The blind spot a bare count leaves: renumber P7 to the number one past the end
+  // and unit 1 keeps its item count, all with unique ids, while P7 has vanished from
+  // the pack. The target number is computed, not literal — a literal 13 now names a
+  // problem the pack really has, which would make this a duplicate-id test instead.
   const real = read(`ap_precalc/study-packs/${U1}`)
-  const gapped = real.replace('**P7 (medium, no-calc).**', '**P13 (medium, no-calc).**')
+  const shipped = parseAll(read).items.filter((i) => i.unit === '1').length
+  const gapped = real.replace('**P7 (medium, no-calc).**', `**P${shipped + 1} (medium, no-calc).**`)
   assert.notEqual(gapped, real, 'the fixture substitution must actually apply')
   const r = parseAll((f) => (f.includes(U1) ? gapped : read(f)))
-  assert.equal(r.items.filter((i) => i.unit === '1').length, 12, 'the count check is satisfied — the blind spot')
+  assert.equal(r.items.filter((i) => i.unit === '1').length, shipped, 'the count check is satisfied — the blind spot')
   assert.ok(
     r.errors.some((e) => e.includes(U1) && /\bP7\b/.test(e)),
     `expected a numbering gap error naming P7, got: ${JSON.stringify(r.errors)}`,
