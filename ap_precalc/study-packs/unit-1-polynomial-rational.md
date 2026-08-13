@@ -368,6 +368,39 @@ Why the others are there: **A** takes the horizontal asymptote $y=0$ as the bott
 <!-- practice: 3.B -->
 <!-- topic: 1.11 -->
 
+**P18 (medium, no-calc) — every denominator zero is not an asymptote.** Which statement is true of the graph of $f(x)=\dfrac{x^3-x}{x^2-x}$?
+A) It has holes at x = 0 and x = 1 and no vertical asymptote.   B) It has vertical asymptotes at x = 0 and x = 1 and no hole.   C) It has a hole at x = 0 and a vertical asymptote at x = 1.   D) It has no hole and no vertical asymptote, and its domain is every real number.
+<details><summary>Solution</summary>
+
+**Factor both, completely, before deciding anything.**
+$$f(x)=\frac{x(x-1)(x+1)}{x(x-1)}$$
+Both denominator factors cancel, so **both** denominator zeros are **holes** and there is **no vertical asymptote at all**. What is left is $f(x)=x+1$ — the graph is the straight line $y=x+1$ with two points punched out of it, at $(0,1)$ and $(1,2)$.
+Check the limits: as $x\to0$ the outputs approach $1$, and as $x\to1$ they approach $2$. **A vertical asymptote needs the outputs to run off to $\pm\infty$; these stay perfectly finite**, which is what "removable" means.
+Two holes still cost you the domain, though: $x=0$ and $x=1$ make the **original** denominator zero, so the domain is every real number **except 0 and 1**.
+
+Why the others are there: **B** calls every denominator zero a vertical asymptote — this unit's #1 mistake, and the reason the factoring comes first. **C** cancels only the monomial $x$, reaches $\dfrac{x^2-1}{x-1}$, and stops factoring — the leftover $(x-1)$ is still common to both, so what looks like an asymptote is the second hole. **D** does simplify all the way to $x+1$ and then forgets where it came from: a cancelled factor is still barred from the domain, so the line is missing two of its points.
+</details>
+<!-- key: A -->
+<!-- practice: 1.B -->
+<!-- topic: 1.6 -->
+
+**P19 (exam-level, no-calc) — complex zeros come in pairs.** $p$ is a polynomial of degree 5 with **real** coefficients. Two of its zeros are $x=2i$ and $x=1-i$. Counting multiplicity, exactly how many of $p$'s five zeros are real numbers?
+A) 0   B) 1   C) 2   D) 3
+<details><summary>Solution</summary>
+
+**Real coefficients force every non-real zero to bring its conjugate.** So each given zero is really a pair:
+- $x=2i$ forces $x=-2i$;
+- $x=1-i$ forces $x=1+i$ — the conjugate flips the sign of the imaginary part only, so $1+i$, **not** $-1+i$.
+
+That is **four** non-real zeros already. A degree-5 polynomial has exactly 5 zeros counting multiplicity, so $5-4=\mathbf{1}$ of them is real.
+And it cannot be any other number: a fifth non-real zero would drag in a **sixth** zero as its conjugate, pushing the degree past 5. (Check the arithmetic: $(x-2i)(x+2i)=x^2+4$ and $(x-(1-i))(x-(1+i))=x^2-2x+2$, both with real coefficients, and their product $x^4-2x^3+6x^2-8x+8$ is degree 4 — leaving room for exactly one real factor $(x-r)$.)
+
+Why the others are there: **D** counts only the two zeros the stem printed and forgets the conjugates entirely — $5-2=3$. **C** takes the conjugate of $2i$ but not of $1-i$, as if the pairing rule only applied to purely imaginary zeros — $5-3=2$, and 3 non-real zeros is impossible for real coefficients anyway. **A** allows the last zero to be non-real too, which is the same pairing rule ignored one final time; an odd-degree polynomial with real coefficients always has at least one real zero.
+</details>
+<!-- key: B -->
+<!-- practice: 3.B -->
+<!-- topic: 1.4 -->
+
 ---
 
 ## 4. Quick self-check
