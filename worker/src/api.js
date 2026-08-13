@@ -316,15 +316,35 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
   //   nothing. Section II inverted is the same defect: an mcq is not a
   //   free-response paper.
   //
-  // Only the halves of THIS exam are closed off this way. A kind the exam table
-  // has no half for — every Precalc item is `constructed_model_graded` — is left
-  // servable on purpose: see handleMockStart, where practice against a bank that
-  // cannot supply the section is kept as real work that simply cannot be scored.
+  //   A kind that is no half of the EXAM at all. This clause used to be absent,
+  //   with the reason written down: "every Precalc item is
+  //   `constructed_model_graded`", so no such answer could ever be marked, so none
+  //   could ever reach a composite, so leaving them servable cost nothing and kept
+  //   timed practice available on a bank that cannot supply its own section (see
+  //   handleMockStart). That premise died when the Precalc packs gained `kind: mcq`
+  //   and a per-problem answer key: a keyed `constructed` item IS server-graded, and
+  //   a 42-answer section I sitting made of 22 multiple choice questions and 20
+  //   keyed short-answer drills passed the coverage gate and scored 100 — because
+  //   `covered` counts attempts of any kind and `right` counted every server-graded
+  //   answer on the paper. A drill is not a question section I contains, and it may
+  //   not stand in for one.
+  //
+  // The allowance the dead premise was protecting survives, narrowed to the fact it
+  // was justified by: while the bank holds not ONE question of any half this section
+  // is made of, the sitting cannot produce a composite whatever is served on it
+  // (sectionScoring gives every such half an obstacle, so `scorable` is 0 and
+  // handleMockSubmit's `supplied` guard refuses the score and says so). Practice
+  // under a clock is real work and is kept. The moment one exam-shaped question of
+  // its own halves exists, the paper is drawn from those and nothing else.
   const examHalves = sectionParts('full', config?.exam).map(([kind]) => kind)
   const sittingHalves = new Set(sitting ? sectionParts(sitting.section, config?.exam).map(([kind]) => kind) : examHalves)
+  const ownHalvesInBank = sitting == null
+    ? 0
+    : examTestedCount({ items: ctx.items.filter((it) => sittingHalves.has(it.kind)), topics: ctx.topics })
   const closed = new Set([
     ...(paper?.parts.filter((p) => p.full).map((p) => p.kind) ?? []),
     ...examHalves.filter((kind) => !sittingHalves.has(kind)),
+    ...(ownHalvesInBank > 0 ? ctx.items.map((it) => it.kind).filter((kind) => !sittingHalves.has(kind)) : []),
   ])
   const unservable = paper == null ? null : [
     ...inFlight,
@@ -1084,7 +1104,6 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // Composite counts only mechanically graded answers. Including model-graded or
   // unkeyed items would fold an ungraded zero into the score and understate it.
   const scored = attempts.filter((a) => a.graded_by === 'server')
-  const right = scored.filter((a) => a.correct).length
   // Two different things used to be told as one. `ungraded` is everything the
   // composite cannot include, and the basis described the whole of it as needing
   // "human or model grading" — including the responses grade.js could not read as
@@ -1108,6 +1127,45 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // A section with nothing scorable is not a paper this system can mark at all.
   const supplied = scorable == null || scorable > 0
 
+  // THE PAPER PROPER: the answers that are questions this section is made of.
+  //
+  // A section is a number of questions OF A KIND (see sectionParts), and every
+  // number below this line is a claim about that section. An answer of any other
+  // kind is work he did — it stays recorded, it stays in `answered`, `scored` and
+  // `ungraded`, and it still counts as practice — but it is not one of the
+  // section's questions, so it cannot fill the coverage this sitting is judged on,
+  // cannot enter the composite's numerator, and cannot be one of the questions the
+  // composite is divided by. Measured pre-fix on a bank of 42 keyed multiple choice
+  // items and 20 keyed short-answer drills: a 42-answer section I sitting came back
+  // counted:true, composite_pct:100, scored_out_of:42 having asked 22 of the
+  // section's 42 multiple choice questions. That is this project's founding failure
+  // — a number that means less than it says — reached through a different door.
+  //
+  // handleNext now refuses to serve such an item into a sitting whose own halves
+  // the bank can supply, so on a paper assembled after this fix the two sets are
+  // identical. This is not therefore belt and braces: a sitting can be OPEN with
+  // drills already on it when the exam-shaped content lands, and from that moment
+  // its paper is mixed. That paper is honestly refused a composite here, through
+  // the coverage reason that already exists.
+  //
+  // Nothing is set aside when the exam table declares no count for this section:
+  // there is no half to test a kind against, and `expected` and `scorable` are
+  // null there too, so none of the arithmetic below can run anyway.
+  const sectionKinds = new Set(
+    sectionParts(m.section, cfg.exam).filter(([, n]) => n != null).map(([kind]) => kind),
+  )
+  const onSection = sectionKinds.size ? attempts.filter((a) => sectionKinds.has(a.kind)) : attempts
+  const aside = attempts.length - onSection.length
+  const asideKinds = [...new Set(
+    attempts.filter((a) => !sectionKinds.has(a.kind)).map((a) => a.kind ?? 'unlabelled'),
+  )].sort()
+  const marked = onSection.filter((a) => a.graded_by === 'server')
+  const right = marked.filter((a) => a.correct).length
+  // The section's own answers that came back unmarkable, which is what comes off
+  // the divisor. Counted over the paper proper for the same reason `right` is: a
+  // drill nobody could mark is not one of the section's questions going unmarked.
+  const unmarkable = onSection.length - marked.length
+
   // Blanks count what the answer sheet would show, which is the same rule the
   // composite applies below: a question left empty and a question never reached
   // are both an unfilled bubble. Counting only the explicit ones let a 38-of-42
@@ -1119,8 +1177,8 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // cannot ask is not one he failed to reach. Counting the 4 free-response
   // questions of a full sitting as blanks put max_blanks (1) permanently out of
   // reach after three sittings, i.e. it made `ready` unreachable through sec=full.
-  const unreached = scorable == null ? 0 : Math.max(0, scorable - attempts.length)
-  const left = attempts.filter((a) => (a.response ?? '') === '').length
+  const unreached = scorable == null ? 0 : Math.max(0, scorable - onSection.length)
+  const left = onSection.filter((a) => (a.response ?? '') === '').length
   const blanks = left + unreached
 
   // Three guards against three different false claims:
@@ -1135,7 +1193,7 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   //      questions "a section II sitting is expected to contain" and scored them
   //      100 — the coverage gate cannot do its job on a count the bank has no
   //      questions behind.
-  const covered = scorable == null || attempts.length >= Math.ceil(scorable * MIN_MOCK_COVERAGE)
+  const covered = scorable == null || onSection.length >= Math.ceil(scorable * MIN_MOCK_COVERAGE)
   // The questions this sitting was actually scored against: the section's markable
   // questions, less the answers that came back unmarkable — and never fewer than
   // the answers that WERE marked, because a paper cannot be scored over fewer
@@ -1148,7 +1206,7 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // `scorable`, which is how one string came to report a composite "measured over
   // the 42 question(s)" and then "Scored 40 right out of 43" — 95.2 and 93.0, two
   // divisors 2.2 points apart, about a number the student can check himself.
-  const denominator = Math.max(scored.length, (scorable ?? 0) - ungraded)
+  const denominator = Math.max(marked.length, (scorable ?? 0) - unmarkable)
 
   // The fourth guard: a sitting that was not run against a clock is not evidence
   // about how he performs under exam conditions, whatever it scores. See
@@ -1186,6 +1244,24 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     basis.push(
       `${unparsed} response(s) could not be read as one answer, so nothing was graded on them and no grader is coming `
       + `for them either — they are excluded from the composite, and they were not counted wrong.`,
+    )
+  }
+  // Answers of a kind this section does not contain, named as practice rather than
+  // as a fault: he gave them, they are kept, and what they are not is questions
+  // this section is made of. Stating the count is also what stops `answered` and
+  // the halves sentence above reading as a contradiction — 42 answered, 22 of the
+  // 42 multiple choice questions filled, and nothing to account for the other 20.
+  //
+  // Deliberately NOT a fifth reason a sitting goes unscored: it is a fact about the
+  // paper, true whether or not a composite came out, and the reason such a paper
+  // gets no composite is the coverage shortfall that already exists and already has
+  // its own words. See the `composite == null` block below, whose branches are
+  // counted from this source by worker/tests/openapi.test.js.
+  if (aside) {
+    basis.push(
+      `${aside} of those answer(s) — ${asideKinds.join('/')} items — fill no half of a section ${m.section} paper, so `
+      + `they count as ordinary practice and are left out of this sitting's coverage and its composite. Nothing he `
+      + `answered was thrown away.`,
     )
   }
 
@@ -1235,13 +1311,13 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
       // markable questions, 4 unmarkable answers, so 38), and printing `scorable`
       // here put two divisors in one string. Both deductions are named, so the
       // number can be reconstructed rather than merely believed.
-      const unmarkable = (scorable ?? denominator) - denominator
+      const deducted = (scorable ?? denominator) - denominator
       basis.push(
         `This composite is measured over the ${denominator} question(s) of the ${expected} a section ${m.section} sitting `
         + `contains that this paper could be scored on: ${obstacles.join('; ')}`
-        + (unmarkable > 0 ? `; and ${unmarkable} more of them came back as answers no grader can mark` : '')
-        + (unmarkable < 0
-          ? `; and this sitting logged ${-unmarkable} markable answer(s) more than the section has questions, every one `
+        + (deducted > 0 ? `; and ${deducted} more of them came back as answers no grader can mark` : '')
+        + (deducted < 0
+          ? `; and this sitting logged ${-deducted} markable answer(s) more than the section has questions, every one `
             + `of which is in that divisor`
           : '')
         + `.`,
@@ -1305,6 +1381,15 @@ function unscoredSittings(ctx) {
     const { expected, scorable, obstacles } = sectionScoring({
       section: m.section, exam: ctx.config.exam, supply: ctx.supply,
     })
+    // Coverage is judged over the answers that ARE questions this section contains,
+    // exactly as handleMockSubmit judges it, and the count printed below is that
+    // same number. Judging on rows.length while the basis judged on the section's
+    // own answers would put this surface and the submit basis one call apart on the
+    // same sitting: "#7 reached 42 of 42" against "short of the 90%".
+    const sectionKinds = new Set(
+      sectionParts(m.section, ctx.config.exam).filter(([, n]) => n != null).map(([kind]) => kind),
+    )
+    const onSection = sectionKinds.size ? rows.filter((a) => sectionKinds.has(a.kind)) : rows
     const timing = sittingTiming({ section: m.section, exam: ctx.config.exam, attempts: rows })
     // Closed, and never scored at all: the scoring write died in the gap after the
     // close (see db.scoreMock, the only writer of `blanks`, so a NULL there means
@@ -1328,8 +1413,8 @@ function unscoredSittings(ctx) {
     // the way out, but what will happen then has to be said in the same breath.
     const still_fails = !unscored_write ? [] : [
       ...(scorable === 0 ? [`section ${m.section} cannot be scored from this question bank at all`] : []),
-      ...(scorable > 0 && rows.length < Math.ceil(scorable * MIN_MOCK_COVERAGE)
-        ? [`it covers ${rows.length} of ${scorable}, under the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a `
+      ...(scorable > 0 && onSection.length < Math.ceil(scorable * MIN_MOCK_COVERAGE)
+        ? [`it covers ${onSection.length} of ${scorable}, under the ${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a `
           + `scored sitting has to reach`]
         : []),
       ...(timing?.untimed ? ['its clock does not read as exam conditions'] : []),
@@ -1338,6 +1423,11 @@ function unscoredSittings(ctx) {
       id: m.id,
       section: m.section,
       answered: rows.length,
+      // How much of the section itself it reached: `answered` counts every answer
+      // filed under the sitting, and on a paper that also holds work of a kind this
+      // section does not contain those are two different numbers. The shortfall
+      // advisory quotes this one, because it is the one the gate was applied to.
+      on_section: onSection.length,
       gradeable: rows.filter((a) => a.graded_by === 'server').length,
       expected,
       scorable,
@@ -1360,7 +1450,7 @@ function unscoredSittings(ctx) {
       // the wrong thing, while the submit basis named both — two surfaces, one
       // sitting, contradictory instructions.
       short: !unscored_write && !unsupplied && scorable != null
-        && rows.length < Math.ceil(scorable * MIN_MOCK_COVERAGE),
+        && onSection.length < Math.ceil(scorable * MIN_MOCK_COVERAGE),
     })
   }
   return out
@@ -1423,7 +1513,15 @@ function unscoredAdvisory(unscored) {
   const short = unscored.filter((u) => u.short)
   if (short.length) {
     parts.push(
-      `${short.map((u) => `#${u.id} reached ${u.answered} of ${u.scorable}`).join(', ')} — under the ` +
+      // `on_section`, not `answered`: the gate was applied to the questions this
+      // section is made of, so that is the number this sentence has to quote, and
+      // where the two differ the difference is stated rather than left to look like
+      // a miscount.
+      `${short.map((u) => `#${u.id} reached ${u.on_section} of ${u.scorable}` +
+        (u.answered > u.on_section
+          ? ` (its other ${u.answered - u.on_section} answer(s) are of a kind a section ${u.section} paper does not ` +
+            `contain, so they stand as practice and fill none of it)`
+          : '')).join(', ')} — under the ` +
       `${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a scored sitting has to cover. Running out of time is ` +
       `exactly what a mock is for: treat that as a pace problem to work on, not as noise. Only a sitting that covers ` +
       `the section can produce a composite, so re-sit a full one to turn this into a score.`,

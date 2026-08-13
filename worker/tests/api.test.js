@@ -2249,3 +2249,293 @@ withSeed('the parent page states an unfinished sitting once, not twice', async (
   assert.equal(csa.unfinished_sittings[0].id, m.mock)
   assert.equal(csa.unfinished_sittings[0].answered, 1)
 })
+
+// ---------------------------------------------------------------------------
+// A paper is made of the section's own questions, and nothing may stand in
+//
+// Driven over REAL SQLite and worker/schema.sql, with the bank built here rather
+// than seeded: the defect is about item KINDS, and the seeded Precalc bank does
+// not yet hold the kinds that expose it. (It is also stale relative to the
+// markdown, which is somebody else's fix; nothing below reads it.)
+//
+// THE DEFECT. handleNext closed a kind off a sitting only when that kind was a
+// half of the EXAM the sitting belongs to — the other half of the paper, or a
+// half already full. A kind belonging to NEITHER half was left servable on
+// purpose, with the reason written into the source: "every Precalc item is
+// `constructed_model_graded`", so no such item could ever be marked, so no such
+// answer could ever reach a composite. That premise died the moment the Precalc
+// packs could declare `kind: mcq` (and a per-problem answer key, which makes a
+// `constructed` item server-graded).
+//
+// What it then produced, measured below on the pre-fix code: a section I sitting
+// of 42 answers, 20 of them keyed SHORT-ANSWER DRILLS and only 22 of the
+// section's 42 multiple choice questions — `counted: true`, `composite_pct: 100`,
+// `scored_out_of: 42`. `covered` compares attempts.length of ANY kind against
+// ceil(scorable x 0.9), and `right`/`scored` counted every server-graded answer on
+// the paper whatever it was a question of. That is this project's founding bug in
+// new clothes: 100% reported for "Section I, 42 multiple-choice questions" on a
+// paper that was not that section.
+// ---------------------------------------------------------------------------
+
+const SCHEMA = new URL('../schema.sql', import.meta.url)
+
+/**
+ * A Precalc bank holding both an exam-shaped half and a pile of keyed drills,
+ * over real SQL.
+ *
+ * Deliberately built so that BOTH could compose the paper: the drills sit on
+ * their own topics, so the mock sampler (which spreads across a unit's topics
+ * least-asked-first, then by name) reaches them before the multiple choice ones —
+ * which is exactly what a real bank looks like while the exam-shaped items are
+ * still being written.
+ *
+ * @param mcq  how many keyed `mcq` items the bank holds, i.e. whether the exam's
+ *             multiple choice half can be supplied at all (it takes
+ *             ceil(42 x 0.9) = 38 before section I is scorable).
+ * @param drills  how many keyed `constructed` short-answer items sit alongside.
+ */
+function precalcBank({ mcq = PRECALC.exam.mcq_count, drills = 20, frq = 0 } = {}) {
+  const sqlite = new DatabaseSync(':memory:')
+  sqlite.exec(readFileSync(SCHEMA, 'utf8'))
+  const topic = sqlite.prepare(
+    `INSERT INTO topics (id, subject, name, unit, tested_on_exam, exam_weight_low, exam_weight_high)
+     VALUES (?, 'ap_precalc', ?, '1', 1, 30, 40)`,
+  )
+  const item = sqlite.prepare(
+    `INSERT INTO items (id, subject, topic, unit, practice, kind, stem, options_json, answer, explanation, calc_allowed)
+     VALUES (?, 'ap_precalc', ?, '1', 'P1', ?, ?, ?, ?, ?, 0)`,
+  )
+  const pad = (n) => String(n).padStart(2, '0')
+  // Drills first in name order, so the sampler prefers them and the padding is
+  // reproduced rather than hoped for.
+  for (let i = 1; i <= drills; i++) {
+    topic.run(`c${pad(i)}`, `Drill topic ${i}`)
+    item.run(`c${pad(i)}-q1`, `c${pad(i)}`, 'constructed', `Short answer ${i}`, null, '7', `Because ${i}.`)
+  }
+  for (let i = 1; i <= mcq; i++) {
+    topic.run(`k${pad(i)}`, `Exam topic ${i}`)
+    item.run(
+      `k${pad(i)}-q1`, `k${pad(i)}`, 'mcq', `Multiple choice ${i}`,
+      JSON.stringify({ A: 'a', B: 'b', C: 'c', D: 'd' }), 'B', `Because ${i}.`,
+    )
+  }
+  for (let i = 1; i <= frq; i++) {
+    topic.run(`f${pad(i)}`, `Free response topic ${i}`)
+    item.run(`f${pad(i)}-q1`, `f${pad(i)}`, 'frq', `Free response ${i}`, null, null, `Because ${i}.`)
+  }
+  return { sqlite, db: makeDb(d1(sqlite)) }
+}
+
+/** What is actually on one paper: every attempt filed under the sitting, in order. */
+async function paperOf(db, mockId, subject = 'ap_precalc') {
+  return (await db.attempts(subject)).filter((a) => Number(a.mock_id) === Number(mockId))
+}
+
+/**
+ * Sit a Precalc mock, answering every question right off the real key, until the
+ * server refuses or `limit` answers are on the paper.
+ *
+ * A rubric-scored item has no key, so it gets written work — answered, and not
+ * markable, which is what a free-response answer is today.
+ */
+async function sitPrecalc({ db, mock, limit, spacing = 120, seconds = 60 }) {
+  let answered = 0
+  let refusal = null
+  while (answered < limit) {
+    let q
+    try {
+      q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(answered * spacing), mockId: mock })
+    } catch (e) {
+      refusal = e
+      break
+    }
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({
+      db, serveId: q.serve, response: item.answer ?? 'my working, in prose',
+      config: PRECALC, now: at(answered * spacing + seconds),
+    })
+    answered++
+  }
+  return { answered, refusal }
+}
+
+test('a section I paper is the section\'s own multiple choice questions, never drills padding out the count', async () => {
+  const { db } = precalcBank({ mcq: PRECALC.exam.mcq_count, drills: 20 })
+  const expected = PRECALC.exam.mcq_count
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
+
+  const { answered } = await sitPrecalc({ db, mock: m.mock, limit: expected + 4 })
+  const paper = await paperOf(db, m.mock)
+
+  // THE INVARIANT. A section I sitting is 42 multiple choice questions. A keyed
+  // short-answer drill fills no half of it (sectionFill credits an answer only to
+  // its own kind's part), so it cannot be one of the 42 — and it cannot be handed
+  // out as though it were.
+  assert.deepEqual(
+    [...new Set(paper.map((a) => a.kind))], ['mcq'],
+    `a section I paper made partly of short-answer drills is not a section I paper at all: ` +
+      `${paper.filter((a) => a.kind !== 'mcq').length} of its ${paper.length} answers are not multiple choice`,
+  )
+  assert.equal(answered, expected, 'and the bank can supply the whole section, so the whole section is what it sits')
+  assert.equal(new Set(paper.map((a) => a.item_id)).size, paper.length, 'no question may appear twice on one paper')
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(expected * 120 + 600) })
+  assert.equal(r.answered, expected)
+  assert.equal(r.counted, true, 'the whole section, answered inside its budget, is a scored sitting')
+  assert.equal(r.composite_pct, 100, 'every answer was the key itself, so this is 100 — and it means 100 of section I')
+  assert.equal(r.scored_out_of, expected, 'measured over the 42 multiple choice questions the section actually contains')
+  assert.equal(r.scored, expected, 'every answer on it was mechanically marked')
+  assert.equal(r.blanks, 0)
+})
+
+test('a drill answer already on a paper cannot buy that paper past the coverage gate', async () => {
+  // The transition case, and the reason the submit side is guarded as well as the
+  // serve side: a sitting can be OPEN with drills already on it when the
+  // exam-shaped content lands (a deploy reloads the bank; the sitting does not
+  // restart). From then on /next serves only multiple choice, so the paper ends up
+  // mixed — and 20 drills plus 22 multiple choice used to clear a 38-of-42
+  // coverage gate and be scored 100.
+  const { db } = precalcBank({ mcq: PRECALC.exam.mcq_count, drills: 20 })
+  const expected = PRECALC.exam.mcq_count
+  const mock = await db.startMock({ subject: 'ap_precalc', section: 'I', started_at: T0, proctored: 1, source: 'official' })
+
+  const drills = 20
+  const onSection = expected - drills
+  let n = 0
+  const file = async (item_id, topic, kind) => {
+    await db.recordAttempt({
+      ts: at(n * 120 + 60), subject: 'ap_precalc', item_id, topic, unit: '1', practice: 'P1',
+      response: kind === 'mcq' ? 'B' : '7', correct: 1, graded_by: 'server', seconds: 60,
+      hints_used: 0, conditions: 'proctored_mock', mock_id: mock,
+    })
+    n++
+  }
+  const pad = (i) => String(i).padStart(2, '0')
+  for (let i = 1; i <= drills; i++) await file(`c${pad(i)}-q1`, `c${pad(i)}`, 'constructed')
+  for (let i = 1; i <= onSection; i++) await file(`k${pad(i)}-q1`, `k${pad(i)}`, 'mcq')
+
+  const r = await handleMockSubmit({ db, mockId: mock, config: PRECALC, now: at(expected * 120 + 600) })
+  assert.equal(r.answered, expected, 'the paper does hold 42 answers, every one of them correct')
+  assert.equal(
+    r.composite_pct, null,
+    `22 of the section's 42 multiple choice questions is not 90% of section I, whatever else is on the paper`,
+  )
+  assert.equal(r.counted, false, 'and a sitting with no composite cannot move readiness')
+  assert.equal(r.scored_out_of, null, 'there was no division, and a number here would read as one')
+  assert.match(r.basis, /short of the \d+% of the section/, `the existing shortfall reason is what fires: ${r.basis}`)
+  assert.match(r.basis, new RegExp(`${onSection} of its ${expected} multiple choice`), r.basis)
+  // The drills are still his work: recorded, counted as practice, and named.
+  assert.equal(r.status.questions_answered, expected, 'nothing he answered is thrown away')
+  assert.match(
+    r.basis, new RegExp(`${drills} of those answer\\(s\\) — constructed items — fill no half of a section I paper`),
+    `the basis has to account for the other ${drills} answers rather than leave them unexplained: ${r.basis}`,
+  )
+  assert.match(r.basis, /count as ordinary practice/, r.basis)
+  assert.doesNotMatch(r.basis, /Scored \d+ right/, 'an unscored sitting must not also report a score')
+
+  // The same sitting, on the surface that resurfaces afterwards: it must quote the
+  // number the gate was applied to, not the paper length, or the two contradict.
+  const s = await handleStatus({ db, subject: 'ap_precalc', config: PRECALC, now: at(expected * 120 + 900) })
+  const adv = s.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `an unscored sitting must stay visible: ${JSON.stringify(s.advisories)}`)
+  assert.match(adv, new RegExp(`reached ${onSection} of ${expected}`), `not "reached 42 of 42": ${adv}`)
+  assert.match(adv, new RegExp(`other ${drills} answer\\(s\\) are of a kind a section I paper does not contain`), adv)
+})
+
+test('a sitting hands out a different question each time, and none at all once it is in', async () => {
+  // Re-verified here because both guards run through the same `unservable` list the
+  // kind filter above was added to, so a mistake there would silently reopen them.
+  const { db } = precalcBank({ mcq: PRECALC.exam.mcq_count, drills: 20 })
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
+
+  // Two /next with nothing logged in between: the first question is on screen, and
+  // a served-but-unanswered item is still on the paper, so it cannot be issued
+  // again. Two attempt rows for one question are not two questions of evidence.
+  const first = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: T0, mockId: m.mock })
+  const second = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(60), mockId: m.mock })
+  const idOf = async (q) => (await db.serve(q.serve)).item_id
+  assert.notEqual(await idOf(first), await idOf(second), 'a question in flight must not be handed out twice')
+
+  await handleLog({ db, serveId: first.serve, response: 'B', config: PRECALC, now: at(90) })
+  await handleLog({ db, serveId: second.serve, response: 'B', config: PRECALC, now: at(120) })
+  await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(200) })
+  await assert.rejects(
+    () => handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(300), mockId: m.mock }),
+    (e) => e instanceof ApiError && e.status === 409,
+    'a closed sitting cannot be served another question',
+  )
+})
+
+test('a Precalc drill is served and marked exactly as before outside a mock', async () => {
+  // The capability this must not break: a keyed `constructed` item is the whole of
+  // the measurable-topic-percentage work, and ordinary drilling is where it lives.
+  const { db } = precalcBank({ mcq: PRECALC.exam.mcq_count, drills: 20 })
+  const kinds = new Set()
+  for (let i = 0; i < 6; i++) {
+    const q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(i * 300) })
+    assert.equal(q.type, 'question', `ordinary drilling must not be refused: ${JSON.stringify(q)}`)
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    const r = await handleLog({ db, serveId: q.serve, response: item.answer, config: PRECALC, now: at(i * 300 + 90) })
+    assert.equal(r.graded_by, 'server', `${item.id}: a keyed drill must still reach a real verdict`)
+    assert.equal(r.correct, true, `${item.id}: its own key must still mark its own answer right`)
+    kinds.add(item.kind)
+  }
+  assert.ok(
+    kinds.has('constructed'),
+    `a short-answer drill must still be servable outside a sitting — got ${[...kinds].join(', ')}`,
+  )
+  const s = await handleStatus({ db, subject: 'ap_precalc', config: PRECALC, now: at(3000) })
+  assert.equal(s.questions_answered, 6, 'and the drills count as practice, exactly as they did before')
+})
+
+test('a sitting on a bank with no exam-shaped question of its own is still real work, and still unscorable', async () => {
+  // THE ALLOWANCE THAT SURVIVES, narrowed to the fact it was justified by. api.js
+  // left a no-half kind servable inside a sitting because "practice against a bank
+  // that cannot supply the section is kept as real work that simply cannot be
+  // scored" — true only while the bank holds nothing the section IS made of, which
+  // is the state Precalc is in until the exam-shaped items land. So a drills-only
+  // bank still sits: nothing is refused, nothing is discarded, and the sitting is
+  // disclosed as unscorable through the existing `supplied` reason rather than
+  // pretending to a composite. As soon as one multiple choice question exists, the
+  // test above takes over and drills stop appearing on section I papers.
+  const { db } = precalcBank({ mcq: 0, drills: 12 })
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'bank', config: PRECALC, now: T0 })
+  const { answered, refusal } = await sitPrecalc({ db, mock: m.mock, limit: 5 })
+  assert.equal(refusal, null, `timed practice on an unsuppliable section is not refused: ${refusal?.message}`)
+  assert.equal(answered, 5)
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(2000) })
+  assert.equal(r.scored, 5, 'the answers were marked, and saying otherwise would discard them')
+  assert.equal(r.counted, false)
+  assert.equal(r.composite_pct, null, 'null is not zero and must never be shown as one')
+  assert.match(r.basis, /cannot be scored from this question bank at all/, r.basis)
+  assert.match(r.basis, /0 exam-tested multiple choice question\(s\)/, r.basis)
+})
+
+test('the divisor identity holds on a paper the bank can only partly supply', async () => {
+  // 38 keyed multiple choice items is exactly what it takes for section I to be
+  // scorable, and four fewer than the section contains: the paper runs out at 38,
+  // the four it never reached count as blank AND as wrong, and no drill may be
+  // handed out to close the gap.
+  const need = Math.ceil(PRECALC.exam.mcq_count * MIN_MOCK_COVERAGE)
+  const { db } = precalcBank({ mcq: need, drills: 20 })
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
+
+  const { answered, refusal } = await sitPrecalc({ db, mock: m.mock, limit: PRECALC.exam.mcq_count })
+  assert.equal(answered, need, 'the paper is as long as the bank can make it, and not one drill longer')
+  assert.ok(refusal instanceof ApiError && refusal.status === 409, `and then it says so: ${refusal?.message}`)
+  assert.match(refusal.message, /cannot be drawn from this bank/, refusal.message)
+  const paper = await paperOf(db, m.mock)
+  assert.deepEqual([...new Set(paper.map((a) => a.kind))], ['mcq'])
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(need * 120 + 600) })
+  assert.equal(r.counted, true, `${need} of ${PRECALC.exam.mcq_count} is 90% of section I, so this is a scored sitting`)
+  assert.equal(r.scored_out_of, PRECALC.exam.mcq_count, 'the divisor is the section, not the paper length')
+  assert.equal(r.blanks, PRECALC.exam.mcq_count - need, 'the four never reached read as unfilled bubbles')
+  const right = Number(/Scored (\d+) right out of (\d+)/.exec(r.basis)[1])
+  const stated = Number(/Scored (\d+) right out of (\d+)/.exec(r.basis)[2])
+  assert.equal(right, need, 'every answer given was the key itself')
+  assert.equal(stated, r.scored_out_of, 'one composite, one divisor, stated once')
+  assert.equal(Number(((right / r.scored_out_of) * 100).toFixed(1)), r.composite_pct, 'right / scored_out_of is the composite')
+})
