@@ -535,6 +535,40 @@ Why the others are there: **C** reports the three-year ratio as the yearly facto
 
 ---
 
+**P23 [NC] — Med — composition does not commute.** $f(x) = 2^{x}$ and $g(x) = x - 3$. What is $(g\circ f)(5) - (f\circ g)(5)$?
+A) 25   B) -25   C) 0   D) 28
+<details><summary>Solution</summary>
+
+Work each composition **inside-out**, and keep track of which function is on the inside.
+$(g\circ f)(5) = g(f(5))$: inside is $f(5) = 2^{5} = 32$, then $g(32) = 32 - 3 = \mathbf{29}$.
+$(f\circ g)(5) = f(g(5))$: inside is $g(5) = 5 - 3 = 2$, then $f(2) = 2^{2} = \mathbf{4}$.
+Difference: $29 - 4 = \mathbf{25}$.
+The two compositions are $2^{x}-3$ and $2^{\,x-3}$ — a vertical shift and a horizontal shift, different functions.
+
+Why the others are there: **C** is what you get if you believe $g(f(x)) = f(g(x))$; the fact that the answer is *not* 0 is the whole point, and order-swapping is this topic's #1 mistake. **B** does both compositions correctly and then subtracts them the other way round, $4 - 29$. **D** computes $g(f(5))$ as $32$ — the outer $-3$ never applied — giving $32 - 4$.
+</details>
+<!-- key: A -->
+<!-- practice: 1.C -->
+<!-- topic: 2.4 -->
+
+---
+
+**P24 [NC] — Med — a log whose base is not the obvious one.** What is the exact value of $\log_9 27$?
+A) 1/3   B) 2/3   C) 3/2   D) 3
+<details><summary>Solution</summary>
+
+A log asks **"the base to what power?"** — so: 9 to what power is 27? Neither number is a power of the other, so put **both over a common base 3**:
+$9 = 3^{2}$ and $27 = 3^{3}$. If $9^{y} = 27$ then $3^{2y} = 3^{3} \Rightarrow 2y = 3 \Rightarrow y = \mathbf{\dfrac{3}{2}}$.
+Check: $9^{3/2} = (\sqrt9)^{3} = 3^{3} = 27$ ✓. Sanity check the size first: $9^{1} = 9$ and $9^{2} = 81$, so the answer has to sit between 1 and 2 — which already rules out three of the options.
+
+Why the others are there: **B** is $\log_{27} 9 = 2/3$ — base and argument swapped, so the question was answered upside down. **D** is $27 \div 9$: dividing the two numbers instead of asking what exponent links them, which is also what "$\log 27 - \log 9$" turns into if you read the difference as an answer rather than as $\log 3$. **A** is the same numeric shortcut with the ratio inverted, $9 \div 27$. Test any of them: $9^{2/3} \approx 4.33$, $9^{3} = 729$, $9^{1/3} \approx 2.08$ — none is 27.
+</details>
+<!-- key: C -->
+<!-- practice: 1.B -->
+<!-- topic: 2.6 -->
+
+---
+
 ## 4. Quick Self-Check (rapid Q&A)
 
 1. **Q:** Table has equal y-ratios over equal x-steps — linear or exponential? **A:** Exponential.
