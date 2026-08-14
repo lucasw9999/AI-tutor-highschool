@@ -409,6 +409,62 @@ test('self-labelling parts stay order-free even where the stem states an order',
   creditsOn(u2p1, 'y=50(0.8)^x, exponential')
 })
 
+test('FALSE NEGATIVE: on an order-declared item, a phrasing that labels every entry still permutes', () => {
+  // Order-freedom is a property of what the student actually TYPED, not of what
+  // the item could have been typed as. pc-u3-p2 declares bare phrasings ("4",
+  // "y=-2", "2pi/3") alongside labelled ones, so the ITEM is order-locked — and
+  // it must stay locked for the bare forms, because "-2, 4, 2pi/3" is the
+  // canonical amplitude/midline swap. But "midline -2, amplitude 4, period
+  // 2pi/3" says which value is which IN THE STRING: no reordering of it can
+  // change the facts it asserts, so refusing it marks a correct, unambiguous
+  // answer wrong — the one error this file exists to prevent.
+  const p2 = shipped('pc-u3-p2')
+  for (const typed of [
+    'midline -2, amplitude 4, period 2pi/3',
+    'period 2pi/3, amplitude 4, midline -2',
+    'amplitude 4, period 2pi/3, midline -2',
+    'period 2pi/3, midline -2, amplitude 4',
+    'midline -2; amplitude 4; period 2pi/3',
+    'period 2pi/3, midline -2, and amplitude 4',
+    'amp 4, period 2pi/3, midline -2',
+  ]) creditsOn(p2, typed)
+
+  // One bare entry among labelled ones is identified by ELIMINATION — "midline
+  // -2, amplitude 4, 2pi/3" leaves only the period for the 2pi/3 — so it
+  // permutes too. Two bare entries cannot be told apart, and do not.
+  for (const typed of [
+    'midline -2, amplitude 4, 2pi/3',
+    'amp 4, period 2pi/3, -2',
+    'period 2pi/3, midline -2, 4',
+    'period 2pi/3, y=-2, amplitude 4',
+  ]) creditsOn(p2, typed)
+  for (const typed of ['-2, 4, period 2pi/3', '2pi/3, 4, midline -2', 'y=-2, 4, period 2pi/3']) {
+    refusesOn(p2, typed, 'two bare values, so a swap of THEM is indistinguishable from the right answer')
+  }
+
+  // And the item's own declared order still grades correct, in every notation.
+  for (const typed of ['4, -2, 2pi/3', '4, -2, 2π/3', 'amplitude 4, midline -2, period 2pi/3']) {
+    creditsOn(p2, typed)
+  }
+})
+
+test('an all-bare item gains nothing: no phrasing of it labels itself', () => {
+  // pc-u3-p1 and pc-u3-p5 declare ONLY bare values, so no combination of their
+  // phrasings labels itself and every one of them stays order-locked. Per-form
+  // order-freedom must not reach them at all.
+  const p1 = shipped('pc-u3-p1')
+  creditsOn(p1, '3pi/4, -sqrt(2)/2')
+  creditsOn(p1, '3π/4, -√2/2')
+  refusesOn(p1, '-sqrt(2)/2, 3pi/4', 'the radian measure and the cosine swapped')
+  refusesOn(p1, '-1/sqrt(2), 3pi/4', 'swapped, in another notation')
+
+  const p5 = shipped('pc-u3-p5')
+  creditsOn(p5, '5pi/6, -pi/4')
+  creditsOn(p5, '5π/6, -π/4')
+  refusesOn(p5, '-pi/4, 5pi/6', 'arccos and arctan swapped')
+  refusesOn(p5, '5pi/6 - pi/4', 'the two values subtracted into one number that answers neither')
+})
+
 test('bare-value parts whose format states NEITHER an order nor a set are a build ERROR', () => {
   // The fail-safe direction: with nothing in the parts to tell them apart and
   // nothing in the sentence the student was given, the parser cannot know
@@ -997,6 +1053,50 @@ test('the shipped item nearest the cap is fully expanded, not clipped', () => {
   // The last phrasing of the last part, in the last ordering, joined by the last
   // scheme: everything a truncation would take first.
   creditsOn(p5, 'horizontal asymptote y=1, vertical asymptote at x=-3 and hole: x=3')
+})
+
+test('the cap counts the orderings freed per FORM, and refuses rather than truncating', () => {
+  // The orderings are no longer one factor shared by every combination, so the
+  // cap has to sum them per combination. If it did not — if it still multiplied
+  // by 1 because the ITEM is order-locked — an item like the second one below
+  // would report 216 forms and then quietly emit 1266 into the D1 row.
+  //
+  // Three parts, two of which also accept a bare value, so the item is
+  // order-locked and only the combinations that label themselves permute.
+  const declare = (labelled, bare, p) =>
+    [...labelled.map((l) => `<!-- part ${p}: ${l}${p} -->`), ...(bare ? [`<!-- part ${p}: ${p} -->`] : [])]
+  const SENTENCE = 'Answer as three comma-separated values in that order.'
+  const item = (...parts) =>
+    one({
+      stem: `Give it. ${SENTENCE}`,
+      meta: [...parts.flat(), `<!-- format: ${SENTENCE} -->`],
+    })
+
+  const under = item(
+    declare(['aa', 'bb', 'cc'], true, 1),
+    declare(['gg', 'hh', 'ii', 'jj', 'kk'], true, 2),
+    declare(['mm'], false, 3),
+  )
+  assert.deepEqual(under.errors, [])
+  const forms = [under.item.answer, ...under.item.answer_variants]
+  // 24 combinations, 23 of which carry at most one bare value and so permute:
+  // (23 x 6 + 1) x 6 join schemes = 834, and every one of them ships.
+  assert.equal(forms.length, 834, 'the whole expansion ships, or the cap has started truncating')
+  assert.equal(new Set(forms.map(normalizeShort)).size, 834, 'and no two forms the grader cannot tell apart')
+  for (const form of forms) creditsOn(under.item, form)
+
+  // Two more phrasings on the first part and the sum crosses the line. The cap's
+  // arithmetic is stated in the error, so a future change to it cannot pass here
+  // by accident.
+  const over = item(
+    declare(['aa', 'bb', 'cc', 'dd', 'ee'], true, 1),
+    declare(['gg', 'hh', 'ii', 'jj', 'kk'], true, 2),
+    declare(['mm'], false, 3),
+  )
+  assert.equal(over.errors.length, 1, JSON.stringify(over.errors))
+  assert.match(over.errors[0], /expand to 1266 accepted forms, past the cap of 1000/)
+  assert.equal(over.item.answer, null, 'over the cap the item degrades to model-graded, key and all')
+  assert.equal(over.item.kind, 'constructed_model_graded')
 })
 
 // ---------------------------------------------------------------------------
