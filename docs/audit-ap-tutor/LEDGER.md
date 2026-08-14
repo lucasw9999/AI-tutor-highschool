@@ -4,9 +4,17 @@
 
 **NOT converged.** Eight rounds. Round 7 opened the content/external-currency lens on the *documentation*. **Round 8 read the user's words at face value — "how much coverage we do" is the ITEM BANK — and that is where the real hole was.** AP Precalculus went from structurally unmeasurable (every item model-graded and excluded from every floor; 500 correct answers → 0%) to fully measurable: 33 of 33 exam-tested topics covered AND keyed, 38 MCQ + 4 FRQ, and a mock that assembles and scores, verified end-to-end through the real seed and the real grader. **The build reports `Build OK` for the first time in the project's life.** Pattern persists: auditing a round's fix code finds more — round 8 caught a "100%" bug that the round's own new content would have made reachable.
 
-**Verification command:** `npm test` → 698 tests, 698 pass, 0 fail. `node tools/build/build.js` → `Build OK`, 0 gate lines (was 62 at round-8 start).
+**Verification command:** `npm test` → 809 tests, 809 pass, 0 fail. `node tools/build/build.js` → `Build OK`, 0 gate lines (was 62 at round-8 start).
 
 **Largest open risk is still not a defect:** `origin/main` holds zero files under `worker/`, and 175 commits are unpushed. Nine months of work on one laptop. Reported to the user; pushing is theirs to call.
+
+**Round 9 (resumed) — see round-9.md.** Stopped for dispatcher context budget, not convergence.
+Its lesson: the round audited the PRODUCER of answer keys from four lenses and never audited the
+CONSUMER that compares them. `worker/src/grade.js` was in neither the target list nor the
+exclusion list, and a completeness critic found a confirmed false negative there — Unicode U+2212
+vs ASCII hyphen was marking **1,828 right short answers wrong**. Confirm-fix also caught two
+regressions the fixers had reported as successes, both unguarded by any test. Round 10 head:
+`grade.js`, then `src=official` self-certification (`api.js:853`), then `index.js`'s auth boundary.
 
 ---
 
@@ -14,10 +22,10 @@
 
 **Branch:** perfect/audit-356f3d9  
 **Baseline commit:** 356f3d9 (198 tests / 198 pass / 0 fail)  
-**Rounds completed:** 8  
-**Agents dispatched:** ~131 (5 died on API timeouts, all on one task — see round-8.md)  
-**Commits applied:** 160  
-**Test coverage at end:** 698 tests / 698 pass / 0 fail  
+**Rounds completed:** 9  
+**Agents dispatched:** ~153 (5 died on API timeouts, all on one task — see round-8.md)  
+**Commits applied:** 179  
+**Test coverage at end:** 809 tests / 809 pass / 0 fail  
 **Build:** `Build OK` — 336 items (ap_csa=241, ap_precalc=95), 97 topics, 97 teaching rows.
 
 ## Verified fixed (independently confirmed, with commit)
