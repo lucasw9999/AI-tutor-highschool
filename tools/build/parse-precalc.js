@@ -627,7 +627,18 @@ function readDeclarations(lines) {
       }
       const declared = comment[1].match(DECLARATION)
       if (!declared) {
-        kept.push(line)
+        // A comment inside a problem is a key declaration or it is a mistake.
+        // This branch used to keep the line as body text, where — being an HTML
+        // comment — it rendered as nothing at all: `<!-- key 4 -->`, one colon
+        // short, left the item silently UNKEYED with 0 build errors, and the
+        // same typo on one `part` of a compound answer left the other parts
+        // contiguous, so every gate passed and the item shipped keyed on 2 of
+        // its 3 parts. Prose belongs in `<!-- note: ... -->`.
+        errors.push(
+          `this comment declares no field, so nothing in it was read: ${line.trim()} — a key field is ` +
+            `"<field>: <value>" with a COLON ("<!-- key: 3 -->"); the fields are ${FIELD_LIST}. Write an ` +
+            `editorial aside as "<!-- note: ... -->"`,
+        )
         i++
         continue
       }
@@ -1366,6 +1377,15 @@ export function parsePracticeItems(text, filename) {
     }
     if (misplacedErrors.length) {
       r.errors.push(...misplacedErrors)
+      r = { kind: 'constructed_model_graded', answer: null, variants: [], topic: r.topic, errors: r.errors, extra: {} }
+    }
+    // A line that was TRYING to be a declaration and failed is a key the author
+    // wrote and the build did not read, so what did parse is not a key either:
+    // one unread `part` line leaves the others contiguous, and an item keyed on
+    // 2 of its 3 parts marks the COMPLETE right answer wrong while crediting the
+    // incomplete one. Degraded exactly as a refused declaration is, so that not
+    // even --write-despite-incomplete can carry the half-read key into D1.
+    if (head.errors.length || declared.errors.length) {
       r = { kind: 'constructed_model_graded', answer: null, variants: [], topic: r.topic, errors: r.errors, extra: {} }
     }
     for (const e of [...head.errors, ...declared.errors, ...r.errors]) errors.push(`${id}: ${e}`)
