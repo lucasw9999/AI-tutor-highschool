@@ -426,12 +426,25 @@ export function validate(items, topics, configs = readinessConfigs()) {
     }
   }
 
-  const graded = items.filter((i) => i.answer)
-  if (graded.length >= 20) {
+  // The key-balance check measures how the four LETTERS are spread across the
+  // multiple-choice keys, so its population is the multiple-choice items — not
+  // everything that carries a key. `items.filter((i) => i.answer)` was the same
+  // set for as long as every keyed item was an mcq, and stopped being one the
+  // round 24 Precalc `constructed` items arrived with keys like "4, -2, 2pi/3":
+  // 283 keys of which 259 are letters, so every percentage came out about 8% low
+  // and the 20-30% band was applied to the wrong denominator in BOTH directions —
+  // a letter on 32.8% of the real keys reads as 30.0% and stops warning, one on
+  // 21.6% reads as 19.8% and warns about nothing. The drift grows with every
+  // short-answer key added, and the message named a population it was not
+  // counting.
+  const lettered = items.filter((i) => i.kind === 'mcq' && /^[A-D]$/.test(String(i.answer ?? '').trim().toUpperCase()))
+  if (lettered.length >= 20) {
     for (const L of ['A', 'B', 'C', 'D']) {
-      const pct = (graded.filter((i) => i.answer === L).length / graded.length) * 100
+      const pct = (lettered.filter((i) => String(i.answer).trim().toUpperCase() === L).length / lettered.length) * 100
       if (pct < 20 || pct > 30) {
-        warnings.push(`answer ${L} is ${pct.toFixed(1)}% of keys (target 20-30%)`)
+        warnings.push(
+          `answer ${L} is ${pct.toFixed(1)}% of the ${lettered.length} multiple-choice keys (target 20-30%)`,
+        )
       }
     }
   }
