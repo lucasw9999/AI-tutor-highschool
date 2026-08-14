@@ -718,6 +718,138 @@ test('an editorial aside is still written as a note, and still costs nothing', (
   assert.equal(item.stem.includes('keyed after checking'), false, 'and it never reaches the student')
 })
 
+// ---------------------------------------------------------------------------
+// The two gates that judge a compound answer's PHRASINGS. Both were
+// order-of-declaration dependent: one refused content it already had, the other
+// blamed the wrong line for it.
+// ---------------------------------------------------------------------------
+
+/** The accepted set as the grader sees it, so two declarations can be compared. */
+const acceptedShapes = (item) =>
+  new Set([item.answer, ...(item.answer_variants ?? [])].map(normalizeShort))
+
+const PI_PARTS = {
+  stem: 'Convert 135° to radians and find cos(135°) exactly. Answer as two comma-separated entries in that order.',
+  solution: '3π/4 and −√2/2',
+  format: '<!-- format: Answer as two comma-separated entries in that order. -->',
+}
+
+test('a keyboard-typeable form counts wherever it is declared, not only where it is listed first', () => {
+  // isTypeable was checked against the key and `accept:` only — never against
+  // the forms the parser itself generated — so two declarations with an
+  // IDENTICAL accepted set differed by the ORDER their phrasings were listed in,
+  // and one of them was refused with a diagnostic telling the author to add
+  // something the item already had.
+  const ascii = one({
+    ...PI_PARTS,
+    meta: ['<!-- part 1: 3pi/4 -->', '<!-- part 1: 3π/4 -->', '<!-- part 2: -sqrt(2)/2 -->', PI_PARTS.format],
+  })
+  const unicode = one({
+    ...PI_PARTS,
+    meta: ['<!-- part 1: 3π/4 -->', '<!-- part 1: 3pi/4 -->', '<!-- part 2: -sqrt(2)/2 -->', PI_PARTS.format],
+  })
+  assert.deepEqual(ascii.errors, [])
+  assert.deepEqual(unicode.errors, [], 'listing the same phrasings in the other order must key the same item')
+  assert.deepEqual(
+    [...acceptedShapes(unicode.item)].sort(),
+    [...acceptedShapes(ascii.item)].sort(),
+    'the accepted set cannot depend on which phrasing was written first',
+  )
+  for (const item of [ascii.item, unicode.item]) creditsOn(item, '3pi/4, -sqrt(2)/2')
+})
+
+test('a compound answer with NO typeable form anywhere is still a build ERROR', () => {
+  // The gate keeps its teeth: what changed is where it looks, not what it wants.
+  const err = soleError({
+    stem: 'Give the two values. Answer as two comma-separated entries in that order.',
+    meta: [
+      '<!-- part 1: 3π/4 -->',
+      '<!-- part 2: −√2/2 -->',
+      '<!-- format: Answer as two comma-separated entries in that order. -->',
+    ],
+  })
+  assert.match(err, /type/i)
+  assert.match(err, /part/i, `for a compound answer the fix is another part phrasing, not "accept:": ${err}`)
+})
+
+test('the dead-weight gate names the phrasing that is dead weight, in either declaration order', () => {
+  // The gate registered the FIRST form of each normalized shape and blamed every
+  // phrasing that won no race — and the all-first-phrasings combination is
+  // generated first, so phrasing 0 always won. Declaring the redundant phrasing
+  // FIRST therefore reported the one the item actually wants: `part 1: $4$` then
+  // `part 1: 4` said that "4" accepts nothing new.
+  const both = (meta) =>
+    one({
+      stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values in that order.',
+      meta: [...meta, '<!-- part 2: -2 -->', '<!-- format: Answer as two comma-separated values in that order. -->'],
+    }).errors
+  for (const order of [
+    ['<!-- part 1: $4$ -->', '<!-- part 1: 4 -->'],
+    ['<!-- part 1: 4 -->', '<!-- part 1: $4$ -->'],
+  ]) {
+    const errors = both(order)
+    assert.equal(errors.length, 1, JSON.stringify(errors))
+    assert.match(errors[0], /"\$4\$"/, `the redundant phrasing must be named: ${errors[0]}`)
+    assert.match(errors[0], /"4"/, `and so must the one it duplicates, since either may be deleted: ${errors[0]}`)
+  }
+})
+
+test('the dead-weight gate spares a phrasing that only earns its keep in second position', () => {
+  // The reason this gate is effect-based and not a comparison: normalizeShort
+  // strips a leading "x =" from the WHOLE response, so "x=-2 mult 3 crosses" and
+  // "-2 mult 3 crosses" are identical in isolation and different in second
+  // position. Both shipped items that declare such a pair must keep it.
+  assert.deepEqual(one(ZEROS).errors, [])
+  creditsOn(one(ZEROS).item, 'x=1 mult 2 bounces, x=-2 mult 3 crosses')
+  const p8 = shipped('pc-u3-p8')
+  creditsOn(p8, 'pi/2, x=7pi/6, x=11pi/6')
+  // A trailing period is the same trap in the other direction: normalizeShort
+  // strips it from the END of the response only, so "4." differs from "4"
+  // everywhere except last, and the gate must not call it dead weight.
+  const period = one({
+    stem: 'State the amplitude and the midline. Answer as two comma-separated values in that order.',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 1: 4. -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  })
+  assert.deepEqual(period.errors, [])
+  creditsOn(period.item, '4., -2')
+})
+
+test('the dead-weight gate still refuses a phrasing that earns its keep NOWHERE', () => {
+  // The teeth: two spellings normalizeShort cannot tell apart in ANY position.
+  const pair = soleError({
+    stem: 'State the amplitude and the midline. Answer as two comma-separated values in that order.',
+    meta: [
+      '<!-- part 1: amplitude 4 -->',
+      '<!-- part 1: amplitude  4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  })
+  assert.match(pair, /interchangeable/i)
+  assert.match(pair, /part 1/)
+
+  // ...and where the redundancy is one-sided, the one phrasing that adds nothing
+  // is named alone. "x=4." is "4." wherever the prefix is stripped (first
+  // position) and "x=4" wherever the period is (last), so the other two
+  // phrasings between them already accept everything it would.
+  const single = soleError({
+    stem: 'Solve it. Answer as a comma-separated list in any order.',
+    meta: [
+      '<!-- part 1: x=4. -->',
+      '<!-- part 1: 4. -->',
+      '<!-- part 1: x=4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as a comma-separated list in any order. -->',
+    ],
+  })
+  assert.match(single, /"x=4\." accepts nothing/)
+})
+
 test('the accepted forms of a compound answer are capped, so a build cannot explode', () => {
   const parts = []
   for (let p = 1; p <= 4; p++) {
