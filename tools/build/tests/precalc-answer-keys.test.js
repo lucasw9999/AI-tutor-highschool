@@ -78,6 +78,51 @@ test('an item with no key block is untouched — model-graded, no key, no varian
   assert.equal(grade(item, 'anything at all').graded_by, 'model')
 })
 
+/**
+ * Unicode and LaTeX folded to the ASCII a key is written in, so a key can be
+ * looked for in the prose of the worked solution: the packs write "−√2/2" and
+ * "$\dfrac{5}{6}$" where a key says "-sqrt(2)/2" and "5/6".
+ */
+const folded = (text) =>
+  String(text)
+    .toLowerCase()
+    .replace(/[−–—]/g, '-')
+    .replace(/π/g, 'pi')
+    .replace(/√/g, 'sqrt')
+    .replace(/[·⋅×]/g, '*')
+    .replace(/\\[a-z]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2')
+    .replace(/\\[a-z]+/g, '')
+
+const squeezed = (text) => folded(text).replace(/[$*`{}()[\]\s]/g, '')
+const wordsOf = (text) =>
+  folded(text)
+    .split(/[\s,;:]+/)
+    .map((w) => w.replace(/[$*`{}()[\]]/g, ''))
+    .filter(Boolean)
+
+/**
+ * True when some accepted form of this item's key is traceable to the worked
+ * solution the author wrote — every word of it appearing somewhere in that
+ * solution's prose.
+ *
+ * Deliberately weak, and it is the strongest thing a test can say about a key
+ * without re-deriving the mathematics: it cannot tell a right answer from a
+ * plausible wrong one. What it does catch is a key with NO relationship to the
+ * item, which is the whole failure class `grade(it, it.answer)` hid.
+ */
+const groundedInSolution = (item) => {
+  const solution = squeezed(item.solution ?? '')
+  return [item.answer, ...(item.answer_variants ?? [])].some((form) =>
+    wordsOf(form).every((word) => solution.includes(squeezed(word))),
+  )
+}
+
+/** The spellings of its own key a STUDENT types, which are not the key itself. */
+const studentSpellings = (item) =>
+  item.kind === 'mcq'
+    ? [item.answer.toLowerCase(), `(${item.answer})`, `${item.answer})`, `${item.answer}.`]
+    : [` ${item.answer} `, `${item.answer}.`, `$${item.answer}$`, item.answer.toUpperCase()]
+
 test('every item in the shipped packs is either keyed and server-graded, or model-graded with a solution', () => {
   // Phrased as the INVARIANT rather than as "all 48 are model-graded", so it
   // still holds after the content agents key the items this syntax unblocks —
@@ -94,12 +139,55 @@ test('every item in the shipped packs is either keyed and server-graded, or mode
     const keyed = it.answer != null && String(it.answer).trim() !== ''
     if (keyed) {
       assert.ok(SERVER_GRADED.has(it.kind), `${it.id} carries a key but its kind '${it.kind}' is not server-graded`)
-      assert.equal(grade(it, it.answer).correct, 1, `${it.id}: its own key does not grade as correct`)
+      // `assert.equal(grade(it, it.answer).correct, 1)` used to stand here, and
+      // it is a TAUTOLOGY on a constructed item: grade() builds its accepted set
+      // as [answer, ...variants].map(normalizeShort) and compares
+      // normalizeShort(response), so with response === it.answer both sides are
+      // the same expression. It passed on a deliberate key of "qqzzx nonsense 99"
+      // declared on an item whose answer is 3, with 0 build errors, while the
+      // student who typed "3" was marked WRONG. Two assertions with content
+      // replace it: the key is credited as a STUDENT spells it, which exercises
+      // normalizeShort and the variant set rather than one expression against
+      // itself; and the key is grounded in the worked solution.
+      for (const typed of studentSpellings(it)) creditsOn(it, typed)
+      if (it.kind === 'mcq') {
+        // A letter cannot be grounded in prose. The multiple-choice equivalent
+        // is that the keyed choice's own TEXT resolves to the choice it is
+        // printed against — the reading a student who types the answer rather
+        // than the label depends on.
+        creditsOn(it, String(it.options[it.answer]).trim())
+      } else {
+        assert.ok(
+          groundedInSolution(it),
+          `${it.id}: no accepted form of the key ${JSON.stringify(it.answer)} appears in the worked solution, so ` +
+            `nothing in the pack says this is the answer: ${JSON.stringify(it.solution)}`,
+        )
+      }
     } else {
       assert.ok(MODEL_GRADED_KINDS.has(it.kind), `${it.id} has no key, so its kind '${it.kind}' must be model-graded`)
       assert.deepEqual(it.answer_variants, [], `${it.id} has variants but no key`)
     }
   }
+})
+
+test('a key with nothing behind it in the solution fails the shipped-bank invariant', () => {
+  // The proof that the invariant above is no longer a tautology. This is the
+  // audit's own construction: a nonsense key on pc-u1-p14, whose answer is 4.
+  const nonsense = parsePracticeItems(
+    pack(block({ stem: 'Find $f(2)+f(-1)$.', solution: '$f(2)+f(-1)=3+1=\\mathbf{4}$.', meta: ['<!-- key: qqzzx nonsense 99 -->'] })),
+    U1,
+  ).items[0]
+  assert.deepEqual(nonsense.answer, 'qqzzx nonsense 99', 'the parser cannot know it is nonsense — no gate can')
+  assert.equal(grade(nonsense, nonsense.answer).correct, 1, 'which is exactly why comparing it to itself proves nothing')
+  assert.equal(groundedInSolution(nonsense), false, 'but nothing in the worked solution says it')
+  assert.equal(grade(nonsense, '4').correct, 0, 'and the student who is right is marked wrong')
+  // ...while the real key of the same item is grounded, and credits him.
+  const real = parsePracticeItems(
+    pack(block({ stem: 'Find $f(2)+f(-1)$.', solution: '$f(2)+f(-1)=3+1=\\mathbf{4}$.', meta: ['<!-- key: 4 -->'] })),
+    U1,
+  ).items[0]
+  assert.equal(groundedInSolution(real), true)
+  creditsOn(real, '4')
 })
 
 // ---------------------------------------------------------------------------
