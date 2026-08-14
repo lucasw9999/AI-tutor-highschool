@@ -94,7 +94,7 @@
  * 4sin(3x)-2 — because every permutation of the bare values was generated. A
  * permutation is the same answer only when the parts identify THEMSELVES, or
  * when they are a set in which position means nothing at all. So the parser asks
- * two questions, in this order:
+ * three questions, in this order:
  *
  *   1. Are the parts SELF-LABELLING? "hole at x=3" cannot be read as the
  *      horizontal asymptote and "overestimate" cannot be read as the rate, so
@@ -112,6 +112,15 @@
  *      to an equation) means the parts are a set and every ordering is. A
  *      sentence that says neither is a BUILD ERROR — the parser will not guess
  *      which of a right answer and the classic wrong one it is looking at.
+ *   3. An order LOCKED by 2 is locked per FORM, not per item. Question 1 is asked
+ *      again of each combination of phrasings on its own — of the string a student
+ *      actually types — because that is what a reader of the answer sees.
+ *      pc-u3-p2 declares "4" as well as "amplitude 4", so the item is locked and
+ *      "-2, 4, 2pi/3" is refused; but "midline -2, amplitude 4, period 2pi/3"
+ *      names every value it gives, so no reordering of THAT string can change what
+ *      it asserts, and refusing it marked 255 correct answers wrong — 50 of them
+ *      labelling every single entry. Locking the whole item because one of its
+ *      phrasings is ambiguous punishes the student who was clearest.
  *
  * That expansion also absorbs an asymmetry in normalizeShort that would
  * otherwise be a trap: it strips a leading `x =` from the WHOLE response only,
@@ -531,6 +540,28 @@ function partsAreSelfLabelling(parts) {
 }
 
 /**
+ * The same question asked of ONE combination — one phrasing chosen per part, i.e.
+ * a string a student could actually type.
+ *
+ * Order-freedom is a property of the ANSWER, not of the declaration it was drawn
+ * from. pc-u3-p2 declares "4" and "amplitude 4" for its first part, so the item
+ * as a whole is not self-labelling and its order is locked — rightly, because
+ * "-2, 4, 2pi/3" is the amplitude/midline swap, THE canonical error on
+ * 4sin(3x)-2. But "midline -2, amplitude 4, period 2pi/3" says which value is
+ * which in the string itself; no reordering of it can change what it asserts, so
+ * marking it wrong is a false negative, and 255 forms of that one item were
+ * marked wrong — 135 accepted where 390 are correct.
+ *
+ * Asking the SAME predicate one combination at a time is what separates the two:
+ * a combination carrying two bare values stays locked (nothing tells them apart),
+ * while a combination that labels itself permutes freely. There is deliberately
+ * no second, weaker definition of "self-labelling" here — the rule that credits
+ * a permutation is the rule that refuses one, applied at the granularity the
+ * student is graded at.
+ */
+const combinationIsSelfLabelling = (chosen) => partsAreSelfLabelling(chosen.map((phrasing) => [phrasing]))
+
+/**
  * The `format:` sentence states an ORDER for the parts. Deliberately liberal:
  * a match only ever SUPPRESSES permutations, which is the safe direction, and
  * self-labelling parts are decided before this is consulted at all.
@@ -554,6 +585,12 @@ const ORDER_ADVICE =
 /**
  * Whether the parts' ORDER is part of the answer, or an error saying why the
  * question cannot be settled.
+ *
+ * `ordered: true` is the ITEM's default, not its last word: the expansion asks
+ * combinationIsSelfLabelling() of each phrasing combination and frees the ones
+ * that name their own values. This decides the two things a single combination
+ * cannot — whether the `format:` sentence has to be read for an order at all, and
+ * whether a sentence that states none is a build error.
  *
  * @returns {{ordered: boolean}|{error: string}}
  */
@@ -1155,9 +1192,21 @@ function resolveKey({ decls, stem, unit }) {
     }
     ordered = semantics.ordered
 
-    const orderings = ordered ? 1 : permutations(indices).length
+    /**
+     * The orderings of ONE combination that all assert the same answer: every
+     * one of them, unless this exact combination is the kind whose entries only
+     * position tells apart. Used by the cap below and by the expansion itself, so
+     * the count the build refuses on and the set it emits cannot drift apart.
+     */
+    const orderingsOf = (chosen) =>
+      ordered && !combinationIsSelfLabelling(chosen) ? [chosen] : permutations(chosen)
+
     const schemes = joinSchemes(parts)
-    const forms = orderings * parts.reduce((n, p) => n * p.length, 1) * schemes.length
+    // Summed per combination rather than multiplied out, because after the fix
+    // above the orderings are no longer a single factor shared by every
+    // combination. Still counted BEFORE a form is built, and still an upper bound
+    // on what is emitted — normalization only ever merges two forms into one.
+    const forms = combinations(parts).reduce((n, chosen) => n + orderingsOf(chosen).length, 0) * schemes.length
     if (forms > MAX_ACCEPTED_FORMS) {
       errors.push(
         `these parts expand to ${forms} accepted forms, past the cap of ${MAX_ACCEPTED_FORMS} — too many phrasings ` +
@@ -1177,7 +1226,7 @@ function resolveKey({ decls, stem, unit }) {
     const expand = (byPart) => {
       const forms = new Map()
       for (const chosen of combinations(byPart)) {
-        for (const ordering of ordered ? [chosen] : permutations(chosen)) {
+        for (const ordering of orderingsOf(chosen)) {
           for (const scheme of schemes) {
             const form = joinParts(ordering, scheme)
             // A separator that would fuse two parts into one expression is not a
