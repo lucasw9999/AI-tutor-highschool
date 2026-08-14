@@ -801,7 +801,8 @@ test('spaced review gets a reserved share of ordinary practice', async (t) => {
 // ---------------------------------------------------------------------------
 // An EXHAUSTED bank. The bank is finite and the no-repeat window is long, so
 // this state is reached in the first week of ordinary use, not in some corner
-// case: 238 CSA items at 50 answers a day is five days of unique questions.
+// case: the 241 seeded CSA items (221 mcq + 20 frq) at 50 answers a day is five
+// days of unique questions.
 // Refusing to serve anything is the one response the student cannot use, so the
 // selector degrades to the least-recently-seen item and SAYS it is a repeat.
 // ---------------------------------------------------------------------------
@@ -1006,6 +1007,41 @@ function unitShares(paper) {
   for (const [unit, n] of counts) out.set(unit, (n / paper.length) * 100)
   return out
 }
+
+// ---------------------------------------------------------------------------
+// The counts the comments quote about the shipped bank.
+//
+// select.js reasons about supply out loud — "N items at 50 answers a day is five
+// days of unique questions" — and those numbers rotted: the header said 218 CSA
+// items and this file said 238 while the seed shipped 241, so a reader checking
+// the module's arithmetic against the bank found it wrong, and the next person to
+// reason about supply started from a false figure. The same rot in
+// DEFAULT_REUSE_DAYS is caught by a test, so this one is too: any count stated
+// about the seeded CSA bank, in either file, has to be the seeded CSA bank's.
+// ---------------------------------------------------------------------------
+
+test('every item count the comments quote is the count the seed actually ships', () => {
+  const csa = bankOf('ap_csa')
+  const counts = { items: csa.items.length }
+  for (const it of csa.items) counts[it.kind] = (counts[it.kind] ?? 0) + 1
+  for (const file of ['../src/select.js', './select.test.js']) {
+    // Comment markers stripped and whitespace collapsed, because a comment wraps
+    // and the phrase can straddle two lines with a `//` or ` *` between them.
+    const text = readFileSync(new URL(file, import.meta.url), 'utf8')
+      .replace(/^\s*(\/\/|\*)/gm, ' ').replace(/\s+/g, ' ')
+    const stated = [...text.matchAll(/(\d+) seeded CSA items/gi)]
+    assert.ok(stated.length >= 1, `${file}: the phrase this test guards has been reworded out of existence`)
+    for (const [, n] of stated) {
+      assert.equal(Number(n), counts.items, `${file} states ${n} seeded CSA items; the seed ships ${counts.items}`)
+    }
+    for (const [, mcq, frq] of text.matchAll(/\((\d+) mcq \+ (\d+) frq\)/g)) {
+      assert.deepEqual(
+        [Number(mcq), Number(frq)], [counts.mcq, counts.frq],
+        `${file} splits the CSA bank ${mcq}/${frq}; the seed ships ${counts.mcq} mcq and ${counts.frq} frq`,
+      )
+    }
+  }
+})
 
 // ---------------------------------------------------------------------------
 // What the reserved review share DELIVERS, measured over a real bank.
