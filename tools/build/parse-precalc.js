@@ -425,7 +425,16 @@ const MAX_ALTS_PER_PART = 6
 /** Guards items.json and the D1 row against a combinatorial blow-up. */
 const MAX_ACCEPTED_FORMS = 1000
 
-/** @returns {string[][]} one separator per gap, deduplicated. */
+/**
+ * @returns {string[][]} one separator per gap, deduplicated.
+ *
+ * Deduplicated on `JSON.stringify` rather than on the scheme joined by some
+ * sentinel character: a separator is itself punctuation and whitespace, so any
+ * sentinel is a claim about what a separator can never contain, and JSON needs
+ * no such claim. (It also keeps this file TEXT. The dedup key used to be a raw
+ * NUL byte, which made `grep` classify the most safety-critical file in the repo
+ * as binary and answer every pattern with silence unless passed `-a`.)
+ */
 function joinSchemes(parts) {
   const gaps = parts.length - 1
   const schemes = UNIFORM_SEPARATORS.map((s) => Array(gaps).fill(s))
@@ -436,7 +445,7 @@ function joinSchemes(parts) {
   if (gaps === 1 || parts.every((alternatives) => alternatives.every(oneWord))) {
     schemes.push(Array(gaps).fill(RUN_ON))
   }
-  return [...new Map(schemes.map((s) => [s.join(' '), s])).values()]
+  return [...new Map(schemes.map((s) => [JSON.stringify(s), s])).values()]
 }
 
 /** The characters normalizeShort strips the whitespace from around. */
