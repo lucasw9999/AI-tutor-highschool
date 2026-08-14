@@ -1298,7 +1298,20 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // The questions of the scorable halves that this bank cannot ask at all. Not
   // blanks, not wrong, and not silent: they come off the divisor and are named.
   const unaskable = askable == null ? 0 : scorable - askable
-  const left = onScored.filter((a) => (a.response ?? '') === '').length
+  // Counted over the paper PROPER, not over the halves that can be marked, because
+  // this is the one number on the ANSWER SHEET rather than in the arithmetic: `a=`
+  // with no value is a documented deliberate blank (index.js: "a is required (use
+  // a= for a deliberate blank)"; openapi.json says the same to the model), and an
+  // empty free-response answer is a bubble he chose to leave empty whether or not
+  // anything can mark that half. Narrowed to `onScored` it was invisible: measured
+  // on six full CSA sittings with all 42 multiple choice right and all 4
+  // free-response sent as `a=`, the window reported "0 blanks" with the criterion
+  // MET and readiness 94, where the same evidence reads 12 blanks, FAIL and 89 —
+  // twenty-four deliberately empty questions gone, and the number a parent reads
+  // five points HIGHER for it. `marked`, `unmarkable`, `covered` and `denominator`
+  // stay on `onScored` for the opposite reason: they are the DIVISOR, and a rubric
+  // answer must not shrink it.
+  const left = onSection.filter((a) => (a.response ?? '') === '').length
   const blanks = left + unreached
 
   // Three guards against three different false claims:

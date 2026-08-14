@@ -2930,3 +2930,183 @@ withSeed('every answer on a mixed paper is excluded once, for one reason', async
   assert.equal(r.composite_pct, 100)
   assert.equal(r.blanks, 0)
 })
+
+// ---------------------------------------------------------------------------
+// A DELIBERATE BLANK ON THE HALF NOTHING CAN MARK IS STILL A BLANK
+//
+// `a=` with no value is a first-class, DOCUMENTED input, not a hypothetical:
+// index.js refuses a missing `a` with "a is required (use a= for a deliberate
+// blank)", and openapi.json instructs the model "Use a= with no value for a
+// deliberate blank". An empty response to a free-response question is therefore a
+// bubble the student chose to leave empty, and the answer sheet shows it.
+//
+// THE DEFECT. `left` — the count whose ENTIRE JOB is to count blank responses —
+// was narrowed to `onScored`, the answers to the halves this paper can be MARKED
+// on. A CSA free-response answer is on no such half, so every blank one became
+// invisible to the one criterion that counts blanks. Measured on the shipped CSA
+// bank, six `full` proctored sittings on days 0/8/16/24/32/40, all 42 multiple
+// choice answered correctly off the real key and all 4 free-response submitted as
+// `a=`:
+//
+//   per-sitting `blanks` 4 -> 0; the window's blanks criterion FAIL "12 blanks"
+//   -> MET "0 blanks"; readiness 89 -> 94; and `next_thing_blocking` went from
+//   `At most 1 blank response across the window — 12 blanks` to `Free response ≥
+//   85% — grader not yet calibrated ...`. Twenty-four questions left DELIBERATELY
+//   empty across the window vanished, and the number a parent reads ROSE five
+//   points on strictly worse evidence.
+//
+// On this bank `askable == scorable == 42`, so no bank shortfall is involved and
+// none can excuse it: this is the founding failure — a number that means less
+// than it says — reached through the ANSWER SHEET instead of through the divisor.
+// It also contradicted api.js's own surviving comment two lines above ("a question
+// left empty and a question never reached are the same fact on an answer sheet")
+// and the criterion's own label, "blank RESPONSE".
+//
+// THE DIVISOR IS A DIFFERENT QUESTION, and it stays where it belongs: `marked`,
+// `unmarkable`, `covered` and `denominator` are all about the halves that can be
+// marked, and a rubric answer must never shrink them. So this test pins BOTH
+// halves of that distinction on one paper at once — `blanks` 4 AND
+// `scored_out_of` 42 — because the whole defect was one migrating into the other.
+//
+// Driven over REAL SQLite, the real seeded bank and the real handlers: the empty
+// response has to survive grade.js, db.js's projection and the readiness window,
+// and a fake that hands back more than D1 does has hidden a blank-counting bug in
+// this file before.
+// ---------------------------------------------------------------------------
+
+/**
+ * Sit a full CSA paper: every multiple choice question answered right off the real
+ * key, every free-response question submitted as `a=` — the deliberate blank.
+ *
+ * Not `answer ?? WRITTEN_RESPONSE` like sitMock: written work is answered-and-
+ * unmarkable, which is a DIFFERENT sitting. This one is answered-and-empty.
+ */
+async function sitBlankingTheRubricHalf({ db, mock, base, spacing = 60 }) {
+  const kinds = []
+  const blanked = []
+  for (let n = 0; ; n++) {
+    let q
+    try {
+      q = await handleNext({ db, subject: 'ap_csa', config: CSA, now: at(base + n * spacing), mockId: mock })
+    } catch {
+      break
+    }
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    const blank = item.kind === 'frq'
+    await handleLog({
+      db, serveId: q.serve, response: blank ? '' : item.answer, config: CSA, now: at(base + n * spacing + 30),
+    })
+    kinds.push(item.kind)
+    if (blank) blanked.push(item.id)
+  }
+  return { answered: kinds.length, kinds, blanked }
+}
+
+withSeed('a free-response question left deliberately empty is a blank on the answer sheet, and does not shrink the divisor', async () => {
+  const { db, sqlite } = realDb()
+  const mcq = CSA.exam.mcq_count
+  const frq = CSA.exam.frq_count
+  const drilled = await drillEveryTopic(db, sqlite, 'ap_csa', CSA)
+  assert.ok(drilled > 0, 'the coverage prerequisite is met by drilling, so the performance criteria are evaluated')
+
+  // Six sittings, 8 days apart: `total_logged_mocks_min` is 6, and the last three
+  // (days 24/32/40) span 16 days, inside the 10-to-42-day qualifying window. The
+  // blanks criterion sums over exactly those three, so 4 per sitting is 12.
+  const window = [24, 32, 40]
+  const sittings = []
+  for (const day of [0, 8, 16, ...window]) {
+    const m = await handleMockStart({
+      db, subject: 'ap_csa', section: 'full', source: 'official', config: CSA, now: at(day * DAY),
+    })
+    const { answered, kinds, blanked } = await sitBlankingTheRubricHalf({ db, mock: m.mock, base: day * DAY })
+    assert.equal(kinds.filter((k) => k === 'mcq').length, mcq, `day ${day}: every multiple choice question of the paper`)
+    assert.equal(kinds.filter((k) => k === 'frq').length, frq, `day ${day}: and the whole rubric half, sat and left empty`)
+    assert.equal(answered, mcq + frq, `day ${day}: the whole of what a full paper holds`)
+
+    // The empty responses really are on the paper as empty, through the real
+    // projection: `a=` reaches the attempts table as '', graded by no mechanical
+    // marker, and NOT as a wrong guess.
+    const paper = await paperOf(db, m.mock, 'ap_csa')
+    const empty = paper.filter((a) => (a.response ?? '') === '')
+    assert.equal(empty.length, frq, `day ${day}: ${frq} responses were left empty and the stored paper must show ${frq}`)
+    assert.deepEqual(
+      [...new Set(empty.map((a) => a.kind))], ['frq'],
+      `day ${day}: nothing on the multiple choice half was left empty — every one of those was the key itself`,
+    )
+    assert.deepEqual(
+      empty.map((a) => a.item_id).sort(), [...blanked].sort(),
+      `day ${day}: the empty rows are the very questions this fixture blanked, and no others`,
+    )
+    assert.deepEqual(
+      [...new Set(empty.map((a) => a.correct))], [0],
+      `day ${day}: a blank is not a wrong guess, and nothing here may be recorded as one he got right`,
+    )
+
+    const r = await handleMockSubmit({ db, mockId: m.mock, config: CSA, now: at(day * DAY + 170 * 60) })
+
+    // THE DEFECT, per sitting. Four questions he was asked and deliberately did not
+    // answer are four blanks; `onScored` could not see a single one of them.
+    assert.equal(
+      r.blanks, frq,
+      `day ${day}: ${frq} free-response questions were submitted as \`a=\` — a documented deliberate blank — and the ` +
+        `blank count says ${r.blanks}. Counting blanks over the halves that can be MARKED makes every blank on the ` +
+        `rubric half invisible to the one criterion whose job is to count blank responses`,
+    )
+
+    // And the other half of the distinction, unmoved: an unmarkable answer does not
+    // come off a divisor that never contained it, whether it was written or empty.
+    assert.equal(r.counted, true, `day ${day}: 42 of the 42 markable questions, timed and official, is a scored sitting`)
+    assert.equal(
+      r.scored_out_of, mcq,
+      `day ${day}: the divisor is the multiple choice half — the rubric half was never in it, so leaving it blank ` +
+        `cannot deduct from it either`,
+    )
+    assert.equal(r.composite_pct, 100, `day ${day}: every markable answer was the key itself, over every markable question`)
+    assert.equal(r.ungraded, frq, `day ${day}: the empty rubric responses carry no mechanical verdict, counted once`)
+    sittings.push(r)
+  }
+
+  assert.deepEqual(
+    sqlite.prepare('SELECT blanks FROM mocks ORDER BY id').all().map((x) => x.blanks), Array(6).fill(frq),
+    'and the stored number the blanks criterion actually reads must agree on every one of them',
+  )
+
+  // THE PARENT-FACING NUMBERS. 24 questions left empty across six sittings, 12 of
+  // them inside the judged window, against max_blanks 1.
+  const s = await handleStatus({ db, subject: 'ap_csa', config: CSA, now: at(41 * DAY) })
+  const blanks = s.criteria.find((c) => /blank response/.test(c.requirement))
+  assert.ok(blanks, `the blanks criterion must be reported: ${JSON.stringify(s.criteria.map((c) => c.requirement))}`)
+  assert.equal(
+    blanks.evidence, `${window.length * frq} blanks`,
+    `${window.length} sittings in the window, ${frq} deliberate blanks each: ${blanks.evidence}`,
+  )
+  assert.equal(
+    blanks.met, false,
+    `${window.length * frq} blanks against max_blanks ${CSA.readiness.max_blanks} is not met — a criterion that reads ` +
+      `MET on 12 deliberately empty answers is worse than no criterion`,
+  )
+  assert.equal(
+    s.next_thing_blocking, `At most ${CSA.readiness.max_blanks} blank response across the window — ${window.length * frq} blanks`,
+    'the blanks are the first thing standing between this record and ready, and that is what he is told',
+  )
+  assert.equal(
+    s.readiness_pct, 89,
+    'a student who left 24 questions empty may not read HIGHER than one who answered them: blind to the blanks this ' +
+      'record scored 94, five points more, on strictly worse evidence',
+  )
+  assert.equal(s.ready, false)
+
+  // The card a parent reads says the same thing, off the same stored numbers.
+  const dash = await handleDashboard({ db, configs: CONFIGS, now: at(41 * DAY) })
+  const card = dash.subjects.find((x) => x.config.subject === 'ap_csa')
+  assert.equal(card.readiness.readiness_pct, s.readiness_pct, 'one readiness number, on both surfaces')
+  assert.equal(
+    card.readiness.first_unmet, 'blanks',
+    'and the parent card names the same blocker as the student summary, off the same criteria list',
+  )
+  assert.equal(
+    card.readiness.criteria.find((c) => c.id === 'blanks').detail, `${window.length * frq} blanks`,
+    'with the same count behind it',
+  )
+})
