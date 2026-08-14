@@ -34,6 +34,49 @@ const PRECALC = JSON.parse(readFileSync(new URL('../config/ap_precalc.json', imp
 
 const DESCRIPTION_LIMIT = 300
 
+// --- what is actually PASTED into the Custom GPT ------------------------------
+//
+// gpt-instructions.md is two documents in one file. Everything after the first
+// `---` is the body that goes into the Instructions box; everything above it is
+// instructions-for-Luyao that the model never sees, and the file says so about
+// itself.
+//
+// Every check about what the MODEL is told therefore has to read the BODY. Reading
+// the whole file looks equivalent and is not: a required field named only in the
+// preamble satisfies a whole-file search and reaches the model never. That is not
+// hypothetical — a length cut relocated the `proctored_mocks` caveat out of the
+// body and up into the preamble, and no test noticed, because they all read
+// `INSTRUCTIONS`.
+const BODY_SEPARATOR = '\n---\n'
+
+function pasteableBody(md) {
+  const i = md.indexOf(BODY_SEPARATOR)
+  if (i === -1) {
+    throw new Error('gpt-instructions.md has no `---` separator, so the pasteable body cannot be identified')
+  }
+  return md.slice(i + BODY_SEPARATOR.length).replace(/^\n+/, '')
+}
+
+const BODY = pasteableBody(INSTRUCTIONS)
+
+/**
+ * The access key as COMMITTED, and its length as INSTALLED.
+ *
+ * These are different, and the difference is load-bearing: the repo commits a
+ * placeholder and the GPT holds a real 32-character key (worker/DEPLOY.md), so the
+ * text ChatGPT measures is longer than the text this file measures. KEY_LENGTH is
+ * named rather than folded into a hardcoded deduction so that rotating to a longer
+ * key WIDENS the deduction here instead of silently re-breaking the cap gate.
+ */
+const KEY_PLACEHOLDER = 'PASTE_STUDENT_KEY'
+const KEY_LENGTH = 32
+
+/** How long the pasted body is once the real key replaces every placeholder. */
+function installedLength(body) {
+  const substitutions = body.split(KEY_PLACEHOLDER).length - 1
+  return body.length + substitutions * (KEY_LENGTH - KEY_PLACEHOLDER.length)
+}
+
 /** Walk every node, yielding [path, value] for each object. */
 function* walk(node, path = '$') {
   if (node && typeof node === 'object') {
@@ -46,11 +89,22 @@ function* walk(node, path = '$') {
 
 test('no description exceeds ChatGPT\'s 300-character limit', () => {
   const over = []
+  const lengths = []
   for (const [path, node] of walk(SPEC)) {
-    if (typeof node.description === 'string' && node.description.length > DESCRIPTION_LIMIT) {
+    if (typeof node.description !== 'string') continue
+    lengths.push([node.description.length, path])
+    if (node.description.length > DESCRIPTION_LIMIT) {
       over.push(`${path} is ${node.description.length} chars`)
     }
   }
+  // Printed, not asserted: a description one clause from the limit is not a defect,
+  // but it is the thing that breaks next, and nothing else in the repo records how
+  // close the tightest ones are running.
+  const tightest = lengths.sort((a, b) => b[0] - a[0]).slice(0, 3)
+  console.log(
+    `descriptions closest to the ${DESCRIPTION_LIMIT}-character limit: ` +
+      tightest.map(([n, p]) => `${p} (${n}, ${DESCRIPTION_LIMIT - n} spare)`).join('; '),
+  )
   assert.deepEqual(over, [], `descriptions over ${DESCRIPTION_LIMIT}:\n${over.join('\n')}`)
 })
 
@@ -65,6 +119,13 @@ test('every object schema declares properties', () => {
   for (const [path, node] of walk(SPEC)) {
     // A nullable object still has to declare its properties, so this looks at
     // every declared type rather than only at `type: "object"`.
+    //
+    // The `additionalProperties` escape hatch is UNVERIFIED against the real
+    // builder. What was observed live was the flat rejection "object schema
+    // missing properties" on a node with neither; nothing has ever been pasted
+    // into a GPT with `additionalProperties: true` and no `properties`, so
+    // whether ChatGPT accepts that form is not known. No such node exists in the
+    // schema today, and one should be proven on a throwaway GPT before it does.
     if (typesOf(node).includes('object') && !node.properties && !node.additionalProperties) {
       bare.push(path)
     }
@@ -161,7 +222,11 @@ test('the key parameter is required on every operation', () => {
   }
 })
 
-test('the server url is a placeholder until deploy, not a stale hostname', () => {
+// Named for what it checks, not for what it once checked: the deploy has happened,
+// so the live hostname is now the expected value and the placeholder is the
+// pre-deploy one. Both are accepted; what is refused is a non-https url and a
+// malformed host.
+test('servers[0].url is https and either the deploy placeholder or a plain hostname', () => {
   const url = SPEC.servers[0].url
   assert.match(url, /^https:\/\//, 'must be https')
   assert.ok(
@@ -225,21 +290,49 @@ test('the shared parameters block is gone, so no one can reintroduce a ref', () 
 // The cap applies to what is PASTED, which is the body after the human-facing
 // preamble (everything up to and including the first `---`). The preamble is
 // instructions-for-Luyao, never for the model.
-test('gpt-instructions.md fits the 8000-character Custom GPT limit', () => {
+//
+// AND IT APPLIES TO THE TEXT AS INSTALLED, not as committed. This gate used to
+// measure `body.length` with the 17-character `PASTE_STUDENT_KEY` placeholder in
+// place and compare it against a flat 8000, while the GPT holds a real
+// 32-character key: a 15-character understatement, in the direction that breaks
+// the paste. A body measured at 7,995 passed and installed as 8,010 — ChatGPT
+// 422s, the Update button stays disabled, and the only symptom is that the live
+// tutor keeps running the previous instructions. The cap is therefore deducted
+// from, per substitution, so a longer key makes the gate STRICTER on its own.
+//
+// (worker/DEPLOY.md rounds this to "~14 characters". It is 15: the placeholder is
+// 17 long, not 18. The number is derived here rather than transcribed for exactly
+// that reason.)
+test('gpt-instructions.md fits the 8000-character Custom GPT limit as installed', () => {
   const CAP = 8000
-  const sep = '\n---\n'
-  const i = INSTRUCTIONS.indexOf(sep)
-  assert.notEqual(i, -1, 'the preamble/body separator `---` is missing, so the pasteable body cannot be identified')
-  const body = INSTRUCTIONS.slice(i + sep.length).replace(/^\n+/, '')
   assert.ok(
-    body.startsWith('You are'),
-    `the body after the first \`---\` should be the text pasted into the GPT, but it starts: ${body.slice(0, 60)}`,
+    BODY.startsWith('You are'),
+    `the body after the first \`---\` should be the text pasted into the GPT, but it starts: ${BODY.slice(0, 60)}`,
+  )
+
+  // Precondition, so the substitution cannot silently stop being measured: with
+  // zero placeholders in the body this degrades to exactly the gate that was
+  // wrong, and reports a pass it has not earned.
+  const substitutions = BODY.split(KEY_PLACEHOLDER).length - 1
+  assert.ok(
+    substitutions >= 1,
+    `the body no longer passes \`${KEY_PLACEHOLDER}\` to the GPT at all, so this gate is measuring the wrong text. ` +
+      'Either the key moved (to an Actions Authentication header, say), in which case delete the deduction and this ' +
+      'precondition together, or the body lost the access key and every call will 401.',
+  )
+
+  const installed = installedLength(BODY)
+  const deduction = installed - BODY.length
+  console.log(
+    `gpt-instructions.md: body ${BODY.length} chars as committed, ${installed} as installed ` +
+      `(+${deduction} over ${substitutions} key substitution(s)), ${CAP - installed} of real headroom`,
   )
   assert.ok(
-    body.length <= CAP,
-    `the pasteable body is ${body.length} characters, over ChatGPT's ${CAP} limit by ${body.length - CAP}. ` +
-      'ChatGPT will refuse to save the draft and the Update button stays disabled, so this cannot be installed. ' +
-      'Cut it, or move reference material into an attached knowledge file.',
+    installed <= CAP,
+    `the pasteable body measures ${BODY.length} characters here but installs as ${installed} once the real ` +
+      `${KEY_LENGTH}-character key replaces \`${KEY_PLACEHOLDER}\` — over ChatGPT's ${CAP} limit by ` +
+      `${installed - CAP}. ChatGPT will refuse to save the draft and the Update button stays disabled, so this ` +
+      'cannot be installed. Cut it, or move reference material into the free preamble.',
   )
 })
 
@@ -300,6 +393,14 @@ test('every field the instructions name in backticks exists in the schema', () =
  * been told the field exists cannot recover it: `advisories` is the only place an
  * unscored sitting resurfaces, `basis` the only reason a mock did not count,
  * `what_100_means` the only per-subject statement of the standard.
+ *
+ * This list used to be exhaustive on the REASON fields and empty on the
+ * ARITHMETIC ones, which is the wrong half to have covered in a project whose
+ * founding failure was a number: a tutor told only `composite_pct` and `basis`
+ * has to recover the divisor by parsing prose, which is the exact behaviour
+ * `scored_out_of` was added to prevent. The arithmetic half is now named too, and
+ * so are the three fields whose own schema descriptions are direct orders to the
+ * model that nothing in the instructions was passing on.
  */
 const MUST_BE_IN_THE_INSTRUCTIONS = [
   'advisories',        // an unscored proctored sitting, and the burnout guard
@@ -308,6 +409,15 @@ const MUST_BE_IN_THE_INSTRUCTIONS = [
   'next_thing_blocking',
   'counted',           // whether a mock can move readiness
   'composite_pct',     // null on an unscored sitting — never a zero
+  'scored_out_of',     // the divisor it was ACTUALLY taken over, and neither
+                       // `answered` nor `expected`: a GPT doing the obvious
+                       // arithmetic instead contradicts the server out loud
+  'ungraded',          // "Say how many when reporting the score" — its own words
+  'readiness_pct',     // the number the whole project exists to stop overstating
+  'ready',             // "While this is false, never tell him he is ready"
+  'proctored_mocks',   // scored sittings only, so an unscored one is missing
+  'keyed',             // the right answer, revealed only after he has answered —
+                       // nothing told the tutor to show it to him at all
   'basis',             // why it was, or was not, scored
   'timing',            // the section's real time budget, read aloud
   'rules',
@@ -320,15 +430,20 @@ const MUST_BE_IN_THE_INSTRUCTIONS = [
   'status',
 ]
 
-test('every field the student depends on is named in the instructions', () => {
+test('every field the student depends on is named in the pasted body', () => {
   // Matched against the BACKTICKED names, not raw text: "correctly" contains
   // "correct" and "ungraded" contains "graded", so a substring search would pass
   // on prose that never tells the GPT the field exists.
-  const named = backtickedIdentifiers(INSTRUCTIONS)
+  //
+  // And matched against the BODY, not the file: the preamble is never pasted, so a
+  // field named only up there is a field the model is never told about. See
+  // pasteableBody — `proctored_mocks` reached exactly that state.
+  const named = backtickedIdentifiers(BODY)
   const missing = MUST_BE_IN_THE_INSTRUCTIONS.filter((f) => !named.has(f))
   assert.deepEqual(
     missing, [],
-    `the server sends these and gpt-instructions.md never mentions them, so the student never hears them: ${missing.join(', ')}`,
+    `the server sends these and the PASTED body of gpt-instructions.md never mentions them, so the student never ` +
+      `hears them: ${missing.join(', ')}. Naming one in the preamble does not count — that text is not pasted.`,
   )
 })
 
@@ -717,9 +832,9 @@ withSeed('every field the router returns carries a description the GPT can act o
 const STATUS_CLAIM = 'No nested `status`'
 
 withSeed('the responses that carry no nested status are exactly the ones the instructions except', async () => {
-  const at = INSTRUCTIONS.indexOf(STATUS_CLAIM)
-  assert.ok(at >= 0, `gpt-instructions.md no longer states which responses carry a status ("${STATUS_CLAIM}")`)
-  const paragraph = INSTRUCTIONS.slice(at).split('\n\n')[0]
+  const at = BODY.indexOf(STATUS_CLAIM)
+  assert.ok(at >= 0, `the pasted body no longer states which responses carry a status ("${STATUS_CLAIM}")`)
+  const paragraph = BODY.slice(at).split('\n\n')[0]
 
   const operations = Object.values(SPEC.paths).flatMap((methods) => Object.values(methods)).map((op) => op.operationId)
   const claimed = operations.filter((op) => paragraph.includes(op)).sort()
@@ -732,6 +847,64 @@ withSeed('the responses that carry no nested status are exactly the ones the ins
     'gpt-instructions.md names these operations as returning no nested status summary, but the router disagrees. ' +
       'Whichever changed, both have to say the same thing: the GPT is told to show a status on every response.',
   )
+})
+
+// The same paragraph also enumerates what `startMock` DOES return, and that half
+// was wrong: it said "reports only its `mock` id, `timing` and `rules`" while
+// handleMockStart returns five fields. The two it omitted are not filler —
+// `source`'s own description carries a fact the student needs ("Readiness needs an
+// official sitting inside the judged window"), and both configs set
+// require_official_mock, so a `bank` sitting can never satisfy that criterion
+// however well it goes. A tutor never told to read the field cannot warn him.
+//
+// So the list is checked against the REAL handler's own keys rather than against a
+// count typed in here: a sixth field added to handleMockStart fails this test
+// until the sentence names it.
+const STARTMOCK_CLAIM = '`startMock` reports only its'
+
+test('the startMock exception names every field startMock actually returns', async () => {
+  const at = BODY.indexOf(STARTMOCK_CLAIM)
+  assert.ok(at >= 0, `the pasted body no longer enumerates what startMock returns ("${STARTMOCK_CLAIM}")`)
+  const sentence = BODY.slice(at).split(/\n\n/)[0]
+
+  const returned = Object.keys(await handleMockStart({
+    db: { async startMock() { return 1 } },
+    subject: 'ap_csa', section: 'I', source: 'bank', config: CSA, now: '2027-03-01T12:00:00Z',
+  }))
+  const named = backtickedIdentifiers(sentence)
+  const unnamed = returned.filter((f) => !named.has(f))
+  assert.deepEqual(
+    unnamed, [],
+    `handleMockStart returns ${returned.join(', ')} and the sentence enumerating them omits ${unnamed.join(', ')}, ` +
+      'so the GPT is told a shorter response arrives than really does and never reads the rest.',
+  )
+})
+
+test('the instructions warn that a bank sitting can never satisfy the official-mock criterion', () => {
+  // Driven off the configs, not off a belief about them: while either exam
+  // requires an official sitting, the body has to say a `bank` one cannot be it,
+  // and while neither does, the body may not claim otherwise.
+  const requiring = [CSA, PRECALC].filter((c) => c.readiness.require_official_mock).map((c) => c.subject)
+  const named = backtickedIdentifiers(BODY)
+  const warns = /`official`[^.]*`source`[^.]*`bank`|`bank`[^.]*never satisf/i.test(BODY)
+
+  if (requiring.length) {
+    assert.ok(
+      named.has('official') && named.has('bank'),
+      `${requiring.join(' and ')} require an official sitting, so the body has to name both \`official\` and ` +
+        '`bank` — a real College Board paper logged as `bank` leaves readiness capped with no diagnostic',
+    )
+    assert.ok(
+      warns,
+      `${requiring.join(' and ')} set require_official_mock, so the body must tell him a \`source\` of \`bank\` can ` +
+        'never satisfy it. Without that he sits mock after mock and readiness never moves.',
+    )
+  } else {
+    assert.ok(
+      !warns,
+      'no config requires an official sitting any more, so the body must stop telling him a bank sitting cannot count',
+    )
+  }
 })
 
 // --- the answer keys, all the way through the database ----------------------
@@ -870,27 +1043,150 @@ withSeed('the selector actually serves keyed Precalc items to the student', asyn
   assert.ok(seen.model > 0, `precondition: the bank still holds model-graded Precalc work (keyed: ${seen.keyed})`)
 })
 
-withSeed('the Precalculus warning in the instructions matches what the bank can actually be scored on', () => {
-  const env = freshEnv()
-  const claim = 'A Precalculus sitting drawn from this question bank is rubric-scored throughout'
-  const gradeable = env.sqlite
-    .prepare(`SELECT id, kind FROM items WHERE subject = 'ap_precalc'`)
-    .all()
-    .filter((r) => !MODEL_GRADED.has(r.kind))
-    .map((r) => `${r.id} (${r.kind})`)
+// --- the instructions may not deny what the bank actually holds ---------------
+//
+// THE TEST THAT USED TO LIVE HERE FAILED SILENTLY FOR THE WHOLE LIFE OF THE DEFECT
+// IT EXISTED TO CATCH, and that is the reason this one is shaped differently.
+//
+// It asserted the ABSENCE of one literal sentence — 'A Precalculus sitting drawn
+// from this question bank is rubric-scored throughout' — whenever the bank held
+// mechanically gradeable Precalc items. Commit c109802 landed the keyed Precalc
+// content and, in the same commit, REWORDED the claim to "The Precalculus bank
+// holds no multiple-choice and no free-response questions ... `counted` comes back
+// false on it". From that moment the bank held 62 gradeable Precalc items, the
+// instructions asserted the opposite in front of a fifteen-year-old, and this test
+// PASSED — because it was looking for a sentence the file had stopped using.
+//
+// A guard that cannot fail is worse than no guard: it reports safety it is not
+// providing. So the fact comes from the SEEDED DATABASE (what the student can
+// actually be handed), the forbidden shape is a negation or universal quantifier
+// governing what the bank can ask or mark rather than one spelling of it, and
+// every wording that has actually shipped is kept below as a fixture that each
+// pattern is REQUIRED to catch. A pattern that stops catching its fixtures fails
+// this test rather than quietly matching nothing.
 
-  if (gradeable.length) {
-    assert.ok(
-      !INSTRUCTIONS.includes(claim),
-      `the bank now holds mechanically gradeable Precalc items (${gradeable.join(', ')}), so the instructions ` +
-        `must stop telling him a Precalculus mock always comes back unscored`,
-    )
-  } else {
-    assert.ok(
-      INSTRUCTIONS.includes(claim),
-      'every Precalc item is rubric-scored, so a Precalc mock can never produce a composite. The instructions ' +
-        'have to warn him before he sits one, or a real 42-question effort comes back as "not scored" with no reason.',
-    )
+/**
+ * Wordings of a false claim about the bank that have really been in this file.
+ *
+ * Not history for its own sake: these are the non-vacuity proof. Every pattern in
+ * BANK_CLAIMS has to catch the fixtures it names, so the patterns cannot decay
+ * into a set that matches nothing — which is precisely how the previous version of
+ * this test came to pass on a false file.
+ */
+const SHIPPED_FALSE_CLAIMS = {
+  // dd4c906..0a50e4f — the one literal the previous test looked for.
+  'rubric-scored throughout':
+    'A Precalculus sitting drawn from this question bank is rubric-scored throughout, so it can never produce a composite.',
+  // c109802 — the reword that slipped past it, while the keys were landing.
+  'holds no askable questions':
+    'The Precalculus bank holds no multiple-choice and no free-response questions — so a Precalculus sitting cannot supply either half of the paper, and `counted` comes back false on it.',
+  // Live until this round, in both places the unscored reasons are enumerated.
+  'bank cannot supply the section':
+    'nothing in it could be graded mechanically; the bank cannot supply that section at all (nothing re-sitting can fix).',
+}
+
+/**
+ * A fact the shipped bank establishes, and the claim shape that contradicts it.
+ *
+ * `holds` is measured against the seeded database the Worker really serves from,
+ * so the guard follows the content instead of the wording. `contradicted` is
+ * matched per SENTENCE — a claim is made in a sentence, and that bounds the match
+ * so it cannot bridge two unrelated ones. `instead` is the true statement the body
+ * has to be making in its place; a required literal is safe in that direction,
+ * because rewording it FAILS loudly rather than passing silently.
+ */
+const BANK_CLAIMS = [
+  {
+    fact: 'the Precalculus bank holds items grade.js marks mechanically',
+    holds: (sqlite) => sqlite
+      .prepare(`SELECT id, kind FROM items WHERE subject = 'ap_precalc'`)
+      .all()
+      .filter((r) => !MODEL_GRADED.has(r.kind))
+      .map((r) => `${r.id} (${r.kind})`),
+    // "Precalculus ... is rubric-scored throughout" / "the Precalculus bank holds
+    // no <askable thing>" / "a Precalculus sitting can never be scored". The
+    // negation has to govern what the BANK does, which is what keeps the body's
+    // true "never assume a Precalculus answer went unmarked" — an order to the
+    // model, not a claim about the content — out of it.
+    contradicted: /precalc\w*[^.]*?(?:\brubric-scored throughout\b|\b(?:holds|has|contains|carries|keys)\s+(?:no|none|zero|not one)\b|\bcan\s?never\s+(?:be\s+)?(?:scored|graded|marked|produce)\b)/i,
+    catches: ['rubric-scored throughout', 'holds no askable questions'],
+    instead: 'Many Precalculus items now carry an answer key',
+    because: 'a Precalculus section I sitting of 38 keyed answers comes back counted:true, composite_pct 90.5',
+  },
+  {
+    fact: 'both banks hold free-response items, so section II can be ASKED',
+    holds: (sqlite) => sqlite
+      .prepare(`SELECT id, subject FROM items WHERE kind = 'frq' ORDER BY id`)
+      .all()
+      .map((r) => `${r.id} (${r.subject})`),
+    // The label the body used to hang on the `unsupplied` unscored reason, in both
+    // places it enumerates them. api.js says the opposite outright, and so does its
+    // own basis text: the free-response questions EXIST and are "rubric-scored
+    // rather than mechanically marked". A tutor paraphrasing "cannot supply" tells
+    // him the bank has no free-response questions — false, and it can serve him one
+    // as a drill next turn.
+    contradicted: /\b(?:bank|it|this)\s+cannot\s+supply\b|\bcannot\s+supply\s+(?:that|the|this|either)\b|\b(?:bank|banks)\s+(?:holds|has|contains)\s+(?:no|zero|not one)\s+free[- ]response\b/i,
+    catches: ['holds no askable questions', 'bank cannot supply the section'],
+    instead: 'rubric-scored',
+    because: "the server's own basis says they are rubric-scored rather than mechanically marked, not absent",
+  },
+]
+
+/** The body's sentences, flattened — a claim is made in a sentence. */
+const sentencesOf = (text) => text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/)
+
+test('every forbidden bank claim is a pattern that really catches the wordings that shipped', () => {
+  // The non-vacuity half, run first and without the database: if a pattern stops
+  // matching the sentence it was written for, it is no longer a guard, and this is
+  // the failure the previous version of this test could not produce.
+  for (const claim of BANK_CLAIMS) {
+    for (const name of claim.catches) {
+      const fixture = SHIPPED_FALSE_CLAIMS[name]
+      assert.ok(fixture, `BANK_CLAIMS names a fixture "${name}" that SHIPPED_FALSE_CLAIMS does not define`)
+      assert.match(
+        fixture, claim.contradicted,
+        `the pattern guarding "${claim.fact}" no longer catches the wording that actually shipped ("${name}"), so it ` +
+          'guards nothing. This is the exact failure mode of the phrase-match it replaced.',
+      )
+    }
+  }
+  // And no pattern may be dead weight: every fixture has to be caught by someone.
+  const covered = new Set(BANK_CLAIMS.flatMap((c) => c.catches))
+  const orphans = Object.keys(SHIPPED_FALSE_CLAIMS).filter((n) => !covered.has(n))
+  assert.deepEqual(orphans, [], `these false claims once shipped and nothing guards against them now: ${orphans}`)
+})
+
+withSeed('the instructions deny nothing the shipped bank actually holds', () => {
+  const env = freshEnv()
+  const sentences = sentencesOf(BODY)
+
+  for (const claim of BANK_CLAIMS) {
+    const holds = claim.holds(env.sqlite)
+    const denials = sentences.filter((s) => claim.contradicted.test(s))
+
+    if (holds.length) {
+      assert.deepEqual(
+        denials, [],
+        `${holds.length} item(s) in the shipped bank establish that ${claim.fact} — ${claim.because} — and the ` +
+          `PASTED body denies it:\n  ${denials.join('\n  ')}\nThe items: ${holds.slice(0, 8).join(', ')}` +
+          `${holds.length > 8 ? `, +${holds.length - 8} more` : ''}`,
+      )
+      assert.ok(
+        BODY.includes(claim.instead),
+        `the bank establishes that ${claim.fact}, so the body has to SAY so — it no longer contains ` +
+          `"${claim.instead}". Removing the true statement is the other half of this defect: he is then told ` +
+          'nothing at all about it and the GPT falls back on whatever it assumes.',
+      )
+    } else {
+      // The bank really can be emptied of these, and then the warning is the thing
+      // that must be present: a real 42-question effort otherwise comes back "not
+      // scored" with no reason he was ever given.
+      assert.ok(
+        denials.length,
+        `nothing in the bank establishes that ${claim.fact} any more, so the body has to warn him BEFORE he sits one ` +
+          'rather than staying silent about it',
+      )
+    }
   }
 })
 
@@ -941,11 +1237,18 @@ const UNSCORED_BRANCH_MARKERS = {
 // instead — a different audience (a fifteen-year-old, not the server's basis
 // string), so the phrasing differs, but the SET has to be the same size as
 // UNSCORED_BRANCH_MARKERS, enforced below.
+//
+// `unsupplied` used to read /bank\s+cannot\s+supply/i, which PINNED A FALSE LABEL
+// IN PLACE: both banks hold free-response items (CSA 20, Precalc 4), so nothing is
+// unsupplied — the server's own basis says the questions "are rubric-scored rather
+// than mechanically marked". The marker now follows the server's word, and the
+// supply framing is separately forbidden by BANK_CLAIMS above, which is what stops
+// this from being a marker that merely moved.
 const INSTRUCTIONS_REASON_MARKERS = {
   short: /reach(ed)?[^.]*section/i,
   untimed: /clock|too long|overran|ran past|slack/i,
   ungraded: /graded mechanically/i,
-  unsupplied: /bank\s+cannot\s+supply/i,
+  unsupplied: /rubric-scored[^.]*\bmark/i,
 }
 
 test('the number of reasons api.js can leave a sitting unscored matches what this file checks for', () => {
@@ -1008,15 +1311,16 @@ withSeed('every real reason a mock sitting can go unscored is named in gpt-instr
     }
   }
 
-  // Four real, pairwise-distinct reasons exist today. Both places
-  // gpt-instructions.md enumerates them have to name all four, not fewer.
+  // Four real, pairwise-distinct reasons exist today. Both places the PASTED body
+  // enumerates them have to name all four, not fewer — read from the body, because
+  // a reason named only in the preamble is a reason the model never hears.
   for (const [where, needle] of [
     ['the advisories bullet', 'A proctored sitting was recorded but not scored.'],
     ['the mock-exam walkthrough', '**If `counted` is false:**'],
   ]) {
-    const at = INSTRUCTIONS.indexOf(needle)
-    assert.ok(at >= 0, `gpt-instructions.md no longer has ${where} ("${needle}")`)
-    const rest = INSTRUCTIONS.slice(at + 1)
+    const at = BODY.indexOf(needle)
+    assert.ok(at >= 0, `the pasted body no longer has ${where} ("${needle}")`)
+    const rest = BODY.slice(at + 1)
     const end = rest.search(/\n- \*\*|\n\n/)
     const paragraph = end === -1 ? rest : rest.slice(0, end)
 
@@ -1440,14 +1744,86 @@ withSeed('the answer form the instructions ask for is the one the grader can act
     assert.equal(marked.picked, letter, `${id}: "${MARKED_FORM(letter)}" must resolve to ${letter}`)
   }
 
-  // And the instructions have to be teaching that exact form, not some other one.
+  // And the instructions have to be teaching that exact form, not some other one —
+  // in the PASTED body, since a form taught only in the preamble is taught to nobody.
   assert.ok(
-    INSTRUCTIONS.includes(`"${MARKED_FORM('B')}"`),
-    `gpt-instructions.md must tell him the marked form verbatim, e.g. "${MARKED_FORM('B')}"`,
+    BODY.includes(`"${MARKED_FORM('B')}"`),
+    `the pasted body must tell him the marked form verbatim, e.g. "${MARKED_FORM('B')}"`,
   )
   assert.ok(
     SPEC.components.responses.Log.content['application/json'].schema.properties.graded_by.description
       .includes(MARKED_FORM('B')),
     'the unparsed field description must recommend the same form the instructions do',
   )
+})
+
+// The PRESCRIPTION above survived the content fix. The DIAGNOSIS printed beside it
+// did not, and nothing here could tell: the body said "On some CSA items an
+// option's text is itself a letter, so a bare 'B' is ambiguous and comes back
+// `unparsed`", and told the GPT to demand the marked form "on any item whose option
+// text is a lone letter" — a trigger condition that has been unreachable since the
+// content fix reordered csa-ac-q14, csa-ac-q33 and csa-u2-q7.
+//
+// Swept through the real grade.js: 259 shipped items carry options_json, ZERO
+// letter collisions remain, and all 1036 bare letters over every option of every
+// one of them come back graded_by:'server'. So the body was stating a false fact
+// about the student's own bank, in the one file that reaches him with nothing in
+// between — and the test above had moved its proof to a synthetic fixture, which is
+// right for the grader's contract and left the CLAIM unguarded.
+//
+// This is that guard, in the direction the other one cannot cover: the body may
+// assert a collision in the bank only while the bank actually has one.
+const CLAIMS_A_LETTER_COLLISION = [
+  /an? option'?s?(?: own)? text is (?:itself )?(?:a )?(?:lone |single )?letter/i,
+  /item whose option text is a (?:lone|single) letter/i,
+  /bare "?[A-E]"? is ambiguous/i,
+]
+
+/** The sentences that shipped this claim, as the non-vacuity proof for the above. */
+const SHIPPED_COLLISION_CLAIMS = [
+  'On some CSA items an option\'s text is itself a letter, so a bare "B" is ambiguous and comes back `unparsed`.',
+  'Ask for that after any `unparsed`, and on any item whose option text is a lone letter.',
+]
+
+withSeed('the body claims a letter collision in the bank only while the bank has one', () => {
+  // Non-vacuity first: each pattern has to catch a sentence that really shipped,
+  // and each shipped sentence has to be caught by something. Without this the
+  // whole check degrades into the absence-of-a-literal shape that let the stale
+  // Precalculus claim live (see BANK_CLAIMS).
+  for (const shipped of SHIPPED_COLLISION_CLAIMS) {
+    assert.ok(
+      CLAIMS_A_LETTER_COLLISION.some((p) => p.test(shipped)),
+      `nothing here catches a sentence this file really shipped, so this guards nothing: ${shipped}`,
+    )
+  }
+  for (const pattern of CLAIMS_A_LETTER_COLLISION) {
+    assert.ok(
+      SHIPPED_COLLISION_CLAIMS.some((s) => pattern.test(s)),
+      `${pattern} matches none of the wordings that shipped, so it is dead weight pretending to be a guard`,
+    )
+  }
+
+  const env = freshEnv()
+  const withOptions = env.sqlite
+    .prepare(`SELECT id, kind, answer, options_json FROM items WHERE options_json IS NOT NULL`)
+    .all()
+  const shipped = letterCollisions(withOptions)
+  const claims = CLAIMS_A_LETTER_COLLISION.filter((p) => p.test(BODY))
+
+  if (shipped.length) {
+    assert.ok(
+      claims.length,
+      `${shipped.length} shipped item(s) collide a bare letter with an option label ` +
+        `(${shipped.map((c) => `${c.id}/${c.letter}`).join(', ')}), so the body has to warn him that a bare letter ` +
+        'will be declined on them — otherwise he sends one, gets `unparsed`, and is told nothing about why',
+    )
+  } else {
+    assert.deepEqual(
+      claims.map(String), [],
+      `no shipped item collides a bare letter with an option label — swept ${withOptions.length} item(s) carrying ` +
+        'options through grade.js — so the body may not tell him his bank contains one. It is the only file that ' +
+        'reaches him unmediated, and the prescription (a marked letter, last) stands on its own: the real and only ' +
+        'remaining cause of `unparsed` is prose with no trailing letter.',
+    )
+  }
 })
