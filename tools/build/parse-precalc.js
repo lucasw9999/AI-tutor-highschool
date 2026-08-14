@@ -286,7 +286,7 @@
 // the same reason again: the option line must mean here what it means for CSA,
 // and the bare-letter collision must be judged by the one rule the build already
 // applies rather than by a second copy of it.
-import { grade, normalizeShort } from '../../worker/src/grade.js'
+import { grade, normalizeShort, foldLookalikes } from '../../worker/src/grade.js'
 import { parseOptions } from './parse-mcq.js'
 import { letterOptionCollisions } from './validate.js'
 
@@ -408,6 +408,31 @@ const LABELLED_LIST = /,\s*[a-z][a-z0-9 .()]*[:=]/
 
 /** Plain keyboard characters only: no LaTeX macro, no unicode lookalike. */
 const isTypeable = (text) => /^[\x20-\x7E]+$/.test(text) && !text.includes('\\')
+
+/**
+ * Two phrasings that differ ONLY in characters grade.js folds onto their ASCII
+ * equivalent — `3π/4` against `3pi/4`, `-√2/2` against `-sqrt2/2`.
+ *
+ * The dead-weight gates below are stated in terms of normalizeShort, which is
+ * right — an accepted form has to be judged by the function that will grade it.
+ * The cost of that coupling is that STRENGTHENING the grader turns content that
+ * was correct into a build error: when normalizeShort learned to fold Unicode
+ * lookalikes, nine hand-written `π` and `√` aliases across pc-u3-p1/p2/p5/p8/p10
+ * became redundant and the whole build stopped, with nothing written and the
+ * student served nothing.
+ *
+ * So this one redundancy is exempt. The gate exists to catch an author who did
+ * not realise normalizeShort already covered a difference; an author who wrote
+ * `π/2` before the fold existed was not making that mistake, and the alias is now
+ * harmless by construction rather than by luck — the fold GUARANTEES the two
+ * spellings are graded identically, which is the whole point of it. Every other
+ * kind of dead weight is still a build error, and the exemption is narrow: the
+ * two phrasings must be equal under normalizeShort AND at least one of them must
+ * carry a character the fold actually rewrites.
+ */
+const differsOnlyByFold = (form, other) =>
+  normalizeShort(form) === normalizeShort(other) &&
+  (foldLookalikes(form) !== String(form) || foldLookalikes(other) !== String(other))
 
 /**
  * How a compound answer's parts may be joined by the student: one separator PER
@@ -1262,7 +1287,10 @@ function resolveKey({ decls, stem, unit }) {
     // both named, in one error, and either may be the one deleted.
     for (const [k, alternatives] of parts.entries()) {
       if (alternatives.length < 2) continue
-      const dead = alternatives.filter((_, a) => {
+      const dead = alternatives.filter((alt, a) => {
+        // A phrasing the FOLD made redundant is not an authoring mistake. See
+        // differsOnlyByFold.
+        if (alternatives.some((other) => other !== alt && differsOnlyByFold(alt, other))) return false
         const without = parts.map((p, j) => (j === k ? p.filter((_, i) => i !== a) : p))
         return expand(without).size === expanded.size
       })
@@ -1320,6 +1348,9 @@ function resolveKey({ decls, stem, unit }) {
     const norm = normalizeShort(form)
     if (!norm) continue
     if (seen.has(norm)) {
+      // A phrasing the FOLD made redundant is not an authoring mistake. See
+      // differsOnlyByFold.
+      if (differsOnlyByFold(form, seen.get(norm))) continue
       errors.push(
         `"accept: ${form}" is identical to ${seen.get(norm) === answer ? `the key "${answer}"` : `"${seen.get(norm)}"`} ` +
           `once normalized, so it accepts nothing new — dead weight, and usually a sign that normalizeShort already ` +
@@ -1337,11 +1368,18 @@ function resolveKey({ decls, stem, unit }) {
   // listed in — `part 1: 3pi/4` then `part 1: 3π/4` passed, the same two lines
   // the other way round were refused, and the diagnostic told the author to add
   // a form the item already held.
+  //
+  // The forms are NORMALIZED before the check, which now means folded: a key of
+  // `π/2` or `y = 2x − 1` is typeable on its own, because grade.js credits `pi/2`
+  // and `y = 2x - 1` against it in both directions. What is left for this gate is
+  // what no fold can reach — a LaTeX macro, and the Unicode with no single ASCII
+  // spelling (`≈`, `×`, `·`, `°`, `∈`, `‖`).
   const typeable = [...seen.keys(), ...generated.map(normalizeShort)]
   if (!typeable.some(isTypeable)) {
     errors.push(
-      `no accepted form of "${answer}" can be typed on a plain keyboard (LaTeX macros, or unicode like − and π), ` +
-        `so a student typing the answer the ordinary way is marked wrong. Add the typeable form as ` +
+      `no accepted form of "${answer}" can be typed on a plain keyboard (a LaTeX macro, or unicode grade.js ` +
+        `cannot fold to ASCII, like ≈ or ×), so a student typing the answer the ordinary way is marked wrong. ` +
+        `Add the typeable form as ` +
         `${generated.length ? 'another "part <n>:" phrasing' : '"accept:"'}`,
     )
     return { ...unkeyed, topic }
