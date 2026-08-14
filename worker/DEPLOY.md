@@ -77,21 +77,71 @@ that origin and comes back as HTML, which parses as
 
 `seed.sql` is idempotent — every insert is an upsert and nothing in it touches
 `attempts`, `serves`, `mocks` or `gaps`. Reloading is safe against a live
-database with real evidence in it, and a test asserts that property.
+database with real evidence in it, and `tools/build/tests/to-sql.test.js`
+asserts exactly that: it loads the real file, adds a column the way a later
+migration would, writes one row into each of `attempts`, `serves`, `mocks` and
+`gaps`, reloads twice, and then compares the evidence byte for byte — rows,
+autoincrement counters, and the migration-added column included. It also asserts
+no evidence table references a content table, because `INSERT OR REPLACE` is a
+delete followed by an insert, so a cascading foreign key would erase attempts
+silently.
 
-**Split statements with a quote-aware splitter.** Naively cutting on lines that
-end in `;` corrupts the payload: the CSA stems contain Java, so
-`String csv = "red,green,blue,yellow";` ends a line with a semicolon *inside* a
-SQL string literal. Track single-quote state and treat `''` as an escaped quote.
-Group into ~40 KiB requests to keep the call count low — recompute how many
-that is for whatever `seed.sql` weighs today (currently ~359 KiB; it changes
-every time content is regenerated, so do not assume a fixed call count).
-Measured, not guessed: a naive line-ending-in-`;` split of the current file
-loads **9 of 289 items** and fails 618 of its 639 chunks.
-`tools/build/tests/to-sql.test.js` loads the real file one statement at a time
-through the quote-aware splitter and counts every row back out of the database.
+**Split the file with `splitSqlStatements`, exported from
+`tools/build/to-sql.js`.** Import it — do not re-derive it at deploy time. Two
+things in this file break a splitter written from memory, and both are already
+in it:
 
-### What a reload CANNOT do, and the migration the live database needs
+1. **A `;` inside a string literal.** The CSA stems contain Java, so
+   `String csv = "red,green,blue,yellow";` ends a line with a semicolon *inside*
+   a SQL literal. Cutting on lines that end in `;` cuts there.
+2. **A `;` or a lone apostrophe inside a comment.** `schema.sql` is embedded
+   here verbatim and its prose contains both — `-- ALTER TABLE attempts ADD
+   COLUMN picked TEXT;` and `that column's absence`. Tracking quote state
+   *without* tracking comments is not enough: that apostrophe reads as the start
+   of a literal, and statement boundaries stop being seen until the next
+   apostrophe. Parity is what decides it, so adding one apostrophe to any
+   comment in the file inverts the state for everything after it — a pure
+   documentation edit that takes the load from every item to none.
+
+`splitSqlStatements` treats single-quoted literals (with `''` escaped), quoted
+identifiers, `--` lines and `/* */` blocks as opaque. The test suite loads each
+statement it returns on its own with `prepare()` — which compiles exactly one
+statement, so anything glued on behind it would be skipped and the row counts
+would not reconcile.
+
+**Group whole statements into requests; never split a statement.** ~40 KiB per
+request is a reasonable target for the small ones, but it is not achievable
+across the board and never will be: three statements in the current file are
+each larger than 40 KiB on their own (see the table), so each has to travel as a
+request of its own, at roughly twice the target. A statement is indivisible.
+
+**D1 rejects any single statement over 100,000 bytes**
+([limits](https://developers.cloudflare.com/d1/platform/limits/)), and that
+limit is per statement even inside a batch, so grouping cannot amortize it.
+Nothing at load time will warn you: `node:sqlite` accepts a 140 KB statement
+without complaint, so an over-limit file passes every test here and then fails
+*partway through* the live load, leaving the database half-seeded. `npm run
+seed:sql` therefore gates it, refuses to write the file if any statement is over,
+and prints the largest statement as a percentage of the limit. If the gate ever
+fires, lower the `chunk` size in `insertStatements()` and regenerate.
+
+### The numbers, as measured
+
+Every figure below is **checked by `tools/build/tests/to-sql.test.js` against the
+real `worker/seed.sql`**, so it cannot go stale the way the hand-written figures
+in this file did three times. If content is regenerated and a number moves, the
+suite fails and names the new value — update the table, do not silence it.
+
+| What | Measured |
+|---|---|
+| `seed.sql`, total | **420364 bytes** (410.5 KiB) |
+| statements | **28** |
+| largest statement | **93723 bytes** = 93.7% of the limit, 6277 bytes of headroom |
+| statements over 40 KiB | **3**: 77993, 93723, 53088 bytes |
+| that largest one, plus one more row shaped like the heaviest item in the bank (`pc-u1-p5`) | **136439 bytes** = 136.4% of the limit |
+| a naive line-ending-in-`;` split of it | loads **56 of 336** items, fails **618 of 640** chunks |
+
+### What a reload CANNOT do, and the migration the live database needed
 
 Two things `seed.sql` will never do to a database that already exists, because
 every `CREATE TABLE` in it is `IF NOT EXISTS` and every write is an upsert:
@@ -104,7 +154,15 @@ every `CREATE TABLE` in it is `IF NOT EXISTS` and every write is an upsert:
    `coverageOf` (api.js), which pins readiness at 0 through the coverage
    criterion and inflates the dashboard's "N/M topics attempted" chip.
 
-Both apply right now. Run these against the deployed D1, **in this order**:
+Both are permanent properties of the file, and both bit the live database once.
+**Their migration has already been run** — `attempts.picked` exists and the four
+`<unit>.0` placeholder topics are gone (see "Closed since the last deploy"), and
+the current `seed.sql` carries 0 placeholder rows and 0 items pointing at one. So
+do **not** run the block below against the live database again: step 1 fails with
+"duplicate column name" and step 3 is a no-op. It is kept because the order is
+the load-bearing part, and any future rebuild of this database, or any future
+column, needs it. Run these against a D1 that has not had them, **in this
+order**:
 
 ```sql
 -- 1. attempts.picked, added to schema.sql after the table shipped. Check first:
@@ -113,9 +171,10 @@ Both apply right now. Run these against the deployed D1, **in this order**:
 --    so re-running it on a migrated database errors with "duplicate column name".
 ALTER TABLE attempts ADD COLUMN picked TEXT;
 
--- 2. Reload the regenerated seed.sql (quote-aware split, ~40 KiB batches). This
---    repoints every Precalc item from its <unit>.0 placeholder onto its real CED
---    topic, so nothing references the placeholders after this step.
+-- 2. Reload the regenerated seed.sql (split with splitSqlStatements, whole
+--    statements per request). This repoints every Precalc item from its <unit>.0
+--    placeholder onto its real CED topic, so nothing references the placeholders
+--    after this step.
 --    ... seed.sql ...
 
 -- 3. Delete the four placeholder topic rows the reload leaves behind. 1.0, 2.0
@@ -133,7 +192,7 @@ before: `items` = 336, `topics` = 97, `teaching` = 97,
 `SELECT count(*) FROM items i LEFT JOIN topics t ON t.id = i.topic AND
 t.subject = i.subject WHERE t.id IS NULL` = 0, and for ap_precalc
 `constructed` = 24, `constructed_model_graded` = 29, `mcq` = 38, `frq` = 4 (62
-of the 95 keyed). All of that was confirmed live after the migration below.
+of the 95 keyed). All of that was confirmed live after the migration above.
 
 **One honest consequence.** Any Precalc attempt logged before this migration was
 recorded against a `<unit>.0` placeholder, and `attempts.topic` is stored as it

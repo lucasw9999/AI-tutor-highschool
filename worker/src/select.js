@@ -3,9 +3,11 @@
 // The selector is deterministic on purpose. Given the same history it makes the
 // same choice — including when the bank arrives in a different order — so a
 // disputed question can be replayed and explained. Every return value carries a
-// `reason`, which the status view shows verbatim — the student should never
-// wonder why he is being asked something, and the reason must never claim more
-// than the evidence supports.
+// `reason`, and the student reads it: api.js returns it as `/next`'s `why`, and
+// gpt-instructions.md tells the tutor to tell him the `why`. (It does NOT reach
+// the status view — `summarize` and `handleStatus` carry no reason field, only
+// numbers and criteria.) He should never wonder why he is being asked something,
+// and the reason must never claim more than the evidence supports.
 //
 // Priority order, highest first:
 //   1. Re-test a taught gap cold. A gap closes only on an unaided correct answer.
@@ -22,8 +24,18 @@
 // "Weakest" is judged on RECENCY-WEIGHTED accuracy, not on lifetime accuracy: over
 // a nine-month run a topic drilled to 100% in September still read 100% in May, so
 // selecting on "below the floor" steered practice away from exactly the material
-// he had had longest to forget. See topicStats — every percentage the student or
-// parent is SHOWN is still the plain unweighted one, computed in readiness.js.
+// he had had longest to forget. See topicStats.
+//
+// WHERE THE WEIGHTED FIGURE IS AND IS NOT SHOWN, precisely, because a looser
+// version of this sentence has twice been read as a guarantee it is not. Every
+// number COMPUTED BY readiness.js — the composite, mcq_overall, every per-unit
+// floor, the parent dashboard — is the plain unweighted one, and readiness.js
+// cannot see this module's weighting at all. But the weighted figure IS shown to
+// the student, in the `reason` above: `statedPct` prints it, and it reaches him as
+// `/next`'s `why`. That is deliberate — the number that chose the question is the
+// number the sentence has to name — and it is only honest because `statedPct`
+// never prints it alone: the lifetime figure, the answer count it rests on, and
+// which way the weighting moved it all go in the same sentence.
 //
 // Each of those branches asks for a specific topic, and each draws from that
 // topic's OWN pool: its never-asked items first, then its items whose reuse
@@ -54,26 +66,37 @@
 //     Padding a paper from the class-only tiers puts material readiness
 //     deliberately excludes into a composite that has no unit filter.
 //
-// The bank is FINITE, and that is a supply constraint, not an edge case. 218 CSA
-// items at the ~50 answers a day db.js sizes itself for is four days of unique
-// questions; a scored sitting needs 38 of them at once and readiness asks for six
-// sittings. So this module has to answer "what do I serve when everything has been
-// seen recently?", and the answer cannot be "nothing": refusing to serve turns
-// into a 409 on every drill and every mock, i.e. the tutor stops working entirely
-// for weeks. It serves the least-recently-seen item instead and SAYS, in the same
-// `reason` the student reads, that this is a question he has already answered and
-// therefore a memory check rather than fresh evidence. Two rules keep that honest:
-// a repeat never displaces a fresh question WITHIN the pool being drawn from, and
-// no item may appear twice on the SAME paper — the same question twice is not two
-// questions of evidence, whatever the bank is short of.
+// The bank is FINITE, and that is a supply constraint, not an edge case. The 241
+// seeded CSA items (221 mcq + 20 frq) at the ~50 answers a day db.js sizes itself
+// for is five days of unique questions; a scored sitting needs 38 of them at once
+// and readiness asks for six sittings. So this module has to answer "what do I
+// serve when everything has been seen recently?", and the answer cannot be
+// "nothing": refusing to serve turns into a 409 on every drill and every mock,
+// i.e. the tutor stops working entirely for weeks. It serves the
+// least-recently-seen item instead and SAYS, in the same `reason` the student
+// reads, that this is a question he has already answered and therefore a memory
+// check rather than fresh evidence. Two rules keep that honest: a repeat never
+// displaces a fresh question WITHIN the pool being drawn from, and no item may
+// appear twice on the SAME paper — the same question twice is not two questions of
+// evidence, whatever the bank is short of.
 //
 // "Within the pool being drawn from" is the exact scope, and the qualifier is
-// load-bearing. In ordinary practice the pool is the whole bank, so the rule is
-// global: while any item anywhere is outside the window, nothing inside it is
-// served. Inside a sitting the pool is the topic the exam-weighted apportionment
-// landed on, so a unit whose own questions are all inside the window contributes
-// labelled repeats rather than nothing at all. The alternative is a paper missing
-// a unit, which is silent and scores him HIGH on the material he skipped.
+// load-bearing. There are three pools, and the first is the default:
+//   - Ordinary practice draws from the whole bank, so the rule is global: while
+//     any item anywhere is outside the window, nothing inside it is served.
+//   - Inside a sitting the pool is the topic the exam-weighted apportionment
+//     landed on, so a unit whose own questions are all inside the window
+//     contributes labelled repeats rather than nothing at all. The alternative is
+//     a paper missing a unit, which is silent and scores him HIGH on the material
+//     he skipped.
+//   - On the RESERVED review slot the pool is the topic that has come due, for the
+//     same reason and with the same labelling. Four of the five review intervals
+//     are shorter than the reuse windows the configs ship, so a topic that comes
+//     due on the early schedule has its own answered questions inside the window
+//     by construction; under the global rule its due review was dropped in
+//     silence. See serveReview. This is the ONLY place ordinary practice reaches
+//     inside the window while something outside it exists, and it is bounded to one
+//     question in REVIEW_SHARE.
 //
 // A degraded repeat is reported twice over: in the `reason` the student reads, and
 // as `repeat: true` plus a `repeat_of` marker naming the earlier answer, which is
@@ -88,11 +111,16 @@ const DAY_MS = 86400000
  * Fallback no-repeat window, in days, when the subject's config names none.
  *
  * The right value is a property of the BANK, not of this code — roughly how long
- * the bank lasts at the volume the student actually drills at (218 items at 10 a
- * day is three weeks) — so it belongs in worker/config/<subject>.json under
- * readiness.reuse_days, where it can be sized to the bank it governs. This
- * constant only covers a config that has not said. tools/build/validate.js
- * re-states it, and a test fails if the two ever disagree.
+ * the bank lasts at the volume the student actually drills at (the 241 seeded CSA
+ * items at 10 a day is about three and a half weeks) — so it belongs in
+ * worker/config/<subject>.json under readiness.reuse_days, where it can be sized
+ * to the bank it governs. This constant only covers a config that has not said.
+ * tools/build/validate.js re-states it, and a test fails if the two ever disagree.
+ *
+ * It is NOT the only thing a window has to be sized against. A window longer than
+ * a review interval means a topic that comes due on that interval has its own
+ * answered questions inside it, and every shipped window is longer than most of
+ * the intervals — see serveReview, which is what stops that dropping the review.
  */
 export const DEFAULT_REUSE_DAYS = 56
 
@@ -122,7 +150,10 @@ export function reviewInterval(streak) {
 
 /**
  * How long an answer keeps half its weight, in days, in the accuracy that drives
- * SELECTION. Nothing the student or parent is SHOWN is weighted — see topicStats.
+ * SELECTION. No number readiness.js COMPUTES is weighted — the composite, every
+ * per-unit floor and the dashboard are all plain unweighted percentages. The
+ * weighted figure does reach the student, in this module's own `reason`, and never
+ * without the lifetime figure beside it: see topicStats and statedPct.
  *
  * WHY THERE IS A HALF-LIFE AT ALL. Lifetime accuracy is the wrong question for
  * "what should he practise next?" over a nine-month run. A topic drilled to 100%
@@ -158,15 +189,31 @@ function recencyWeight(ts, now) {
  * measure decay rather than merely re-describe the same ratio:
  *
  *   - Both halves of the fraction are weighted, so a topic whose answers are ALL
- *     equally old would come out at exactly its lifetime figure. Decay alone
- *     cannot move a ratio.
+ *     equally old comes out at exactly its lifetime figure — PROVIDED they still
+ *     weigh one answer's worth between them. Decay alone cannot move a ratio; the
+ *     divisor floor below can, and does.
  *   - The divisor is therefore floored at ONE fresh answer's worth of weight.
  *     Below that the topic is scaled down in proportion to the evidence still
  *     standing: three right answers eight months ago carry 0.012 of an answer's
  *     worth of weight between them, so the topic reads ~1% rather than 100%. That
  *     floor is what makes "he has not touched this since September" visible, and
  *     it is why a topic he HAS worked recently is unaffected — one right answer
- *     today is a full answer's worth of weight, and still reads 100%.
+ *     today is a full answer's worth of weight, and still reads 100%. It is also
+ *     why the bullet above is conditional: one correct and one wrong answer both
+ *     60 days old weigh 0.5 between them, so that topic reads 25% against a
+ *     lifetime 50% even though its two answers are the same age.
+ *
+ * WHAT THE FLOOR COSTS, recorded because it is a real consequence of a deliberate
+ * choice and not a defect: it shrinks a low-confidence estimate toward 0%, not
+ * toward a prior. So at equal exam weight a topic answered 3-for-3 eight months
+ * ago (reads ~1%) outranks a topic answered 8 of 10 WRONG this morning (reads
+ * 20%) — and keeps outranking it down to 7 of 10 wrong. The design goal, "go
+ * re-prove old material", is defensible; encoding it as shrink-to-zero makes "you
+ * have not proved this lately" strictly more urgent than "you demonstrably cannot
+ * do this". A shrinkage estimator toward a prior mean would keep the decay and
+ * order those two cases the other way round. NOT changed here: the formula is
+ * documented to the digit in the bullets above and its worked example verifies,
+ * so changing it is a design decision, not a fix.
  *
  * @param {string|null} now  The moment the weighting is relative to. Without it
  *        `recent_pct` is null rather than a number silently equal to `pct`: a
@@ -651,15 +698,31 @@ export function pickNext({
    * who has 100% of this topic's answers right can check "3%" and find it false,
    * and a reason he can catch out is worse than no reason. So the sentence says
    * what the number is, and what the raw record says, and why they differ.
+   *
+   * WHICH WAY they differ is part of that, and it is not a constant. `recent_pct`
+   * is below `pct` when the topic has decayed, and ABOVE it whenever the misses
+   * are older than the correct answers — which is the shape of every topic he has
+   * pulled up, and which recency weighting guarantees for it. The sentence used to
+   * say "weighted down" unconditionally: on the real CSA bank at 8 answers a day,
+   * 133 of the reasons served in 90 days named a figure HIGHER than the lifetime
+   * one and called it that lifetime figure weighted down. 72 is not 40 weighted
+   * down; that is arithmetic he can check, in the one sentence that may never be
+   * checkable and false.
+   *
+   * The direction is read off the ROUNDED pair, because the rounded pair is what
+   * he is shown, and the explanation has to describe the numbers beside it rather
+   * than the full-precision ones behind them.
    */
   const statedPct = (s) => {
     const recent = held(s).toFixed(0)
     const lifetime = s.pct.toFixed(0)
-    return recent === lifetime
-      ? `${recent}%`
-      : `${recent}% on recent evidence (${lifetime}% across all ${s.n} answer(s) ever, weighted down because an ` +
-        `answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days — work you have not repeated is not ` +
-        `evidence about today)`
+    if (recent === lifetime) return `${recent}%`
+    const because = Number(recent) < Number(lifetime)
+      ? `weighted down because an answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days — work you have `
+        + 'not repeated is not evidence about today'
+      : `higher than that because an answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days and the `
+        + 'questions you missed on this are older than the ones you got right — the recent record is the better one'
+    return `${recent}% on recent evidence (${lifetime}% across all ${s.n} answer(s) ever, ${because})`
   }
   const weak = [...stats.entries()]
     .filter(([topic, s]) => held(s) < floor && isTested(topic))
@@ -679,13 +742,31 @@ export function pickNext({
   //    around did not execute at all.
   //
   //    One ordinary-practice question in REVIEW_SHARE is reserved for a due review
-  //    instead. Three reasons for that number: remediation keeps the majority of
-  //    the session while anything is genuinely below its floor, which is the right
-  //    balance early on; at the ~8 answers a day the configs size the bank for, a
-  //    third is around 2-3 reviews a day, enough to work down a due queue that is
-  //    small at steady state (only topics with a past miss that are past their
-  //    interval); and a due review waits at most two questions, so a 1-day
-  //    interval is still honoured inside one short session.
+  //    instead. Reasons for that number, and what it actually delivers — the three
+  //    quantities that used to stand here were all asserted rather than measured,
+  //    and all three were false:
+  //      - Remediation keeps the majority of the session while anything is
+  //        genuinely below its floor, which is the right balance early on. That
+  //        one holds: a reserve of one in three is a CEILING on review, not a
+  //        quota.
+  //      - It is a ceiling because a reserved slot with nothing due, or with
+  //        nothing due that remediation is not already about to serve, goes back to
+  //        remediation. Measured over the real banks at the ~8 answers a day the
+  //        configs size themselves for, 90 days, 720 ordinary answers: review takes
+  //        15.1% of them on CSA (1.2 a day, 84 of 240 reserved slots claimed, 148
+  //        of the rest holding nothing but topics already below their floor) and
+  //        22.1% on Precalc (1.8 a day). NOT "around 2-3 reviews a day"; and before
+  //        serveReview's second pass it was 10.3% and 0.8 a day on CSA, because the
+  //        reuse window was eating the queue.
+  //      - A due review waits at most REVIEW_SHARE - 1 ordinary questions when it
+  //        is at the head of the queue, so a 1-day interval survives one short
+  //        session. Behind k other due topics it waits about k * REVIEW_SHARE, and
+  //        a topic can drop into remediation's hands and back out while it waits.
+  //        Measured on the same runs: median 1 question, worst 7 (CSA) and 25
+  //        (Precalc). Before: median 29 and worst 135 on CSA, and counting every
+  //        topic that came due rather than only the ones the reserve owed, median
+  //        77 and worst 702 — reviews that came due in week two and were still
+  //        waiting in week thirteen.
   //
   //    Which slot is the reserved one is a function of the recorded history —
   //    ordinary-practice attempts only, so a 42-answer paper cannot rotate the
@@ -704,29 +785,95 @@ export function pickNext({
    * serve it in a moment, with a reason that describes it accurately — and
    * spending the reserved slot on it would relabel remediation as spaced review
    * and leave the actual review queue exactly as starved as before.
+   *
+   * TWO PASSES OVER THE QUEUE, and the second one is what makes this branch
+   * reachable at all. The first draws from `servable`, where the reuse decision
+   * has already been taken globally, so a due topic that still has a question he
+   * has not answered recently is served with it — freshness first, and across the
+   * whole queue, so a fresh review is never passed over for a repeat on a more
+   * overdue topic.
+   *
+   * The second pass draws from the topic's OWN items instead, and only on the
+   * reserved slot. It exists because four of the five review intervals — 1, 3, 7
+   * and 16 days — are SHORTER than the reuse windows the configs ship (28 days on
+   * CSA, 14 on Precalc). A topic that comes due on the early schedule therefore
+   * has its own answered questions INSIDE the no-repeat window by construction,
+   * and once its never-asked ones are gone `servable` holds none of them: the
+   * first pass finds an empty pool and the due review is dropped in silence. That
+   * is not a corner. Measured on the real banks at 8 answers a day for 90 days —
+   * 720 ordinary questions, the run select.test.js drives — it emptied 146 of
+   * CSA's 240 reserved slots and 125 of Precalc's, held the realized review share
+   * to 10.3% against a ceiling of 33%, and left a due review the reserve was
+   * responsible for waiting a median of 29 questions and a worst case of 135.
+   * Counting every topic that came due, including the ones remediation was already
+   * handling: median 77, worst 702, and 10 of the 47 that came due never reviewed
+   * in 90 days. The 1/3/7/16/35 schedule this module is built around did not run.
+   *
+   * Serving the topic's own most-forgotten question instead is the same trade the
+   * mock branch already makes, for the same reason and with the same two
+   * safeguards. It is HONEST because `serve` labels it — `repeat: true`,
+   * `repeat_of`, and a sentence saying he has answered this exact question before,
+   * so a remembered answer is never sold as fresh evidence. It does not break the
+   * no-repeat window's purpose, because `poolFor` still prefers a never-asked
+   * question, then one whose window has passed, and only then the LEAST RECENTLY
+   * SEEN of what is left — so a review is never served with the very question he
+   * just answered while any alternative exists. And it is confined to the reserved
+   * slot, which is the one question in REVIEW_SHARE the module has already decided
+   * to spend on review whatever else was available: outside the reserve the global
+   * rule stands unchanged, and a repeat never displaces a fresh question there.
+   *
+   * Deterministic in both passes: `due` is ordered by how overdue it is then by
+   * name, `poolFor` sorts by least-recently-seen then exam weight then id, and
+   * neither reads a clock beyond `now` or an RNG.
+   *
+   * One consequence worth naming, because it bounds how bad a reserved repeat can
+   * be: it can never hand back a question he answered TODAY. `due` requires the
+   * topic's most recent answer to be at least its review interval old, and no
+   * question of that topic can have been answered more recently than that, so
+   * whatever the second pass reaches for is at least one interval — one day at the
+   * very shortest — behind him.
+   *
+   * AND ONE COST, measured on the same runs and owed to api.js rather than fixable
+   * here. On CSA this second pass is the first thing that makes ordinary practice
+   * serve repeats at all: 0 of 720 before, 69 after, all of them reviews. Every one
+   * is labelled in the `reason` and carries `repeat` / `repeat_of` — but nothing
+   * downstream reads either yet (handleNext does not forward the flag, and
+   * readiness counts a remembered correct answer into mcq_overall exactly like a
+   * first-time one), so the honesty is currently prose-only. That gap is the one
+   * `serve` already records; this change puts ~10% of CSA's ordinary practice
+   * through it where there was none before. Precalc, whose 95-item bank was already
+   * being recycled, went the other way: 262 repeats before, 243 after.
    */
   const serveReview = (reserved = false) => {
     const skip = reserved ? new Set(weak.map((w) => w.topic)) : new Set()
-    for (const [topic, s] of due) {
-      if (skip.has(topic)) continue
-      const pool = poolFor(topic)
-      if (!pool.length) continue
-      const days = ageDays(s.last_ts, now).toFixed(0)
-      // Only on the reserved slot, and only when something really is below its
-      // floor: the student is looking at a review while the status view names a
-      // weak topic, and the two have to agree about what is going on.
-      const displaced = reserved ? weak[0] : null
-      return serve({
-        item: pool[0],
-        priority: 'review',
-        conditions: 'cold',
-        reason: `Spaced review of ${topic} — you missed it before, and it has been ${days} days. Checking it stuck.`
-          + (displaced
-            ? ` ${displaced.topic} is at ${statedPct(displaced.s)} and is still the next thing to work on, but one `
-              + `ordinary question in ${REVIEW_SHARE} is kept for a review that has come due: with remediation always `
-              + `first, a review would never be served at all.`
-            : ''),
-      })
+    for (const pool of reserved ? [servable, universe] : [servable]) {
+      for (const [topic, s] of due) {
+        if (skip.has(topic)) continue
+        const own = poolFor(topic, pool)
+        if (!own.length) continue
+        // Whole CALENDAR days, the unit calendarDaysAgo exists for and the same
+        // unit as the repeat sentence `serve` may append to this one. Elapsed days
+        // rounded with toFixed(0) put "it has been 1 days" and "you answered it 2
+        // days ago" in one sentence about one gap — and rounded a 36-hour gap down
+        // to "1" while the calendar had already turned twice.
+        const days = calendarDaysAgo(s.last_ts, now)
+        // Only on the reserved slot, and only when something really is below its
+        // floor: the student is looking at a review while the status view names a
+        // weak topic, and the two have to agree about what is going on.
+        const displaced = reserved ? weak[0] : null
+        return serve({
+          item: own[0],
+          priority: 'review',
+          conditions: 'cold',
+          reason: `Spaced review of ${topic} — you missed it before, and it has been `
+            + `${days === 1 ? '1 day' : `${days} days`}. Checking it stuck.`
+            + (displaced
+              ? ` ${displaced.topic} is at ${statedPct(displaced.s)} and is still the next thing to work on, but one `
+                + `ordinary question in ${REVIEW_SHARE} is kept for a review that has come due: with remediation always `
+                + `first, a review would never be served at all.`
+              : ''),
+        })
+      }
     }
     return null
   }

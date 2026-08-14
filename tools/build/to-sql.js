@@ -57,7 +57,9 @@ export function teachingRows(teaching) {
   ])
 }
 
-/** Chunk rows into multi-value INSERTs; D1 rejects very large single statements. */
+/** Chunk rows into multi-value INSERTs; D1 rejects any single statement over
+ * D1_MAX_STATEMENT_BYTES. 40 rows is not a measurement, so main() gates the
+ * generated file against the real limit rather than trusting this number. */
 function insertStatements(table, columns, rows, chunk = 40) {
   const out = []
   for (let i = 0; i < rows.length; i += chunk) {
@@ -98,6 +100,134 @@ export function buildSql({ items, topics, teaching, schema }) {
   return parts.join('\n')
 }
 
+// --- Splitting the generated file for the deploy ----------------------------
+//
+// Nothing in the deploy path hands this file to a client that swallows a whole
+// script: the seed reaches D1 as HTTP requests carrying statements (see
+// worker/DEPLOY.md), so something has to cut the file into statements first.
+// That cut is the one step where a perfectly correct file can be corrupted
+// without looking corrupted, and it has two hazards, both real in THIS file:
+//
+//   1. A `;` inside a string literal. CSA stems contain Java, so
+//      `String csv = "red,green,blue,yellow";` ends a line with a semicolon
+//      *inside* a SQL literal. Cutting there yields two invalid halves.
+//   2. A lone apostrophe inside a comment. worker/schema.sql is embedded in
+//      this file verbatim and its prose says "that column's absence"; it also
+//      writes a `;` inside a `--` line. A splitter that tracks quote state but
+//      has no notion of comments reads that apostrophe as the start of a
+//      literal and then stops seeing statement boundaries until the next
+//      apostrophe — silently gluing statements together. Because parity is
+//      what decides this, adding a single apostrophe to a comment anywhere in
+//      the file inverts the state for everything after it and the load fails
+//      almost completely, from a pure documentation edit.
+//
+// So the splitter is exported from here, tested here, and named in the runbook,
+// instead of being described in prose for a human to re-derive at deploy time.
+// A re-derived splitter is not the splitter the tests cover.
+
+/**
+ * Split a SQL script into individually executable statements.
+ *
+ * Opaque regions, in which a `;` ends nothing and an apostrophe means nothing:
+ * `'single-quoted literals'` (where `''` is an escaped quote), `"quoted
+ * identifiers"` (where `""` is escaped), `--` line comments, and slash-star
+ * block comments.
+ *
+ * Each returned statement is trimmed, keeps the comments that precede it, and
+ * ends with its own `;`. Comment-only text is not a statement: it attaches to
+ * the statement that follows it, and at end-of-file it is dropped.
+ */
+export function splitSqlStatements(sql) {
+  const statements = []
+  let current = ''
+  let sawCode = false // has anything other than comments/whitespace accumulated?
+  let i = 0
+  while (i < sql.length) {
+    const c = sql[i]
+    const next = sql[i + 1]
+
+    if (c === '-' && next === '-') {
+      // Runs to end of line. Its apostrophes and semicolons are prose.
+      while (i < sql.length && sql[i] !== '\n') current += sql[i++]
+      continue
+    }
+    if (c === '/' && next === '*') {
+      // Same, but it may span lines. An unterminated block runs to EOF.
+      current += '/*'
+      i += 2
+      while (i < sql.length && !(sql[i] === '*' && sql[i + 1] === '/')) current += sql[i++]
+      current += sql.slice(i, i + 2)
+      i += 2
+      continue
+    }
+    if (c === "'" || c === '"') {
+      // A doubled delimiter is an escaped one and stays inside the region, so
+      // `''` and `""` do not end it. Everything else in here is data.
+      sawCode = true
+      current += c
+      i++
+      while (i < sql.length) {
+        if (sql[i] === c && sql[i + 1] === c) { current += c + c; i += 2; continue }
+        if (sql[i] === c) { current += sql[i++]; break }
+        current += sql[i++]
+      }
+      continue
+    }
+    if (c === ';') {
+      i++
+      if (!sawCode) continue // an empty statement: comment punctuation, or `;;`
+      statements.push(`${current};`.trim())
+      current = ''
+      sawCode = false
+      continue
+    }
+    if (!/\s/.test(c)) sawCode = true
+    current += c
+    i++
+  }
+  if (sawCode) statements.push(current.trim()) // a final statement with no `;`
+  return statements
+}
+
+/**
+ * Cloudflare D1's documented ceiling on ONE SQL statement, in BYTES.
+ *
+ * "Maximum SQL statement length — 100,000 bytes", from
+ * https://developers.cloudflare.com/d1/platform/limits/. The same page notes
+ * that the per-query limits apply to each individual statement contained
+ * within a batch, so grouping statements into fewer requests does not amortize
+ * this one: it is per statement, always.
+ *
+ * Nothing local enforces it. node:sqlite accepts a 140 KB statement without
+ * complaint, so a load that passes every test here can still fail partway
+ * through against live D1, leaving the database half-seeded. That is why the
+ * check below runs at generation time.
+ */
+export const D1_MAX_STATEMENT_BYTES = 100_000
+
+/** The first line of real SQL in a statement, for error messages. */
+function statementHead(statement, width = 60) {
+  return statement
+    .split('\n').filter((line) => !/^\s*--/.test(line)).join(' ')
+    .replace(/\s+/g, ' ').trim().slice(0, width)
+}
+
+/** Every statement's size in real UTF-8 bytes, in file order. Byte length, not
+ * `.length`: every D1 limit is specified in bytes, and this content is full of
+ * multi-byte characters, which `.length` undercounts. */
+export function statementSizes(sql) {
+  return splitSqlStatements(sql).map((statement, i) => ({
+    index: i + 1,
+    bytes: Buffer.byteLength(statement),
+    head: statementHead(statement),
+  }))
+}
+
+/** The statements D1 would reject as too long, largest first. */
+export function oversizedStatements(sql, limit = D1_MAX_STATEMENT_BYTES) {
+  return statementSizes(sql).filter((s) => s.bytes > limit).sort((a, b) => b.bytes - a.bytes)
+}
+
 function main() {
   const root = process.cwd()
   const read = (f) => JSON.parse(readFileSync(join(root, 'content', f), 'utf8'))
@@ -113,20 +243,52 @@ function main() {
     // so it must be a hard error rather than a NULL unit.
     console.error(`ERROR: ${orphans.length} item(s) reference a topic with no row:`)
     for (const o of orphans.slice(0, 10)) console.error(`  ${o.id} -> topic ${o.topic}`)
+    if (orphans.length > 10) console.error(`  ...and ${orphans.length - 10} more`)
     process.exit(1)
   }
 
   const sql = buildSql({ items, topics, teaching, schema })
+
+  // D1 rejects any statement over its documented byte ceiling, and nothing else
+  // in this project can catch that: node:sqlite has no such limit, so a file
+  // with an over-limit statement passes every local test and then fails partway
+  // through the real load, leaving the live database half-seeded.
+  const oversized = oversizedStatements(sql)
+  if (oversized.length) {
+    console.error(
+      `ERROR: ${oversized.length} statement(s) exceed D1's documented ` +
+      `${D1_MAX_STATEMENT_BYTES}-byte limit on one SQL statement ` +
+      '(https://developers.cloudflare.com/d1/platform/limits/):',
+    )
+    for (const s of oversized.slice(0, 10)) {
+      console.error(`  statement ${s.index}: ${s.bytes} bytes -- ${s.head}`)
+    }
+    if (oversized.length > 10) console.error(`  ...and ${oversized.length - 10} more`)
+    console.error('  Batching cannot amortize this; the limit is per statement.')
+    console.error('  Lower the `chunk` size in insertStatements() and regenerate.')
+    process.exit(1)
+  }
+
   const out = join(root, 'worker', 'seed.sql')
   writeFileSync(out, sql)
 
   const bySubject = {}
   for (const it of items) bySubject[it.subject] = (bySubject[it.subject] ?? 0) + 1
+  const bytes = Buffer.byteLength(sql)
+  const sizes = statementSizes(sql)
+  const largest = sizes.reduce((a, b) => (b.bytes > a.bytes ? b : a))
   console.log(`wrote ${out}`)
   console.log(`  items:    ${items.length} (${Object.entries(bySubject).map(([k, v]) => `${k}=${v}`).join(', ')})`)
   console.log(`  topics:   ${topics.length}`)
   console.log(`  teaching: ${teaching.length}`)
-  console.log(`  size:     ${(sql.length / 1024).toFixed(0)} KiB`)
+  // Bytes, not `.length`: UTF-16 code units undercount this file by thousands,
+  // and every D1 limit is expressed in bytes.
+  console.log(`  size:     ${bytes} bytes UTF-8 (${(bytes / 1024).toFixed(1)} KiB)`)
+  console.log(
+    `  largest statement: ${largest.bytes} bytes = ` +
+    `${((largest.bytes / D1_MAX_STATEMENT_BYTES) * 100).toFixed(1)}% of D1's ` +
+    `${D1_MAX_STATEMENT_BYTES}-byte limit (statement ${largest.index} of ${sizes.length})`,
+  )
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main()
