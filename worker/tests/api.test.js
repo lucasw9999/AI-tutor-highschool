@@ -2555,11 +2555,27 @@ test('a sitting on a bank with no exam-shaped question of its own is still real 
   assert.match(r.basis, /0 exam-tested multiple choice question\(s\)/, r.basis)
 })
 
-test('the divisor identity holds on a paper the bank can only partly supply', async () => {
+test('a question the bank cannot ask is neither a blank nor a wrong answer, and the divisor identity still holds', async () => {
   // 38 keyed multiple choice items is exactly what it takes for section I to be
   // scorable, and four fewer than the section contains: the paper runs out at 38,
-  // the four it never reached count as blank AND as wrong, and no drill may be
-  // handed out to close the gap.
+  // and no drill may be handed out to close the gap.
+  //
+  // WHAT THIS TEST USED TO PIN, and why it was wrong. It asserted
+  // `scored_out_of: 42` and `blanks: 4` — "the four it never reached count as blank
+  // AND as wrong" — and stopped there, without asking what that costs downstream.
+  // It costs everything: max_blanks is 1, blanks are SUMMED across a three-sitting
+  // window, so 4 per sitting is 12 per window and the criterion was UNSATISFIABLE BY
+  // CONSTRUCTION on this bank. `ready` could never be true, and the string a parent
+  // read as the one thing blocking his son was `At most 1 blank response across the
+  // window — 12 blanks`, on a record where the son had answered every question the
+  // system was able to ask him, correctly, four times over.
+  //
+  // A question the bank cannot ask is not one he failed to reach. api.js's own
+  // comment said so already, and the codebase had already ruled the same way when a
+  // whole half is missing (a full CSA sitting on a bank with no free-response items
+  // scores 100 over 42, not 91.3 over 46 — see the sibling test above). This is that
+  // rule applied inside a half instead of across two, and the shortfall is disclosed
+  // as what it is: a gap in the question bank.
   const need = Math.ceil(PRECALC.exam.mcq_count * MIN_MOCK_COVERAGE)
   const { db } = precalcBank({ mcq: need, drills: 20 })
   const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
@@ -2573,11 +2589,344 @@ test('the divisor identity holds on a paper the bank can only partly supply', as
 
   const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(need * 120 + 600) })
   assert.equal(r.counted, true, `${need} of ${PRECALC.exam.mcq_count} is 90% of section I, so this is a scored sitting`)
-  assert.equal(r.scored_out_of, PRECALC.exam.mcq_count, 'the divisor is the section, not the paper length')
-  assert.equal(r.blanks, PRECALC.exam.mcq_count - need, 'the four never reached read as unfilled bubbles')
+  assert.equal(r.expected, PRECALC.exam.mcq_count, 'the real section size is a true fact and he still sees it')
+  assert.equal(
+    r.scored_out_of, need,
+    'the divisor is the questions the bank can ask AND mark — counting the four it cannot ask as wrong is the same ' +
+      'false negative as marking an unkeyed item wrong',
+  )
+  assert.equal(
+    r.blanks, 0,
+    'a question that was never asked is not a bubble he left empty; four of these per sitting made max_blanks (1) ' +
+      'unreachable and pinned the blame on him',
+  )
+  assert.equal(r.composite_pct, 100, 'every answer given was the key itself, over every question he could be asked')
+
+  // Said in words, and attributed to the bank rather than to him.
+  assert.match(
+    r.basis, new RegExp(`${PRECALC.exam.mcq_count - need} of those ${PRECALC.exam.mcq_count} questions cannot be asked`),
+    `the basis has to disclose the shortfall rather than absorb it silently: ${r.basis}`,
+  )
+  assert.match(r.basis, /gap in the question bank rather than a question he skipped/, r.basis)
+  assert.doesNotMatch(
+    r.basis, /never reached/,
+    `nothing can be "never reached" that this bank cannot ask: ${r.basis}`,
+  )
+
+  // The identity the GPT does its own arithmetic against, unchanged.
   const right = Number(/Scored (\d+) right out of (\d+)/.exec(r.basis)[1])
   const stated = Number(/Scored (\d+) right out of (\d+)/.exec(r.basis)[2])
   assert.equal(right, need, 'every answer given was the key itself')
   assert.equal(stated, r.scored_out_of, 'one composite, one divisor, stated once')
   assert.equal(Number(((right / r.scored_out_of) * 100).toFixed(1)), r.composite_pct, 'right / scored_out_of is the composite')
+
+  // And the questions he DID skip are still his. One answer short of the bank's
+  // supply is one blank, and the sitting drops below the coverage gate with it —
+  // the gate is measured against the 42 the section has, not the 38 the bank holds,
+  // so nothing here lowered it.
+  const { db: db2 } = precalcBank({ mcq: need, drills: 20 })
+  const m2 = await handleMockStart({ db: db2, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
+  await sitPrecalc({ db: db2, mock: m2.mock, limit: need - 1 })
+  const short = await handleMockSubmit({ db: db2, mockId: m2.mock, config: PRECALC, now: at(need * 120 + 600) })
+  assert.equal(short.blanks, 1, 'the one question he could have been asked and was not IS a blank')
+  assert.match(short.basis, /1 question\(s\) were never reached/, short.basis)
+  assert.equal(
+    short.composite_pct, null,
+    `${need - 1} of ${PRECALC.exam.mcq_count} is under the 90% the gate asks for, and the gate did not move`,
+  )
+})
+
+// ---------------------------------------------------------------------------
+// THE FOUNDING FAILURE, in both directions, on the bank that actually ships
+//
+// Driven over REAL SQLite, worker/schema.sql and worker/seed.sql, through the real
+// handlers, because the whole of both defects is a disagreement between the exam
+// table (42 multiple choice + 4 free-response) and the shipped Precalc content (38
+// exam-tested keyed mcq, 4 rubric-scored frq). No fabricated bank can express it:
+// the in-memory fake in this file has repeatedly proven MORE capable than the real
+// projection, and every `section: 'full'` test above is ap_csa, whose 221 mcq items
+// exceed mcq_count outright — so the absorption path below cannot arise there at
+// all.
+//
+// DEFECT ONE, understating and misattributing. Precalc's exam-tested keyed mcq
+// supply is 38; `need = ceil(42 x 0.9)` is 38, so partObstacle passed the half and
+// `scorable` claimed all 42. `unreached = scorable - onSection.length` was then 4 on
+// EVERY sitting, forever, and blanks are summed across a three-sitting window
+// against max_blanks 1. Measured: four sittings, days 0/11/22/33, every one of the
+// 38 answers correct off the real key — readiness 86%, `ready:false`, and
+// `next_thing_blocking` read `At most 1 blank response across the window — 12
+// blanks`. It blamed the student for four questions the server itself refused to
+// hand him: /next's own refusal on the same paper says "the 4 multiple choice
+// question(s) it still owes cannot be drawn from this bank".
+//
+// DEFECT TWO, overstating, which is the unsafe direction. On a `full` paper the
+// same 4-question gap was absorbed instead: `unreached` credited the 4 rubric
+// answers as reaching 4 of the multiple choice half's questions (erasing 4 blanks),
+// while `denominator = scorable - unmarkable` took the SAME 4 rows off a divisor
+// that never included them. One row counted twice in the student's favour. Measured
+// on one sitting submitted at two points: 38 answers read composite 90.2 over 41
+// with 4 blanks, 42 answers read composite 100 over 38 with 0 blanks, and the
+// markable evidence between those two states was ONE extra answer. On this bank
+// `blanks <= max_blanks` was reachable only that way.
+// ---------------------------------------------------------------------------
+
+/** Every exam-tested topic, attempted once as an ordinary drill, so coverage holds. */
+async function drillEveryTopic(db, sqlite, subject, config) {
+  const topics = sqlite
+    .prepare(`SELECT id FROM topics WHERE subject = ? AND tested_on_exam != 0`).all(subject).map((t) => t.id)
+  const anItem = sqlite.prepare(`SELECT id, answer FROM items WHERE subject = ? AND topic = ? LIMIT 1`)
+  let clock = -200000
+  for (const topic of topics) {
+    const item = anItem.get(subject, topic)
+    assert.ok(item, `every exam-tested topic needs an item for this fixture: ${topic} has none`)
+    const serve = await db.recordServe({ subject, item_id: item.id, served_at: at(clock) })
+    await handleLog({ db, serveId: serve, response: item.answer ?? WRITTEN_RESPONSE, config, now: at(clock + 60) })
+    clock += 300
+  }
+  return topics.length
+}
+
+/**
+ * Sit one Precalc paper starting at `base` seconds, answering everything right off
+ * the real key, until the server refuses or `limit` answers are on it.
+ *
+ * Unlike sitPrecalc above this takes a base offset, because the defect is about a
+ * WINDOW of sittings days apart, and the clock those sittings are judged on is the
+ * server's own.
+ */
+async function sitPrecalcAt({ db, mock, base, limit, spacing = 60 }) {
+  let answered = 0
+  let refusal = null
+  const kinds = []
+  while (answered < limit) {
+    let q
+    try {
+      q = await handleNext({ db, subject: 'ap_precalc', config: PRECALC, now: at(base + answered * spacing), mockId: mock })
+    } catch (e) {
+      refusal = e
+      break
+    }
+    if (q.type !== 'question') continue
+    const item = await db.item((await db.serve(q.serve)).item_id)
+    await handleLog({
+      db, serveId: q.serve, response: item.answer ?? 'my working, in prose',
+      config: PRECALC, now: at(base + answered * spacing + 30),
+    })
+    kinds.push(item.kind)
+    answered++
+  }
+  return { answered, refusal, kinds }
+}
+
+const DAY = 86400
+
+withSeed('the four questions the shipped Precalc bank cannot ask are not four blanks in his answer sheet', async () => {
+  const { db, sqlite } = realDb()
+  const drilled = await drillEveryTopic(db, sqlite, 'ap_precalc', PRECALC)
+  assert.equal(drilled, 33, 'the coverage prerequisite is met by drilling, so the performance criteria are evaluated')
+
+  // Four sittings, spaced 11 days apart so the window qualifies, with the official
+  // one inside the judged run (the last three).
+  const sittings = []
+  for (const [i, day] of [0, 11, 22, 33].entries()) {
+    const m = await handleMockStart({
+      db, subject: 'ap_precalc', section: 'I', source: i === 2 ? 'official' : 'bank', config: PRECALC, now: at(day * DAY),
+    })
+    const { answered, refusal, kinds } = await sitPrecalcAt({ db, mock: m.mock, base: day * DAY, limit: 60 })
+    assert.deepEqual([...new Set(kinds)], ['mcq'], 'a section I paper is multiple choice and nothing else')
+    assert.equal(answered, 38, `this bank can put 38 of the section's 42 questions on a paper, and it puts all 38`)
+    assert.match(
+      refusal.message, /4 multiple choice question\(s\) it still owes cannot be drawn from this bank/,
+      `and /next says exactly whose gap the other four are: ${refusal.message}`,
+    )
+    sittings.push(await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(day * DAY + 40 * 60) }))
+  }
+
+  for (const r of sittings) {
+    assert.equal(r.counted, true, '38 of 42 is 90% of section I, answered inside the budget')
+    assert.equal(r.blanks, 0, 'he answered every question he was offered; there are no unfilled bubbles')
+    assert.equal(r.scored_out_of, 38, 'and the composite is measured over the questions the bank could ask')
+    assert.equal(r.composite_pct, 100)
+    assert.match(r.basis, /4 of those 42 questions cannot be asked from this bank at all/, r.basis)
+    assert.match(r.basis, /gap in the question bank rather than a question he skipped/, r.basis)
+    assert.doesNotMatch(r.basis, /count as blank AND as wrong/, `nothing here was blank: ${r.basis}`)
+  }
+
+  const s = await handleStatus({ db, subject: 'ap_precalc', config: PRECALC, now: at(34 * DAY) })
+  const blanks = s.criteria.find((c) => /blank response/.test(c.requirement))
+  assert.ok(blanks, `the blanks criterion must be reported: ${JSON.stringify(s.criteria.map((c) => c.requirement))}`)
+  assert.equal(blanks.met, true, `it was UNSATISFIABLE by construction on this bank: ${blanks.evidence}`)
+  assert.equal(blanks.evidence, '0 blanks', 'and the evidence for it is that he left none')
+  assert.doesNotMatch(
+    s.next_thing_blocking, /blank/i,
+    `a student who answered everything he was offered may not be told blanks are what block him: ${s.next_thing_blocking}`,
+  )
+  // What DOES block him now is honest and is not about him: the free-response
+  // grader has never been calibrated, so that evidence is unmeasured rather than
+  // failed, and api.js passes `calibrated: false` as a literal at every call site.
+  assert.match(s.next_thing_blocking, /grader not yet calibrated/, s.next_thing_blocking)
+
+  // The bank's own shortfall does not vanish with the blank count: it is disclosed
+  // on every surface, as a fact about the bank, so a composite of 100 cannot be read
+  // as 100% of the real section.
+  const shortfall = s.advisories.find((a) => /cannot supply one half of the exam in full/i.test(a))
+  assert.ok(shortfall, `the shortfall must be disclosed somewhere: ${JSON.stringify(s.advisories)}`)
+  assert.match(shortfall, /38 of the 42 multiple choice question\(s\)/, shortfall)
+  assert.match(shortfall, /not counted as blanks and not counted wrong/, shortfall)
+  const dash = await handleDashboard({ db, configs: { ap_precalc: PRECALC }, now: at(34 * DAY) })
+  assert.ok(
+    dash.subjects[0].readiness.advisories.some((a) => /cannot supply one half of the exam in full/i.test(a)),
+    'and the parent reading the card sees the same thing, not a bare 100%',
+  )
+})
+
+withSeed('a rubric answer cannot erase a blank and shrink the divisor at the same time', async () => {
+  // The same student, the same bank, the same work, one `full` sitting — submitted
+  // at two points. Both readings have to be honest ABOUT THE SAME EVIDENCE, and the
+  // rubric half may not buy coverage for the multiple choice half in either.
+  //
+  // THIRTY-EIGHT ANSWERS is the audit's own fixture and the number the selector
+  // reaches by itself: it spends the multiple choice half first and then interleaves
+  // (measured on the shipped bank: 36 mcq, then F m F m F F), so a paper cut at 38
+  // holds 37 multiple choice answers and 1 rubric one. That is 37 of the 38 multiple
+  // choice questions the bank can ask — under the gate — and it used to CLEAR the
+  // gate at "38 of 42" and score 90.2, because the rubric answer was counted as
+  // reaching a multiple choice question.
+  const { db: dbShort } = realDb()
+  const mShort = await handleMockStart({
+    db: dbShort, subject: 'ap_precalc', section: 'full', source: 'official', config: PRECALC, now: T0,
+  })
+  await sitPrecalcAt({ db: dbShort, mock: mShort.mock, base: 0, limit: 38 })
+  const paper = await paperOf(dbShort, mShort.mock)
+  const mcqAnswered = paper.filter((a) => a.kind === 'mcq').length
+  const frqAnswered = paper.filter((a) => a.kind === 'frq').length
+  assert.equal(mcqAnswered + frqAnswered, 38, 'the whole paper is one of the two halves')
+  assert.ok(frqAnswered > 0, 'precondition: the paper holds rubric answers, which is what used to pad the count')
+  assert.ok(mcqAnswered < 38, 'precondition: and it is short of the multiple choice questions the bank can ask')
+
+  const r = await handleMockSubmit({ db: dbShort, mockId: mShort.mock, config: PRECALC, now: at(3600) })
+  assert.equal(
+    r.composite_pct, null,
+    `${mcqAnswered} of the 38 multiple choice questions this bank can ask is under 90% of section I — a rubric answer ` +
+      'is not a multiple choice question and may not fill the coverage gate for one',
+  )
+  assert.equal(r.counted, false, 'so it cannot count toward readiness at all')
+  assert.equal(r.scored_out_of, null, 'and there was no division')
+  assert.equal(
+    r.blanks, 38 - mcqAnswered,
+    'the multiple choice questions he never reached ARE blanks: the bank could have asked them',
+  )
+  assert.match(r.basis, /short of the \d+% of the section/, r.basis)
+
+  // And the surface that resurfaces afterwards quotes the number the gate was
+  // applied to, with both reasons it differs from `answered` named separately: an
+  // answer on a half nothing can mark is not an answer of a kind the section does
+  // not contain, and neither is a question the bank cannot ask.
+  const sShort = await handleStatus({ db: dbShort, subject: 'ap_precalc', config: PRECALC, now: at(4000) })
+  const adv = sShort.advisories.find((a) => /not scored/i.test(a))
+  assert.ok(adv, `the sitting must stay visible: ${JSON.stringify(sShort.advisories)}`)
+  assert.match(adv, new RegExp(`reached ${mcqAnswered} of ${PRECALC.exam.mcq_count}`), `not "reached 38 of 42": ${adv}`)
+  assert.match(adv, /on a half of section full this bank cannot mark/, adv)
+  assert.match(adv, /can put only 38 of those 42 on a paper at all/, adv)
+  assert.match(adv, /gap in the question bank rather than questions he skipped/, adv)
+
+  // The same paper, four multiple choice answers further on: now it covers what the
+  // bank can ask, and the rubric half neither adds a reached question nor takes one
+  // off the divisor.
+  const { db, sqlite } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'full', source: 'official', config: PRECALC, now: T0 })
+  const { kinds } = await sitPrecalcAt({ db, mock: m.mock, base: 0, limit: 46 })
+  assert.equal(kinds.filter((k) => k === 'mcq').length, 38, 'every multiple choice question the bank can ask')
+  assert.equal(kinds.filter((k) => k === 'frq').length, PRECALC.exam.frq_count, 'and the whole rubric half')
+
+  const full = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(4000) })
+  assert.equal(full.counted, true)
+  assert.equal(full.composite_pct, 100, 'every markable answer right, over every markable question')
+  assert.equal(
+    full.scored_out_of, 38,
+    'the divisor is the multiple choice half the bank can ask; the rubric half was never in it, so it cannot be ' +
+      'deducted from it either',
+  )
+  assert.equal(full.blanks, 0, 'and the rubric answers are not four multiple choice questions "reached"')
+  assert.equal(full.ungraded, PRECALC.exam.frq_count, 'the rubric answers are reported as needing a grader, once')
+  assert.doesNotMatch(
+    full.basis, /came back as work no grader can mark/,
+    `the rubric half is excluded by its own obstacle; deducting it AGAIN was the double count: ${full.basis}`,
+  )
+  assert.match(full.basis, /rubric-scored rather than mechanically marked/, full.basis)
+  assert.match(full.basis, /4 of them are questions this bank cannot ask/, full.basis)
+
+  // A section I sitting of the same 38 answers reads the SAME, which is the
+  // disagreement this pair of defects produced: 90.2 over 41 with 4 blanks on one
+  // surface, 100 over 38 with 0 blanks on the other, from one afternoon's work.
+  const { db: db1 } = realDb()
+  const m1 = await handleMockStart({ db: db1, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
+  await sitPrecalcAt({ db: db1, mock: m1.mock, base: 0, limit: 60 })
+  const one = await handleMockSubmit({ db: db1, mockId: m1.mock, config: PRECALC, now: at(4000) })
+  assert.deepEqual(
+    { composite: one.composite_pct, out_of: one.scored_out_of, blanks: one.blanks },
+    { composite: full.composite_pct, out_of: full.scored_out_of, blanks: full.blanks },
+    'the same 38 markable answers must not score differently for having a rubric half beside them',
+  )
+
+  // Four such sittings and the blank criterion is met on evidence rather than on
+  // absorption: the stored blank counts are all 0 because nothing was left empty.
+  assert.deepEqual(
+    sqlite.prepare('SELECT blanks FROM mocks WHERE id = ?').all(m.mock).map((x) => x.blanks), [0],
+    'and the stored number the criterion reads agrees',
+  )
+})
+
+withSeed('every answer on a mixed paper is excluded once, for one reason', async () => {
+  // The state api.js:1143-1149 names as live: a sitting is OPEN with short-answer
+  // drills already on it when the exam-shaped content lands, so its paper is mixed.
+  //
+  // THE DEFECT. `ungraded` counted every answer with no server verdict, paper-wide,
+  // and the basis then described the whole of it as "responses that need human or
+  // model grading" — including a model-graded drill that the very next sentence
+  // also excluded as an answer that "fills no half of a section I paper". The same
+  // row, excluded twice, for two different reasons, in one basis. On a `full` paper
+  // the mismatch was arithmetical instead: `ungraded: 5` beside a divisor deduction
+  // of 4, with the fifth row in no arithmetic at all.
+  const { db, sqlite } = realDb()
+  const m = await handleMockStart({ db, subject: 'ap_precalc', section: 'I', source: 'official', config: PRECALC, now: T0 })
+  const drill = (kind, ts) => {
+    const it = sqlite.prepare(
+      `SELECT i.id, i.topic, i.unit, i.practice, i.answer FROM items i
+       JOIN topics t ON t.id = i.topic AND t.subject = i.subject
+       WHERE i.subject = 'ap_precalc' AND i.kind = ? AND t.tested_on_exam != 0 LIMIT 1`,
+    ).get(kind)
+    assert.ok(it, `the seed must hold an exam-tested ${kind} item for this fixture`)
+    return db.recordAttempt({
+      ts, subject: 'ap_precalc', item_id: it.id, topic: it.topic, unit: it.unit, practice: it.practice,
+      response: it.answer ?? 'working', correct: it.answer ? 1 : 0, graded_by: it.answer ? 'server' : 'model',
+      seconds: 60, hints_used: 0, conditions: 'proctored_mock', mock_id: m.mock,
+    })
+  }
+  await drill('constructed', at(10))               // keyed: marked, and still not section I
+  await drill('constructed_model_graded', at(20))  // unkeyed rubric work: no verdict at all
+  await sitPrecalcAt({ db, mock: m.mock, base: 60, limit: 60 })
+
+  const r = await handleMockSubmit({ db, mockId: m.mock, config: PRECALC, now: at(4000) })
+  assert.equal(r.answered, 40, '38 multiple choice answers and the two drills already on the paper')
+  assert.equal(r.ungraded, 1, 'one row on this paper carries no verdict: the rubric drill')
+
+  // The paper is PARTITIONED by the prose: every answer is accounted for exactly
+  // once, and the counts add up to `answered`.
+  const grading = /(\d+) response\(s\) need human or model grading/.exec(r.basis)
+  assert.equal(grading, null, `no answer to section ITSELF needs a grader here, so nothing may claim any do: ${r.basis}`)
+  const set_aside = /(\d+) of those answer\(s\) — ([\w/]+) items — fill no half/.exec(r.basis)
+  assert.ok(set_aside, `the drills have to be accounted for: ${r.basis}`)
+  assert.equal(Number(set_aside[1]), 2, 'both drills, named once, in the clause that owns them')
+  assert.equal(set_aside[2], 'constructed/constructed_model_graded')
+  assert.match(
+    r.basis, /1 of them carries no grader's verdict either/,
+    `and the ungraded count stays reconstructible from the prose rather than unexplained: ${r.basis}`,
+  )
+
+  // Unchanged by any of it: the drills cannot fill section I, and the composite is
+  // over the multiple choice questions the bank can ask.
+  assert.equal(r.scored_out_of, 38, 'the divisor is the section half, not the paper length')
+  assert.equal(r.composite_pct, 100)
+  assert.equal(r.blanks, 0)
 })
