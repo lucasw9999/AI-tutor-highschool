@@ -989,14 +989,12 @@ function permutations(list) {
 }
 
 /**
- * One phrasing chosen per part, every way round, each paired with the "<part>:
- * <phrasing>" labels it used so a phrasing that earns nothing can be named.
+ * One phrasing chosen per part, every way round.
  */
 function combinations(parts) {
   return parts.reduce(
-    (acc, alternatives, k) =>
-      acc.flatMap(([chosen, picks]) => alternatives.map((a, i) => [[...chosen, a], [...picks, `${k}:${i}`]])),
-    [[[], []]],
+    (acc, alternatives) => acc.flatMap((chosen) => alternatives.map((a) => [...chosen, a])),
+    [[]],
   )
 }
 
@@ -1161,41 +1159,67 @@ function resolveKey({ decls, stem, unit }) {
 
     answer = parts.map((p) => p[0]).join(', ')
 
-    // Expand, remembering which declared phrasings the FIRST form of each
-    // normalized shape used. A phrasing that never wins that race accepts
-    // nothing the others do not already accept.
-    //
-    // Dead weight is judged by that EFFECT, not by comparing the phrasings to
-    // each other: normalizeShort strips a leading `x =` from the whole response,
-    // so "x=-2 mult 3 crosses" and "-2 mult 3 crosses" look identical in
-    // isolation while behaving differently in second position ("..., x=1 mult 2
-    // bounces" keeps its prefix). Comparing them directly rejected a phrasing
-    // the bank genuinely needed.
-    const winners = new Set()
-    const firstOf = new Map()
-    for (const [chosen, picks] of combinations(parts)) {
-      for (const ordering of ordered ? [chosen] : permutations(chosen)) {
-        for (const scheme of schemes) {
-          const form = joinParts(ordering, scheme)
-          // A separator that would fuse two parts into one expression is not a
-          // way of writing this answer, so it is no form at all.
-          if (form == null) continue
-          const norm = normalizeShort(form)
-          if (!norm || firstOf.has(norm)) continue
-          firstOf.set(norm, form)
-          for (const pick of picks) winners.add(pick)
+    /**
+     * Every form these parts expand to, keyed on the normalized shape the grader
+     * will compare; the first spelling of each shape is the one emitted. The
+     * join schemes are fixed by the FULL declaration, so a leave-one-out run
+     * below measures the phrasing and nothing else.
+     */
+    const expand = (byPart) => {
+      const forms = new Map()
+      for (const chosen of combinations(byPart)) {
+        for (const ordering of ordered ? [chosen] : permutations(chosen)) {
+          for (const scheme of schemes) {
+            const form = joinParts(ordering, scheme)
+            // A separator that would fuse two parts into one expression is not a
+            // way of writing this answer, so it is no form at all.
+            if (form == null) continue
+            const norm = normalizeShort(form)
+            if (!norm || forms.has(norm)) continue
+            forms.set(norm, form)
+          }
         }
       }
+      return forms
     }
-    generated = [...firstOf.values()]
+    const expanded = expand(parts)
+    generated = [...expanded.values()]
+
+    // Dead weight, judged by LEAVE-ONE-OUT: a phrasing is dead weight when the
+    // accepted set is exactly the same without it. Removing a phrasing can only
+    // remove forms, so equal sizes mean equal sets.
+    //
+    // Judged by that EFFECT rather than by comparing the phrasings to each other,
+    // because normalizeShort strips a leading `x =` from the whole response: so
+    // "x=-2 mult 3 crosses" and "-2 mult 3 crosses" look identical in isolation
+    // while behaving differently in second position ("..., x=1 mult 2 bounces"
+    // keeps its prefix), and comparing them directly rejected a phrasing the bank
+    // genuinely needed.
+    //
+    // Leave-one-out is also SYMMETRIC, which the previous first-past-the-post
+    // version was not: it registered the first form of each shape, and the
+    // all-first-phrasings combination is generated first, so phrasing 0 won every
+    // race and `part 1: $4$` before `part 1: 4` reported that "4" — the phrasing
+    // the item wants — accepts nothing new. Two interchangeable phrasings are now
+    // both named, in one error, and either may be the one deleted.
     for (const [k, alternatives] of parts.entries()) {
-      for (const [a, alternative] of alternatives.entries()) {
-        if (!winners.has(`${k}:${a}`)) {
-          errors.push(
-            `part ${k + 1}'s phrasing "${alternative}" accepts nothing that its other phrasings do not already ` +
-              `accept — dead weight, and usually a sign that normalizeShort already covers the difference`,
-          )
-        }
+      if (alternatives.length < 2) continue
+      const dead = alternatives.filter((_, a) => {
+        const without = parts.map((p, j) => (j === k ? p.filter((_, i) => i !== a) : p))
+        return expand(without).size === expanded.size
+      })
+      const quoted = dead.map((d) => `"${d}"`).join(' and ')
+      if (dead.length === 1) {
+        errors.push(
+          `part ${k + 1}'s phrasing ${quoted} accepts nothing that its other phrasings do not already ` +
+            `accept — dead weight, and usually a sign that normalizeShort already covers the difference`,
+        )
+      } else if (dead.length > 1) {
+        errors.push(
+          `part ${k + 1}'s phrasings ${quoted} are interchangeable once normalized — each accepts nothing that ` +
+            `the others do not already accept, and normalizeShort covers the difference. Keep whichever one you ` +
+            `want the key itself to read as, and delete the rest`,
+        )
       }
     }
     if (errors.length) return { ...unkeyed, topic }
@@ -1249,10 +1273,18 @@ function resolveKey({ decls, stem, unit }) {
   }
   if (errors.length) return { ...unkeyed, topic }
 
-  if (![...seen.keys()].some(isTypeable)) {
+  // Every form this item will accept, not only the ones written out by hand: the
+  // expansion of a compound answer is accepted content too, and checking the key
+  // and `accept:` alone made the gate depend on the ORDER the phrasings were
+  // listed in — `part 1: 3pi/4` then `part 1: 3π/4` passed, the same two lines
+  // the other way round were refused, and the diagnostic told the author to add
+  // a form the item already held.
+  const typeable = [...seen.keys(), ...generated.map(normalizeShort)]
+  if (!typeable.some(isTypeable)) {
     errors.push(
       `no accepted form of "${answer}" can be typed on a plain keyboard (LaTeX macros, or unicode like − and π), ` +
-        `so a student typing the answer the ordinary way is marked wrong. Add the typeable form as "accept:"`,
+        `so a student typing the answer the ordinary way is marked wrong. Add the typeable form as ` +
+        `${generated.length ? 'another "part <n>:" phrasing' : '"accept:"'}`,
     )
     return { ...unkeyed, topic }
   }
