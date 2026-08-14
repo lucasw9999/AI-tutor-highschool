@@ -400,12 +400,71 @@ const LABELLED_LIST = /,\s*[a-z][a-z0-9 .()]*[:=]/
 /** Plain keyboard characters only: no LaTeX macro, no unicode lookalike. */
 const isTypeable = (text) => /^[\x20-\x7E]+$/.test(text) && !text.includes('\\')
 
-/** How a compound answer's parts may be joined by the student. */
-const SEPARATORS = [', ', ' and ', ', and ', '; ', ' ']
+/**
+ * How a compound answer's parts may be joined by the student: one separator PER
+ * GAP, not one separator repeated.
+ *
+ * Repeating one separator is what an English list is not. Commas go BETWEEN the
+ * entries and a conjunction goes before the LAST one, so joining every gap with
+ * ", and " generated "4, -2, and 2pi/3" only when there were exactly two parts —
+ * 444 of the 2612 forms the bank shipped were spent on "4, and -2, and 2pi/3",
+ * which nobody writes, while "4, -2, and 2pi/3" was booked as a MISS on every
+ * item with three parts, counted against the student and fed into readiness.
+ *
+ * The run-on join, with no punctuation at all, is offered only where a reader
+ * can still find the gaps: one gap, or single-word parts. "hole at x=3 VA at
+ * x=-3 HA y=1" cannot be read back as three entries, and the cap that guards the
+ * D1 row is not there to be spent on it.
+ */
+const LIST_SEPARATOR = ', '
+const UNIFORM_SEPARATORS = [', ', '; ', ' and ']
+const FINAL_CONJUNCTIONS = [' and ', ', and ']
+const RUN_ON = ' '
 const MAX_PARTS = 4
 const MAX_ALTS_PER_PART = 6
 /** Guards items.json and the D1 row against a combinatorial blow-up. */
 const MAX_ACCEPTED_FORMS = 1000
+
+/** @returns {string[][]} one separator per gap, deduplicated. */
+function joinSchemes(parts) {
+  const gaps = parts.length - 1
+  const schemes = UNIFORM_SEPARATORS.map((s) => Array(gaps).fill(s))
+  for (const conjunction of FINAL_CONJUNCTIONS) {
+    schemes.push([...Array(gaps - 1).fill(LIST_SEPARATOR), conjunction])
+  }
+  const oneWord = (phrasing) => !/\s/.test(phrasing)
+  if (gaps === 1 || parts.every((alternatives) => alternatives.every(oneWord))) {
+    schemes.push(Array(gaps).fill(RUN_ON))
+  }
+  return [...new Map(schemes.map((s) => [s.join(' '), s])).values()]
+}
+
+/** The characters normalizeShort strips the whitespace from around. */
+const OPERATOR_EDGE = /[=+\-*/^,]/
+
+/**
+ * True when this separator VANISHES between these two parts, fusing them into
+ * one expression.
+ *
+ * normalizeShort collapses the whitespace around an operator, so "5pi/6" and
+ * "-pi/4" joined by a space both normalize to "5pi/6-pi/4" — a SUBTRACTION,
+ * 7pi/12, one number that answers neither arccos(-sqrt3/2) nor arctan(-1). 14
+ * such forms shipped as accepted answers on pc-u3-p1 and pc-u3-p5, so a student
+ * who subtracted the two values he was asked for was told he was right.
+ */
+const fuses = (separator, left, right) =>
+  !/\S/.test(separator) &&
+  (OPERATOR_EDGE.test(right.trimStart().slice(0, 1)) || OPERATOR_EDGE.test(left.trimEnd().slice(-1)))
+
+/** One ordering joined by one scheme, or null when a gap would fuse shut. */
+function joinParts(ordering, scheme) {
+  let form = ordering[0]
+  for (const [gap, part] of ordering.slice(1).entries()) {
+    if (fuses(scheme[gap], form, part)) return null
+    form += scheme[gap] + part
+  }
+  return form
+}
 
 /**
  * Words that belong to a VALUE rather than labelling one. "2pi/3" and "-sqrt2/2"
@@ -1079,7 +1138,8 @@ function resolveKey({ decls, stem, unit }) {
     ordered = semantics.ordered
 
     const orderings = ordered ? 1 : permutations(indices).length
-    const forms = orderings * parts.reduce((n, p) => n * p.length, 1) * SEPARATORS.length
+    const schemes = joinSchemes(parts)
+    const forms = orderings * parts.reduce((n, p) => n * p.length, 1) * schemes.length
     if (forms > MAX_ACCEPTED_FORMS) {
       errors.push(
         `these parts expand to ${forms} accepted forms, past the cap of ${MAX_ACCEPTED_FORMS} — too many phrasings ` +
@@ -1104,8 +1164,11 @@ function resolveKey({ decls, stem, unit }) {
     const firstOf = new Map()
     for (const [chosen, picks] of combinations(parts)) {
       for (const ordering of ordered ? [chosen] : permutations(chosen)) {
-        for (const separator of SEPARATORS) {
-          const form = ordering.join(separator)
+        for (const scheme of schemes) {
+          const form = joinParts(ordering, scheme)
+          // A separator that would fuse two parts into one expression is not a
+          // way of writing this answer, so it is no form at all.
+          if (form == null) continue
           const norm = normalizeShort(form)
           if (!norm || firstOf.has(norm)) continue
           firstOf.set(norm, form)

@@ -375,6 +375,119 @@ test('a format sentence claiming both an order and any order is a build ERROR', 
 })
 
 // ---------------------------------------------------------------------------
+// How the parts are JOINED. Two defects lived here, pointing opposite ways: a
+// separator that vanished and fused two parts into one number that answers
+// neither, and the ordinary English list — commas between, a conjunction before
+// the last — which no item with three parts could ever generate.
+// ---------------------------------------------------------------------------
+
+test('FALSE POSITIVE: a separator that fuses the parts into one expression is not generated', () => {
+  // "5pi/6 - pi/4" is a SUBTRACTION: 7pi/12, one number answering neither
+  // arccos(-sqrt3/2) nor arctan(-1). normalizeShort strips the whitespace around
+  // the operator, so a space-joined "5pi/6" + "-pi/4" normalizes to exactly what
+  // the student typed, and 14 such forms shipped as accepted answers.
+  const p5 = shipped('pc-u3-p5')
+  refusesOn(p5, '5pi/6 - pi/4', 'the two parts fused into a subtraction')
+  refusesOn(p5, '5pi/6-pi/4', 'the same fusion, typed without spaces')
+  refusesOn(p5, '5pi/6 -pi/4', 'the space-joined form the expander used to emit')
+
+  const p1 = shipped('pc-u3-p1')
+  refusesOn(p1, '3pi/4 - sqrt(2)/2', 'the two parts fused into a subtraction')
+  refusesOn(p1, '3pi/4 -sqrt(2)/2', 'the space-joined form the expander used to emit')
+  for (const it of [p1, p5]) {
+    const fused = (it.answer_variants ?? []).filter((f) => !/[,;]| and /.test(f) && /\s-/.test(f))
+    assert.deepEqual(fused, [], `${it.id} still ships space-joined forms that read as a subtraction`)
+  }
+})
+
+test('a space between two parts still joins them where nothing can fuse', () => {
+  // The counterweight: the run-on join is only dropped where normalizeShort
+  // would eat it. Two words with a space between them are still two words.
+  creditsOn(shipped('pc-u1-p7'), 'overestimate increasing')
+  creditsOn(shipped('pc-u2-p1'), 'exponential y=50(0.8)^x')
+  creditsOn(shipped('pc-u3-p8'), 'pi/2 7pi/6 11pi/6')
+})
+
+test('FALSE NEGATIVE: the ordinary English list is credited on every three-part item', () => {
+  // commas between the entries, a conjunction before the last. Every shipped
+  // three-part item booked this as a MISS — counted against the student, fed
+  // into gap detection and into readiness.
+  for (const [id, typed] of [
+    ['pc-u1-p5', 'hole at x=3, VA at x=-3, and HA y=1'],
+    ['pc-u1-p5', 'hole at x=3, VA at x=-3 and HA y=1'],
+    ['pc-u3-p2', '4, -2, and 2pi/3'],
+    ['pc-u3-p2', '4, -2 and 2pi/3'],
+    ['pc-u3-p8', 'pi/2, 7pi/6, and 11pi/6'],
+    ['pc-u3-p8', 'pi/2, 7pi/6 and 11pi/6'],
+  ]) creditsOn(shipped(id), typed)
+})
+
+/** Three parts that label themselves, so every ordering is the same answer. */
+const FEATURES = {
+  stem: 'For $f(x)=\\dfrac{x^2-x-6}{x^2-9}$ find the hole, the vertical asymptote and the horizontal asymptote. Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7.',
+  solution: 'hole at $x=3$, VA at $x=-3$, HA $y=1$',
+  meta: [
+    '<!-- part 1: hole at x=3 -->',
+    '<!-- part 2: VA at x=-3 -->',
+    '<!-- part 3: HA y=1 -->',
+    '<!-- format: Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7. -->',
+  ],
+}
+
+test('THREE parts: every ordering, joined every way a student writes a list', () => {
+  // The first three-part fixture in this suite. Every positive compound fixture
+  // was two parts, where "a, b and c" and "a, and b, and c" cannot be told
+  // apart — which is why a list scheme was never missed.
+  const { item, errors } = one(FEATURES)
+  assert.deepEqual(errors, [])
+  assert.equal(item.kind, 'constructed')
+  for (const typed of [
+    'hole at x=3, VA at x=-3, HA y=1',
+    'hole at x=3, VA at x=-3, and HA y=1',
+    'hole at x=3, VA at x=-3 and HA y=1',
+    'hole at x=3; VA at x=-3; HA y=1',
+    'hole at x=3 and VA at x=-3 and HA y=1',
+    'HA y=1, hole at x=3, and VA at x=-3',
+    'VA at x=-3, HA y=1 and hole at x=3',
+    'HA y=1, VA at x=-3, hole at x=3',
+  ]) creditsOn(item, typed)
+  // ...and the whole answer is still the whole answer.
+  assert.equal(grade(item, 'hole at x=3, VA at x=-3').correct, 0, 'two thirds of an answer is not the answer')
+})
+
+test('THREE bare values in a declared order: the list forms, that order only', () => {
+  const AMP = {
+    stem: 'State the amplitude, midline and period of $f(x)=4\\sin(3x)-2$. Answer as three comma-separated values in the order amplitude, midline, period.',
+    solution: 'amplitude 4, midline -2, period 2pi/3',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- part 3: 2pi/3 -->',
+      '<!-- format: Answer as three comma-separated values in the order amplitude, midline, period. -->',
+    ],
+  }
+  const { item, errors } = one(AMP)
+  assert.deepEqual(errors, [])
+  for (const typed of ['4, -2, 2pi/3', '4, -2, and 2pi/3', '4, -2 and 2pi/3', '4; -2; 2pi/3']) creditsOn(item, typed)
+  for (const typed of ['-2, 4, 2pi/3', '2pi/3, -2, 4', '-2, 4, and 2pi/3', '4, 2pi/3 and -2']) {
+    refusesOn(item, typed, 'a swap on a stem that states the order')
+  }
+})
+
+test('the forms nobody writes are not spent, which is what pays for the ones everybody writes', () => {
+  // A DELIBERATE narrowing, recorded so it is not "fixed" back: joining every
+  // gap with ", and " produced "4, and -2, and 2pi/3" — 444 of the 2612 forms
+  // the bank shipped, on a shape no student types — and the cap at 1000 forms
+  // has room for the English list only because that shape is gone. Same for the
+  // run-on join between multi-word entries, which cannot be read back as a list.
+  const { item } = one(FEATURES)
+  assert.equal(grade(item, 'hole at x=3, and VA at x=-3, and HA y=1').correct, 0)
+  assert.equal(grade(item, 'hole at x=3 VA at x=-3 HA y=1').correct, 0)
+  // Single-word parts keep the run-on join, because the gaps are still findable.
+  creditsOn(shipped('pc-u3-p8'), '7pi/6 pi/2 11pi/6')
+})
+
+// ---------------------------------------------------------------------------
 // Validation with teeth. Every one of these is a BUILD ERROR, because the
 // alternative is an item that is silently unkeyed or, worse, mis-keyed.
 // ---------------------------------------------------------------------------
@@ -570,6 +683,53 @@ test('the accepted forms of a compound answer are capped, so a build cannot expl
     meta: [...parts, '<!-- format: Answer as a, b, c, d in that order -->'],
   })
   assert.match(err, /too many|cap/i)
+})
+
+test('the cap is refused JUST over the line, and honoured just under it', () => {
+  // The cap was only ever tested at a 155x overshoot, where any arithmetic
+  // passes. These two differ by ONE declared phrasing and straddle the line: 3
+  // single-word parts in any order expand to 6 orderings x 6 join schemes = 36
+  // forms per combination of phrasings, so 6x5x1 phrasings is 1080 forms and
+  // 6x4x1 is 864.
+  const phrasings = (counts) =>
+    counts.flatMap((n, p) => Array.from({ length: n }, (_, a) => `<!-- part ${p + 1}: v${p}w${a} -->`))
+  const set = {
+    stem: 'Solve it. Answer as a comma-separated list in any order.',
+    meta: ['<!-- format: Answer as a comma-separated list in any order. -->'],
+  }
+  const over = one({ ...set, meta: [...phrasings([6, 5, 1]), ...set.meta] })
+  assert.equal(over.errors.length, 1, JSON.stringify(over.errors))
+  assert.match(over.errors[0], /expand to 1080 accepted forms, past the cap of 1000/)
+  assert.equal(over.item.answer, null, 'over the cap the item degrades to model-graded, key and all')
+  assert.equal(over.item.kind, 'constructed_model_graded')
+
+  const under = one({ ...set, meta: [...phrasings([6, 4, 1]), ...set.meta] })
+  assert.deepEqual(under.errors, [])
+  assert.equal(under.item.kind, 'constructed')
+  // And the property that matters, which the cap must never quietly break: what
+  // is emitted is the WHOLE expansion, never a truncation of it. Every form in
+  // it grades correct, and forms from the far end of the ordering — the ones a
+  // truncation would drop first — are among them.
+  const forms = [under.item.answer, ...under.item.answer_variants]
+  assert.equal(forms.length, 864, 'the whole expansion must ship, undeduplicated by accident and unclipped')
+  assert.equal(new Set(forms.map(normalizeShort)).size, forms.length, 'and no two forms the grader cannot tell apart')
+  for (const form of forms) creditsOn(under.item, form)
+  creditsOn(under.item, 'v2w0, v1w3, v0w5')
+  creditsOn(under.item, 'v2w0, v1w3, and v0w5')
+  creditsOn(under.item, 'v1w3 v2w0 v0w5')
+})
+
+test('the shipped item nearest the cap is fully expanded, not clipped', () => {
+  // pc-u1-p5 declares 2 x 4 x 4 phrasings of three self-labelling parts: 6
+  // orderings x 32 combinations x 5 join schemes = 960 of the 1000 forms
+  // allowed, the closest any shipped item comes to the ceiling.
+  const p5 = shipped('pc-u1-p5')
+  const forms = [p5.answer, ...p5.answer_variants]
+  assert.equal(forms.length, 960, 'the whole expansion ships, or the cap has started truncating')
+  assert.equal(new Set(forms.map(normalizeShort)).size, 960)
+  // The last phrasing of the last part, in the last ordering, joined by the last
+  // scheme: everything a truncation would take first.
+  creditsOn(p5, 'horizontal asymptote y=1, vertical asymptote at x=-3 and hole: x=3')
 })
 
 // ---------------------------------------------------------------------------
