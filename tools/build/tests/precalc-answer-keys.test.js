@@ -696,12 +696,36 @@ test('a key that carries its own label is a build ERROR — the student types th
 })
 
 test('a key with no plain-ASCII form a student could type is a build ERROR', () => {
-  for (const bad of ['<!-- key: \\dfrac{5}{6} -->', '<!-- key: π/2 -->', '<!-- key: y = 2x − 1 -->']) {
+  // What "typeable" means moved when grade.js learned to fold Unicode lookalikes
+  // onto their ASCII equivalent. The gate is stated on normalizeShort, so it
+  // inherited the fold: a key of `π/2` or `y = 2x − 1` IS typeable now, because
+  // the grader credits `pi/2` and `y = 2x - 1` against it. What is left for this
+  // gate is what no fold can reach — a LaTeX macro, and the Unicode that has no
+  // single ASCII spelling.
+  for (const bad of ['<!-- key: \\dfrac{5}{6} -->', '<!-- key: 5 × 6 -->', '<!-- key: y ≈ 2x -->']) {
     const err = soleError({ meta: [bad] })
     assert.match(err, /type|ASCII/i, `for ${bad}: ${err}`)
   }
   // Declaring the typeable form clears it.
-  assert.deepEqual(one({ meta: ['<!-- key: π/2 -->', '<!-- accept: pi/2 -->'] }).errors, [])
+  assert.deepEqual(one({ meta: ['<!-- key: 5 × 6 -->', '<!-- accept: 5 * 6 -->'] }).errors, [])
+})
+
+test('a key written only in Unicode is typeable, because the grader folds it', () => {
+  // The other half of the same fix, and the reason the gate above may relax: the
+  // fold runs on the stored KEY as well as the response, so `π/2` needs no ASCII
+  // alias to be answerable. Before it did — and worse, the reverse direction bit
+  // too: a student typing the plain `pi/2` at a `π`-keyed item was marked WRONG.
+  for (const [key, typed] of [
+    ['π/2', 'pi/2'],
+    ['y = 2x − 1', 'y = 2x - 1'],
+    ['-√2/2', '-sqrt2/2'],
+    ['15 ≤ h ≤ 62.5', '15 <= h <= 62.5'],
+  ]) {
+    const { item, errors } = one({ meta: [`<!-- key: ${key} -->`] })
+    assert.deepEqual(errors, [], `a Unicode-only key is no longer untypeable: ${key}`)
+    creditsOn(item, typed)
+    creditsOn(item, key)
+  }
 })
 
 test('an unknown or misspelled key field is a build ERROR, never silently ignored', () => {
@@ -904,16 +928,52 @@ test('a keyboard-typeable form counts wherever it is declared, not only where it
 
 test('a compound answer with NO typeable form anywhere is still a build ERROR', () => {
   // The gate keeps its teeth: what changed is where it looks, not what it wants.
+  // The fixture is Unicode grade.js cannot fold, because Unicode it CAN fold is
+  // typeable by definition now — see the test above.
   const err = soleError({
     stem: 'Give the two values. Answer as two comma-separated entries in that order.',
     meta: [
-      '<!-- part 1: 3π/4 -->',
-      '<!-- part 2: −√2/2 -->',
+      '<!-- part 1: 5 × 6 -->',
+      '<!-- part 2: y ≈ 2x -->',
       '<!-- format: Answer as two comma-separated entries in that order. -->',
     ],
   })
   assert.match(err, /type/i)
   assert.match(err, /part/i, `for a compound answer the fix is another part phrasing, not "accept:": ${err}`)
+})
+
+test('a phrasing the FOLD made redundant does not stop the build', () => {
+  // The dead-weight gate is stated on normalizeShort, which is right — a form has
+  // to be judged by the function that will grade it. The cost is that
+  // STRENGTHENING the grader turns correct content into a build error: when
+  // normalizeShort learned the Unicode fold, nine hand-written `π` and `√` aliases
+  // across pc-u3-p1/p2/p5/p8/p10 became redundant and the whole build stopped —
+  // nothing written, the student served nothing. An author who wrote `π/2` before
+  // the fold existed was not making the mistake this gate is for.
+  const compound = one({
+    ...PI_PARTS,
+    meta: ['<!-- part 1: 3pi/4 -->', '<!-- part 1: 3π/4 -->', '<!-- part 2: -sqrt(2)/2 -->', '<!-- part 2: -√2/2 -->', PI_PARTS.format],
+  })
+  assert.deepEqual(compound.errors, [], 'a lookalike alias is redundant, not an authoring mistake')
+  creditsOn(compound.item, '3pi/4, -sqrt(2)/2')
+  creditsOn(compound.item, '3π/4, -√2/2')
+
+  const atomic = one({ meta: ['<!-- key: 8/pi -->', '<!-- accept: 8/π -->'] })
+  assert.deepEqual(atomic.errors, [])
+  creditsOn(atomic.item, '8/pi')
+  creditsOn(atomic.item, '8/π')
+
+  // The exemption is narrow: dead weight that is NOT a lookalike is still an error.
+  const err = soleError({
+    stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values in that order.',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 1: $4$ -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  })
+  assert.match(err, /dead weight|nothing that/i, err)
 })
 
 test('the dead-weight gate names the phrasing that is dead weight, in either declaration order', () => {
