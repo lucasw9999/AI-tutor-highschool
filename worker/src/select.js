@@ -756,15 +756,17 @@ export function pickNext({
   //        15.1% of them on CSA (1.2 a day, 84 of 240 reserved slots claimed, 148
   //        of the rest holding nothing but topics already below their floor) and
   //        22.1% on Precalc (1.8 a day). NOT "around 2-3 reviews a day"; and before
-  //        serveReview's second pass it was 0.7 a day on CSA, because the reuse
-  //        window was eating the queue.
+  //        serveReview's second pass it was 10.3% and 0.8 a day on CSA, because the
+  //        reuse window was eating the queue.
   //      - A due review waits at most REVIEW_SHARE - 1 ordinary questions when it
   //        is at the head of the queue, so a 1-day interval survives one short
   //        session. Behind k other due topics it waits about k * REVIEW_SHARE, and
   //        a topic can drop into remediation's hands and back out while it waits.
   //        Measured on the same runs: median 1 question, worst 7 (CSA) and 25
-  //        (Precalc). Before: median 77, worst 702, and 10 of the 47 topics that
-  //        came due were never reviewed in 90 days at all.
+  //        (Precalc). Before: median 29 and worst 135 on CSA, and counting every
+  //        topic that came due rather than only the ones the reserve owed, median
+  //        77 and worst 702 — reviews that came due in week two and were still
+  //        waiting in week thirteen.
   //
   //    Which slot is the reserved one is a function of the recorded history —
   //    ordinary-practice attempts only, so a 42-answer paper cannot rotate the
@@ -798,11 +800,14 @@ export function pickNext({
    * has its own answered questions INSIDE the no-repeat window by construction,
    * and once its never-asked ones are gone `servable` holds none of them: the
    * first pass finds an empty pool and the due review is dropped in silence. That
-   * is not a corner: on the real CSA bank at 8 answers a day for 90 days it
-   * emptied 146 of the 240 reserved slots, took the realized review share to 8.9%
-   * against a reserve of 33%, left the median due topic waiting 77 questions and
-   * the worst 702, and 21 of the 47 topics that came due were never reviewed at
-   * all. The 1/3/7/16/35 schedule this module is built around did not run.
+   * is not a corner. Measured on the real banks at 8 answers a day for 90 days —
+   * 720 ordinary questions, the run select.test.js drives — it emptied 146 of
+   * CSA's 240 reserved slots and 125 of Precalc's, held the realized review share
+   * to 10.3% against a ceiling of 33%, and left a due review the reserve was
+   * responsible for waiting a median of 29 questions and a worst case of 135.
+   * Counting every topic that came due, including the ones remediation was already
+   * handling: median 77, worst 702, and 10 of the 47 that came due never reviewed
+   * in 90 days. The 1/3/7/16/35 schedule this module is built around did not run.
    *
    * Serving the topic's own most-forgotten question instead is the same trade the
    * mock branch already makes, for the same reason and with the same two
@@ -820,6 +825,13 @@ export function pickNext({
    * Deterministic in both passes: `due` is ordered by how overdue it is then by
    * name, `poolFor` sorts by least-recently-seen then exam weight then id, and
    * neither reads a clock beyond `now` or an RNG.
+   *
+   * One consequence worth naming, because it bounds how bad a reserved repeat can
+   * be: it can never hand back a question he answered TODAY. `due` requires the
+   * topic's most recent answer to be at least its review interval old, and no
+   * question of that topic can have been answered more recently than that, so
+   * whatever the second pass reaches for is at least one interval — one day at the
+   * very shortest — behind him.
    */
   const serveReview = (reserved = false) => {
     const skip = reserved ? new Set(weak.map((w) => w.topic)) : new Set()

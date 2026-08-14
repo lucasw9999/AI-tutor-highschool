@@ -1050,9 +1050,9 @@ test('every item count the comments quote is the count the seed actually ships',
 // in which each due topic still holds a never-asked question, and it pins WHICH
 // slots are reserved — derived from the rule that decides them. None of it
 // measures a realized share, which is why a reserve documented as "around 2-3
-// reviews a day" delivering 0.71 a day, and a due review documented as "waiting
-// at most two questions" waiting a median of 77 and a maximum of 702, sat under a
-// green suite for a whole campaign.
+// reviews a day" delivering 0.8 a day, and a due review documented as "waiting at
+// most two questions" waiting a median of 29 questions and a maximum of 135, sat
+// under a green suite for a whole campaign.
 //
 // The gap is a property of the shipped numbers together: four of the five review
 // intervals (1, 3, 7, 16) are shorter than CSA's 28-day reuse_days, so a topic
@@ -1104,6 +1104,7 @@ function drillOrdinary({ bank, answers, perDay = 8, startMs }) {
     assert.notEqual(r, null, `ordinary drilling refused after ${i} answers`)
     serves.push({
       q: i + 1, priority: r.priority, topic: r.item.topic, reason: r.reason, repeat: r.repeat === true,
+      daysSince: r.repeat_of?.days_since ?? null,
       reserved: (attempts.length + 1) % REVIEW_SHARE === 0, dueCount: due.length, claimable,
     })
     if (r.priority === 'review') {
@@ -1174,15 +1175,30 @@ test('the reserved review share delivers reviews on the real bank', async (t) =>
       )
     })
 
+    await t.test(`${subject}: a review never hands back a question from today`, () => {
+      // What bounds how bad a reserved repeat can be. `due` requires the topic's
+      // most recent answer to be at least its review interval old, and no question
+      // of that topic can be newer than that answer, so a "spaced review" can never
+      // be a question he answered earlier the same day — which would be the one
+      // form of this trade that is indefensible whatever it is labelled.
+      const sameDay = run.serves.filter((s) => s.priority === 'review' && s.repeat && s.daysSince < 1)
+      assert.deepEqual(
+        sameDay.map((s) => `q${s.q}:${s.topic}(${s.daysSince}d)`), [],
+        'a spaced review of a question answered today is not a review of anything',
+      )
+    })
+
     await t.test(`${subject}: a due review is worked down, not left in a growing queue`, () => {
       // The header claims a due review waits at most two questions. That is true
       // of a queue of one; with k topics due the reserve works them down one every
       // REVIEW_SHARE questions, and a topic can drop into remediation's hands and
       // back out again while it waits, so the honest bound is on the queue rather
-      // than on one review. What must not happen is what did: a median wait of 77
-      // questions and a maximum of 702 — topics that came due in week two and were
-      // still waiting in week thirteen. Measured after the fix: median 1, max 7
-      // (CSA) and 25 (Precalc).
+      // than on one review. What must not happen is what did: a median wait of 29
+      // questions and a maximum of 135 on CSA, and 9 / 51 on Precalc — and, counting
+      // every topic that came due rather than only the ones the reserve owed, a
+      // median of 77 and a maximum of 702, i.e. reviews that came due in week two
+      // and were still waiting in week thirteen. Measured after the fix: median 1,
+      // max 7 (CSA) and 25 (Precalc).
       assert.ok(
         run.waits.median <= REVIEW_SHARE,
         `median wait ${run.waits.median} questions (max ${run.waits.max}) for a due topic remediation was not ` +
