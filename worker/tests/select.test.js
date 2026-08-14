@@ -403,17 +403,86 @@ test('accuracy for selection is weighted by recency', async (t) => {
     assert.equal(topicStats([attempt('a1', 'a', 1, 10)]).get('a').recent_pct, null)
   })
 
-  await t.test('the weighting is scoped to selection: readiness computes its own accuracy', () => {
-    // The scope claim, pinned rather than left in a comment. Every number the
-    // student and parent are SHOWN — the composite, mcq_overall, every per-unit
-    // floor — comes from readiness.js, which reads attempt rows directly and has
-    // no access to this module's weighting. If that ever changes, a reported
-    // percentage would start disagreeing with the evidence behind it.
+  await t.test('every number readiness REPORTS is computed without the weighting', () => {
+    // Retitled. This used to be called "the weighting is scoped to selection",
+    // which named a claim the assertion below cannot see and which is FALSE: the
+    // weighted figure does reach the student, in this module's own `reason` —
+    // api.js returns it as /next's `why` and gpt-instructions.md tells the tutor
+    // to read the `why` out. A green proxy standing in for a false claim is worse
+    // than no test, so the claim is now stated as narrowly as the check supports,
+    // and the part about the student is pinned directly in the test below.
+    //
+    // What this really pins: every number computed by readiness.js — the
+    // composite, mcq_overall, every per-unit floor, the dashboard — reads attempt
+    // rows directly and has no access to the weighting. If that ever changes, a
+    // REPORTED percentage would start disagreeing with the evidence behind it.
     const readiness = readFileSync(new URL('../src/readiness.js', import.meta.url), 'utf8')
     assert.doesNotMatch(
       readiness, /from '\.\/select\.js'/,
       'readiness.js must not consume the selector’s recency weighting — reported numbers are unweighted',
     )
+  })
+
+  await t.test('a weighted percentage in the reason never arrives without the lifetime one beside it', () => {
+    // The half of the scope claim that is about the STUDENT, asserted where it is
+    // decided: on the sentence he reads. He can count his own right answers, so a
+    // weighted number he cannot reconcile with that count is a number he can catch
+    // out — which the module header calls worse than no reason at all.
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`a${i}`, 'a', 1, 240)),
+      ...['b', 'c'].flatMap((tp) => [1, 2, 3].map((i) => attempt(`${tp}${i}`, tp, 1, 1))),
+    ]
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.match(r.reason, /on recent evidence/)
+    assert.match(r.reason, /across all 3 answer\(s\) ever/, 'the raw record, and how many answers it rests on')
+    assert.match(r.reason, new RegExp(`half its weight every ${RECENCY_HALF_LIFE_DAYS} days`), 'and why they differ')
+  })
+
+  // -------------------------------------------------------------------------
+  // Which WAY the two numbers differ.
+  //
+  // `recent_pct` is not always below `pct`. Both halves of the fraction are
+  // weighted, so the ratio moves whenever a topic's misses and its correct
+  // answers are of DIFFERENT ages — and a topic that has improved has exactly
+  // that shape: old misses, recent correct answers. The sentence used to assert
+  // "weighted down" unconditionally, so a student who had just pulled a topic up
+  // from 40% to 72% was told 72% was 40% weighted down. That is arithmetic he can
+  // check and find false, in the one sentence that may never be.
+  // -------------------------------------------------------------------------
+  await t.test('a topic whose misses are older than its correct answers is not called weighted down', () => {
+    const attempts = [
+      // Three misses two to three months ago, two correct answers a month ago:
+      // lifetime 40%, recent evidence far better than that.
+      attempt('a1', 'a', 0, 90), attempt('a2', 'a', 0, 88), attempt('a3', 'a', 0, 86),
+      attempt('a1', 'a', 1, 30), attempt('a2', 'a', 1, 28),
+      attempt('b1', 'b', 1, 0), attempt('c1', 'c', 1, 0),
+    ]
+    const s = topicStats(attempts, NOW).get('a')
+    assert.ok(
+      s.recent_pct > s.pct,
+      `precondition: recent ${s.recent_pct.toFixed(1)}% must EXCEED lifetime ${s.pct.toFixed(1)}%, or this proves nothing`,
+    )
+    assert.ok(s.weight > 1, `precondition: weight ${s.weight.toFixed(2)} — the divisor floor must not be involved`)
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW, reuseDays: 56 })
+    assert.equal(r.priority, 'weakest')
+    assert.equal(r.item.topic, 'a')
+    assert.match(r.reason, /on recent evidence/, 'both numbers are still stated')
+    assert.doesNotMatch(
+      r.reason, /weighted down/,
+      `72% is not 40% weighted down — ${r.reason}`,
+    )
+    assert.match(r.reason, /older than/, 'it has to say WHY the recent figure is the higher one')
+  })
+
+  await t.test('a topic that really has decayed still says weighted down', () => {
+    // The other direction, so the fix above cannot be "delete the explanation".
+    const attempts = [
+      ...[1, 2, 3].map((i) => attempt(`a${i}`, 'a', 1, 240)),
+      ...['b', 'c'].flatMap((tp) => [1, 2, 3].map((i) => attempt(`${tp}${i}`, tp, 1, 1))),
+    ]
+    const r = pickNext({ items: ITEMS, attempts, topicMeta: META, config: CFG, now: NOW })
+    assert.equal(r.item.topic, 'a')
+    assert.match(r.reason, /weighted down/)
   })
 })
 
@@ -587,12 +656,153 @@ test('spaced review gets a reserved share of ordinary practice', async (t) => {
     })
     assert.equal(new Set(picked.map((p) => p.split('=')[1])).size, 1, `order-dependent: ${picked.join(', ')}`)
   })
+
+  // -------------------------------------------------------------------------
+  // The reserved slot against the NO-REPEAT WINDOW.
+  //
+  // Every fixture above hands each due topic a never-asked question, which is the
+  // one state in which the reserve cannot be starved. On the shipped banks it
+  // usually is: four of the five review intervals (1, 3, 7 and 16 days) are
+  // SHORTER than CSA's 28-day reuse_days, so a topic that comes due on the early
+  // schedule has its own answered items INSIDE the no-repeat window. Ordinary
+  // practice drew poolFor from the globally-fresh set, so once such a topic's
+  // never-asked questions were gone its pool was empty and the due review was
+  // dropped in silence — 146 of 240 reserved slots on a real CSA history.
+  // -------------------------------------------------------------------------
+  /** A due topic whose two questions are both inside a 28-day reuse window. */
+  const WINDOWED = {
+    items: [
+      { id: 'r1', topic: 'r', unit: '1', kind: 'mcq', answer: 'A' },
+      { id: 'r2', topic: 'r', unit: '1', kind: 'mcq', answer: 'A' },
+      { id: 'f1', topic: 'f', unit: '1', kind: 'mcq', answer: 'A' },
+      { id: 'f2', topic: 'f', unit: '1', kind: 'mcq', answer: 'A' },
+      { id: 'f3', topic: 'f', unit: '1', kind: 'mcq', answer: 'A' },
+    ],
+    topicMeta: new Map([
+      ['r', { exam_weight_low: 30, exam_weight_high: 30, unit: '1', tested_on_exam: 1 }],
+      ['f', { exam_weight_low: 30, exam_weight_high: 30, unit: '1', tested_on_exam: 1 }],
+    ]),
+    config: { readiness: { per_unit_min: 75, reuse_days: 28 } },
+    // r: missed long ago, right three times since, so streak 3 and due at 16 days.
+    // Its last two answers are 20 and 22 days old — past the interval, inside the
+    // window. f is fresh and above its floor, and still has never-asked questions,
+    // so the global "nothing inside the window while anything outside it exists"
+    // rule bites.
+    history: () => [
+      attempt('r1', 'r', 0, 60),
+      attempt('r1', 'r', 1, 24), attempt('r2', 'r', 1, 22), attempt('r1', 'r', 1, 20),
+      attempt('f1', 'f', 1, 1),
+    ],
+  }
+
+  await t.test('the fixture really is a due review with no question outside the window', () => {
+    const s = topicStats(WINDOWED.history(), NOW).get('r')
+    assert.equal(s.streak, 3)
+    assert.ok(ageDaysOf(s.last_ts) >= reviewInterval(3), 'r must be past its 16-day interval')
+    assert.ok(s.recent_pct > 75, `r reads ${s.recent_pct.toFixed(1)}% — remediation must have no claim on it`)
+    assert.ok(
+      ageDaysOf(s.last_ts) < WINDOWED.config.readiness.reuse_days,
+      'and its own questions must be INSIDE the reuse window, or there is no defect to reproduce',
+    )
+  })
+
+  await t.test('a due review whose questions are all inside the window is served, as a labelled repeat', () => {
+    const attempts = WINDOWED.history()
+    assert.equal((attempts.length + 1) % REVIEW_SHARE, 0, 'the fixture must sit on a reserved slot')
+    const r = pickNext({ ...WINDOWED, items: WINDOWED.items, attempts, now: NOW })
+    assert.equal(r.priority, 'review', 'the reserved slot must not drop the only review that is due')
+    assert.equal(r.item.topic, 'r')
+    assert.equal(r.item.id, 'r2', 'the least-recently-seen of the topic’s own questions, not the one just answered')
+    assert.equal(r.repeat, true, 'and it is a question he has answered, so it must say so')
+    assert.match(r.reason, /answered this exact question before/i)
+    assert.match(r.reason, /memory check|not fresh evidence/i)
+  })
+
+  await t.test('outside the reserve, a review repeat still never displaces a fresh question', () => {
+    // The exact scope of the fix. One question in REVIEW_SHARE is reserved for
+    // review whatever else was available, so spending it on a labelled repeat is
+    // the trade that slot exists to make. The other two are not reserved, and
+    // there the global rule stands: while the bank holds a question he has never
+    // answered, a remembered one is not served.
+    const attempts = [...WINDOWED.history(), attempt('f2', 'f', 1, 1)]
+    assert.notEqual((attempts.length + 1) % REVIEW_SHARE, 0, 'the fixture must NOT sit on a reserved slot')
+    const r = pickNext({ ...WINDOWED, items: WINDOWED.items, attempts, now: NOW })
+    assert.notEqual(r.repeat, true)
+    assert.equal(r.item.id, 'f3', 'the never-asked question')
+  })
+
+  await t.test('the reserved repeat is deterministic however the bank is ordered', () => {
+    const attempts = WINDOWED.history()
+    const orders = {
+      given: WINDOWED.items,
+      reversed: [...WINDOWED.items].reverse(),
+      rotated: [...WINDOWED.items.slice(2), ...WINDOWED.items.slice(0, 2)],
+    }
+    const picked = Object.entries(orders).map(([label, items]) => {
+      const r = pickNext({ ...WINDOWED, items, attempts, now: NOW })
+      return `${label}=${r.priority}:${r.item.id}`
+    })
+    assert.equal(new Set(picked.map((p) => p.split('=')[1])).size, 1, `order-dependent: ${picked.join(', ')}`)
+  })
+
+  // -------------------------------------------------------------------------
+  // The days in the review sentence.
+  //
+  // calendarDaysAgo exists because elapsed hours are the wrong unit for a
+  // sentence the student reads. The review branch used elapsed days rounded with
+  // toFixed(0) instead, so one sentence could carry two different counts of the
+  // same gap — "it has been 1 days ... you answered it 2 days ago".
+  // -------------------------------------------------------------------------
+  await t.test('the review sentence and the repeat sentence count the same days', () => {
+    const now = '2027-03-01T02:00:00Z'
+    const items = [{ id: 'r1', topic: 'r', unit: '1', kind: 'mcq', answer: 'A' }]
+    const meta = new Map([['r', { exam_weight_low: 30, exam_weight_high: 30, unit: '1', tested_on_exam: 1 }]])
+    const at = (iso, correct) => ({ item_id: 'r1', topic: 'r', correct, ts: iso, hints_used: 0, conditions: 'cold' })
+    // The last answer is a miss at 16:24 two calendar days back: 1.400 elapsed
+    // days, which toFixed(0) renders "1" while the repeat sentence beside it says
+    // "2 days ago" about the very same timestamp.
+    const attempts = [
+      at('2027-02-24T16:24:00Z', true), at('2027-02-25T16:24:00Z', true),
+      at('2027-02-26T16:24:00Z', true), at('2027-02-26T19:24:00Z', true),
+      at('2027-02-27T16:24:00Z', false),
+    ]
+    const r = pickNext({ items, attempts, topicMeta: meta, config: CFG, now, reuseDays: 3 })
+    assert.equal(r.priority, 'review')
+    assert.equal(r.repeat_of.days_since, 2, 'precondition: whole calendar days put this at 2')
+    assert.match(r.reason, /it has been 2 days/, `one sentence, one count of one gap — ${r.reason}`)
+    assert.doesNotMatch(r.reason, /it has been 1 days/)
+  })
+
+  await t.test('a review one day old says "1 day", not "1 days"', () => {
+    // Interval 1 is the most common due state there is, so the unguarded plural
+    // was the one the student saw most.
+    const now = '2027-03-01T23:00:00Z'
+    const items = [{ id: 'r1', topic: 'r', unit: '1', kind: 'mcq', answer: 'A' },
+      { id: 'r2', topic: 'r', unit: '1', kind: 'mcq', answer: 'A' }]
+    const meta = new Map([['r', { exam_weight_low: 30, exam_weight_high: 30, unit: '1', tested_on_exam: 1 }]])
+    const at = (id, iso, correct) => ({ item_id: id, topic: 'r', correct, ts: iso, hints_used: 0, conditions: 'cold' })
+    // Five right and one wrong, so the topic stays above its floor and this is a
+    // review rather than remediation; the miss is last, so the streak is 0 and the
+    // interval is one day.
+    const attempts = [
+      at('r1', '2027-02-20T10:00:00Z', true), at('r2', '2027-02-21T10:00:00Z', true),
+      at('r1', '2027-02-22T10:00:00Z', true), at('r2', '2027-02-23T10:00:00Z', true),
+      at('r1', '2027-02-24T10:00:00Z', true), at('r2', '2027-02-28T22:00:00Z', false),
+    ]
+    const st = topicStats(attempts, now).get('r')
+    assert.ok(st.recent_pct > 75, `precondition: r reads ${st.recent_pct.toFixed(1)}% and must be above the floor`)
+    assert.equal(reviewInterval(st.streak), 1, 'precondition: the one-day interval is the case being pinned')
+    const r = pickNext({ items, attempts, topicMeta: meta, config: CFG, now, reuseDays: 1 })
+    assert.equal(r.priority, 'review')
+    assert.match(r.reason, /it has been 1 day\./, `"1 days" is not English — ${r.reason}`)
+  })
 })
 
 // ---------------------------------------------------------------------------
 // An EXHAUSTED bank. The bank is finite and the no-repeat window is long, so
 // this state is reached in the first week of ordinary use, not in some corner
-// case: 238 CSA items at 50 answers a day is five days of unique questions.
+// case: the 241 seeded CSA items (221 mcq + 20 frq) at 50 answers a day is five
+// days of unique questions.
 // Refusing to serve anything is the one response the student cannot use, so the
 // selector degrades to the least-recently-seen item and SAYS it is a repeat.
 // ---------------------------------------------------------------------------
@@ -797,6 +1007,233 @@ function unitShares(paper) {
   for (const [unit, n] of counts) out.set(unit, (n / paper.length) * 100)
   return out
 }
+
+// ---------------------------------------------------------------------------
+// The counts the comments quote about the shipped bank.
+//
+// select.js reasons about supply out loud — "N items at 50 answers a day is five
+// days of unique questions" — and those numbers rotted: the header said 218 CSA
+// items and this file said 238 while the seed shipped 241, so a reader checking
+// the module's arithmetic against the bank found it wrong, and the next person to
+// reason about supply started from a false figure. The same rot in
+// DEFAULT_REUSE_DAYS is caught by a test, so this one is too: any count stated
+// about the seeded CSA bank, in either file, has to be the seeded CSA bank's.
+// ---------------------------------------------------------------------------
+
+test('every item count the comments quote is the count the seed actually ships', () => {
+  const csa = bankOf('ap_csa')
+  const counts = { items: csa.items.length }
+  for (const it of csa.items) counts[it.kind] = (counts[it.kind] ?? 0) + 1
+  for (const file of ['../src/select.js', './select.test.js']) {
+    // Comment markers stripped and whitespace collapsed, because a comment wraps
+    // and the phrase can straddle two lines with a `//` or ` *` between them.
+    const text = readFileSync(new URL(file, import.meta.url), 'utf8')
+      .replace(/^\s*(\/\/|\*)/gm, ' ').replace(/\s+/g, ' ')
+    const stated = [...text.matchAll(/(\d+) seeded CSA items/gi)]
+    assert.ok(stated.length >= 1, `${file}: the phrase this test guards has been reworded out of existence`)
+    for (const [, n] of stated) {
+      assert.equal(Number(n), counts.items, `${file} states ${n} seeded CSA items; the seed ships ${counts.items}`)
+    }
+    for (const [, mcq, frq] of text.matchAll(/\((\d+) mcq \+ (\d+) frq\)/g)) {
+      assert.deepEqual(
+        [Number(mcq), Number(frq)], [counts.mcq, counts.frq],
+        `${file} splits the CSA bank ${mcq}/${frq}; the seed ships ${counts.mcq} mcq and ${counts.frq} frq`,
+      )
+    }
+  }
+})
+
+// ---------------------------------------------------------------------------
+// What the reserved review share DELIVERS, measured over a real bank.
+//
+// Every test in the reserve's own section serves a hand-built three-topic fixture
+// in which each due topic still holds a never-asked question, and it pins WHICH
+// slots are reserved — derived from the rule that decides them. None of it
+// measures a realized share, which is why a reserve documented as "around 2-3
+// reviews a day" delivering 0.8 a day, and a due review documented as "waiting at
+// most two questions" waiting a median of 29 questions and a maximum of 135, sat
+// under a green suite for a whole campaign.
+//
+// The gap is a property of the shipped numbers together: four of the five review
+// intervals (1, 3, 7, 16) are shorter than CSA's 28-day reuse_days, so a topic
+// that comes due on the early schedule has its own answered questions inside the
+// no-repeat window. No fixture that hands every due topic a fresh question can
+// see that, so this drives the real bank at the volume the configs say they are
+// sized for and measures the outcome.
+// ---------------------------------------------------------------------------
+
+/**
+ * Drill ordinary practice through the selector, recording what every serve was
+ * and what the review queue looked like at every reserved slot.
+ *
+ * The due/weak rule is recomputed here from the module's OWN exported primitives
+ * — topicStats, reviewInterval, REVIEW_SHARE — rather than re-derived by hand, so
+ * that "a review was available and was not served" means the same thing here as
+ * it does in the selector.
+ */
+function drillOrdinary({ bank, answers, perDay = 8, startMs }) {
+  const { items, topicMeta, config } = bank
+  const floor = config.readiness.per_unit_min
+  const tested = new Set([...topicMeta.entries()].filter(([, m]) => m.tested_on_exam !== 0).map(([id]) => id))
+  const hasItems = new Set(items.map((it) => it.topic))
+  const attempts = []
+  const serves = []
+  /** Question index at which each topic most recently became due and unserved. */
+  const dueSince = new Map()
+  const waits = []
+  const reviewed = new Set()
+  const everDue = new Set()
+
+  for (let i = 0; i < answers; i++) {
+    const now = new Date(startMs + Math.floor(i / perDay) * DAY_MS + (i % perDay) * 300000).toISOString()
+    const stats = topicStats(attempts, now)
+    const age = (ts) => (new Date(now).getTime() - new Date(ts).getTime()) / DAY_MS
+    const due = [...stats.entries()]
+      .filter(([tp, s]) => tested.has(tp) && s.misses > 0 && s.last_ts && age(s.last_ts) >= reviewInterval(s.streak))
+      .map(([tp]) => tp)
+    const weak = new Set([...stats.entries()].filter(([tp, s]) => (s.recent_pct ?? s.pct) < floor && tested.has(tp)).map(([tp]) => tp))
+    // What the reserved slot is FOR: a due topic remediation is not about to serve
+    // anyway, which the bank can actually supply a question for.
+    const claimable = due.filter((tp) => !weak.has(tp) && hasItems.has(tp))
+    for (const tp of claimable) {
+      everDue.add(tp)
+      if (!dueSince.has(tp)) dueSince.set(tp, i)
+    }
+
+    const r = pickNext({ items, attempts, gaps: [], topicMeta, config, now })
+    assert.notEqual(r, null, `ordinary drilling refused after ${i} answers`)
+    serves.push({
+      q: i + 1, priority: r.priority, topic: r.item.topic, reason: r.reason, repeat: r.repeat === true,
+      daysSince: r.repeat_of?.days_since ?? null,
+      reserved: (attempts.length + 1) % REVIEW_SHARE === 0, dueCount: due.length, claimable,
+    })
+    if (r.priority === 'review') {
+      reviewed.add(r.item.topic)
+      const since = dueSince.get(r.item.topic)
+      if (since != null) waits.push(i - since)
+      dueSince.delete(r.item.topic)
+    }
+    attempts.push({
+      item_id: r.item.id, topic: r.item.topic, unit: r.item.unit, response: 'A',
+      correct: i % 5 !== 0, ts: now, hints_used: 0, conditions: 'cold',
+      graded_by: 'server', kind: r.item.kind,
+    })
+  }
+  // A topic still waiting when the run ends has waited at least this long.
+  const all = [...waits, ...[...dueSince.values()].map((since) => answers - since)].sort((a, b) => a - b)
+  const reviews = serves.filter((s) => s.priority === 'review').length
+  const reserved = serves.filter((s) => s.reserved)
+  return {
+    attempts, serves, reviews, sharePct: (reviews / answers) * 100,
+    reservedSlots: reserved.length,
+    reservedDelivered: reserved.filter((s) => s.priority === 'review').length,
+    // The invariant: a reserved slot that passed up a claimable due topic.
+    missed: reserved.filter((s) => s.priority !== 'review' && s.claimable.length),
+    waits: { min: all[0] ?? null, median: all.length ? all[Math.floor(all.length / 2)] : null, max: all[all.length - 1] ?? null },
+    everDue, neverReviewed: [...everDue].filter((tp) => !reviewed.has(tp)),
+  }
+}
+
+test('the reserved review share delivers reviews on the real bank', async (t) => {
+  const START = new Date('2026-09-01T12:00:00Z').getTime()
+  // 8 answers a day for 90 days — the volume reuse_days_note says the banks are
+  // sized for, over a span longer than the longest review interval.
+  const runs = new Map(['ap_csa', 'ap_precalc'].map(
+    (subject) => [subject, drillOrdinary({ bank: bankOf(subject), answers: 720, perDay: 8, startMs: START })],
+  ))
+
+  for (const [subject, run] of runs) {
+    await t.test(`${subject}: no reserved slot passes up a review it could have served`, () => {
+      // The rule, stated as an invariant rather than as a share: on a reserved
+      // slot, a due topic that is not already remediation's business and that the
+      // bank can supply a question for IS the question. Before the reuse-window
+      // fix this failed on 146 of CSA's 240 reserved slots, every one of them
+      // because the topic's own questions were all inside the no-repeat window.
+      assert.deepEqual(
+        run.missed.map((s) => `q${s.q}:${s.priority}(due ${s.claimable.slice(0, 3).join(',')})`), [],
+        `${run.missed.length} of ${run.reservedSlots} reserved slots dropped a due review`,
+      )
+    })
+
+    await t.test(`${subject}: the realized share does not collapse to a tenth of the reserve`, () => {
+      // A collapse guard, not a target. The reserve's CEILING is one question in
+      // REVIEW_SHARE — 33.3% — and it is a ceiling rather than a quota: a reserved
+      // slot with nothing due, or with nothing due that remediation is not already
+      // about to serve, correctly goes back to remediation, and the healthier the
+      // queue the more often that happens. Measured on these two banks at 8
+      // answers a day for 90 days: 15.1% of ordinary practice on CSA (1.2 reviews
+      // a day, 84 of 240 reserved slots claimed, 148 of the rest holding nothing
+      // but topics already below their floor) and 22.1% on Precalc (1.8 a day).
+      // Before the reuse-window fix: 10.3% and 23.9%, with 146 and 125 slots
+      // dropping a review they could have served. The bar is a third of the
+      // ceiling, which those 8.9%-11% collapse states do not clear.
+      const ceiling = 100 / REVIEW_SHARE
+      assert.ok(
+        run.sharePct >= ceiling / 3,
+        `review took ${run.sharePct.toFixed(1)}% of 720 ordinary questions against a ${ceiling.toFixed(1)}% ceiling ` +
+          `(${run.reservedDelivered}/${run.reservedSlots} reserved slots delivered)`,
+      )
+    })
+
+    await t.test(`${subject}: a review never hands back a question from today`, () => {
+      // What bounds how bad a reserved repeat can be. `due` requires the topic's
+      // most recent answer to be at least its review interval old, and no question
+      // of that topic can be newer than that answer, so a "spaced review" can never
+      // be a question he answered earlier the same day — which would be the one
+      // form of this trade that is indefensible whatever it is labelled.
+      const sameDay = run.serves.filter((s) => s.priority === 'review' && s.repeat && s.daysSince < 1)
+      assert.deepEqual(
+        sameDay.map((s) => `q${s.q}:${s.topic}(${s.daysSince}d)`), [],
+        'a spaced review of a question answered today is not a review of anything',
+      )
+    })
+
+    await t.test(`${subject}: a due review is worked down, not left in a growing queue`, () => {
+      // The header claims a due review waits at most two questions. That is true
+      // of a queue of one; with k topics due the reserve works them down one every
+      // REVIEW_SHARE questions, and a topic can drop into remediation's hands and
+      // back out again while it waits, so the honest bound is on the queue rather
+      // than on one review. What must not happen is what did: a median wait of 29
+      // questions and a maximum of 135 on CSA, and 9 / 51 on Precalc — and, counting
+      // every topic that came due rather than only the ones the reserve owed, a
+      // median of 77 and a maximum of 702, i.e. reviews that came due in week two
+      // and were still waiting in week thirteen. Measured after the fix: median 1,
+      // max 7 (CSA) and 25 (Precalc).
+      assert.ok(
+        run.waits.median <= REVIEW_SHARE,
+        `median wait ${run.waits.median} questions (max ${run.waits.max}) for a due topic remediation was not ` +
+          'already going to serve',
+      )
+      assert.ok(
+        run.waits.max <= 20 * REVIEW_SHARE,
+        `worst wait ${run.waits.max} questions — a 1-day review interval cannot survive that`,
+      )
+      assert.deepEqual(
+        run.neverReviewed, [],
+        `${run.neverReviewed.length} of ${run.everDue.size} topics came due, were not remediation's business, and ` +
+          'were never reviewed in 90 days',
+      )
+    })
+  }
+
+  await t.test('no served reason mis-states which way the recency weighting moved', () => {
+    // The real-bank counterpart of the fixture test in the recency section: over
+    // 1,440 serves on two banks, every reason that prints both percentages must
+    // describe the direction it actually moved. 133 of them used to say "weighted
+    // down" about a number that was HIGHER than the lifetime figure.
+    const wrong = []
+    for (const [subject, run] of runs) {
+      for (const s of run.serves) {
+        const m = s.reason.match(/(\d+)% on recent evidence \((\d+)% across all/)
+        if (!m) continue
+        const [recent, lifetime] = [Number(m[1]), Number(m[2])]
+        const saysDown = /weighted down/.test(s.reason)
+        if (saysDown !== recent < lifetime) wrong.push(`${subject} q${s.q}: ${recent}% vs ${lifetime}% — ${s.reason.slice(0, 120)}`)
+      }
+    }
+    assert.deepEqual(wrong.slice(0, 5), [], `${wrong.length} served reasons state the wrong direction`)
+  })
+})
 
 test('the real bank keeps serving after it has been worked through', async (t) => {
   for (const subject of ['ap_csa', 'ap_precalc']) {

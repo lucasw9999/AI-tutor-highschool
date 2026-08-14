@@ -49,26 +49,46 @@
  *
  * AND THE DISCIPLINE: this parser REFUSES to report success on a partial parse.
  * Every count it expects is asserted — five practice FRQs per file, 20 in all,
- * rubric points equal to the question's value and numbered 1..N without gaps,
- * part points summing to the total, a sample solution, a trace check, a stem, a
- * penalty policy, a declared topic list, and every fenced Java block classified
- * as either provided or to-be-implemented. Any violation collects into one
- * FrqParseError listing all of them; nothing partial is ever returned.
+ * rubric points equal to the question's value and numbered 1..N without gaps, the
+ * number of rubric part tables the slot has and their points summing to the total,
+ * one sample solution, exactly one trace check, a stem, a penalty policy, a
+ * declared topic list, the shared element class reaching the items FRQ_FILES says
+ * it reaches, and every fenced Java block classified as either provided or
+ * to-be-implemented and not both. Any violation collects into one FrqParseError
+ * listing all of them; nothing partial is ever returned.
+ *
+ * WHAT "SILENT" MEANT HERE, because three rounds of counts never caught it: every
+ * check above used to be phrased as "if the thing is there, it must be right",
+ * which cannot see the thing GOING AWAY. Deleting frq-q3's shared `Book` class —
+ * or just its closing fence — parsed clean at 20 items and 125 points with two
+ * stems calling an accessor nothing defined. Merging Q1's two rubric tables into
+ * one parsed clean with parts=[]. Both are now counted against FRQ_FILES, which
+ * states the structure each file is supposed to have, so absence is as loud as
+ * malformation.
  */
 
 /**
- * The four files, the exam question slot each one is, and what that slot is worth.
+ * The four files, the exam question slot each one is, what that slot is worth,
+ * how many rubric part tables each of its items must have, and which of its items
+ * the section-(b) shared element class belongs to.
  *
- * The point values mirror worker/config/ap_csa.json `exam.frq_points`, re-stated
- * here so the content build does not read the Worker's config at runtime — the
- * same arrangement validate.js uses for MIN_MOCK_COVERAGE, and
- * tools/build/tests/parse-frq.test.js fails if the two ever disagree.
+ * THIS TABLE IS THE AUTHORITY, and naming the right authority is the point of
+ * this comment. The FRQ point split is written in three places — here,
+ * worker/config/ap_csa.json `exam.frq_points`, and tools/build/tests/
+ * parse-frq.test.js — and only this one has any effect. Nothing at runtime reads
+ * `exam.frq_points`: if the config drifts, the markdown is still validated
+ * against this table, the build reports OK and writes artifacts, and only
+ * `node --test tools/build/tests/parse-frq.test.js` objects. If THIS table drifts,
+ * the build fails with sixteen structural violations and writes nothing. So the
+ * test that asserts the two agree is not a redundant restatement of a stronger
+ * check — it is the only check there is, and the config must be edited together
+ * with this table, never instead of it.
  */
 export const FRQ_FILES = [
-  { file: 'frq-q1-methods-control.md', slot: 'Q1', points: 7 },
-  { file: 'frq-q2-class-design.md', slot: 'Q2', points: 7 },
-  { file: 'frq-q3-arraylist.md', slot: 'Q3', points: 5 },
-  { file: 'frq-q4-2d-array.md', slot: 'Q4', points: 6 },
+  { file: 'frq-q1-methods-control.md', slot: 'Q1', points: 7, parts: 2, sharedFor: [] },
+  { file: 'frq-q2-class-design.md', slot: 'Q2', points: 7, parts: 0, sharedFor: [] },
+  { file: 'frq-q3-arraylist.md', slot: 'Q3', points: 5, parts: 0, sharedFor: [1, 3] },
+  { file: 'frq-q4-2d-array.md', slot: 'Q4', points: 6, parts: 0, sharedFor: [] },
 ]
 
 /** Five original practice FRQs per question type, twenty in all. */
@@ -131,10 +151,20 @@ const isTableRule = (l) => /^\|[\s:|-]+\|$/.test(l.trim())
 /**
  * Every top-level fenced block in `lines`, in order, as {lang, code}.
  *
- * Only fences at the start of a line count, which is what keeps the fenced Java
- * inside frq-q3's `> **Equivalent forward pattern**` blockquote out of the
- * stem's code inventory — it is a note about the solution, not code the student
- * is handed.
+ * Only fences at the START of a line count, so a fence indented into a list item
+ * or quoted inside a `>` blockquote never opens a block. Nothing in the four files
+ * exercises that today, and the comment that used to live here claimed otherwise:
+ * frq-q3's `> **Equivalent forward pattern**` blockquote is the only blockquoted
+ * fence in all four files, and it sits AFTER the trace check, in the rubric region,
+ * which is never passed to this function — its text reaches the student through
+ * `notes`. The line-start rule is kept because the alternative is a fence matcher
+ * that a quoted example can prise open, not because the content needs it yet.
+ *
+ * `unterminated` is REPORTED rather than thrown so each caller can say out loud
+ * what a half-open fence means for its own region — and every caller must, because
+ * an unterminated fence yields ZERO blocks. That is how a dropped closing fence in
+ * the section-(b) preamble made a shared element class vanish out of two stems
+ * without one count changing.
  */
 function fencedBlocks(lines) {
   const out = []
@@ -225,14 +255,36 @@ function officialModels(lines) {
 /**
  * Classify a fenced Java block by the convention the files actually use:
  * a provided element/helper says its body is "not shown"; a skeleton the student
- * must fill says "to be implemented". A block that says neither means the
- * convention changed, and guessing would be the silent partial parse this module
- * exists to prevent.
+ * must fill says "to be implemented".
+ *
+ * Both failure modes are returned as their own label rather than a bare null,
+ * because the caller's message has to say WHICH convention broke.
+ *
+ *   'unmarked'  — says neither. The convention changed, and guessing would be the
+ *                 silent partial parse this module exists to prevent.
+ *   'ambiguous' — says BOTH. This one used to resolve to whichever regex was
+ *                 tested first, which was /not shown/: a Part B skeleton carrying
+ *                 the note "uses the provided helpers, whose bodies are not shown"
+ *                 was filed as code the student had been HANDED, with no
+ *                 violation, when it is the signature he must WRITE. A block that
+ *                 answers "which is it?" both ways does not have an answer.
  */
 function classifyJava(code) {
-  if (/not shown/.test(code)) return 'provided'
-  if (/to be implemented/.test(code)) return 'skeleton'
-  return null
+  const provided = /not shown/.test(code)
+  const skeleton = /to be implemented/.test(code)
+  if (provided && skeleton) return 'ambiguous'
+  if (provided) return 'provided'
+  if (skeleton) return 'skeleton'
+  return 'unmarked'
+}
+
+/** Why a block could not be classified, in the words of the convention it broke. */
+const UNCLASSIFIED_WHY = {
+  unmarked:
+    'says neither "not shown" (code provided to be called) nor "to be implemented" (the signature the student writes)',
+  ambiguous:
+    'says BOTH "not shown" and "to be implemented", so which one it is cannot be read — taking whichever phrase ' +
+    'matches first would file the signature the student must WRITE among the code he was HANDED',
 }
 
 /** Parse one file. Violations are appended to `violations`; items are returned. */
@@ -250,8 +302,9 @@ function parseOne(text, filename, spec, violations) {
     if (h1[1] !== spec.slot) say(`heading says ${h1[1]}, expected ${spec.slot}`)
     if (Number(h1[3]) !== spec.points) {
       say(
-        `heading says ${h1[3]} points, expected ${spec.points} — worker/config/ap_csa.json exam.frq_points.${spec.slot} ` +
-        'is the authority on what this question is worth',
+        `heading says ${h1[3]} points, expected ${spec.points} — FRQ_FILES in tools/build/parse-frq.js is the ` +
+        `authority on what ${spec.slot} is worth (worker/config/ap_csa.json exam.frq_points re-states it for the ` +
+        'Worker, but nothing reads that at build time). Fix the heading, or change FRQ_FILES and the config together.',
       )
     }
   }
@@ -276,9 +329,10 @@ function parseOne(text, filename, spec, violations) {
   }
 
   const b = section(lines, '## (b)')
+  const meta = { slot: spec.slot, points: spec.points, title, topics, models, sharedProvidedFor: [] }
   if (!b) {
     say('no "## (b) Original practice FRQs" section — no practice FRQ can be read')
-    return []
+    return { items: [], meta }
   }
 
   // The grading note states the penalty policy once for every rubric in the file.
@@ -296,13 +350,33 @@ function parseOne(text, filename, spec, violations) {
     say(`found ${heads.length} practice FRQ(s), expected ${FRQ_PER_FILE}`)
   }
 
+  // The shared element class, and the three ways it used to go missing in silence.
+  //
+  // THE SENTENCE IS THE GATE, not the block. Everything here used to hang off
+  // `if (shared.blocks.length)` — the applicability check, the classification
+  // check, all of it — so the gate opened only when a block was FOUND, and every
+  // way of losing the block took the checks with it. Deleting the class, or just
+  // its closing fence, or tagging the fence ```Java, each parsed clean at 20 items
+  // and 125 points while csa-frq-q3-p1 and -p3 shipped stems with nothing defining
+  // the `getPages()` their own rubric point 3 requires them to call. So: an
+  // unterminated fence is reported, a preamble that PROMISES a class must carry a
+  // ```java one, and what the prose says must match what FRQ_FILES declares — the
+  // last of which is the only thing that can notice the sentence and the class
+  // being deleted together, leaving nothing in the markdown to disagree with.
   const preamble = trimBlank(b.slice(0, heads.length ? heads[0] : b.length).filter((l) => !l.startsWith('>')))
   const shared = fencedBlocks(preamble)
+  if (shared.unterminated) {
+    say(
+      'an unterminated code fence in the section (b) preamble — a half-open fence yields NO blocks, so the shared ' +
+      'element class would silently reach none of the items whose stems call it',
+    )
+  }
+  const applies = preamble.join(' ').match(/provided for FRQs?\s+([\d\s,and]+?)\s*\(/i)
+  const sharedJava = shared.blocks.filter((blk) => blk.lang === 'java')
   let sharedFor = []
   let sharedText = null
-  if (shared.blocks.length) {
+  if (applies || shared.blocks.length) {
     sharedText = dropSeparator(trimBlank(preamble)).join('\n').trim()
-    const applies = preamble.join(' ').match(/provided for FRQs?\s+([\d\s,and]+?)\s*\(/i)
     sharedFor = applies ? (applies[1].match(/\d+/g) ?? []).map(Number) : []
     if (!sharedFor.length) {
       say(
@@ -314,12 +388,31 @@ function parseOne(text, filename, spec, violations) {
     for (const n of sharedFor) {
       if (n < 1 || n > FRQ_PER_FILE) say(`the shared element class is declared for FRQ ${n}, which does not exist`)
     }
-    for (const blk of shared.blocks) {
-      if (blk.lang === 'java' && !classifyJava(blk.code)) {
-        say(`unclassified java block in the shared element class: it says neither "not shown" nor "to be implemented"`)
+    if (!sharedJava.length && !shared.unterminated) {
+      say(
+        `section (b) says a shared element class is provided for FRQ(s) ${sharedFor.join(', ') || '(unstated)'}, but ` +
+        'the preamble holds no fenced ```java block — those stems would name a class nothing defines. ' +
+        (shared.blocks.length
+          ? `The preamble's ${shared.blocks.length} fenced block(s) are tagged [${
+            shared.blocks.map((blk) => blk.lang || '(none)').join(', ')}], not "java", so nothing inventoried them.`
+          : 'The preamble holds no fenced block at all.'),
+      )
+    }
+    for (const blk of sharedJava) {
+      const kind = classifyJava(blk.code)
+      if (kind !== 'provided' && kind !== 'skeleton') {
+        say(`unclassified java block in the shared element class: it ${UNCLASSIFIED_WHY[kind]}`)
       }
     }
   }
+  if (sharedFor.join(',') !== spec.sharedFor.join(',')) {
+    say(
+      `section (b)'s shared element class reaches FRQ(s) [${sharedFor.join(', ') || 'none'}], but FRQ_FILES declares ` +
+      `[${spec.sharedFor.join(', ') || 'none'}] for ${spec.slot} — the prose and the parser's own table must agree, ` +
+      'or a stem ships calling a class nothing defines (or is handed one it never mentions)',
+    )
+  }
+  meta.sharedProvidedFor = sharedFor
 
   const items = []
   heads.forEach((start, k) => {
@@ -339,7 +432,7 @@ function parseOne(text, filename, spec, violations) {
     if (item) items.push(item)
   })
 
-  return { items, meta: { slot: spec.slot, points: spec.points, title, topics, models, sharedProvidedFor: sharedFor } }
+  return { items, meta }
 }
 
 /** Parse one `### Practice FRQ n — ...` block into an item. */
@@ -391,10 +484,7 @@ function parseItem({ header, body, index, spec, filename, title, topics, penalty
     if (kind === 'provided') provided.push(blk.code)
     else if (kind === 'skeleton') skeleton.push(blk.code)
     else {
-      say(
-        'unclassified java block in the stem — it says neither "not shown" (code provided to be called) nor ' +
-        `"to be implemented" (the signature the student writes):\n      ${blk.code.split('\n')[0]}`,
-      )
+      say(`unclassified java block in the stem — it ${UNCLASSIFIED_WHY[kind]}:\n      ${blk.code.split('\n')[0]}`)
     }
   }
 
@@ -409,31 +499,41 @@ function parseItem({ header, body, index, spec, filename, title, topics, penalty
   const criteria = []
   let part = null
   let trace = null
-  let sawHeader = false
   for (const line of rubLines) {
     const p = line.match(/^\*\*Part ([A-Z])\s+—\s+`([^`]+)`\s+\((\d+)\s+points?\)\*\*\s*$/)
     if (p) {
       part = `Part ${p[1]}`
       parts.push({ label: part, method: p[2], points: Number(p[3]) })
-      sawHeader = false
       continue
     }
     const t = line.match(/^\*\*Trace check\.\*\*\s*(.*)$/)
     if (t) {
-      trace = t[1].trim()
+      // Last write used to win, so a second trace check discarded the first without
+      // a word — out of `trace_check` AND out of `explanation`, which /log returns
+      // to the student. Everything else in this file that appears twice is a
+      // violation; this is one too, and the FIRST is kept so the report is stable.
+      if (trace !== null) {
+        say(
+          'two "**Trace check.**" paragraphs — one of them would be silently discarded, along with whatever it says ' +
+          `about the rubric. Keep one. The second reads: "${t[1].trim().slice(0, 60)}..."`,
+        )
+      } else {
+        trace = t[1].trim()
+      }
       continue
     }
     if (!isTableRow(line)) continue
     if (isTableRule(line)) continue
     const cells = rowCells(line)
-    if (!sawHeader) {
-      // The column contract itself: if the table stops being "Pt | Criterion",
-      // every row below it means something else and must not be read as points.
-      if (cells.length === 2 && /^pt$/i.test(cells[0]) && /^criterion$/i.test(cells[1])) {
-        sawHeader = true
-        continue
-      }
-    }
+    // A "| Pt | Criterion |" row is the column contract, never a point, wherever it
+    // appears: Q1's rubric is two tables, so an item legitimately carries two of
+    // them. This used to be a one-shot latch that only a RECOGNIZED part header
+    // reset, which meant an unrecognized part header turned the second table's
+    // header row into 'malformed rubric row (2 cell(s), expected "| point |
+    // criterion |")' — a true refusal, pointed at the wrong line, blaming a row
+    // that has exactly the 2 cells it is accused of lacking. The part headers are
+    // counted against FRQ_FILES below, which is the check that actually belongs.
+    if (cells.length === 2 && /^pt$/i.test(cells[0]) && /^criterion$/i.test(cells[1])) continue
     if (cells.length !== 2 || !/^\d+$/.test(cells[0]) || !cells[1]) {
       say(`malformed rubric row (${cells.length} cell(s), expected "| point | criterion |"): ${line.trim()}`)
       continue
@@ -448,6 +548,22 @@ function parseItem({ header, body, index, spec, filename, title, topics, penalty
   const expected = Array.from({ length: criteria.length }, (_, k) => k + 1)
   if (criteria.length && numbers.join(',') !== expected.join(',')) {
     say(`rubric points [${numbers.join(', ')}] must be numbered 1..${spec.points} in order, across both parts if split`)
+  }
+  // How many part tables this slot has is declared, not inferred. "Part points sum
+  // to the total" was a CONDITIONAL invariant — it only ran `if (parts.length)` —
+  // so merging Q1's two tables into one, an ordinary-looking formatting cleanup,
+  // parsed with ZERO violations: 7 rows numbered 1..7, parts empty, every criterion
+  // belonging to no part. Zero parts was indistinguishable from a single undivided
+  // table, and which part a point belongs to is how a student is told which half of
+  // the question he lost it in.
+  if (parts.length !== spec.parts) {
+    say(
+      `${parts.length} rubric part header(s) ("**Part A — \`method\` (N points)**"), expected ${spec.parts} for ` +
+      `${spec.slot} — ` + (spec.parts
+        ? `a ${spec.slot} rubric is ${spec.parts} tables whose points sum to ${spec.points}, numbered 1..${spec.points} ` +
+          'across both; one undivided table loses which part each point belongs to'
+        : `a ${spec.slot} rubric is one undivided table of ${spec.points} points`),
+    )
   }
   if (parts.length) {
     const sum = parts.reduce((n, x) => n + x.points, 0)
@@ -499,7 +615,8 @@ function parseItem({ header, body, index, spec, filename, title, topics, penalty
     explanation,
     trace_check: trace ?? null,
     notes,
-    // The markdown declares topics per FILE, not per item (see parseFrqAll).
+    // The markdown declares topics per FILE, not per item, and for Q4 the first of
+    // them is the WRONG one. See parseFrqAll: this is a known, unfixed defect.
     topic: topics[0] ?? null,
     topics,
     practice: null,
@@ -509,8 +626,13 @@ function parseItem({ header, body, index, spec, filename, title, topics, penalty
 }
 
 /**
- * Parse ONE FRQ file. `filename` must be one of FRQ_FILES — the slot and point
- * value come from that table, so an unknown file is refused rather than guessed.
+ * Parse ONE FRQ file. `filename` must be one of FRQ_FILES — the slot, point value,
+ * rubric part count and shared-class applicability all come from that table, so an
+ * unknown file is refused rather than guessed.
+ *
+ * Returns `{ items, meta }`, where `meta` is `{ slot, points, title, topics,
+ * models, sharedProvidedFor }`. parseFrqAll spreads that same `meta` alongside
+ * `items` into each `byFile` entry.
  */
 export function parseFrqFile(text, filename) {
   const spec = FRQ_FILES.find((f) => f.file === filename)
@@ -533,14 +655,45 @@ export function parseFrqFile(text, filename) {
  * tags topics per FILE (each file's Cross-links line, cross-checked against the
  * "Bank Item(s)" column of topic-coverage-matrix.md), never per item. So each
  * item carries its file's whole declared list in `topics`, and `topic` — the one
- * column the items table has — is the FIRST topic that list declares. That is
- * the document's own ordering, not a mapping invented here: in all four files the
- * first-declared topic is exercised by all five of its items (every Q1 Part B is
- * a String method, 1.15; every Q2 item writes a constructor, 1.13; every Q3 item
- * calls ArrayList methods, 4.8; every Q4 item runs a standard array algorithm,
- * 4.5). build.js reports the 20 items as not individually topic-tagged, the same
+ * column the items table has — is the FIRST topic that list declares. That is the
+ * document's own ordering, not a mapping invented here, and for three of the four
+ * files it is also true of every item: every Q1 Part B is a String method (1.15),
+ * every Q2 item writes a constructor (1.13), every Q3 item calls ArrayList methods
+ * (4.8). build.js reports the 20 items as not individually topic-tagged, the same
  * way it reports the Precalc <unit>.0 buckets, rather than presenting a per-item
  * tag the content does not state.
+ *
+ * KNOWN DEFECT, Q4, UNFIXED — this justification does NOT hold for frq-q4-2d-array
+ * and the comment here used to claim it did ("every Q4 item runs a standard array
+ * algorithm, 4.5"). Q4's first-declared topic is 4.5 "Standard Array Algorithms",
+ * which is the ONE-dimensional topic, and all five of its items are 2D: countEven,
+ * columnMax, countAvailable, heaviestColumn, borderSum. The same file declares 4.13
+ * "2D Array Algorithms ... sum, count, find max/min in 2D", which describes them
+ * exactly. So a quarter of the free-response bank — of the section that is 45% of
+ * the exam — points topic-level selection at the wrong topic. It is coarse for
+ * Q1-Q3; for Q4 it is wrong.
+ *
+ * THE FIX, and why it is not in this commit. This parser is the right place for the
+ * READ, not the invention: it must not mint 4.13 out of prose that does not say it.
+ * The cheapest correct fix is content-side and spans five files, three of which are
+ * outside this module's ownership, so it has to land as one coordinated change:
+ *
+ *   1. each `### Practice FRQ n` heading states its own topic, e.g. a trailing
+ *      "· topic 4.13"  (the 4 markdown files);
+ *   2. parseItem reads it, strips it out of `aside`, and REFUSES both a heading
+ *      that states none and a topic outside the file's declared list, so the tag
+ *      stays a read of the content and drift stays loud  (this file);
+ *   3. build.js:284-290 — its INCOMPLETE disclosure says these items "carry the
+ *      FIRST topic their file declares" and prints `frq.primaryTopics` as evidence.
+ *      Both become false the moment step 1 lands;
+ *   4. tools/build/tests/build-gates.test.js:689-693 pins that wording AND the
+ *      exact list `1.15, 1.13, 4.8, 4.5`, so it moves with build.js;
+ *   5. worker/seed.sql is a COMMITTED artifact holding every item's topic column,
+ *      and to-sql.test.js round-trips it against content/items.json. It must be
+ *      regenerated (`npm run seed:sql`) in the same change, or the suite fails.
+ *
+ * Steps 1 and 2 were built and tested; they are not shipped because 3-5 are not
+ * this module's to change, and half of them would leave npm test red.
  *
  * Throws FrqParseError, listing every violation found across all four files,
  * instead of returning fewer items than the content holds.
@@ -557,9 +710,8 @@ export function parseFrqAll(readBankFile) {
       violations.push(`${spec.file}: could not be read (${err.message})`)
       continue
     }
-    const parsed = parseOne(text, spec.file, spec, violations)
-    const fileItems = Array.isArray(parsed) ? parsed : parsed.items
-    byFile.set(spec.file, { ...(Array.isArray(parsed) ? {} : parsed.meta), items: fileItems })
+    const { items: fileItems, meta } = parseOne(text, spec.file, spec, violations)
+    byFile.set(spec.file, { ...meta, items: fileItems })
     items.push(...fileItems)
   }
 

@@ -210,9 +210,19 @@ function sixMocks(composites) {
   return composites.map((c, i) => mock(i + 1, 40 - i * 7, c, i === 4 ? { source: 'official' } : {}))
 }
 
-function assess({ composites, attempts, config = CSA, calibrated = true, blanks }) {
+/**
+ * Six well-spaced mocks judged against a config.
+ *
+ * `blanks` sets the blank count on the NEWEST sitting only, which is enough to
+ * pin the threshold but cannot exercise the SUM across the window — every other
+ * sitting stays at 0, so `blanks: 3` and "one sitting with 3 blanks" are the same
+ * fixture. `blanksPer` sets all six, oldest first, which is what a real record
+ * looks like and what the criterion actually reduces over.
+ */
+function assess({ composites, attempts, config = CSA, calibrated = true, blanks, blanksPer }) {
   const mocks = sixMocks(composites)
   if (blanks != null) mocks[mocks.length - 1].blanks = blanks
+  if (blanksPer != null) mocks.forEach((m, i) => { m.blanks = blanksPer[i] })
   return computeReadiness({
     config,
     mocks,
@@ -589,6 +599,28 @@ test('threshold boundaries', async (t) => {
   await t.test('blanks: exactly one blank is tolerated, two are not', () => {
     assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], blanks: 1 }), 'blanks').met, true)
     assert.equal(criterion(assess({ composites: [90, 90, 90, 92, 93, 94], blanks: 2 }), 'blanks').met, false)
+  })
+
+  await t.test('blanks: the window is SUMMED, not read off its newest sitting', () => {
+    // The limit is "at most 1 blank response ACROSS THE WINDOW", and the fixtures
+    // above can never show that: they set the count on one sitting and leave the
+    // other five at 0, so `blanks: 3` and "three blanks in one sitting" are the same
+    // input, and a criterion that read only the newest sitting would pass both.
+    //
+    // One blank in each of the three judged sittings is three across the window and
+    // must fail, though no single sitting is over the limit. This is the assertion
+    // that would have caught a blank count derived per sitting rather than summed.
+    const summed = assess({ composites: [90, 90, 90, 92, 93, 94], blanksPer: [0, 0, 0, 1, 1, 1] })
+    assert.equal(criterion(summed, 'blanks').met, false, 'three sittings with one blank each is three blanks')
+    assert.equal(criterion(summed, 'blanks').detail, '3 blanks', 'and the detail states the sum, not the newest')
+
+    // And it is summed over the WINDOW, not the logbook: blanks on the three older
+    // sittings no criterion here measured cannot fail a criterion about the three it
+    // did. The window is the last three (see sixMocks), so 20 apiece before it are
+    // outside every number in this report.
+    const outside = assess({ composites: [90, 90, 90, 92, 93, 94], blanksPer: [20, 20, 20, 1, 0, 0] })
+    assert.equal(criterion(outside, 'blanks').met, true, 'blanks outside the judged window are not in this criterion')
+    assert.equal(criterion(outside, 'blanks').detail, '1 blank')
   })
 
   await t.test('overall MCQ: exactly 80% is met, 79% is not', () => {

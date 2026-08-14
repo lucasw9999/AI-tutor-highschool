@@ -1165,3 +1165,219 @@ test('G7: no shipped mcq is keyed with something the grader cannot use', () => {
     assert.ok(keyed in item.options, `${item.id} is keyed ${keyed}, which is not one of its options`)
   }
 })
+
+// ---------------------------------------------------------------------------
+// Q8-G1 — a character that MEANS an ASCII character is that ASCII character
+//
+// normalizeShort and canonAnswer folded `$`, `\left`, backticks, whitespace and a
+// trailing period, but not the lookalikes every real keyboard, CAS, PDF and word
+// processor emits. Substituting U+2212 MINUS SIGN for the ASCII hyphen in a
+// SHIPPED CORRECT ANSWER, 7 of the 24 keyed constructed items came back
+// `correct: 0, graded_by: 'server', detail: 'mismatch'` — pc-u1-p3, pc-u1-p5,
+// pc-u1-p6, pc-u3-p1, pc-u3-p2, pc-u3-p5, pc-u4-p3 — a right answer marked wrong
+// and booked as a miss the student then has to work off. The same substitution
+// pushed 80 option texts across 26 mcq items to `unparsed / no_letter`: the serve
+// is spent and no evidence is recorded at all.
+//
+// It bit in BOTH directions, because the bank itself carries these characters in
+// its own keys and options: `n(n−1)/2` (csa-u2-q23 option A), `n²` (csa-ac-q38),
+// `π/3` (pc-u3-p19), `cos θ` (pc-u3-p21), `15 ≤ H ≤ 62.5` (pc-u1-p17),
+// `-√3/2` (pc-u3-p14), `show(7) → show(int)` (csa-u1-q11), `résumé` (csa-u3-q3)
+// and an em dash on six more. On every one of those a student typing the plain
+// ASCII form of the option printed in front of him was refused.
+//
+// tools/build/parse-precalc.js gates `isTypeable = /^[\x20-\x7E]+$/` on accepted
+// forms, so an ASCII-typeable spelling is guaranteed to EXIST. That gate is
+// one-directional: it never made a Unicode-typed RESPONSE acceptable, and it does
+// not apply to mcq option text at all. This is the other half.
+// ---------------------------------------------------------------------------
+
+/**
+ * Mutations that swap a character for one that means the same thing. Each is
+ * applied to a form the bank itself declares correct; the verdict must not move.
+ * These are what a student's keyboard, a pasted PDF, a CAS and Word produce.
+ */
+const LOOKALIKE_MUTATIONS = {
+  minus_sign: (s) => s.replace(/-/g, '−'),
+  en_dash: (s) => s.replace(/-/g, '–'),
+  em_dash_to_ascii: (s) => s.replace(/[–—]/g, '-'),
+  nbsp: (s) => s.replace(/ /g, ' '),
+  thin_space: (s) => s.replace(/ /g, ' '),
+  zero_width: (s) => s.replace(/([^\s])/g, '$1​'),
+  curly_apostrophe: (s) => s.replace(/'/g, '’'),
+  curly_quotes: (s) => s.replace(/"([^"]*)"/g, '“$1”'),
+  pi_symbol: (s) => s.replace(/pi/g, 'π'),
+  pi_to_ascii: (s) => s.replace(/π/g, 'pi'),
+  theta_to_ascii: (s) => s.replace(/θ/g, 'theta'),
+  radical_to_ascii: (s) => s.replace(/√/g, 'sqrt'),
+  superscript_two: (s) => s.replace(/\^2\b/g, '²'),
+  superscript_to_ascii: (s) => s.replace(/²/g, '^2'),
+  le_ge_to_ascii: (s) => s.replace(/≤/g, '<=').replace(/≥/g, '>='),
+  arrow_to_ascii: (s) => s.replace(/→/g, '->').replace(/⇒/g, '=>'),
+  accent_stripped: (s) => s.replace(/é/g, 'e'),
+  fullwidth: (s) => s.replace(/[\x21-\x7e]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0xfee0)),
+  leading_dot: (s) => s.replace(/(^|[^\w.])0\.(\d)/g, '$1.$2'),
+}
+
+/** The keyed short-answer items — the ones a student types a value into. */
+const SHIPPED_CONSTRUCTED = SHIPPED.filter(
+  (i) => i.kind === 'constructed' && i.answer != null && String(i.answer).trim() !== '',
+)
+
+/**
+ * The accepted forms of an item, one per distinct multiset of characters.
+ *
+ * Every mutation above is a per-CHARACTER substitution, so two forms built from
+ * the same characters exercise byte-for-byte the same substitutions. The variant
+ * sets are mostly word-order permutations — pc-u3-p1 ships 960 of them — so this
+ * throws away nothing the sweep could have caught and turns ten seconds into a
+ * fraction of one. Every distinct SPELLING (`sqrt2` vs `sqrt(2)`, `pi` vs `π`,
+ * `50*0.8^x` vs `50(0.8)^x`) has its own multiset and is kept.
+ */
+const acceptedForms = (item) => {
+  const bySignature = new Map()
+  for (const form of [item.answer, ...(item.answer_variants ?? [])]) {
+    if (form == null || String(form).trim() === '') continue
+    const signature = [...String(form)].sort().join('')
+    if (!bySignature.has(signature)) bySignature.set(signature, String(form))
+  }
+  return [...bySignature.values()]
+}
+
+test('Q8-G1: every shipped short answer survives every lookalike substitution', () => {
+  assert.ok(SHIPPED_CONSTRUCTED.length >= 20, `only ${SHIPPED_CONSTRUCTED.length} keyed constructed items`)
+  const refused = []
+  for (const item of SHIPPED_CONSTRUCTED) {
+    for (const form of acceptedForms(item)) {
+      // The bank declares this form correct, so the unmutated form must pass.
+      assert.equal(grade(item, form).correct, 1, `${item.id} refuses its own declared form ${JSON.stringify(form)}`)
+      for (const [name, mutate] of Object.entries(LOOKALIKE_MUTATIONS)) {
+        const typed = mutate(form)
+        if (typed === form) continue
+        const r = grade(item, typed)
+        if (r.correct !== 1 || r.graded_by !== 'server') {
+          refused.push(`${item.id} ${name} ${JSON.stringify(typed)} -> ${r.graded_by}/${r.detail}`)
+        }
+      }
+    }
+  }
+  assert.deepEqual(refused.slice(0, 25), [], `${refused.length} right answers marked wrong`)
+})
+
+/** (item, label) pairs where the option's own text already resolves to it. */
+const READABLE_OPTIONS = SHIPPED_MCQ.flatMap((item) =>
+  Object.entries(item.options)
+    .filter(([label, text]) => text != null && grade(item, String(text)).picked === label)
+    .map(([label, text]) => [item, label, String(text)]),
+)
+
+test('Q8-G1: every readable mcq option survives every lookalike substitution', () => {
+  assert.ok(READABLE_OPTIONS.length >= 500, `only ${READABLE_OPTIONS.length} readable options`)
+  const refused = []
+  for (const [item, label, text] of READABLE_OPTIONS) {
+    for (const [name, mutate] of Object.entries(LOOKALIKE_MUTATIONS)) {
+      const typed = mutate(text)
+      if (typed === text) continue
+      const r = grade(item, typed)
+      if (r.graded_by !== 'server' || r.picked !== label) {
+        refused.push(`${item.id}:${label} ${name} ${JSON.stringify(typed)} -> ${r.graded_by}/${r.detail}/${r.picked}`)
+      }
+    }
+  }
+  assert.deepEqual(refused.slice(0, 25), [], `${refused.length} readable options stopped resolving`)
+})
+
+test('Q8-G1: folding never credits an answer the bank calls wrong', () => {
+  // Folding is a character equivalence. It may not make two DIFFERENT answers
+  // equal, so every distractor — and every lookalike spelling of one — still
+  // scores 0, and no other item's key is ever accepted here.
+  const credited = []
+  for (const item of SHIPPED_MCQ) {
+    const keyed = normalizeChoice(item.answer)
+    for (const [label, text] of Object.entries(item.options)) {
+      if (label === keyed || text == null) continue
+      for (const mutate of [(s) => s, ...Object.values(LOOKALIKE_MUTATIONS)]) {
+        const r = grade(item, mutate(String(text)))
+        if (r.correct === 1) credited.push(`${item.id} distractor ${label} credited via ${JSON.stringify(mutate(String(text)))}`)
+      }
+    }
+  }
+  for (const item of SHIPPED_CONSTRUCTED) {
+    const own = new Set(
+      [item.answer, ...(item.answer_variants ?? [])].filter((a) => a != null).map((a) => normalizeShort(a)),
+    )
+    const wrong = [
+      // A sign that vanished is a different answer.
+      String(item.answer).replace(/-/g, ''),
+      // So is a digit that changed.
+      String(item.answer).replace(/\d/, (d) => String((Number(d) + 1) % 10)),
+      // And so is every other item's answer.
+      ...SHIPPED_CONSTRUCTED.filter((o) => o.id !== item.id).map((o) => String(o.answer)),
+    ]
+    for (const w of wrong) {
+      for (const mutate of [(s) => s, ...Object.values(LOOKALIKE_MUTATIONS)]) {
+        const typed = mutate(w)
+        if (own.has(normalizeShort(typed))) continue
+        const r = grade(item, typed)
+        if (r.correct === 1) credited.push(`${item.id} credited wrong answer ${JSON.stringify(typed)}`)
+      }
+    }
+  }
+  assert.deepEqual(credited.slice(0, 25), [], `${credited.length} wrong answers credited`)
+})
+
+test('Q8-G1: folding leaves every item’s options distinct from each other', () => {
+  // If a fold collapsed two options onto one canonical form the grader would
+  // report `ambiguous_choice` where it used to resolve — a refusal, not a false
+  // credit, but still a serve spent. No shipped item may reach that state.
+  const collapsed = []
+  for (const item of SHIPPED_MCQ) {
+    const seen = new Map()
+    for (const [label, text] of Object.entries(item.options)) {
+      if (text == null) continue
+      const canon = normalizeShort(text)
+      if (seen.has(canon)) collapsed.push(`${item.id}: ${seen.get(canon)} and ${label} both fold to ${JSON.stringify(canon)}`)
+      seen.set(canon, label)
+    }
+  }
+  assert.deepEqual(collapsed, [])
+})
+
+test('Q8-G1: every bare letter and every key still resolves after folding', () => {
+  for (const item of SHIPPED_MCQ) {
+    for (const label of Object.keys(item.options)) {
+      assert.equal(grade(item, label).picked, label, `${item.id} lost the bare letter ${label}`)
+      assert.equal(grade(item, `choice ${label}`).picked, label, `${item.id} lost 'choice ${label}'`)
+    }
+    assert.ok(normalizeChoice(item.answer), `${item.id} key became unreadable`)
+  }
+})
+
+test('Q8-G1: the fold is stated on normalizeShort directly', () => {
+  const eq = (a, b) => assert.equal(normalizeShort(a), normalizeShort(b), `${JSON.stringify(a)} != ${JSON.stringify(b)}`)
+  eq('−2', '-2')             // U+2212 MINUS SIGN, what a CAS emits
+  eq('y = 2x – 1', 'y = 2x - 1')  // en dash
+  eq('a — b', 'a - b')       // em dash
+  eq('a‑b', 'a-b')           // non-breaking hyphen
+  eq('x = 4', 'x = 4')  // non-breaking space
+  eq('a​b', 'ab')            // zero-width space from a paste
+  eq('don’t', "don't")       // curly apostrophe
+  eq('“yes”', '"yes"')  // curly quotes
+  eq('3π/4', '3pi/4')        // pi
+  eq('cos θ', 'cos theta')   // theta
+  eq('√3/2', 'sqrt3/2')      // radical
+  eq('n²', 'n^2')            // superscript two
+  eq('x⁻¹', 'x^(-1)')   // a superscript run
+  eq('15 ≤ h', '15 <= h')    // less-or-equal
+  eq('a → b', 'a -> b')      // arrow
+  eq('résumé', 'resume')// accented letter
+  eq('ｙ＝２', 'y=2') // fullwidth
+  eq('½', '1/2')             // vulgar fraction
+  eq('.8', '0.8')                 // a leading-dot decimal
+  eq('y=50(.8)^x', 'y=50(0.8)^x')
+  // And it does NOT make different answers equal.
+  assert.notEqual(normalizeShort('-2'), normalizeShort('2'))
+  assert.notEqual(normalizeShort('n^2'), normalizeShort('n^3'))
+  assert.notEqual(normalizeShort('0.8'), normalizeShort('0.08'))
+  assert.notEqual(normalizeShort('pi/6'), normalizeShort('pi/3'))
+})

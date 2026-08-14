@@ -23,7 +23,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { parseFrqAll, parseFrqFile, FRQ_FILES, FRQ_TOTAL, FrqParseError } from '../parse-frq.js'
+import { parseFrqAll, parseFrqFile, splitCells, FRQ_FILES, FRQ_TOTAL, FrqParseError } from '../parse-frq.js'
 
 const ROOT = new URL('../../../', import.meta.url)
 const BANK = new URL('ap_csa/ap_csa_exam/question-bank/', ROOT)
@@ -63,15 +63,17 @@ test('the four question types carry their real exam point values: 7/7/5/6', () =
   }
 })
 
-test('the parser point table cannot drift from the exam table the Worker ships', () => {
-  // Same arrangement as validate.js's MIN_MOCK_COVERAGE: the value is re-stated
-  // here rather than imported so the content build does not depend on the Worker
-  // config at runtime — and this fails if the two ever disagree.
+test('this test is the ONLY thing that catches worker/config/ap_csa.json drifting', () => {
+  // FRQ_FILES is the authority: it is what the markdown is validated against, and
+  // nothing at runtime reads exam.frq_points — grep it and you find this file, the
+  // parser's own prose, and nothing that executes. So a config that drifts from
+  // the parser builds clean and ships, and ONLY this assertion objects. It is not
+  // a redundant restatement of a stronger check; it is the whole check.
   const cfg = JSON.parse(readFileSync(new URL('worker/config/ap_csa.json', ROOT), 'utf8'))
   assert.deepEqual(
     Object.fromEntries(FRQ_FILES.map((f) => [f.slot, f.points])),
     cfg.exam.frq_points,
-    'exam.frq_points is the authority on what each FRQ slot is worth',
+    'FRQ_FILES is what the build validates the markdown against; exam.frq_points only re-states it for the Worker',
   )
   assert.equal(FRQ_TOTAL / FRQ_FILES.length, 5, 'five practice FRQs per exam question type')
 })
@@ -131,9 +133,13 @@ test('a rubric criterion with unescaped pipes inside a code span survives intact
 
 test('no criterion text was truncated at a pipe, a newline or a backtick', () => {
   // Cross-checked against the source: every criterion the markdown wrote must
-  // appear in the file verbatim, whole.
+  // appear in the file verbatim, whole. The source is unescaped the same way
+  // splitCells unescapes it, because a criterion is stored RENDERED: an author who
+  // writes the markdown-correct `\|` gets `|` in the item, and comparing that
+  // against the raw bytes would fail a row that in fact parsed perfectly. See
+  // 'a criterion written with markdown-correct escaped pipes survives too' below.
   for (const f of FRQ_FILES) {
-    const text = read(f.file)
+    const text = read(f.file).replace(/\\\|/g, '|')
     for (const it of of(f.slot)) {
       for (const c of it.rubric.criteria) {
         assert.ok(
@@ -143,6 +149,31 @@ test('no criterion text was truncated at a pipe, a newline or a backtick', () =>
       }
     }
   }
+})
+
+test('splitCells resolves an escaped pipe to a literal, outside a code span and in', () => {
+  // The escaped-pipe arm of splitCells is the one branch that decides how a point
+  // is cut out of a row and had no test at all: there is not one `\|` in the four
+  // files. It is the documented escape hatch for a criterion that must show a
+  // literal pipe outside a code span, so it is pinned here rather than left to the
+  // first author who needs it.
+  assert.deepEqual(splitCells('| 4 | uses r == 0 \\|\\| c == 0 |'), ['', ' 4 ', ' uses r == 0 || c == 0 ', ''])
+  assert.deepEqual(splitCells('| 1 | a `x | y` b |'), ['', ' 1 ', ' a `x | y` b ', ''])
+  assert.deepEqual(splitCells('| 1 | plain |'), ['', ' 1 ', ' plain ', ''])
+})
+
+test('a criterion written with markdown-correct escaped pipes survives too', () => {
+  // The four files use UNESCAPED pipes inside code spans, which is what the parser
+  // is built for. But `\|` is markdown's own escape and the header advertises it,
+  // so writing it must not break anything: the criterion arrives with the escape
+  // resolved, whole, and reads exactly as the unescaped row does.
+  const row = read('frq-q4-2d-array.md').split('\n').find((l) => l.startsWith('| 4 ') && l.includes('r == 0 ||'))
+  const escaped = patched('frq-q4-2d-array.md', (t) => t.replace(row, row.replace(/\|\|/g, '\\|\\|')))
+  const point4 = parseFrqAll(escaped).items
+    .find((i) => i.id === 'csa-frq-q4-p5').rubric.criteria.find((c) => c.point === 4)
+  assert.match(point4.criterion, /r == 0 \|\| r == grid\.length - 1 \|\| c == 0 \|\| c == grid\[0\]\.length - 1/)
+  assert.match(point4.criterion, /last row\/col use `length - 1`/)
+  assert.equal(point4.criterion, byId.get('csa-frq-q4-p5').rubric.criteria.find((c) => c.point === 4).criterion)
 })
 
 // --- stems, solutions, traces ----------------------------------------------
@@ -242,6 +273,32 @@ test('topics come from the file that declares them, and the whole list is kept',
   for (const it of items) {
     assert.deepEqual(it.topics, declared[it.question_type], `${it.id} keeps its file's whole declared list`)
     assert.equal(it.topic, declared[it.question_type][0], `${it.id}'s primary topic is the first declared`)
+  }
+})
+
+test('KNOWN DEFECT: Q4\'s five items are tagged 4.5, a 1D topic, and they are all 2D', () => {
+  // Pinned as a defect, not as a convention, so it cannot be mistaken for one and
+  // so the day it is fixed this test fails and points at the fix. `topic` is the
+  // FIRST topic each file declares; for Q1-Q3 that read holds for all five items,
+  // but frq-q4 declares 4.5 "Standard Array Algorithms" — the ONE-dimensional
+  // topic — first, while every one of its items is two-dimensional and the same
+  // file declares 4.13 "2D Array Algorithms ... sum, count, find max/min in 2D".
+  //
+  // The fix is content-side and spans build.js:284-290, build-gates.test.js:689
+  // and the committed worker/seed.sql as well as this parser; see the change set
+  // in parseFrqAll's docstring. When it lands, replace this test with the per-item
+  // topic map.
+  const matrix = readFileSync(MATRIX, 'utf8')
+  assert.match(matrix, /\*\*4\.5\*\* Standard Array Algorithms/, '4.5 is the 1D standard-algorithms topic')
+  assert.match(matrix, /\*\*4\.13\*\* 2D Array Algorithms/, '4.13 is the 2D one, declared by the same file')
+  for (const it of of('Q4')) {
+    assert.equal(it.topic, '4.5', `${it.id} still carries the wrong topic — if this failed, the fix landed`)
+    assert.ok(it.topics.includes('4.13'), `${it.id}'s own file already declares the topic that describes it`)
+    assert.match(
+      `${it.stem}\n${it.solution}`,
+      /\[[a-z]+\]\[[a-z]+\]|grid\[0\]\.length|int\[\]\[\]/,
+      `${it.id} is a 2D-array question by its own text`,
+    )
   }
 })
 
@@ -392,4 +449,174 @@ test('every refusal names the file and lists every violation it found at once', 
 
 test('parseFrqFile refuses an unknown filename rather than guessing a slot', () => {
   assert.throws(() => parseFrqFile('# nothing\n', 'frq-q9-invented.md'), /unknown FRQ file/)
+})
+
+test('parseFrqFile parses one file alone and returns its items and its metadata', () => {
+  // The single-file entry point is exported and was only ever tested by its throw.
+  const one = parseFrqFile(read('frq-q3-arraylist.md'), 'frq-q3-arraylist.md')
+  assert.deepEqual(one.items.map((i) => i.id), [1, 2, 3, 4, 5].map((n) => `csa-frq-q3-p${n}`))
+  assert.deepEqual(one.meta.sharedProvidedFor, [1, 3])
+  assert.equal(one.meta.slot, 'Q3')
+  assert.equal(one.meta.points, 5)
+  assert.equal(one.meta.title, 'Data Analysis with ArrayList')
+  assert.deepEqual(one.meta.topics, ['4.8', '4.9', '4.10'])
+  assert.equal(one.meta.models.length, 2)
+  assert.deepEqual(one.items.map((i) => i.rubric.criteria.length), [5, 5, 5, 5, 5])
+})
+
+test('a file with no "## (b)" section is refused, and returns no items at all', () => {
+  const bad = patched('frq-q2-class-design.md', (t) => t.replace('## (b) Original practice FRQs', '## (b2) Scratch'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /no "## \(b\) Original practice FRQs" section/)
+    assert.match(err.message, /0 FRQ item\(s\)|15 FRQ item\(s\)/, err.message)
+    return true
+  })
+})
+
+test('a file with no "# FRQ Bank — Qn: ..." heading is refused', () => {
+  const bad = patched('frq-q1-methods-control.md', (t) =>
+    t.replace('# FRQ Bank — Q1: Methods & Control Structures (7 points)', '# Q1 practice'))
+  assert.throws(() => parseFrqAll(bad), /cannot tell which exam question this file is/)
+})
+
+test('a practice FRQ heading the parser cannot read is refused, never renumbered', () => {
+  const bad = patched('frq-q2-class-design.md', (t) =>
+    t.replace('### Practice FRQ 3 — `Sensor` (7 points)', '### Practice FRQ 3 — `Sensor` [7 pts]'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /unreadable practice FRQ heading/)
+    assert.match(err.message, /Sensor/)
+    return true
+  })
+})
+
+// --- the SILENT defects: mutations that used to parse clean and lie ----------
+//
+// Every negative test above this line is a mutation the parser already shouted
+// about. These are the ones it used to accept in silence, still reporting 20
+// items and 125 points while handing the student something else. A mutation that
+// parses cleanly and produces the wrong output is the failure mode this whole
+// module exists to prevent, so each one is pinned as a REFUSAL here.
+
+test('a shared class whose closing fence is missing is refused, not silently dropped', () => {
+  // Printed before the fix: PARSED CLEAN, 20 items, sharedProvidedFor=[], and
+  // csa-frq-q3-p1 and -p3 shipped with provided=0 and no `public class Book` in the
+  // stem — while rubric point 3 of q3-p1 still reads "calls the provided
+  // getPages()". fencedBlocks reports `unterminated`; nobody looked at it here.
+  const bad = patched('frq-q3-arraylist.md', (t) =>
+    t.replace('public int    getPages()  { /* not shown */ }\n}\n```\n', 'public int    getPages()  { /* not shown */ }\n}\n'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /frq-q3-arraylist\.md/)
+    assert.match(err.message, /unterminated code fence in the section \(b\) preamble/, err.message)
+    return true
+  })
+})
+
+test('a preamble that promises a shared class but carries no java block is refused', () => {
+  // The applicability SENTENCE is the gate now, not the block: the old code only
+  // looked for the class if a fenced block happened to be found, so deleting the
+  // block while keeping "provided for FRQs 1 and 3" parsed clean with 20 items.
+  const bad = patched('frq-q3-arraylist.md', (t) => t.replace(/```java\npublic class Book \{[\s\S]*?\n\}\n```\n\n/, ''))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /says a shared element class is provided/)
+    assert.match(err.message, /FRQ\(s\) 1, 3/, err.message)
+    return true
+  })
+})
+
+test('a shared class fenced as ```Java instead of ```java is refused', () => {
+  // The subtlest of the three: sharedProvidedFor stayed [1, 3] and both stems kept
+  // the class text, but `provided` was silently 0 — the code inventory only counts
+  // blocks tagged exactly "java", so the class was shown and not inventoried.
+  const bad = patched('frq-q3-arraylist.md', (t) => t.replace('```java\npublic class Book {', '```Java\npublic class Book {'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /no fenced ```java block/)
+    assert.match(err.message, /tagged \[Java\]/, err.message)
+    return true
+  })
+})
+
+test('deleting BOTH the shared class and its sentence is refused by the file table', () => {
+  // With the block AND the prose gone there is nothing left in the markdown to
+  // notice, so FRQ_FILES declares which items the class belongs to and the prose
+  // must agree with it.
+  const bad = patched('frq-q3-arraylist.md', (t) =>
+    t.replace(/A `Book` element class is provided for FRQs 1 and 3[^\n]*\n\n```java\npublic class Book \{[\s\S]*?\n\}\n```\n\n/, ''))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /reaches FRQ\(s\) \[none\]/)
+    assert.match(err.message, /FRQ_FILES declares \[1, 3\]/, err.message)
+    return true
+  })
+})
+
+test('Q1 rubric tables merged into one is refused: the part split cannot vanish', () => {
+  // An ordinary-looking formatting cleanup — drop the two "**Part A/B — `m` (N
+  // points)**" lines and the second table's header — used to parse with ZERO
+  // violations: rows=7, numbered 1..7, parts=[], every criterion's part null. The
+  // sum-to-total invariant was conditional on parts existing, so zero parts was
+  // indistinguishable from a single undivided table.
+  const bad = patched('frq-q1-methods-control.md', (t) => t
+    .replace(/^\*\*Part [AB] — `[^`]+` \(\d+ points?\)\*\*\n\n/gm, '')
+    .replace(/(\| \d+ \| [^\n]*\|\n)\n\| Pt \| Criterion \|\n\|---\|---\|\n/g, '$1'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /csa-frq-q1-p1/)
+    assert.match(err.message, /0 rubric part header\(s\).*expected 2/, err.message)
+    return true
+  })
+})
+
+test('a part header the parser cannot read is named as such, not as a bad row', () => {
+  // This one was already caught, but for the wrong reason and with a message that
+  // sent the reader to the wrong line: the second table's "| Pt | Criterion |" row
+  // stopped being skipped, producing 'malformed rubric row (2 cell(s), expected
+  // "| point | criterion |")' about a row with exactly 2 cells.
+  const bad = patched('frq-q1-methods-control.md', (t) =>
+    t.replace(/^\*\*Part ([AB]) — `([^`]+)` \((\d+) points?\)\*\*$/gm, '**Part $1: `$2` ($3 points)**'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /0 rubric part header\(s\).*expected 2/, err.message)
+    assert.doesNotMatch(err.message, /malformed rubric row/, err.message)
+    return true
+  })
+})
+
+test('Q2-Q4 growing a part header is refused too: the count is checked both ways', () => {
+  const bad = patched('frq-q3-arraylist.md', (t) =>
+    t.replace('| Pt | Criterion |\n|---|---|\n| 1 | Declares and initializes a counter to 0 |',
+      '**Part A — `countLongBooks` (5 points)**\n\n| Pt | Criterion |\n|---|---|\n| 1 | Declares and initializes a counter to 0 |'))
+  assert.throws(() => parseFrqAll(bad), /csa-frq-q3-p1.*1 rubric part header\(s\).*expected 0/s)
+})
+
+test('a java block claiming BOTH "not shown" and "to be implemented" is refused', () => {
+  // classifyJava tested /not shown/ first, so a skeleton that merely MENTIONS the
+  // provided helpers was filed as provided code: q1-p1 went from provided 1 /
+  // skeleton 2 to provided 2 / skeleton 1 with zero violations. The signature the
+  // student must WRITE became code he was HANDED.
+  const bad = patched('frq-q1-methods-control.md', (t) => t.replace(
+    'public static String routeCode(String label) {\n    /* to be implemented in Part B */',
+    'public static String routeCode(String label) {\n    // uses the provided helpers above, whose bodies are not shown\n    /* to be implemented in Part B */'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /csa-frq-q1-p1/)
+    assert.match(err.message, /unclassified java block/)
+    assert.match(err.message, /BOTH "not shown" and "to be implemented"/, err.message)
+    return true
+  })
+})
+
+test('an unclassified java block in the SHARED class is refused as well', () => {
+  const bad = patched('frq-q3-arraylist.md', (t) => t.replace(/\/\* not shown \*\//g, '/* omitted */'))
+  assert.throws(() => parseFrqAll(bad), /unclassified java block in the shared element class/)
+})
+
+test('a second "**Trace check.**" is refused rather than discarding the first', () => {
+  // Last write won: the earlier paragraph vanished from trace_check AND from
+  // explanation, which /log returns to the student, with zero violations —
+  // while everything else in this file that appears twice is a violation.
+  const bad = patched('frq-q3-arraylist.md', (t) => t.replace(
+    '**Trace check.** pages 120,400,80,510',
+    '**Trace check.** An earlier, contradictory trace that the parser used to throw away without a word.\n\n' +
+    '**Trace check.** pages 120,400,80,510'))
+  assert.throws(() => parseFrqAll(bad), (err) => {
+    assert.match(err.message, /csa-frq-q3-p1/)
+    assert.match(err.message, /two "\*\*Trace check\.\*\*" paragraphs/, err.message)
+    return true
+  })
 })

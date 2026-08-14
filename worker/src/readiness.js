@@ -55,8 +55,11 @@ export function roundUp(value, decimals = 1) {
  * 100/n of a percent for n attempts.
  *
  * The snap happens AFTER the scaling multiply, because that multiply introduces
- * noise of its own (77.96 * 10 is 779.6000000000001). The directional property is
- * untouched: 77.96 still floors to 77.9, below the 78 floor it does not meet.
+ * noise of its own (77.96 * 10 is 779.5999999999999 — noise DOWNWARD, i.e. the
+ * opposite direction from the (29/50)*100 case above, which is why the snap has to
+ * be a rounding to significant digits rather than a nudge either way). The
+ * directional property is untouched: 77.96 still floors to 77.9, below the 78 floor
+ * it does not meet.
  */
 function scaled(value, decimals) {
   return Number((value * 10 ** decimals).toPrecision(12))
@@ -441,9 +444,13 @@ function evaluateChecks({ config, window, attempts, calibrated, excluded, now })
   } else {
     // Once calibrated, model-graded work is trusted, so this reads from the full
     // window rather than the server-graded subset. The filter is the grader's own
-    // set of model-graded kinds: no item in the bank is stored as kind 'frq' —
-    // every free-response item is 'constructed_model_graded' — so matching that
-    // literal would have measured nothing the moment calibration was switched on.
+    // set of model-graded kinds (MODEL_GRADED = {'frq', 'constructed_model_graded'})
+    // rather than a literal, because BOTH kinds ship: the seed holds 24 items stored
+    // as kind 'frq' (20 ap_csa, 4 ap_precalc) and 29 stored as
+    // 'constructed_model_graded'. An earlier version of this comment asserted that
+    // no item is stored as 'frq' and that every free-response item is
+    // 'constructed_model_graded' — false on both subjects, and it would have sent
+    // the next reader to narrow this filter to the kind that is now the minority.
     //
     // Trusted is not the same as scored. grade.js books EVERY rubric item as
     // `{correct: 0, graded_by: 'model'}` when it is served: attempts.correct is

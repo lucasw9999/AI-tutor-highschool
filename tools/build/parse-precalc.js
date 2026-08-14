@@ -77,17 +77,50 @@
  * silently unkeyed item, which is how a parser once found 22 of 48 problems and
  * reported success.
  *
- * ORDER INDEPENDENCE, AND THE DECISION BEHIND IT
- * ----------------------------------------------
+ * ORDER, AND THE DECISION BEHIND IT
+ * ---------------------------------
  * grade.js compares `normalizeShort(response)` against the key and each variant
  * as WHOLE STRINGS. It cannot be taught set semantics ("all these parts must
  * appear, in any order") — and it must not be, because the grader is deliberately
- * mechanical. So a compound answer is made order-independent HERE, at build
- * time: the author declares each part once, and the parser expands the
- * declaration into every ordering of the parts, every combination of the
- * phrasings declared for them, and every separator a student plausibly types
- * (", ", " and ", ", and ", "; ", " "). "x=2 (mult 2), x=-3 (mult 1)" typed in
- * the other order is therefore a variant the bank already holds, not a miss.
+ * mechanical. So a compound answer is expanded HERE, at build time: the author
+ * declares each part once, and the parser generates every combination of the
+ * phrasings declared for the parts, every way a student plausibly joins them,
+ * and — WHEN AND ONLY WHEN a reordering says the same thing — every ordering.
+ *
+ * ORDER IS NOT UNCONDITIONALLY FREE, and treating it as free credited wrong
+ * answers on three shipped items. "State amplitude, midline, and period ... IN
+ * THE ORDER amplitude, midline, period" keyed 4, -2, 2pi/3 also accepted
+ * "-2, 4, 2pi/3" — the amplitude/midline swap that is THE canonical error on
+ * 4sin(3x)-2 — because every permutation of the bare values was generated. A
+ * permutation is the same answer only when the parts identify THEMSELVES, or
+ * when they are a set in which position means nothing at all. So the parser asks
+ * three questions, in this order:
+ *
+ *   1. Are the parts SELF-LABELLING? "hole at x=3" cannot be read as the
+ *      horizontal asymptote and "overestimate" cannot be read as the rate, so
+ *      every ordering of them asserts exactly the same facts and every ordering
+ *      is generated — even where the stem states an order, because marking a
+ *      correct, unambiguous answer wrong is the one error this file exists to
+ *      prevent. partsAreSelfLabelling() decides this from the declared phrasings
+ *      alone: at most one part may accept a BARE value (that one is identified by
+ *      elimination), and no phrasing's words may be a subset of another part's.
+ *   2. Otherwise the parts are interchangeable in shape, so what a position means
+ *      can only come from the sentence the STUDENT was given. The required
+ *      `format:` sentence is read for it: "in that order" / "in the order
+ *      amplitude, midline, period" means position is part of the claim and NO
+ *      permutation is generated; "in any order" (or a list of all the solutions
+ *      to an equation) means the parts are a set and every ordering is. A
+ *      sentence that says neither is a BUILD ERROR — the parser will not guess
+ *      which of a right answer and the classic wrong one it is looking at.
+ *   3. An order LOCKED by 2 is locked per FORM, not per item. Question 1 is asked
+ *      again of each combination of phrasings on its own — of the string a student
+ *      actually types — because that is what a reader of the answer sees.
+ *      pc-u3-p2 declares "4" as well as "amplitude 4", so the item is locked and
+ *      "-2, 4, 2pi/3" is refused; but "midline -2, amplitude 4, period 2pi/3"
+ *      names every value it gives, so no reordering of THAT string can change what
+ *      it asserts, and refusing it marked 255 correct answers wrong — 50 of them
+ *      labelling every single entry. Locking the whole item because one of its
+ *      phrasings is ambiguous punishes the student who was clearest.
  *
  * That expansion also absorbs an asymmetry in normalizeShort that would
  * otherwise be a trap: it strips a leading `x =` from the WHOLE response only,
@@ -253,7 +286,7 @@
 // the same reason again: the option line must mean here what it means for CSA,
 // and the bare-letter collision must be judged by the one rule the build already
 // applies rather than by a second copy of it.
-import { grade, normalizeShort } from '../../worker/src/grade.js'
+import { grade, normalizeShort, foldLookalikes } from '../../worker/src/grade.js'
 import { parseOptions } from './parse-mcq.js'
 import { letterOptionCollisions } from './validate.js'
 
@@ -376,12 +409,242 @@ const LABELLED_LIST = /,\s*[a-z][a-z0-9 .()]*[:=]/
 /** Plain keyboard characters only: no LaTeX macro, no unicode lookalike. */
 const isTypeable = (text) => /^[\x20-\x7E]+$/.test(text) && !text.includes('\\')
 
-/** How a compound answer's parts may be joined by the student. */
-const SEPARATORS = [', ', ' and ', ', and ', '; ', ' ']
+/**
+ * Two phrasings that differ ONLY in characters grade.js folds onto their ASCII
+ * equivalent — `3π/4` against `3pi/4`, `-√2/2` against `-sqrt2/2`.
+ *
+ * The dead-weight gates below are stated in terms of normalizeShort, which is
+ * right — an accepted form has to be judged by the function that will grade it.
+ * The cost of that coupling is that STRENGTHENING the grader turns content that
+ * was correct into a build error: when normalizeShort learned to fold Unicode
+ * lookalikes, nine hand-written `π` and `√` aliases across pc-u3-p1/p2/p5/p8/p10
+ * became redundant and the whole build stopped, with nothing written and the
+ * student served nothing.
+ *
+ * So this one redundancy is exempt. The gate exists to catch an author who did
+ * not realise normalizeShort already covered a difference; an author who wrote
+ * `π/2` before the fold existed was not making that mistake, and the alias is now
+ * harmless by construction rather than by luck — the fold GUARANTEES the two
+ * spellings are graded identically, which is the whole point of it. Every other
+ * kind of dead weight is still a build error, and the exemption is narrow: the
+ * two phrasings must be equal under normalizeShort AND at least one of them must
+ * carry a character the fold actually rewrites.
+ */
+const differsOnlyByFold = (form, other) =>
+  normalizeShort(form) === normalizeShort(other) &&
+  (foldLookalikes(form) !== String(form) || foldLookalikes(other) !== String(other))
+
+/**
+ * How a compound answer's parts may be joined by the student: one separator PER
+ * GAP, not one separator repeated.
+ *
+ * Repeating one separator is what an English list is not. Commas go BETWEEN the
+ * entries and a conjunction goes before the LAST one, so joining every gap with
+ * ", and " generated "4, -2, and 2pi/3" only when there were exactly two parts —
+ * 444 of the 2612 forms the bank shipped were spent on "4, and -2, and 2pi/3",
+ * which nobody writes, while "4, -2, and 2pi/3" was booked as a MISS on every
+ * item with three parts, counted against the student and fed into readiness.
+ *
+ * The run-on join, with no punctuation at all, is offered only where a reader
+ * can still find the gaps: one gap, or single-word parts. "hole at x=3 VA at
+ * x=-3 HA y=1" cannot be read back as three entries, and the cap that guards the
+ * D1 row is not there to be spent on it.
+ */
+const LIST_SEPARATOR = ', '
+const UNIFORM_SEPARATORS = [', ', '; ', ' and ']
+const FINAL_CONJUNCTIONS = [' and ', ', and ']
+const RUN_ON = ' '
 const MAX_PARTS = 4
 const MAX_ALTS_PER_PART = 6
 /** Guards items.json and the D1 row against a combinatorial blow-up. */
 const MAX_ACCEPTED_FORMS = 1000
+
+/**
+ * @returns {string[][]} one separator per gap, deduplicated.
+ *
+ * Deduplicated on `JSON.stringify` rather than on the scheme joined by some
+ * sentinel character: a separator is itself punctuation and whitespace, so any
+ * sentinel is a claim about what a separator can never contain, and JSON needs
+ * no such claim. (It also keeps this file TEXT. The dedup key used to be a raw
+ * NUL byte, which made `grep` classify the most safety-critical file in the repo
+ * as binary and answer every pattern with silence unless passed `-a`.)
+ */
+function joinSchemes(parts) {
+  const gaps = parts.length - 1
+  const schemes = UNIFORM_SEPARATORS.map((s) => Array(gaps).fill(s))
+  for (const conjunction of FINAL_CONJUNCTIONS) {
+    schemes.push([...Array(gaps - 1).fill(LIST_SEPARATOR), conjunction])
+  }
+  const oneWord = (phrasing) => !/\s/.test(phrasing)
+  if (gaps === 1 || parts.every((alternatives) => alternatives.every(oneWord))) {
+    schemes.push(Array(gaps).fill(RUN_ON))
+  }
+  return [...new Map(schemes.map((s) => [JSON.stringify(s), s])).values()]
+}
+
+/** The characters normalizeShort strips the whitespace from around. */
+const OPERATOR_EDGE = /[=+\-*/^,]/
+
+/**
+ * True when this separator VANISHES between these two parts, fusing them into
+ * one expression.
+ *
+ * normalizeShort collapses the whitespace around an operator, so "5pi/6" and
+ * "-pi/4" joined by a space both normalize to "5pi/6-pi/4" — a SUBTRACTION,
+ * 7pi/12, one number that answers neither arccos(-sqrt3/2) nor arctan(-1). 14
+ * such forms shipped as accepted answers on pc-u3-p1 and pc-u3-p5, so a student
+ * who subtracted the two values he was asked for was told he was right.
+ */
+const fuses = (separator, left, right) =>
+  !/\S/.test(separator) &&
+  (OPERATOR_EDGE.test(right.trimStart().slice(0, 1)) || OPERATOR_EDGE.test(left.trimEnd().slice(-1)))
+
+/** One ordering joined by one scheme, or null when a gap would fuse shut. */
+function joinParts(ordering, scheme) {
+  let form = ordering[0]
+  for (const [gap, part] of ordering.slice(1).entries()) {
+    if (fuses(scheme[gap], form, part)) return null
+    form += scheme[gap] + part
+  }
+  return form
+}
+
+/**
+ * Words that belong to a VALUE rather than labelling one. "2pi/3" and "-sqrt2/2"
+ * are bare values however many letters they contain, so their letters cannot be
+ * what tells one part from another. Over-inclusion here is the safe direction: a
+ * label mistaken for a value makes the parts look interchangeable, which costs a
+ * build error rather than a wrong answer credited.
+ */
+const MATH_WORDS = new Set([
+  'pi', 'sqrt', 'cbrt', 'abs', 'exp', 'log', 'ln', 'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
+  'arcsin', 'arccos', 'arctan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh',
+  'inf', 'infinity', 'dne', 'nan', 'none', 'undefined',
+])
+
+/**
+ * The words by which a phrasing announces WHICH part it is. Single letters are
+ * never labels — 'x', 'y', 'a', 'b' are variables, i.e. part of the value — and
+ * neither is mathematical vocabulary. "hole at x=3" -> {hole, at}; "2pi/3" -> {}.
+ */
+const labelsOf = (phrasing) =>
+  new Set((String(phrasing).toLowerCase().match(/[a-z]{2,}/g) ?? []).filter((w) => !MATH_WORDS.has(w)))
+
+const isSubsetOf = (a, b) => [...a].every((w) => b.has(w))
+
+/**
+ * True when no phrasing of one part could be read as a phrasing of another — so
+ * every ordering of the parts asserts the same facts and a permutation is a
+ * right answer, not a swap.
+ *
+ * Two conditions, both of them about what a READER of the answer can tell:
+ *
+ *   * At most one part may accept a bare value. One unlabelled entry among
+ *     labelled ones is identified by elimination ("midline -2, 4" can only mean
+ *     amplitude 4); two of them cannot be told apart at all, which is exactly
+ *     the amplitude/midline case.
+ *   * No phrasing's words may be a subset of another part's phrasing's words
+ *     (equal sets included). "asymptote y=1" against "vertical asymptote x=-3"
+ *     is readable as the same label with more said, so the parts are not
+ *     self-labelling; "-2 mult 3 crosses" against "1 mult 2 bounces" is not.
+ */
+function partsAreSelfLabelling(parts) {
+  const labels = parts.map((alternatives) => alternatives.map(labelsOf))
+  if (labels.filter((alternatives) => alternatives.some((l) => l.size === 0)).length > 1) return false
+  for (const [i, mine] of labels.entries()) {
+    for (const [j, theirs] of labels.entries()) {
+      if (i >= j) continue
+      for (const a of mine) {
+        for (const b of theirs) {
+          if (a.size && b.size && (isSubsetOf(a, b) || isSubsetOf(b, a))) return false
+        }
+      }
+    }
+  }
+  return true
+}
+
+/**
+ * The same question asked of ONE combination — one phrasing chosen per part, i.e.
+ * a string a student could actually type.
+ *
+ * Order-freedom is a property of the ANSWER, not of the declaration it was drawn
+ * from. pc-u3-p2 declares "4" and "amplitude 4" for its first part, so the item
+ * as a whole is not self-labelling and its order is locked — rightly, because
+ * "-2, 4, 2pi/3" is the amplitude/midline swap, THE canonical error on
+ * 4sin(3x)-2. But "midline -2, amplitude 4, period 2pi/3" says which value is
+ * which in the string itself; no reordering of it can change what it asserts, so
+ * marking it wrong is a false negative, and 255 forms of that one item were
+ * marked wrong — 135 accepted where 390 are correct.
+ *
+ * Asking the SAME predicate one combination at a time is what separates the two:
+ * a combination carrying two bare values stays locked (nothing tells them apart),
+ * while a combination that labels itself permutes freely. There is deliberately
+ * no second, weaker definition of "self-labelling" here — the rule that credits
+ * a permutation is the rule that refuses one, applied at the granularity the
+ * student is graded at.
+ */
+const combinationIsSelfLabelling = (chosen) => partsAreSelfLabelling(chosen.map((phrasing) => [phrasing]))
+
+/**
+ * The `format:` sentence states an ORDER for the parts. Deliberately liberal:
+ * a match only ever SUPPRESSES permutations, which is the safe direction, and
+ * self-labelling parts are decided before this is consulted at all.
+ */
+const ORDER_DECLARED =
+  /\bin (?:that|this|the) (?:given |stated |same |following |exact )?(?:order|form)\b|\bin order\b|\bthen\b|\bfirst\b|\brespectively\b/i
+
+/**
+ * ...or states that the parts are a SET, where every ordering is the same
+ * answer: "in any order", or a list of all the solutions of an equation, which
+ * is a set by construction. Deliberately STRICT: a match here is what licenses
+ * crediting every permutation of values nothing else can tell apart.
+ */
+const SET_DECLARED = /\bany order\b|\blist of (?:all |the )*(?:exact )?solutions\b|\ball (?:the )?solutions\b/i
+
+const ORDER_ADVICE =
+  `Say "in that order" (or "in the order amplitude, midline, period") in the sentence when a part's POSITION is ` +
+  `what identifies it, or "in any order" when the parts are a set and any ordering is the same answer. Whichever ` +
+  `you write goes in the stem too, because the sentence is what the student is told`
+
+/**
+ * Whether the parts' ORDER is part of the answer, or an error saying why the
+ * question cannot be settled.
+ *
+ * `ordered: true` is the ITEM's default, not its last word: the expansion asks
+ * combinationIsSelfLabelling() of each phrasing combination and frees the ones
+ * that name their own values. This decides the two things a single combination
+ * cannot — whether the `format:` sentence has to be read for an order at all, and
+ * whether a sentence that states none is a build error.
+ *
+ * @returns {{ordered: boolean}|{error: string}}
+ */
+function orderSemantics(parts, formatDecl) {
+  // The parts name themselves: a reordering says the same thing, whatever the
+  // sentence says about how to type it. Refusing it would mark a correct,
+  // unambiguous answer wrong.
+  if (partsAreSelfLabelling(parts)) return { ordered: false }
+  const sentence = String(formatDecl)
+  const order = ORDER_DECLARED.test(sentence)
+  const set = SET_DECLARED.test(sentence)
+  if (order && set) {
+    return {
+      error:
+        `the "format:" sentence states both a required order and that any order will do, and these parts have ` +
+        `nothing but position to tell them apart, so one of the two readings credits an answer the other calls ` +
+        `wrong. Say one thing: ${ORDER_ADVICE}`,
+    }
+  }
+  if (order) return { ordered: true }
+  if (set) return { ordered: false }
+  return {
+    error:
+      `these parts (${parts.map((p) => `"${p[0]}"`).join(', ')}) could be swapped without the answer looking any ` +
+      `different, and the "format:" sentence does not say whether their ORDER is part of the answer. Either every ` +
+      `ordering is credited or only the declared one is, and the parser will not guess which: a swap is the ` +
+      `commonest wrong answer there is. ${ORDER_ADVICE}`,
+  }
+}
 
 function readTagline(tagline) {
   const t = tagline.toLowerCase()
@@ -435,7 +698,18 @@ function readDeclarations(lines) {
       }
       const declared = comment[1].match(DECLARATION)
       if (!declared) {
-        kept.push(line)
+        // A comment inside a problem is a key declaration or it is a mistake.
+        // This branch used to keep the line as body text, where — being an HTML
+        // comment — it rendered as nothing at all: `<!-- key 4 -->`, one colon
+        // short, left the item silently UNKEYED with 0 build errors, and the
+        // same typo on one `part` of a compound answer left the other parts
+        // contiguous, so every gate passed and the item shipped keyed on 2 of
+        // its 3 parts. Prose belongs in `<!-- note: ... -->`.
+        errors.push(
+          `this comment declares no field, so nothing in it was read: ${line.trim()} — a key field is ` +
+            `"<field>: <value>" with a COLON ("<!-- key: 3 -->"); the fields are ${FIELD_LIST}. Write an ` +
+            `editorial aside as "<!-- note: ... -->"`,
+        )
         i++
         continue
       }
@@ -786,14 +1060,12 @@ function permutations(list) {
 }
 
 /**
- * One phrasing chosen per part, every way round, each paired with the "<part>:
- * <phrasing>" labels it used so a phrasing that earns nothing can be named.
+ * One phrasing chosen per part, every way round.
  */
 function combinations(parts) {
   return parts.reduce(
-    (acc, alternatives, k) =>
-      acc.flatMap(([chosen, picks]) => alternatives.map((a, i) => [[...chosen, a], [...picks, `${k}:${i}`]])),
-    [[[], []]],
+    (acc, alternatives) => acc.flatMap((chosen) => alternatives.map((a) => [...chosen, a])),
+    [[]],
   )
 }
 
@@ -804,6 +1076,11 @@ const looseText = (text) =>
     .replace(/[`*$]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
+
+/** The one diagnostic for a `format:` sentence the stem does not state. */
+const formatNotInStem = (formatDecl) =>
+  `the "format:" sentence does not appear in the stem, so nothing tells the student how to type the answer. ` +
+  `Add it to the stem verbatim: "${String(formatDecl).trim()}"`
 
 /**
  * Turn one problem's declarations into { answer, variants, topic }, or into
@@ -870,6 +1147,9 @@ function resolveKey({ decls, stem, unit }) {
   // --- assemble the accepted forms ---------------------------------------
   let answer
   let generated = []
+  // Whether a part's POSITION is part of the answer. Only a compound answer has
+  // an order to get wrong; orderSemantics() below decides it.
+  let ordered = false
   if (keyDecl != null) {
     answer = keyDecl.trim()
   } else {
@@ -919,8 +1199,39 @@ function resolveKey({ decls, stem, unit }) {
       )
       return { ...unkeyed, topic }
     }
+    // Checked HERE rather than with the other `format:` rules below, because the
+    // sentence is also what declares the parts' ORDER: a sentence the stem does
+    // not state is not a contract with the student, so it cannot be read for one.
+    if (!looseText(stem).includes(looseText(formatDecl))) {
+      errors.push(formatNotInStem(formatDecl))
+      return { ...unkeyed, topic }
+    }
 
-    const forms = permutations(indices).length * parts.reduce((n, p) => n * p.length, 1) * SEPARATORS.length
+    // Does a reordering of the parts say the same thing? See the module comment:
+    // self-labelling parts always do, interchangeable ones only when the sentence
+    // the student was given says so, and a sentence that says nothing is refused.
+    const semantics = orderSemantics(parts, formatDecl)
+    if (semantics.error) {
+      errors.push(semantics.error)
+      return { ...unkeyed, topic }
+    }
+    ordered = semantics.ordered
+
+    /**
+     * The orderings of ONE combination that all assert the same answer: every
+     * one of them, unless this exact combination is the kind whose entries only
+     * position tells apart. Used by the cap below and by the expansion itself, so
+     * the count the build refuses on and the set it emits cannot drift apart.
+     */
+    const orderingsOf = (chosen) =>
+      ordered && !combinationIsSelfLabelling(chosen) ? [chosen] : permutations(chosen)
+
+    const schemes = joinSchemes(parts)
+    // Summed per combination rather than multiplied out, because after the fix
+    // above the orderings are no longer a single factor shared by every
+    // combination. Still counted BEFORE a form is built, and still an upper bound
+    // on what is emitted — normalization only ever merges two forms into one.
+    const forms = combinations(parts).reduce((n, chosen) => n + orderingsOf(chosen).length, 0) * schemes.length
     if (forms > MAX_ACCEPTED_FORMS) {
       errors.push(
         `these parts expand to ${forms} accepted forms, past the cap of ${MAX_ACCEPTED_FORMS} — too many phrasings ` +
@@ -931,49 +1242,80 @@ function resolveKey({ decls, stem, unit }) {
 
     answer = parts.map((p) => p[0]).join(', ')
 
-    // Expand, remembering which declared phrasings the FIRST form of each
-    // normalized shape used. A phrasing that never wins that race accepts
-    // nothing the others do not already accept.
-    //
-    // Dead weight is judged by that EFFECT, not by comparing the phrasings to
-    // each other: normalizeShort strips a leading `x =` from the whole response,
-    // so "x=-2 mult 3 crosses" and "-2 mult 3 crosses" look identical in
-    // isolation while behaving differently in second position ("..., x=1 mult 2
-    // bounces" keeps its prefix). Comparing them directly rejected a phrasing
-    // the bank genuinely needed.
-    const winners = new Set()
-    const firstOf = new Map()
-    for (const [chosen, picks] of combinations(parts)) {
-      for (const ordering of permutations(chosen)) {
-        for (const separator of SEPARATORS) {
-          const form = ordering.join(separator)
-          const norm = normalizeShort(form)
-          if (!norm || firstOf.has(norm)) continue
-          firstOf.set(norm, form)
-          for (const pick of picks) winners.add(pick)
+    /**
+     * Every form these parts expand to, keyed on the normalized shape the grader
+     * will compare; the first spelling of each shape is the one emitted. The
+     * join schemes are fixed by the FULL declaration, so a leave-one-out run
+     * below measures the phrasing and nothing else.
+     */
+    const expand = (byPart) => {
+      const forms = new Map()
+      for (const chosen of combinations(byPart)) {
+        for (const ordering of orderingsOf(chosen)) {
+          for (const scheme of schemes) {
+            const form = joinParts(ordering, scheme)
+            // A separator that would fuse two parts into one expression is not a
+            // way of writing this answer, so it is no form at all.
+            if (form == null) continue
+            const norm = normalizeShort(form)
+            if (!norm || forms.has(norm)) continue
+            forms.set(norm, form)
+          }
         }
       }
+      return forms
     }
-    generated = [...firstOf.values()]
+    const expanded = expand(parts)
+    generated = [...expanded.values()]
+
+    // Dead weight, judged by LEAVE-ONE-OUT: a phrasing is dead weight when the
+    // accepted set is exactly the same without it. Removing a phrasing can only
+    // remove forms, so equal sizes mean equal sets.
+    //
+    // Judged by that EFFECT rather than by comparing the phrasings to each other,
+    // because normalizeShort strips a leading `x =` from the whole response: so
+    // "x=-2 mult 3 crosses" and "-2 mult 3 crosses" look identical in isolation
+    // while behaving differently in second position ("..., x=1 mult 2 bounces"
+    // keeps its prefix), and comparing them directly rejected a phrasing the bank
+    // genuinely needed.
+    //
+    // Leave-one-out is also SYMMETRIC, which the previous first-past-the-post
+    // version was not: it registered the first form of each shape, and the
+    // all-first-phrasings combination is generated first, so phrasing 0 won every
+    // race and `part 1: $4$` before `part 1: 4` reported that "4" — the phrasing
+    // the item wants — accepts nothing new. Two interchangeable phrasings are now
+    // both named, in one error, and either may be the one deleted.
     for (const [k, alternatives] of parts.entries()) {
-      for (const [a, alternative] of alternatives.entries()) {
-        if (!winners.has(`${k}:${a}`)) {
-          errors.push(
-            `part ${k + 1}'s phrasing "${alternative}" accepts nothing that its other phrasings do not already ` +
-              `accept — dead weight, and usually a sign that normalizeShort already covers the difference`,
-          )
-        }
+      if (alternatives.length < 2) continue
+      const dead = alternatives.filter((alt, a) => {
+        // A phrasing the FOLD made redundant is not an authoring mistake. See
+        // differsOnlyByFold.
+        if (alternatives.some((other) => other !== alt && differsOnlyByFold(alt, other))) return false
+        const without = parts.map((p, j) => (j === k ? p.filter((_, i) => i !== a) : p))
+        return expand(without).size === expanded.size
+      })
+      const quoted = dead.map((d) => `"${d}"`).join(' and ')
+      if (dead.length === 1) {
+        errors.push(
+          `part ${k + 1}'s phrasing ${quoted} accepts nothing that its other phrasings do not already ` +
+            `accept — dead weight, and usually a sign that normalizeShort already covers the difference`,
+        )
+      } else if (dead.length > 1) {
+        errors.push(
+          `part ${k + 1}'s phrasings ${quoted} are interchangeable once normalized — each accepts nothing that ` +
+            `the others do not already accept, and normalizeShort covers the difference. Keep whichever one you ` +
+            `want the key itself to read as, and delete the rest`,
+        )
       }
     }
     if (errors.length) return { ...unkeyed, topic }
   }
 
-  // The stem must actually say what it told the author it says.
+  // The stem must actually say what it told the author it says. (A compound
+  // answer has already been held to this, above, before its `format:` sentence
+  // was read for the parts' order.)
   if (formatDecl != null && !looseText(stem).includes(looseText(formatDecl))) {
-    errors.push(
-      `the "format:" sentence does not appear in the stem, so nothing tells the student how to type the answer. ` +
-        `Add it to the stem verbatim: "${formatDecl.trim()}"`,
-    )
+    errors.push(formatNotInStem(formatDecl))
     return { ...unkeyed, topic }
   }
 
@@ -1006,6 +1348,9 @@ function resolveKey({ decls, stem, unit }) {
     const norm = normalizeShort(form)
     if (!norm) continue
     if (seen.has(norm)) {
+      // A phrasing the FOLD made redundant is not an authoring mistake. See
+      // differsOnlyByFold.
+      if (differsOnlyByFold(form, seen.get(norm))) continue
       errors.push(
         `"accept: ${form}" is identical to ${seen.get(norm) === answer ? `the key "${answer}"` : `"${seen.get(norm)}"`} ` +
           `once normalized, so it accepts nothing new — dead weight, and usually a sign that normalizeShort already ` +
@@ -1017,10 +1362,25 @@ function resolveKey({ decls, stem, unit }) {
   }
   if (errors.length) return { ...unkeyed, topic }
 
-  if (![...seen.keys()].some(isTypeable)) {
+  // Every form this item will accept, not only the ones written out by hand: the
+  // expansion of a compound answer is accepted content too, and checking the key
+  // and `accept:` alone made the gate depend on the ORDER the phrasings were
+  // listed in — `part 1: 3pi/4` then `part 1: 3π/4` passed, the same two lines
+  // the other way round were refused, and the diagnostic told the author to add
+  // a form the item already held.
+  //
+  // The forms are NORMALIZED before the check, which now means folded: a key of
+  // `π/2` or `y = 2x − 1` is typeable on its own, because grade.js credits `pi/2`
+  // and `y = 2x - 1` against it in both directions. What is left for this gate is
+  // what no fold can reach — a LaTeX macro, and the Unicode with no single ASCII
+  // spelling (`≈`, `×`, `·`, `°`, `∈`, `‖`).
+  const typeable = [...seen.keys(), ...generated.map(normalizeShort)]
+  if (!typeable.some(isTypeable)) {
     errors.push(
-      `no accepted form of "${answer}" can be typed on a plain keyboard (LaTeX macros, or unicode like − and π), ` +
-        `so a student typing the answer the ordinary way is marked wrong. Add the typeable form as "accept:"`,
+      `no accepted form of "${answer}" can be typed on a plain keyboard (a LaTeX macro, or unicode grade.js ` +
+        `cannot fold to ASCII, like ≈ or ×), so a student typing the answer the ordinary way is marked wrong. ` +
+        `Add the typeable form as ` +
+        `${generated.length ? 'another "part <n>:" phrasing' : '"accept:"'}`,
     )
     return { ...unkeyed, topic }
   }
@@ -1145,6 +1505,15 @@ export function parsePracticeItems(text, filename) {
     }
     if (misplacedErrors.length) {
       r.errors.push(...misplacedErrors)
+      r = { kind: 'constructed_model_graded', answer: null, variants: [], topic: r.topic, errors: r.errors, extra: {} }
+    }
+    // A line that was TRYING to be a declaration and failed is a key the author
+    // wrote and the build did not read, so what did parse is not a key either:
+    // one unread `part` line leaves the others contiguous, and an item keyed on
+    // 2 of its 3 parts marks the COMPLETE right answer wrong while crediting the
+    // incomplete one. Degraded exactly as a refused declaration is, so that not
+    // even --write-despite-incomplete can carry the half-read key into D1.
+    if (head.errors.length || declared.errors.length) {
       r = { kind: 'constructed_model_graded', answer: null, variants: [], topic: r.topic, errors: r.errors, extra: {} }
     }
     for (const e of [...head.errors, ...declared.errors, ...r.errors]) errors.push(`${id}: ${e}`)

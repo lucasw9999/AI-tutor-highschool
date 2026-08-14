@@ -107,6 +107,52 @@ test('skewed answer distribution is a warning, not an error', () => {
   assert.match(warnings.join('|'), /answer A/)
 })
 
+// The key-balance check measures the LETTER distribution of multiple-choice keys.
+// Its population was `items.filter((i) => i.answer)` — every item carrying any
+// key at all — which was the same set until Precalc's first 24 `constructed`
+// items arrived with keys like "4, -2, 2pi/3". Measured on the shipped bank: 283
+// keys in the population, of which 259 are letters, so every percentage is
+// reported about 8% low and the 20-30% band lands on the wrong denominator in
+// BOTH directions. The drift grows with every short-answer key added.
+const lettersThenShortAnswers = (letters, shortAnswers) => [
+  ...Object.entries(letters).flatMap(([L, n]) =>
+    Array.from({ length: n }, (_, k) => item({ id: `csa-${L}${k}`, answer: L })),
+  ),
+  ...Array.from({ length: shortAnswers }, (_, k) =>
+    item({ id: `pc-c${k}`, kind: 'constructed', answer: '4, -2, 2pi/3', options: undefined, practice: undefined }),
+  ),
+]
+
+test('short-answer keys cannot hide a skewed multiple-choice bank', () => {
+  // 9 of 26 letters is 34.6% of the multiple-choice keys and must warn. Diluted
+  // by 8 short-answer keys it reads as 26.5%, inside the band, and says nothing.
+  const letters = { A: 9, B: 6, C: 6, D: 5 }
+  const alone = validate(lettersThenShortAnswers(letters, 0), TOPICS, NO_BANK)
+  assert.match(alone.warnings.join('|'), /answer A is 34\.6%/, alone.warnings.join('|'))
+
+  const diluted = validate(lettersThenShortAnswers(letters, 8), TOPICS, NO_BANK)
+  assert.deepEqual(diluted.errors, [])
+  assert.match(
+    diluted.warnings.join('|'),
+    /answer A is 34\.6%/,
+    `a real skew must survive 8 short-answer keys: ${diluted.warnings.join('|')}`,
+  )
+  assert.match(diluted.warnings.join('|'), /26 multiple-choice/, 'and the warning must name what it counted')
+})
+
+test('short-answer keys cannot invent a skew that is not there', () => {
+  // 6 of 28 is 21.4%, inside the band. Diluted by 10 short-answer keys it reads
+  // as 15.8% and warns about a distribution that is perfectly balanced.
+  const balanced = lettersThenShortAnswers({ A: 6, B: 8, C: 8, D: 6 }, 10)
+  const { errors, warnings } = validate(balanced, TOPICS, NO_BANK)
+  assert.deepEqual(errors, [])
+  assert.deepEqual(
+    warnings.filter((w) => /^answer /.test(w)),
+    [],
+    `no letter is outside 20-30% of the 28 multiple-choice keys: ${warnings.join('|')}`,
+  )
+})
+
 test('a topic with no items is a warning', () => {
   assert.match(validate([item()], TOPICS, NO_BANK).warnings.join('|'), /topic 1\.5 has no items/)
 })

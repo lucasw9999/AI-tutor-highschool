@@ -78,6 +78,51 @@ test('an item with no key block is untouched — model-graded, no key, no varian
   assert.equal(grade(item, 'anything at all').graded_by, 'model')
 })
 
+/**
+ * Unicode and LaTeX folded to the ASCII a key is written in, so a key can be
+ * looked for in the prose of the worked solution: the packs write "−√2/2" and
+ * "$\dfrac{5}{6}$" where a key says "-sqrt(2)/2" and "5/6".
+ */
+const folded = (text) =>
+  String(text)
+    .toLowerCase()
+    .replace(/[−–—]/g, '-')
+    .replace(/π/g, 'pi')
+    .replace(/√/g, 'sqrt')
+    .replace(/[·⋅×]/g, '*')
+    .replace(/\\[a-z]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2')
+    .replace(/\\[a-z]+/g, '')
+
+const squeezed = (text) => folded(text).replace(/[$*`{}()[\]\s]/g, '')
+const wordsOf = (text) =>
+  folded(text)
+    .split(/[\s,;:]+/)
+    .map((w) => w.replace(/[$*`{}()[\]]/g, ''))
+    .filter(Boolean)
+
+/**
+ * True when some accepted form of this item's key is traceable to the worked
+ * solution the author wrote — every word of it appearing somewhere in that
+ * solution's prose.
+ *
+ * Deliberately weak, and it is the strongest thing a test can say about a key
+ * without re-deriving the mathematics: it cannot tell a right answer from a
+ * plausible wrong one. What it does catch is a key with NO relationship to the
+ * item, which is the whole failure class `grade(it, it.answer)` hid.
+ */
+const groundedInSolution = (item) => {
+  const solution = squeezed(item.solution ?? '')
+  return [item.answer, ...(item.answer_variants ?? [])].some((form) =>
+    wordsOf(form).every((word) => solution.includes(squeezed(word))),
+  )
+}
+
+/** The spellings of its own key a STUDENT types, which are not the key itself. */
+const studentSpellings = (item) =>
+  item.kind === 'mcq'
+    ? [item.answer.toLowerCase(), `(${item.answer})`, `${item.answer})`, `${item.answer}.`]
+    : [` ${item.answer} `, `${item.answer}.`, `$${item.answer}$`, item.answer.toUpperCase()]
+
 test('every item in the shipped packs is either keyed and server-graded, or model-graded with a solution', () => {
   // Phrased as the INVARIANT rather than as "all 48 are model-graded", so it
   // still holds after the content agents key the items this syntax unblocks —
@@ -94,12 +139,55 @@ test('every item in the shipped packs is either keyed and server-graded, or mode
     const keyed = it.answer != null && String(it.answer).trim() !== ''
     if (keyed) {
       assert.ok(SERVER_GRADED.has(it.kind), `${it.id} carries a key but its kind '${it.kind}' is not server-graded`)
-      assert.equal(grade(it, it.answer).correct, 1, `${it.id}: its own key does not grade as correct`)
+      // `assert.equal(grade(it, it.answer).correct, 1)` used to stand here, and
+      // it is a TAUTOLOGY on a constructed item: grade() builds its accepted set
+      // as [answer, ...variants].map(normalizeShort) and compares
+      // normalizeShort(response), so with response === it.answer both sides are
+      // the same expression. It passed on a deliberate key of "qqzzx nonsense 99"
+      // declared on an item whose answer is 3, with 0 build errors, while the
+      // student who typed "3" was marked WRONG. Two assertions with content
+      // replace it: the key is credited as a STUDENT spells it, which exercises
+      // normalizeShort and the variant set rather than one expression against
+      // itself; and the key is grounded in the worked solution.
+      for (const typed of studentSpellings(it)) creditsOn(it, typed)
+      if (it.kind === 'mcq') {
+        // A letter cannot be grounded in prose. The multiple-choice equivalent
+        // is that the keyed choice's own TEXT resolves to the choice it is
+        // printed against — the reading a student who types the answer rather
+        // than the label depends on.
+        creditsOn(it, String(it.options[it.answer]).trim())
+      } else {
+        assert.ok(
+          groundedInSolution(it),
+          `${it.id}: no accepted form of the key ${JSON.stringify(it.answer)} appears in the worked solution, so ` +
+            `nothing in the pack says this is the answer: ${JSON.stringify(it.solution)}`,
+        )
+      }
     } else {
       assert.ok(MODEL_GRADED_KINDS.has(it.kind), `${it.id} has no key, so its kind '${it.kind}' must be model-graded`)
       assert.deepEqual(it.answer_variants, [], `${it.id} has variants but no key`)
     }
   }
+})
+
+test('a key with nothing behind it in the solution fails the shipped-bank invariant', () => {
+  // The proof that the invariant above is no longer a tautology. This is the
+  // audit's own construction: a nonsense key on pc-u1-p14, whose answer is 4.
+  const nonsense = parsePracticeItems(
+    pack(block({ stem: 'Find $f(2)+f(-1)$.', solution: '$f(2)+f(-1)=3+1=\\mathbf{4}$.', meta: ['<!-- key: qqzzx nonsense 99 -->'] })),
+    U1,
+  ).items[0]
+  assert.deepEqual(nonsense.answer, 'qqzzx nonsense 99', 'the parser cannot know it is nonsense — no gate can')
+  assert.equal(grade(nonsense, nonsense.answer).correct, 1, 'which is exactly why comparing it to itself proves nothing')
+  assert.equal(groundedInSolution(nonsense), false, 'but nothing in the worked solution says it')
+  assert.equal(grade(nonsense, '4').correct, 0, 'and the student who is right is marked wrong')
+  // ...while the real key of the same item is grounded, and credits him.
+  const real = parsePracticeItems(
+    pack(block({ stem: 'Find $f(2)+f(-1)$.', solution: '$f(2)+f(-1)=3+1=\\mathbf{4}$.', meta: ['<!-- key: 4 -->'] })),
+    U1,
+  ).items[0]
+  assert.equal(groundedInSolution(real), true)
+  creditsOn(real, '4')
 })
 
 // ---------------------------------------------------------------------------
@@ -216,6 +304,334 @@ test('a compound answer missing one of its parts is NOT credited', () => {
 })
 
 // ---------------------------------------------------------------------------
+// FALSE POSITIVES on a compound answer: the direction the expander was never
+// tested in. Every test above asks "is this right answer credited?"; these ask
+// "is this WRONG answer refused?", which is the question a permutation of an
+// ORDER-SIGNIFICANT answer poses. "we can't fault any mistake if we say it's
+// good" — crediting the swap is the same lie as marking a right answer wrong,
+// pointing the other way.
+// ---------------------------------------------------------------------------
+
+/** The shipped bank, compiled once: the items a student is actually served. */
+let SHIPPED
+const shipped = (id) => {
+  SHIPPED ??= compile()
+  const it = SHIPPED.items.find((i) => i.id === id)
+  assert.ok(it, `${id} is not in the compiled bank`)
+  return it
+}
+
+/**
+ * Assert this response is REFUSED, and by the server rather than by falling off
+ * the keyed path: an item that quietly became model-graded would "refuse"
+ * everything, which is not the same thing at all.
+ */
+function refusesOn(item, response, why) {
+  const v = grade(item, response)
+  assert.equal(
+    v.correct,
+    0,
+    `FALSE POSITIVE: ${JSON.stringify(response)} was CREDITED on ${item.id ?? 'the item'} — ${why}. ` +
+      `normalizeShort gives ${JSON.stringify(normalizeShort(response))}; the key is ` +
+      `${JSON.stringify(item.answer)}`,
+  )
+  assert.equal(v.graded_by, 'server', 'a keyed item must still be graded by the server')
+}
+
+test('FALSE POSITIVE: a permutation of an order-declared answer is refused, on the shipped items', () => {
+  // Each stem states the order in so many words, so the position of a value is
+  // part of the claim it makes. "-2, 4, 2pi/3" on 4sin(3x)-2 says the amplitude
+  // is -2 and the midline is 4: THE canonical mistake this item exists to catch.
+  const p2 = shipped('pc-u3-p2')
+  creditsOn(p2, '4, -2, 2pi/3')
+  refusesOn(p2, '-2, 4, 2pi/3', 'amplitude and midline swapped')
+  refusesOn(p2, '2pi/3, 4, -2', 'all three rotated')
+  refusesOn(p2, 'amplitude -2, midline 4, period 2pi/3', 'swapped, and labelled with the swap')
+
+  const p1 = shipped('pc-u3-p1')
+  creditsOn(p1, '3pi/4, -sqrt(2)/2')
+  refusesOn(p1, '-sqrt(2)/2, 3pi/4', 'the radian measure and the cosine swapped')
+
+  const p5 = shipped('pc-u3-p5')
+  creditsOn(p5, '5pi/6, -pi/4')
+  refusesOn(p5, '-pi/4, 5pi/6', 'arccos and arctan swapped')
+})
+
+test('FALSE POSITIVE: bare values with a declared order credit that order and no other', () => {
+  const ORDERED = {
+    stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values in that order.',
+    solution: 'amplitude 4, midline -2',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  }
+  const { item, errors } = one(ORDERED)
+  assert.deepEqual(errors, [])
+  assert.equal(item.kind, 'constructed')
+  creditsOn(item, '4, -2')
+  creditsOn(item, '4 and -2')
+  refusesOn(item, '-2, 4', 'the two values swapped, on a stem that states the order')
+  refusesOn(item, '-2 and 4', 'the two values swapped')
+})
+
+test('a genuine solution set stays order-free — every ordering is the same answer', () => {
+  // pc-u3-p8 solves 2sin^2x - sinx - 1 = 0 on [0, 2pi): the three parts are a
+  // SET, so no ordering of them is a different claim. The fix for the ordered
+  // items must not cost this item a single form.
+  const p8 = shipped('pc-u3-p8')
+  for (const typed of [
+    'pi/2, 7pi/6, 11pi/6',
+    '7pi/6, 11pi/6, pi/2',
+    '11pi/6, 7pi/6, pi/2',
+    'pi/2, 11pi/6, 7pi/6',
+    'x=pi/2, 7pi/6, 11pi/6',
+  ]) creditsOn(p8, typed)
+})
+
+test('self-labelling parts stay order-free even where the stem states an order', () => {
+  // The parts name themselves, so a reordering asserts exactly the same facts
+  // and marking it wrong would be a false negative. Two shipped items whose
+  // format sentence says "then" / "in this form", and which must keep every
+  // ordering they credit today.
+  const p7 = shipped('pc-u1-p7')
+  creditsOn(p7, 'overestimate, increasing')
+  creditsOn(p7, 'increasing, overestimate')
+
+  const p5 = shipped('pc-u1-p5')
+  creditsOn(p5, 'hole at x=3, VA at x=-3, HA y=1')
+  creditsOn(p5, 'HA y=1, hole at x=3, VA at x=-3')
+  creditsOn(p5, 'VA at x=-3, HA at y=1, hole: x=3')
+
+  const u2p1 = shipped('pc-u2-p1')
+  creditsOn(u2p1, 'exponential, y=50(0.8)^x')
+  creditsOn(u2p1, 'y=50(0.8)^x, exponential')
+})
+
+test('FALSE NEGATIVE: on an order-declared item, a phrasing that labels every entry still permutes', () => {
+  // Order-freedom is a property of what the student actually TYPED, not of what
+  // the item could have been typed as. pc-u3-p2 declares bare phrasings ("4",
+  // "y=-2", "2pi/3") alongside labelled ones, so the ITEM is order-locked — and
+  // it must stay locked for the bare forms, because "-2, 4, 2pi/3" is the
+  // canonical amplitude/midline swap. But "midline -2, amplitude 4, period
+  // 2pi/3" says which value is which IN THE STRING: no reordering of it can
+  // change the facts it asserts, so refusing it marks a correct, unambiguous
+  // answer wrong — the one error this file exists to prevent.
+  const p2 = shipped('pc-u3-p2')
+  for (const typed of [
+    'midline -2, amplitude 4, period 2pi/3',
+    'period 2pi/3, amplitude 4, midline -2',
+    'amplitude 4, period 2pi/3, midline -2',
+    'period 2pi/3, midline -2, amplitude 4',
+    'midline -2; amplitude 4; period 2pi/3',
+    'period 2pi/3, midline -2, and amplitude 4',
+    'amp 4, period 2pi/3, midline -2',
+  ]) creditsOn(p2, typed)
+
+  // One bare entry among labelled ones is identified by ELIMINATION — "midline
+  // -2, amplitude 4, 2pi/3" leaves only the period for the 2pi/3 — so it
+  // permutes too. Two bare entries cannot be told apart, and do not.
+  for (const typed of [
+    'midline -2, amplitude 4, 2pi/3',
+    'amp 4, period 2pi/3, -2',
+    'period 2pi/3, midline -2, 4',
+    'period 2pi/3, y=-2, amplitude 4',
+  ]) creditsOn(p2, typed)
+  for (const typed of ['-2, 4, period 2pi/3', '2pi/3, 4, midline -2', 'y=-2, 4, period 2pi/3']) {
+    refusesOn(p2, typed, 'two bare values, so a swap of THEM is indistinguishable from the right answer')
+  }
+
+  // And the item's own declared order still grades correct, in every notation.
+  for (const typed of ['4, -2, 2pi/3', '4, -2, 2π/3', 'amplitude 4, midline -2, period 2pi/3']) {
+    creditsOn(p2, typed)
+  }
+})
+
+test('an all-bare item gains nothing: no phrasing of it labels itself', () => {
+  // pc-u3-p1 and pc-u3-p5 declare ONLY bare values, so no combination of their
+  // phrasings labels itself and every one of them stays order-locked. Per-form
+  // order-freedom must not reach them at all.
+  const p1 = shipped('pc-u3-p1')
+  creditsOn(p1, '3pi/4, -sqrt(2)/2')
+  creditsOn(p1, '3π/4, -√2/2')
+  refusesOn(p1, '-sqrt(2)/2, 3pi/4', 'the radian measure and the cosine swapped')
+  refusesOn(p1, '-1/sqrt(2), 3pi/4', 'swapped, in another notation')
+
+  const p5 = shipped('pc-u3-p5')
+  creditsOn(p5, '5pi/6, -pi/4')
+  creditsOn(p5, '5π/6, -π/4')
+  refusesOn(p5, '-pi/4, 5pi/6', 'arccos and arctan swapped')
+  refusesOn(p5, '5pi/6 - pi/4', 'the two values subtracted into one number that answers neither')
+})
+
+test('bare-value parts whose format states NEITHER an order nor a set are a build ERROR', () => {
+  // The fail-safe direction: with nothing in the parts to tell them apart and
+  // nothing in the sentence the student was given, the parser cannot know
+  // whether "-2, 4" is a right answer or the classic wrong one — so it refuses
+  // the key instead of guessing, and the item degrades to model-graded.
+  const err = soleError({
+    stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values.',
+    solution: 'amplitude 4, midline -2',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values. -->',
+    ],
+  })
+  assert.match(err, /order/i)
+  assert.match(err, /in that order|in any order/, `the diagnostic must state both vocabularies: ${err}`)
+  assert.equal(
+    one({
+      stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values.',
+      meta: ['<!-- part 1: 4 -->', '<!-- part 2: -2 -->', '<!-- format: Answer as two comma-separated values. -->'],
+    }).item.answer,
+    null,
+    'and no key is written, so --write-despite-incomplete cannot ship the guess',
+  )
+})
+
+test('"in any order" on bare-value parts credits every ordering', () => {
+  const { item, errors } = one({
+    stem: 'Solve $\\sin x = 1/2$ on $[0, 2\\pi)$. Answer as a comma-separated list in any order.',
+    solution: 'pi/6, 5pi/6',
+    meta: [
+      '<!-- part 1: pi/6 -->',
+      '<!-- part 2: 5pi/6 -->',
+      '<!-- format: Answer as a comma-separated list in any order. -->',
+    ],
+  })
+  assert.deepEqual(errors, [])
+  creditsOn(item, 'pi/6, 5pi/6')
+  creditsOn(item, '5pi/6, pi/6')
+})
+
+test('a format sentence claiming both an order and any order is a build ERROR', () => {
+  const err = soleError({
+    stem: 'State them. Answer as two comma-separated values in that order, in any order.',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order, in any order. -->',
+    ],
+  })
+  assert.match(err, /both|contradic/i)
+})
+
+// ---------------------------------------------------------------------------
+// How the parts are JOINED. Two defects lived here, pointing opposite ways: a
+// separator that vanished and fused two parts into one number that answers
+// neither, and the ordinary English list — commas between, a conjunction before
+// the last — which no item with three parts could ever generate.
+// ---------------------------------------------------------------------------
+
+test('FALSE POSITIVE: a separator that fuses the parts into one expression is not generated', () => {
+  // "5pi/6 - pi/4" is a SUBTRACTION: 7pi/12, one number answering neither
+  // arccos(-sqrt3/2) nor arctan(-1). normalizeShort strips the whitespace around
+  // the operator, so a space-joined "5pi/6" + "-pi/4" normalizes to exactly what
+  // the student typed, and 14 such forms shipped as accepted answers.
+  const p5 = shipped('pc-u3-p5')
+  refusesOn(p5, '5pi/6 - pi/4', 'the two parts fused into a subtraction')
+  refusesOn(p5, '5pi/6-pi/4', 'the same fusion, typed without spaces')
+  refusesOn(p5, '5pi/6 -pi/4', 'the space-joined form the expander used to emit')
+
+  const p1 = shipped('pc-u3-p1')
+  refusesOn(p1, '3pi/4 - sqrt(2)/2', 'the two parts fused into a subtraction')
+  refusesOn(p1, '3pi/4 -sqrt(2)/2', 'the space-joined form the expander used to emit')
+  for (const it of [p1, p5]) {
+    const fused = (it.answer_variants ?? []).filter((f) => !/[,;]| and /.test(f) && /\s-/.test(f))
+    assert.deepEqual(fused, [], `${it.id} still ships space-joined forms that read as a subtraction`)
+  }
+})
+
+test('a space between two parts still joins them where nothing can fuse', () => {
+  // The counterweight: the run-on join is only dropped where normalizeShort
+  // would eat it. Two words with a space between them are still two words.
+  creditsOn(shipped('pc-u1-p7'), 'overestimate increasing')
+  creditsOn(shipped('pc-u2-p1'), 'exponential y=50(0.8)^x')
+  creditsOn(shipped('pc-u3-p8'), 'pi/2 7pi/6 11pi/6')
+})
+
+test('FALSE NEGATIVE: the ordinary English list is credited on every three-part item', () => {
+  // commas between the entries, a conjunction before the last. Every shipped
+  // three-part item booked this as a MISS — counted against the student, fed
+  // into gap detection and into readiness.
+  for (const [id, typed] of [
+    ['pc-u1-p5', 'hole at x=3, VA at x=-3, and HA y=1'],
+    ['pc-u1-p5', 'hole at x=3, VA at x=-3 and HA y=1'],
+    ['pc-u3-p2', '4, -2, and 2pi/3'],
+    ['pc-u3-p2', '4, -2 and 2pi/3'],
+    ['pc-u3-p8', 'pi/2, 7pi/6, and 11pi/6'],
+    ['pc-u3-p8', 'pi/2, 7pi/6 and 11pi/6'],
+  ]) creditsOn(shipped(id), typed)
+})
+
+/** Three parts that label themselves, so every ordering is the same answer. */
+const FEATURES = {
+  stem: 'For $f(x)=\\dfrac{x^2-x-6}{x^2-9}$ find the hole, the vertical asymptote and the horizontal asymptote. Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7.',
+  solution: 'hole at $x=3$, VA at $x=-3$, HA $y=1$',
+  meta: [
+    '<!-- part 1: hole at x=3 -->',
+    '<!-- part 2: VA at x=-3 -->',
+    '<!-- part 3: HA y=1 -->',
+    '<!-- format: Answer as three comma-separated entries in this form: hole at x=5, VA at x=6, HA y=7. -->',
+  ],
+}
+
+test('THREE parts: every ordering, joined every way a student writes a list', () => {
+  // The first three-part fixture in this suite. Every positive compound fixture
+  // was two parts, where "a, b and c" and "a, and b, and c" cannot be told
+  // apart — which is why a list scheme was never missed.
+  const { item, errors } = one(FEATURES)
+  assert.deepEqual(errors, [])
+  assert.equal(item.kind, 'constructed')
+  for (const typed of [
+    'hole at x=3, VA at x=-3, HA y=1',
+    'hole at x=3, VA at x=-3, and HA y=1',
+    'hole at x=3, VA at x=-3 and HA y=1',
+    'hole at x=3; VA at x=-3; HA y=1',
+    'hole at x=3 and VA at x=-3 and HA y=1',
+    'HA y=1, hole at x=3, and VA at x=-3',
+    'VA at x=-3, HA y=1 and hole at x=3',
+    'HA y=1, VA at x=-3, hole at x=3',
+  ]) creditsOn(item, typed)
+  // ...and the whole answer is still the whole answer.
+  assert.equal(grade(item, 'hole at x=3, VA at x=-3').correct, 0, 'two thirds of an answer is not the answer')
+})
+
+test('THREE bare values in a declared order: the list forms, that order only', () => {
+  const AMP = {
+    stem: 'State the amplitude, midline and period of $f(x)=4\\sin(3x)-2$. Answer as three comma-separated values in the order amplitude, midline, period.',
+    solution: 'amplitude 4, midline -2, period 2pi/3',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- part 3: 2pi/3 -->',
+      '<!-- format: Answer as three comma-separated values in the order amplitude, midline, period. -->',
+    ],
+  }
+  const { item, errors } = one(AMP)
+  assert.deepEqual(errors, [])
+  for (const typed of ['4, -2, 2pi/3', '4, -2, and 2pi/3', '4, -2 and 2pi/3', '4; -2; 2pi/3']) creditsOn(item, typed)
+  for (const typed of ['-2, 4, 2pi/3', '2pi/3, -2, 4', '-2, 4, and 2pi/3', '4, 2pi/3 and -2']) {
+    refusesOn(item, typed, 'a swap on a stem that states the order')
+  }
+})
+
+test('the forms nobody writes are not spent, which is what pays for the ones everybody writes', () => {
+  // A DELIBERATE narrowing, recorded so it is not "fixed" back: joining every
+  // gap with ", and " produced "4, and -2, and 2pi/3" — 444 of the 2612 forms
+  // the bank shipped, on a shape no student types — and the cap at 1000 forms
+  // has room for the English list only because that shape is gone. Same for the
+  // run-on join between multi-word entries, which cannot be read back as a list.
+  const { item } = one(FEATURES)
+  assert.equal(grade(item, 'hole at x=3, and VA at x=-3, and HA y=1').correct, 0)
+  assert.equal(grade(item, 'hole at x=3 VA at x=-3 HA y=1').correct, 0)
+  // Single-word parts keep the run-on join, because the gaps are still findable.
+  creditsOn(shipped('pc-u3-p8'), '7pi/6 pi/2 11pi/6')
+})
+
+// ---------------------------------------------------------------------------
 // Validation with teeth. Every one of these is a BUILD ERROR, because the
 // alternative is an item that is silently unkeyed or, worse, mis-keyed.
 // ---------------------------------------------------------------------------
@@ -280,12 +696,36 @@ test('a key that carries its own label is a build ERROR — the student types th
 })
 
 test('a key with no plain-ASCII form a student could type is a build ERROR', () => {
-  for (const bad of ['<!-- key: \\dfrac{5}{6} -->', '<!-- key: π/2 -->', '<!-- key: y = 2x − 1 -->']) {
+  // What "typeable" means moved when grade.js learned to fold Unicode lookalikes
+  // onto their ASCII equivalent. The gate is stated on normalizeShort, so it
+  // inherited the fold: a key of `π/2` or `y = 2x − 1` IS typeable now, because
+  // the grader credits `pi/2` and `y = 2x - 1` against it. What is left for this
+  // gate is what no fold can reach — a LaTeX macro, and the Unicode that has no
+  // single ASCII spelling.
+  for (const bad of ['<!-- key: \\dfrac{5}{6} -->', '<!-- key: 5 × 6 -->', '<!-- key: y ≈ 2x -->']) {
     const err = soleError({ meta: [bad] })
     assert.match(err, /type|ASCII/i, `for ${bad}: ${err}`)
   }
   // Declaring the typeable form clears it.
-  assert.deepEqual(one({ meta: ['<!-- key: π/2 -->', '<!-- accept: pi/2 -->'] }).errors, [])
+  assert.deepEqual(one({ meta: ['<!-- key: 5 × 6 -->', '<!-- accept: 5 * 6 -->'] }).errors, [])
+})
+
+test('a key written only in Unicode is typeable, because the grader folds it', () => {
+  // The other half of the same fix, and the reason the gate above may relax: the
+  // fold runs on the stored KEY as well as the response, so `π/2` needs no ASCII
+  // alias to be answerable. Before it did — and worse, the reverse direction bit
+  // too: a student typing the plain `pi/2` at a `π`-keyed item was marked WRONG.
+  for (const [key, typed] of [
+    ['π/2', 'pi/2'],
+    ['y = 2x − 1', 'y = 2x - 1'],
+    ['-√2/2', '-sqrt2/2'],
+    ['15 ≤ h ≤ 62.5', '15 <= h <= 62.5'],
+  ]) {
+    const { item, errors } = one({ meta: [`<!-- key: ${key} -->`] })
+    assert.deepEqual(errors, [], `a Unicode-only key is no longer untypeable: ${key}`)
+    creditsOn(item, typed)
+    creditsOn(item, key)
+  }
 })
 
 test('an unknown or misspelled key field is a build ERROR, never silently ignored', () => {
@@ -399,16 +839,324 @@ test('the same field declared twice is a build ERROR', () => {
   assert.equal(one({ meta: ['<!-- key: 3 -->', '<!-- key: 4 -->'] }).item.answer, null)
 })
 
+test('an HTML comment that declares NO field is a build ERROR, never a dropped key', () => {
+  // The colon is what DECLARATION matches on, so one typo turned a key into a
+  // comment that named nothing — and a comment that names nothing was kept as
+  // invisible body text and dropped. No error, no key, and an item that says
+  // "model-graded" while the markdown says otherwise: exactly the failure this
+  // file's own invariant forbids ("never a silently unkeyed item, which is how a
+  // parser once found 22 of 48 problems and reported success").
+  for (const bad of ['<!-- key 4 -->', '<!-- accept 4 -->', '<!-- topic 1.4 -->', '<!-- part 1 3pi/4 -->']) {
+    const err = soleError({ meta: [bad] })
+    assert.match(err, /declar|field/i, `for ${bad}: ${err}`)
+    assert.match(err, /:/, `the diagnostic must show the colon that is missing: ${err}`)
+  }
+  // The worse half: a typo on ONE part of a compound answer left the other parts
+  // contiguous, so every gate passed and the item shipped keyed on 2 of its 3
+  // parts — the COMPLETE right answer marked wrong, the incomplete one credited.
+  const r = parsePracticeItems(
+    pack(
+      block({
+        stem: 'State the amplitude, midline and period of $f(x)=4\\sin(3x)-2$. Answer as three comma-separated values in the order amplitude, midline, period.',
+        meta: [
+          '<!-- part 1: 4 -->',
+          '<!-- part 2: -2 -->',
+          '<!-- part 3 2pi/3 -->',
+          '<!-- format: Answer as three comma-separated values in the order amplitude, midline, period. -->',
+        ],
+      }),
+    ),
+    U1,
+  )
+  assert.equal(r.errors.length, 1, JSON.stringify(r.errors))
+  assert.match(r.errors[0], /part 3 2pi\/3/)
+  assert.equal(r.items[0].answer, null, 'and the item is not keyed on the parts that did parse')
+  assert.equal(r.items[0].kind, 'constructed_model_graded')
+})
+
+test('an editorial aside is still written as a note, and still costs nothing', () => {
+  // The counterweight: `note:` (and todo/fixme/source/comment) is how a human
+  // writes prose into a problem block, and it must not become an error now that
+  // its neighbours are.
+  const { item, errors } = one({
+    meta: ['<!-- key: 3 -->', '<!-- note: keyed after checking the 2024 scoring guidelines -->'],
+  })
+  assert.deepEqual(errors, [])
+  assert.equal(item.answer, '3')
+  assert.equal(item.stem.includes('keyed after checking'), false, 'and it never reaches the student')
+})
+
+// ---------------------------------------------------------------------------
+// The two gates that judge a compound answer's PHRASINGS. Both were
+// order-of-declaration dependent: one refused content it already had, the other
+// blamed the wrong line for it.
+// ---------------------------------------------------------------------------
+
+/** The accepted set as the grader sees it, so two declarations can be compared. */
+const acceptedShapes = (item) =>
+  new Set([item.answer, ...(item.answer_variants ?? [])].map(normalizeShort))
+
+const PI_PARTS = {
+  stem: 'Convert 135° to radians and find cos(135°) exactly. Answer as two comma-separated entries in that order.',
+  solution: '3π/4 and −√2/2',
+  format: '<!-- format: Answer as two comma-separated entries in that order. -->',
+}
+
+test('a keyboard-typeable form counts wherever it is declared, not only where it is listed first', () => {
+  // isTypeable was checked against the key and `accept:` only — never against
+  // the forms the parser itself generated — so two declarations with an
+  // IDENTICAL accepted set differed by the ORDER their phrasings were listed in,
+  // and one of them was refused with a diagnostic telling the author to add
+  // something the item already had.
+  const ascii = one({
+    ...PI_PARTS,
+    meta: ['<!-- part 1: 3pi/4 -->', '<!-- part 1: 3π/4 -->', '<!-- part 2: -sqrt(2)/2 -->', PI_PARTS.format],
+  })
+  const unicode = one({
+    ...PI_PARTS,
+    meta: ['<!-- part 1: 3π/4 -->', '<!-- part 1: 3pi/4 -->', '<!-- part 2: -sqrt(2)/2 -->', PI_PARTS.format],
+  })
+  assert.deepEqual(ascii.errors, [])
+  assert.deepEqual(unicode.errors, [], 'listing the same phrasings in the other order must key the same item')
+  assert.deepEqual(
+    [...acceptedShapes(unicode.item)].sort(),
+    [...acceptedShapes(ascii.item)].sort(),
+    'the accepted set cannot depend on which phrasing was written first',
+  )
+  for (const item of [ascii.item, unicode.item]) creditsOn(item, '3pi/4, -sqrt(2)/2')
+})
+
+test('a compound answer with NO typeable form anywhere is still a build ERROR', () => {
+  // The gate keeps its teeth: what changed is where it looks, not what it wants.
+  // The fixture is Unicode grade.js cannot fold, because Unicode it CAN fold is
+  // typeable by definition now — see the test above.
+  const err = soleError({
+    stem: 'Give the two values. Answer as two comma-separated entries in that order.',
+    meta: [
+      '<!-- part 1: 5 × 6 -->',
+      '<!-- part 2: y ≈ 2x -->',
+      '<!-- format: Answer as two comma-separated entries in that order. -->',
+    ],
+  })
+  assert.match(err, /type/i)
+  assert.match(err, /part/i, `for a compound answer the fix is another part phrasing, not "accept:": ${err}`)
+})
+
+test('a phrasing the FOLD made redundant does not stop the build', () => {
+  // The dead-weight gate is stated on normalizeShort, which is right — a form has
+  // to be judged by the function that will grade it. The cost is that
+  // STRENGTHENING the grader turns correct content into a build error: when
+  // normalizeShort learned the Unicode fold, nine hand-written `π` and `√` aliases
+  // across pc-u3-p1/p2/p5/p8/p10 became redundant and the whole build stopped —
+  // nothing written, the student served nothing. An author who wrote `π/2` before
+  // the fold existed was not making the mistake this gate is for.
+  const compound = one({
+    ...PI_PARTS,
+    meta: ['<!-- part 1: 3pi/4 -->', '<!-- part 1: 3π/4 -->', '<!-- part 2: -sqrt(2)/2 -->', '<!-- part 2: -√2/2 -->', PI_PARTS.format],
+  })
+  assert.deepEqual(compound.errors, [], 'a lookalike alias is redundant, not an authoring mistake')
+  creditsOn(compound.item, '3pi/4, -sqrt(2)/2')
+  creditsOn(compound.item, '3π/4, -√2/2')
+
+  const atomic = one({ meta: ['<!-- key: 8/pi -->', '<!-- accept: 8/π -->'] })
+  assert.deepEqual(atomic.errors, [])
+  creditsOn(atomic.item, '8/pi')
+  creditsOn(atomic.item, '8/π')
+
+  // The exemption is narrow: dead weight that is NOT a lookalike is still an error.
+  const err = soleError({
+    stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values in that order.',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 1: $4$ -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  })
+  assert.match(err, /dead weight|nothing that/i, err)
+})
+
+test('the dead-weight gate names the phrasing that is dead weight, in either declaration order', () => {
+  // The gate registered the FIRST form of each normalized shape and blamed every
+  // phrasing that won no race — and the all-first-phrasings combination is
+  // generated first, so phrasing 0 always won. Declaring the redundant phrasing
+  // FIRST therefore reported the one the item actually wants: `part 1: $4$` then
+  // `part 1: 4` said that "4" accepts nothing new.
+  const both = (meta) =>
+    one({
+      stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values in that order.',
+      meta: [...meta, '<!-- part 2: -2 -->', '<!-- format: Answer as two comma-separated values in that order. -->'],
+    }).errors
+  for (const order of [
+    ['<!-- part 1: $4$ -->', '<!-- part 1: 4 -->'],
+    ['<!-- part 1: 4 -->', '<!-- part 1: $4$ -->'],
+  ]) {
+    const errors = both(order)
+    assert.equal(errors.length, 1, JSON.stringify(errors))
+    assert.match(errors[0], /"\$4\$"/, `the redundant phrasing must be named: ${errors[0]}`)
+    assert.match(errors[0], /"4"/, `and so must the one it duplicates, since either may be deleted: ${errors[0]}`)
+  }
+})
+
+test('the dead-weight gate spares a phrasing that only earns its keep in second position', () => {
+  // The reason this gate is effect-based and not a comparison: normalizeShort
+  // strips a leading "x =" from the WHOLE response, so "x=-2 mult 3 crosses" and
+  // "-2 mult 3 crosses" are identical in isolation and different in second
+  // position. Both shipped items that declare such a pair must keep it.
+  assert.deepEqual(one(ZEROS).errors, [])
+  creditsOn(one(ZEROS).item, 'x=1 mult 2 bounces, x=-2 mult 3 crosses')
+  const p8 = shipped('pc-u3-p8')
+  creditsOn(p8, 'pi/2, x=7pi/6, x=11pi/6')
+  // A trailing period is the same trap in the other direction: normalizeShort
+  // strips it from the END of the response only, so "4." differs from "4"
+  // everywhere except last, and the gate must not call it dead weight.
+  const period = one({
+    stem: 'State the amplitude and the midline. Answer as two comma-separated values in that order.',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 1: 4. -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  })
+  assert.deepEqual(period.errors, [])
+  creditsOn(period.item, '4., -2')
+})
+
+test('the dead-weight gate still refuses a phrasing that earns its keep NOWHERE', () => {
+  // The teeth: two spellings normalizeShort cannot tell apart in ANY position.
+  const pair = soleError({
+    stem: 'State the amplitude and the midline. Answer as two comma-separated values in that order.',
+    meta: [
+      '<!-- part 1: amplitude 4 -->',
+      '<!-- part 1: amplitude  4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  })
+  assert.match(pair, /interchangeable/i)
+  assert.match(pair, /part 1/)
+
+  // ...and where the redundancy is one-sided, the one phrasing that adds nothing
+  // is named alone. "x=4." is "4." wherever the prefix is stripped (first
+  // position) and "x=4" wherever the period is (last), so the other two
+  // phrasings between them already accept everything it would.
+  const single = soleError({
+    stem: 'Solve it. Answer as a comma-separated list in any order.',
+    meta: [
+      '<!-- part 1: x=4. -->',
+      '<!-- part 1: 4. -->',
+      '<!-- part 1: x=4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as a comma-separated list in any order. -->',
+    ],
+  })
+  assert.match(single, /"x=4\." accepts nothing/)
+})
+
 test('the accepted forms of a compound answer are capped, so a build cannot explode', () => {
   const parts = []
   for (let p = 1; p <= 4; p++) {
     for (let a = 0; a < 6; a++) parts.push(`<!-- part ${p}: p${p}a${a} -->`)
   }
+  // "in that order" so the refusal is the CAP and nothing else: these parts are
+  // interchangeable bare values, which without a stated order is its own error.
   const err = soleError({
-    stem: 'Give it. Answer as a, b, c, d',
-    meta: [...parts, '<!-- format: Answer as a, b, c, d -->'],
+    stem: 'Give it. Answer as a, b, c, d in that order',
+    meta: [...parts, '<!-- format: Answer as a, b, c, d in that order -->'],
   })
   assert.match(err, /too many|cap/i)
+})
+
+test('the cap is refused JUST over the line, and honoured just under it', () => {
+  // The cap was only ever tested at a 155x overshoot, where any arithmetic
+  // passes. These two differ by ONE declared phrasing and straddle the line: 3
+  // single-word parts in any order expand to 6 orderings x 6 join schemes = 36
+  // forms per combination of phrasings, so 6x5x1 phrasings is 1080 forms and
+  // 6x4x1 is 864.
+  const phrasings = (counts) =>
+    counts.flatMap((n, p) => Array.from({ length: n }, (_, a) => `<!-- part ${p + 1}: v${p}w${a} -->`))
+  const set = {
+    stem: 'Solve it. Answer as a comma-separated list in any order.',
+    meta: ['<!-- format: Answer as a comma-separated list in any order. -->'],
+  }
+  const over = one({ ...set, meta: [...phrasings([6, 5, 1]), ...set.meta] })
+  assert.equal(over.errors.length, 1, JSON.stringify(over.errors))
+  assert.match(over.errors[0], /expand to 1080 accepted forms, past the cap of 1000/)
+  assert.equal(over.item.answer, null, 'over the cap the item degrades to model-graded, key and all')
+  assert.equal(over.item.kind, 'constructed_model_graded')
+
+  const under = one({ ...set, meta: [...phrasings([6, 4, 1]), ...set.meta] })
+  assert.deepEqual(under.errors, [])
+  assert.equal(under.item.kind, 'constructed')
+  // And the property that matters, which the cap must never quietly break: what
+  // is emitted is the WHOLE expansion, never a truncation of it. Every form in
+  // it grades correct, and forms from the far end of the ordering — the ones a
+  // truncation would drop first — are among them.
+  const forms = [under.item.answer, ...under.item.answer_variants]
+  assert.equal(forms.length, 864, 'the whole expansion must ship, undeduplicated by accident and unclipped')
+  assert.equal(new Set(forms.map(normalizeShort)).size, forms.length, 'and no two forms the grader cannot tell apart')
+  for (const form of forms) creditsOn(under.item, form)
+  creditsOn(under.item, 'v2w0, v1w3, v0w5')
+  creditsOn(under.item, 'v2w0, v1w3, and v0w5')
+  creditsOn(under.item, 'v1w3 v2w0 v0w5')
+})
+
+test('the shipped item nearest the cap is fully expanded, not clipped', () => {
+  // pc-u1-p5 declares 2 x 4 x 4 phrasings of three self-labelling parts: 6
+  // orderings x 32 combinations x 5 join schemes = 960 of the 1000 forms
+  // allowed, the closest any shipped item comes to the ceiling.
+  const p5 = shipped('pc-u1-p5')
+  const forms = [p5.answer, ...p5.answer_variants]
+  assert.equal(forms.length, 960, 'the whole expansion ships, or the cap has started truncating')
+  assert.equal(new Set(forms.map(normalizeShort)).size, 960)
+  // The last phrasing of the last part, in the last ordering, joined by the last
+  // scheme: everything a truncation would take first.
+  creditsOn(p5, 'horizontal asymptote y=1, vertical asymptote at x=-3 and hole: x=3')
+})
+
+test('the cap counts the orderings freed per FORM, and refuses rather than truncating', () => {
+  // The orderings are no longer one factor shared by every combination, so the
+  // cap has to sum them per combination. If it did not — if it still multiplied
+  // by 1 because the ITEM is order-locked — an item like the second one below
+  // would report 216 forms and then quietly emit 1266 into the D1 row.
+  //
+  // Three parts, two of which also accept a bare value, so the item is
+  // order-locked and only the combinations that label themselves permute.
+  const declare = (labelled, bare, p) =>
+    [...labelled.map((l) => `<!-- part ${p}: ${l}${p} -->`), ...(bare ? [`<!-- part ${p}: ${p} -->`] : [])]
+  const SENTENCE = 'Answer as three comma-separated values in that order.'
+  const item = (...parts) =>
+    one({
+      stem: `Give it. ${SENTENCE}`,
+      meta: [...parts.flat(), `<!-- format: ${SENTENCE} -->`],
+    })
+
+  const under = item(
+    declare(['aa', 'bb', 'cc'], true, 1),
+    declare(['gg', 'hh', 'ii', 'jj', 'kk'], true, 2),
+    declare(['mm'], false, 3),
+  )
+  assert.deepEqual(under.errors, [])
+  const forms = [under.item.answer, ...under.item.answer_variants]
+  // 24 combinations, 23 of which carry at most one bare value and so permute:
+  // (23 x 6 + 1) x 6 join schemes = 834, and every one of them ships.
+  assert.equal(forms.length, 834, 'the whole expansion ships, or the cap has started truncating')
+  assert.equal(new Set(forms.map(normalizeShort)).size, 834, 'and no two forms the grader cannot tell apart')
+  for (const form of forms) creditsOn(under.item, form)
+
+  // Two more phrasings on the first part and the sum crosses the line. The cap's
+  // arithmetic is stated in the error, so a future change to it cannot pass here
+  // by accident.
+  const over = item(
+    declare(['aa', 'bb', 'cc', 'dd', 'ee'], true, 1),
+    declare(['gg', 'hh', 'ii', 'jj', 'kk'], true, 2),
+    declare(['mm'], false, 3),
+  )
+  assert.equal(over.errors.length, 1, JSON.stringify(over.errors))
+  assert.match(over.errors[0], /expand to 1266 accepted forms, past the cap of 1000/)
+  assert.equal(over.item.answer, null, 'over the cap the item degrades to model-graded, key and all')
+  assert.equal(over.item.kind, 'constructed_model_graded')
 })
 
 // ---------------------------------------------------------------------------
