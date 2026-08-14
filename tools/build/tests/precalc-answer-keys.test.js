@@ -671,6 +671,53 @@ test('the same field declared twice is a build ERROR', () => {
   assert.equal(one({ meta: ['<!-- key: 3 -->', '<!-- key: 4 -->'] }).item.answer, null)
 })
 
+test('an HTML comment that declares NO field is a build ERROR, never a dropped key', () => {
+  // The colon is what DECLARATION matches on, so one typo turned a key into a
+  // comment that named nothing — and a comment that names nothing was kept as
+  // invisible body text and dropped. No error, no key, and an item that says
+  // "model-graded" while the markdown says otherwise: exactly the failure this
+  // file's own invariant forbids ("never a silently unkeyed item, which is how a
+  // parser once found 22 of 48 problems and reported success").
+  for (const bad of ['<!-- key 4 -->', '<!-- accept 4 -->', '<!-- topic 1.4 -->', '<!-- part 1 3pi/4 -->']) {
+    const err = soleError({ meta: [bad] })
+    assert.match(err, /declar|field/i, `for ${bad}: ${err}`)
+    assert.match(err, /:/, `the diagnostic must show the colon that is missing: ${err}`)
+  }
+  // The worse half: a typo on ONE part of a compound answer left the other parts
+  // contiguous, so every gate passed and the item shipped keyed on 2 of its 3
+  // parts — the COMPLETE right answer marked wrong, the incomplete one credited.
+  const r = parsePracticeItems(
+    pack(
+      block({
+        stem: 'State the amplitude, midline and period of $f(x)=4\\sin(3x)-2$. Answer as three comma-separated values in the order amplitude, midline, period.',
+        meta: [
+          '<!-- part 1: 4 -->',
+          '<!-- part 2: -2 -->',
+          '<!-- part 3 2pi/3 -->',
+          '<!-- format: Answer as three comma-separated values in the order amplitude, midline, period. -->',
+        ],
+      }),
+    ),
+    U1,
+  )
+  assert.equal(r.errors.length, 1, JSON.stringify(r.errors))
+  assert.match(r.errors[0], /part 3 2pi\/3/)
+  assert.equal(r.items[0].answer, null, 'and the item is not keyed on the parts that did parse')
+  assert.equal(r.items[0].kind, 'constructed_model_graded')
+})
+
+test('an editorial aside is still written as a note, and still costs nothing', () => {
+  // The counterweight: `note:` (and todo/fixme/source/comment) is how a human
+  // writes prose into a problem block, and it must not become an error now that
+  // its neighbours are.
+  const { item, errors } = one({
+    meta: ['<!-- key: 3 -->', '<!-- note: keyed after checking the 2024 scoring guidelines -->'],
+  })
+  assert.deepEqual(errors, [])
+  assert.equal(item.answer, '3')
+  assert.equal(item.stem.includes('keyed after checking'), false, 'and it never reaches the student')
+})
+
 test('the accepted forms of a compound answer are capped, so a build cannot explode', () => {
   const parts = []
   for (let p = 1; p <= 4; p++) {
