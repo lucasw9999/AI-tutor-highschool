@@ -651,15 +651,31 @@ export function pickNext({
    * who has 100% of this topic's answers right can check "3%" and find it false,
    * and a reason he can catch out is worse than no reason. So the sentence says
    * what the number is, and what the raw record says, and why they differ.
+   *
+   * WHICH WAY they differ is part of that, and it is not a constant. `recent_pct`
+   * is below `pct` when the topic has decayed, and ABOVE it whenever the misses
+   * are older than the correct answers — which is the shape of every topic he has
+   * pulled up, and which recency weighting guarantees for it. The sentence used to
+   * say "weighted down" unconditionally: on the real CSA bank at 8 answers a day,
+   * 133 of the reasons served in 90 days named a figure HIGHER than the lifetime
+   * one and called it that lifetime figure weighted down. 72 is not 40 weighted
+   * down; that is arithmetic he can check, in the one sentence that may never be
+   * checkable and false.
+   *
+   * The direction is read off the ROUNDED pair, because the rounded pair is what
+   * he is shown, and the explanation has to describe the numbers beside it rather
+   * than the full-precision ones behind them.
    */
   const statedPct = (s) => {
     const recent = held(s).toFixed(0)
     const lifetime = s.pct.toFixed(0)
-    return recent === lifetime
-      ? `${recent}%`
-      : `${recent}% on recent evidence (${lifetime}% across all ${s.n} answer(s) ever, weighted down because an ` +
-        `answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days — work you have not repeated is not ` +
-        `evidence about today)`
+    if (recent === lifetime) return `${recent}%`
+    const because = Number(recent) < Number(lifetime)
+      ? `weighted down because an answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days — work you have `
+        + 'not repeated is not evidence about today'
+      : `higher than that because an answer loses half its weight every ${RECENCY_HALF_LIFE_DAYS} days and the `
+        + 'questions you missed on this are older than the ones you got right — the recent record is the better one'
+    return `${recent}% on recent evidence (${lifetime}% across all ${s.n} answer(s) ever, ${because})`
   }
   const weak = [...stats.entries()]
     .filter(([topic, s]) => held(s) < floor && isTested(topic))
@@ -704,29 +720,74 @@ export function pickNext({
    * serve it in a moment, with a reason that describes it accurately — and
    * spending the reserved slot on it would relabel remediation as spaced review
    * and leave the actual review queue exactly as starved as before.
+   *
+   * TWO PASSES OVER THE QUEUE, and the second one is what makes this branch
+   * reachable at all. The first draws from `servable`, where the reuse decision
+   * has already been taken globally, so a due topic that still has a question he
+   * has not answered recently is served with it — freshness first, and across the
+   * whole queue, so a fresh review is never passed over for a repeat on a more
+   * overdue topic.
+   *
+   * The second pass draws from the topic's OWN items instead, and only on the
+   * reserved slot. It exists because four of the five review intervals — 1, 3, 7
+   * and 16 days — are SHORTER than the reuse windows the configs ship (28 days on
+   * CSA, 14 on Precalc). A topic that comes due on the early schedule therefore
+   * has its own answered questions INSIDE the no-repeat window by construction,
+   * and once its never-asked ones are gone `servable` holds none of them: the
+   * first pass finds an empty pool and the due review is dropped in silence. That
+   * is not a corner: on the real CSA bank at 8 answers a day for 90 days it
+   * emptied 146 of the 240 reserved slots, took the realized review share to 8.9%
+   * against a reserve of 33%, left the median due topic waiting 77 questions and
+   * the worst 702, and 21 of the 47 topics that came due were never reviewed at
+   * all. The 1/3/7/16/35 schedule this module is built around did not run.
+   *
+   * Serving the topic's own most-forgotten question instead is the same trade the
+   * mock branch already makes, for the same reason and with the same two
+   * safeguards. It is HONEST because `serve` labels it — `repeat: true`,
+   * `repeat_of`, and a sentence saying he has answered this exact question before,
+   * so a remembered answer is never sold as fresh evidence. It does not break the
+   * no-repeat window's purpose, because `poolFor` still prefers a never-asked
+   * question, then one whose window has passed, and only then the LEAST RECENTLY
+   * SEEN of what is left — so a review is never served with the very question he
+   * just answered while any alternative exists. And it is confined to the reserved
+   * slot, which is the one question in REVIEW_SHARE the module has already decided
+   * to spend on review whatever else was available: outside the reserve the global
+   * rule stands unchanged, and a repeat never displaces a fresh question there.
+   *
+   * Deterministic in both passes: `due` is ordered by how overdue it is then by
+   * name, `poolFor` sorts by least-recently-seen then exam weight then id, and
+   * neither reads a clock beyond `now` or an RNG.
    */
   const serveReview = (reserved = false) => {
     const skip = reserved ? new Set(weak.map((w) => w.topic)) : new Set()
-    for (const [topic, s] of due) {
-      if (skip.has(topic)) continue
-      const pool = poolFor(topic)
-      if (!pool.length) continue
-      const days = ageDays(s.last_ts, now).toFixed(0)
-      // Only on the reserved slot, and only when something really is below its
-      // floor: the student is looking at a review while the status view names a
-      // weak topic, and the two have to agree about what is going on.
-      const displaced = reserved ? weak[0] : null
-      return serve({
-        item: pool[0],
-        priority: 'review',
-        conditions: 'cold',
-        reason: `Spaced review of ${topic} — you missed it before, and it has been ${days} days. Checking it stuck.`
-          + (displaced
-            ? ` ${displaced.topic} is at ${statedPct(displaced.s)} and is still the next thing to work on, but one `
-              + `ordinary question in ${REVIEW_SHARE} is kept for a review that has come due: with remediation always `
-              + `first, a review would never be served at all.`
-            : ''),
-      })
+    for (const pool of reserved ? [servable, universe] : [servable]) {
+      for (const [topic, s] of due) {
+        if (skip.has(topic)) continue
+        const own = poolFor(topic, pool)
+        if (!own.length) continue
+        // Whole CALENDAR days, the unit calendarDaysAgo exists for and the same
+        // unit as the repeat sentence `serve` may append to this one. Elapsed days
+        // rounded with toFixed(0) put "it has been 1 days" and "you answered it 2
+        // days ago" in one sentence about one gap — and rounded a 36-hour gap down
+        // to "1" while the calendar had already turned twice.
+        const days = calendarDaysAgo(s.last_ts, now)
+        // Only on the reserved slot, and only when something really is below its
+        // floor: the student is looking at a review while the status view names a
+        // weak topic, and the two have to agree about what is going on.
+        const displaced = reserved ? weak[0] : null
+        return serve({
+          item: own[0],
+          priority: 'review',
+          conditions: 'cold',
+          reason: `Spaced review of ${topic} — you missed it before, and it has been `
+            + `${days === 1 ? '1 day' : `${days} days`}. Checking it stuck.`
+            + (displaced
+              ? ` ${displaced.topic} is at ${statedPct(displaced.s)} and is still the next thing to work on, but one `
+                + `ordinary question in ${REVIEW_SHARE} is kept for a review that has come due: with remediation always `
+                + `first, a review would never be served at all.`
+              : ''),
+        })
+      }
     }
     return null
   }
