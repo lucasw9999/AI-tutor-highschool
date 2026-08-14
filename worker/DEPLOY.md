@@ -134,10 +134,10 @@ suite fails and names the new value — update the table, do not silence it.
 
 | What | Measured |
 |---|---|
-| `seed.sql`, total | **443284 bytes** (432.9 KiB) |
+| `seed.sql`, total | **425586 bytes** (415.6 KiB) |
 | statements | **28** |
 | largest statement | **93711 bytes** = 93.7% of the limit, 6289 bytes of headroom |
-| statements over 40 KiB | **3**: 77993, 93711, 76020 bytes |
+| statements over 40 KiB | **3**: 77993, 93711, 58322 bytes |
 | that largest one, plus one more row shaped like the heaviest item in the bank (`pc-u1-p5`) | **136235 bytes** = 136.2% of the limit |
 | a naive line-ending-in-`;` split of it | loads **56 of 336** items, fails **618 of 640** chunks |
 

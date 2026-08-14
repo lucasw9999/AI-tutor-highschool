@@ -216,6 +216,165 @@ test('a compound answer missing one of its parts is NOT credited', () => {
 })
 
 // ---------------------------------------------------------------------------
+// FALSE POSITIVES on a compound answer: the direction the expander was never
+// tested in. Every test above asks "is this right answer credited?"; these ask
+// "is this WRONG answer refused?", which is the question a permutation of an
+// ORDER-SIGNIFICANT answer poses. "we can't fault any mistake if we say it's
+// good" — crediting the swap is the same lie as marking a right answer wrong,
+// pointing the other way.
+// ---------------------------------------------------------------------------
+
+/** The shipped bank, compiled once: the items a student is actually served. */
+let SHIPPED
+const shipped = (id) => {
+  SHIPPED ??= compile()
+  const it = SHIPPED.items.find((i) => i.id === id)
+  assert.ok(it, `${id} is not in the compiled bank`)
+  return it
+}
+
+/**
+ * Assert this response is REFUSED, and by the server rather than by falling off
+ * the keyed path: an item that quietly became model-graded would "refuse"
+ * everything, which is not the same thing at all.
+ */
+function refusesOn(item, response, why) {
+  const v = grade(item, response)
+  assert.equal(
+    v.correct,
+    0,
+    `FALSE POSITIVE: ${JSON.stringify(response)} was CREDITED on ${item.id ?? 'the item'} — ${why}. ` +
+      `normalizeShort gives ${JSON.stringify(normalizeShort(response))}; the key is ` +
+      `${JSON.stringify(item.answer)}`,
+  )
+  assert.equal(v.graded_by, 'server', 'a keyed item must still be graded by the server')
+}
+
+test('FALSE POSITIVE: a permutation of an order-declared answer is refused, on the shipped items', () => {
+  // Each stem states the order in so many words, so the position of a value is
+  // part of the claim it makes. "-2, 4, 2pi/3" on 4sin(3x)-2 says the amplitude
+  // is -2 and the midline is 4: THE canonical mistake this item exists to catch.
+  const p2 = shipped('pc-u3-p2')
+  creditsOn(p2, '4, -2, 2pi/3')
+  refusesOn(p2, '-2, 4, 2pi/3', 'amplitude and midline swapped')
+  refusesOn(p2, '2pi/3, 4, -2', 'all three rotated')
+  refusesOn(p2, 'amplitude -2, midline 4, period 2pi/3', 'swapped, and labelled with the swap')
+
+  const p1 = shipped('pc-u3-p1')
+  creditsOn(p1, '3pi/4, -sqrt(2)/2')
+  refusesOn(p1, '-sqrt(2)/2, 3pi/4', 'the radian measure and the cosine swapped')
+
+  const p5 = shipped('pc-u3-p5')
+  creditsOn(p5, '5pi/6, -pi/4')
+  refusesOn(p5, '-pi/4, 5pi/6', 'arccos and arctan swapped')
+})
+
+test('FALSE POSITIVE: bare values with a declared order credit that order and no other', () => {
+  const ORDERED = {
+    stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values in that order.',
+    solution: 'amplitude 4, midline -2',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order. -->',
+    ],
+  }
+  const { item, errors } = one(ORDERED)
+  assert.deepEqual(errors, [])
+  assert.equal(item.kind, 'constructed')
+  creditsOn(item, '4, -2')
+  creditsOn(item, '4 and -2')
+  refusesOn(item, '-2, 4', 'the two values swapped, on a stem that states the order')
+  refusesOn(item, '-2 and 4', 'the two values swapped')
+})
+
+test('a genuine solution set stays order-free — every ordering is the same answer', () => {
+  // pc-u3-p8 solves 2sin^2x - sinx - 1 = 0 on [0, 2pi): the three parts are a
+  // SET, so no ordering of them is a different claim. The fix for the ordered
+  // items must not cost this item a single form.
+  const p8 = shipped('pc-u3-p8')
+  for (const typed of [
+    'pi/2, 7pi/6, 11pi/6',
+    '7pi/6, 11pi/6, pi/2',
+    '11pi/6, 7pi/6, pi/2',
+    'pi/2, 11pi/6, 7pi/6',
+    'x=pi/2, 7pi/6, 11pi/6',
+  ]) creditsOn(p8, typed)
+})
+
+test('self-labelling parts stay order-free even where the stem states an order', () => {
+  // The parts name themselves, so a reordering asserts exactly the same facts
+  // and marking it wrong would be a false negative. Two shipped items whose
+  // format sentence says "then" / "in this form", and which must keep every
+  // ordering they credit today.
+  const p7 = shipped('pc-u1-p7')
+  creditsOn(p7, 'overestimate, increasing')
+  creditsOn(p7, 'increasing, overestimate')
+
+  const p5 = shipped('pc-u1-p5')
+  creditsOn(p5, 'hole at x=3, VA at x=-3, HA y=1')
+  creditsOn(p5, 'HA y=1, hole at x=3, VA at x=-3')
+  creditsOn(p5, 'VA at x=-3, HA at y=1, hole: x=3')
+
+  const u2p1 = shipped('pc-u2-p1')
+  creditsOn(u2p1, 'exponential, y=50(0.8)^x')
+  creditsOn(u2p1, 'y=50(0.8)^x, exponential')
+})
+
+test('bare-value parts whose format states NEITHER an order nor a set are a build ERROR', () => {
+  // The fail-safe direction: with nothing in the parts to tell them apart and
+  // nothing in the sentence the student was given, the parser cannot know
+  // whether "-2, 4" is a right answer or the classic wrong one — so it refuses
+  // the key instead of guessing, and the item degrades to model-graded.
+  const err = soleError({
+    stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values.',
+    solution: 'amplitude 4, midline -2',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values. -->',
+    ],
+  })
+  assert.match(err, /order/i)
+  assert.match(err, /in that order|in any order/, `the diagnostic must state both vocabularies: ${err}`)
+  assert.equal(
+    one({
+      stem: 'State the amplitude and the midline of $f(x)=4\\sin(3x)-2$. Answer as two comma-separated values.',
+      meta: ['<!-- part 1: 4 -->', '<!-- part 2: -2 -->', '<!-- format: Answer as two comma-separated values. -->'],
+    }).item.answer,
+    null,
+    'and no key is written, so --write-despite-incomplete cannot ship the guess',
+  )
+})
+
+test('"in any order" on bare-value parts credits every ordering', () => {
+  const { item, errors } = one({
+    stem: 'Solve $\\sin x = 1/2$ on $[0, 2\\pi)$. Answer as a comma-separated list in any order.',
+    solution: 'pi/6, 5pi/6',
+    meta: [
+      '<!-- part 1: pi/6 -->',
+      '<!-- part 2: 5pi/6 -->',
+      '<!-- format: Answer as a comma-separated list in any order. -->',
+    ],
+  })
+  assert.deepEqual(errors, [])
+  creditsOn(item, 'pi/6, 5pi/6')
+  creditsOn(item, '5pi/6, pi/6')
+})
+
+test('a format sentence claiming both an order and any order is a build ERROR', () => {
+  const err = soleError({
+    stem: 'State them. Answer as two comma-separated values in that order, in any order.',
+    meta: [
+      '<!-- part 1: 4 -->',
+      '<!-- part 2: -2 -->',
+      '<!-- format: Answer as two comma-separated values in that order, in any order. -->',
+    ],
+  })
+  assert.match(err, /both|contradic/i)
+})
+
+// ---------------------------------------------------------------------------
 // Validation with teeth. Every one of these is a BUILD ERROR, because the
 // alternative is an item that is silently unkeyed or, worse, mis-keyed.
 // ---------------------------------------------------------------------------
@@ -404,9 +563,11 @@ test('the accepted forms of a compound answer are capped, so a build cannot expl
   for (let p = 1; p <= 4; p++) {
     for (let a = 0; a < 6; a++) parts.push(`<!-- part ${p}: p${p}a${a} -->`)
   }
+  // "in that order" so the refusal is the CAP and nothing else: these parts are
+  // interchangeable bare values, which without a stated order is its own error.
   const err = soleError({
-    stem: 'Give it. Answer as a, b, c, d',
-    meta: [...parts, '<!-- format: Answer as a, b, c, d -->'],
+    stem: 'Give it. Answer as a, b, c, d in that order',
+    meta: [...parts, '<!-- format: Answer as a, b, c, d in that order -->'],
   })
   assert.match(err, /too many|cap/i)
 })
