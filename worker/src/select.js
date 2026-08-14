@@ -832,6 +832,17 @@ export function pickNext({
    * question of that topic can have been answered more recently than that, so
    * whatever the second pass reaches for is at least one interval — one day at the
    * very shortest — behind him.
+   *
+   * AND ONE COST, measured on the same runs and owed to api.js rather than fixable
+   * here. On CSA this second pass is the first thing that makes ordinary practice
+   * serve repeats at all: 0 of 720 before, 69 after, all of them reviews. Every one
+   * is labelled in the `reason` and carries `repeat` / `repeat_of` — but nothing
+   * downstream reads either yet (handleNext does not forward the flag, and
+   * readiness counts a remembered correct answer into mcq_overall exactly like a
+   * first-time one), so the honesty is currently prose-only. That gap is the one
+   * `serve` already records; this change puts ~10% of CSA's ordinary practice
+   * through it where there was none before. Precalc, whose 95-item bank was already
+   * being recycled, went the other way: 262 repeats before, 243 after.
    */
   const serveReview = (reserved = false) => {
     const skip = reserved ? new Set(weak.map((w) => w.topic)) : new Set()
