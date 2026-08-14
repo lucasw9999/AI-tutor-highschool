@@ -57,6 +57,129 @@ const VALUE_MARKER =
 /** Words too common to identify an option on their own. */
 const STOPWORDS = new Set(['the', 'and', 'not', 'for', 'but', 'its', 'it', 'is', 'an', 'a', 'of', 'to', 'in', 'or'])
 
+// --- characters that MEAN an ASCII character --------------------------------
+//
+// Every canonical form below is folded through foldLookalikes, so it runs on the
+// RESPONSE and on the stored KEY and OPTION TEXT alike. Which side carries the
+// exotic character cannot matter: both sides land on the same ASCII spelling.
+//
+// Only the RESPONSE side was ever considered before, and only implicitly, via
+// `\s+`. The bank carries these characters in its own answers: substituting
+// U+2212 MINUS SIGN for the ASCII hyphen in a shipped CORRECT answer marked 7 of
+// the 24 keyed short answers wrong ('mismatch', booked as a miss) and pushed 80
+// option texts across 26 mcq items to 'unparsed' — a spent serve that api.js says
+// cannot be re-graded. In the other direction the bank's own `n(n−1)/2`, `n²`,
+// `π/3`, `cos θ`, `15 ≤ H ≤ 62.5`, `-√3/2`, `show(7) → show(int)` and `résumé`
+// refused the plain ASCII spelling of the option printed in front of the student.
+//
+// tools/build/parse-precalc.js gates accepted forms with `isTypeable =
+// /^[\x20-\x7E]+$/`, so an ASCII-typeable spelling is guaranteed to exist. That
+// gate is one-directional — it never made a Unicode-typed response acceptable,
+// and it does not reach mcq option text at all. This is the other half of it, and
+// it is why ASCII is the fold TARGET rather than the source.
+//
+// Folding is a character equivalence and nothing more. It may never make two
+// different answers equal, which is why `×` and `·` are left alone: canonAnswer
+// strips `*` as markdown emphasis, so folding a multiplication sign onto `*`
+// would DELETE the operator and turn `2×3` into `23`. `≈`, `°` and `‖` are left
+// alone for the same reason from the other end — none has one ASCII spelling.
+
+/** Marks a paste carries that a keyboard cannot type. They mean nothing. */
+const ZERO_WIDTH = /[​‌‍⁠﻿]/g
+
+/** Space-likes. `\s` already covers most; these are the ones it misses. */
+const SPACE_LIKE = /[  ᠎ -   　]/g
+
+/** Fullwidth ASCII, offset by exactly 0xFEE0 from the character it means. */
+const FULLWIDTH = /[！-～]/g
+
+/**
+ * Hyphen-likes. U+2212 MINUS SIGN is what a CAS, a PDF and Word all emit for a
+ * negative sign; U+2013/U+2014 are what a word processor autocorrects `-` into.
+ */
+const HYPHEN_LIKE = /[‐-―˗⁃−➖﹘﹣]/g
+
+const APOSTROPHE_LIKE = /[‘’‚‛′ʼ´]/g
+const QUOTE_LIKE = /[“”„‟″]/g
+
+/** Slash-likes: a fraction is written with all three of these. */
+const SLASH_LIKE = /[⁄∕]/g
+
+/** A run of superscript characters is an exponent: `n²` is `n^2`. */
+const SUPERSCRIPT = /[⁰¹²³⁴-ⁿ]+/g
+const SUPERSCRIPT_ASCII = {
+  '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+  '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+  '⁺': '+', '⁻': '-', '⁼': '=', '⁽': '(', '⁾': ')', 'ⁿ': 'n',
+}
+
+/** One character that spells a whole fraction. */
+const VULGAR = /[¼½¾⅓-⅞]/g
+const VULGAR_ASCII = {
+  '¼': '1/4', '½': '1/2', '¾': '3/4',
+  '⅓': '1/3', '⅔': '2/3', '⅕': '1/5', '⅖': '2/5', '⅗': '3/5',
+  '⅘': '4/5', '⅙': '1/6', '⅚': '5/6', '⅛': '1/8', '⅜': '3/8',
+  '⅝': '5/8', '⅞': '7/8',
+}
+
+/**
+ * Symbols with exactly one ASCII spelling. `π` folds TO `pi` rather than the
+ * other way round because `pi` is what the build gate guarantees is typeable —
+ * and because the bank ships both: pc-u3-p1's variants spell it `π`, while
+ * pc-u3-p19's options spell it `π` and its own answer key spells it `pi`. A
+ * student typing `pi/3` at pc-u3-p19 was refused outright.
+ */
+const SYMBOL = /[πϖθϑ√∞≤≥≠→⇒↔±…]/g
+const SYMBOL_ASCII = {
+  'π': 'pi', 'ϖ': 'pi', 'θ': 'theta', 'ϑ': 'theta',
+  '√': 'sqrt', '∞': 'infinity',
+  '≤': '<=', '≥': '>=', '≠': '!=',
+  '→': '->', '⇒': '=>', '↔': '<->',
+  '±': '+/-', '…': '...',
+}
+
+/** A combining accent, once NFD has split it off its letter: `résumé`/`resume`. */
+const COMBINING = /[̀-ͯ]/g
+
+/**
+ * A decimal a student started at the point: `.8` for `0.8`. Every shipped item
+ * declares `tolerance: null`, so the numeric-tolerance branch never runs and this
+ * was a plain mismatch — on pc-u2-p1 (`exponential, y=50(0.8)^x`) writing
+ * `y=50(.8)^x` was marked wrong. The lookbehind is what keeps it a spelling and
+ * not a widening: a dot with a digit or a word character in front of it is
+ * already part of something ('3.4', 'v1.8'), and a sentence period is followed by
+ * a space rather than a digit.
+ */
+const LEADING_DOT = /(?<![\w.])\.(\d)/g
+
+/**
+ * Fold every character that means an ASCII character onto that character.
+ *
+ * Applied to both sides of every comparison, so it is an equivalence and not a
+ * relaxation: it can only ever make two spellings of the SAME answer agree.
+ */
+export function foldLookalikes(value) {
+  return String(value)
+    .replace(ZERO_WIDTH, '')
+    .replace(SPACE_LIKE, ' ')
+    .replace(FULLWIDTH, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(HYPHEN_LIKE, '-')
+    .replace(APOSTROPHE_LIKE, "'")
+    .replace(QUOTE_LIKE, '"')
+    .replace(SLASH_LIKE, '/')
+    .replace(SUPERSCRIPT, (run) => {
+      const ascii = [...run].map((c) => SUPERSCRIPT_ASCII[c]).join('')
+      return ascii.length > 1 ? `^(${ascii})` : `^${ascii}`
+    })
+    // A fraction glued to a whole number is mixed, not concatenated: `1½` is
+    // `1 1/2`, and folding it to `11/2` would invent a different number.
+    .replace(VULGAR, (c, at, whole) => (/\d/.test(whole[at - 1] ?? '') ? ' ' : '') + VULGAR_ASCII[c])
+    .replace(SYMBOL, (c) => SYMBOL_ASCII[c])
+    .normalize('NFD')
+    .replace(COMBINING, '')
+    .replace(LEADING_DOT, '0.$1')
+}
+
 /** Returned by the option-text matcher when more than one option could match. */
 const AMBIGUOUS = Symbol('ambiguous')
 
@@ -65,9 +188,14 @@ const AMBIGUOUS = Symbol('ambiguous')
  * option's text. Markdown ticks go (students rarely type them), one trailing
  * period goes, whitespace collapses. Quotes and '!' are kept: on csa-ac-q46
  * `"50"` and `50` are different options, and on csa-ac-q76 so are `go` and `go!`.
+ *
+ * Lookalikes fold FIRST, so an option printed `n(n−1)/2` and a student typing
+ * `n(n-1)/2` reach the same form. It has to run before the strips rather than
+ * after: a fullwidth `＄` or `＊` only reaches the `$`/markdown strip once it is
+ * ASCII, and a non-breaking space only collapses once it is a space.
  */
 function canonAnswer(value) {
-  return String(value)
+  return foldLookalikes(value)
     .toLowerCase()
     .replace(/[`*]/g, '')
     .replace(/\s+/g, ' ')
@@ -165,7 +293,11 @@ function matchFragment(text, index) {
 
 /** The label the student named, with whether he named it explicitly. */
 function labelReading(response) {
-  const raw = String(response)
+  // The two label patterns are the only readers that work from the RAW response
+  // rather than a canonical form, so they are the only ones that have to fold for
+  // themselves — otherwise a fullwidth 'Ｂ' or a curly-quoted '‘b’' is a letter
+  // everywhere except here.
+  const raw = foldLookalikes(response)
   const strong = raw.match(STRONG_LABEL)
   if (strong) return { letter: strong[1].toUpperCase(), strong: true }
   const weak = raw.match(WEAK_LABEL)
@@ -363,10 +495,14 @@ export function isBlank(response) {
  * normalize to 'x=4.' and be marked wrong against a key of '4'. A false
  * negative here tells a student they got something wrong when they did not,
  * which is the one grading error this system must never make.
+ *
+ * The lookalike fold is the first step for the same reason: `−`, `–` and `—` only
+ * collapse to `x-1` at the operator strip once they are an ASCII hyphen, and
+ * `x ＝ 4` only loses its prefix once the `＝` is an `=`.
  */
 export function normalizeShort(response) {
   if (response == null) return ''
-  const cleaned = String(response)
+  const cleaned = foldLookalikes(response)
     .toLowerCase()
     .replace(/\$/g, '')
     .replace(/\\left|\\right/g, '')
