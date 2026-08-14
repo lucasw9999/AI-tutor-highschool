@@ -142,7 +142,15 @@ async function requireOpenMock({ db, mockId, subject }) {
  * from (see select.js's `universe`): a paper may not be padded from the
  * class-only corner of the bank, so that corner cannot make a section look
  * supplied either. An item with no answer key is counted out for the same
- * reason — grade.js reports it `unkeyed`, so it can never reach a composite.
+ * reason: nothing can mark it, so it can never reach a composite.
+ *
+ * That is a rule about what MIGHT ship, not a description of what does. grade.js
+ * short-circuits every model-graded kind before it looks for a key (grade.js's
+ * MODEL_GRADED branch runs first), so a keyless free-response item is reported
+ * 'model', not 'unkeyed' — and no shipped item reports 'unkeyed' at all: every
+ * server-gradeable item in the seed carries a usable key, and every mcq key is a
+ * letter. The check stays because an unkeyed `constructed` item is one authoring
+ * mistake away, and it must not be able to make a half look supplied.
  *
  * @returns {Map<string, number>} item kind -> how many the bank can ask and mark.
  */
@@ -367,8 +375,11 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     // instead of nothing (its `repeating` branch), so that state never reaches
     // here. And waiting is not a remedy: the this-paper exclusion is
     // unconditional, so the identical call is refused a day, a month or a year
-    // later. Reproduced on a fresh database: the first-ever Precalc sitting
-    // served all 36 exam-tested items, and the 37th /next was told to wait.
+    // later. Reproduced on a fresh database against the shipped bank: the
+    // first-ever Precalc section I sitting served all 38 exam-tested multiple
+    // choice items, and the 39th /next was told to wait. (36 and the 37th was the
+    // count two content rounds ago; a 36-item fixture no longer reaches this
+    // branch, so the number matters to anyone writing one.)
     //
     // The word "wait" is deliberately absent below: the GPT relays this message
     // to the student mid-sitting, and it must not hand him an instruction that
@@ -377,9 +388,11 @@ export async function handleNext({ db, subject, config, now, mockId = null }) {
     const owed = paper?.parts.filter((p) => !p.full) ?? []
     // Counted over the items this SECTION may draw from, not over the whole bank.
     // A section I paper cannot be handed the bank's free-response items at all, so
-    // saying "all 286 exam-tested question(s) ... are on it already" of a 42-answer
-    // paper would be untrue twice over — it is not 286 questions, and the ones it
-    // never saw are not on it.
+    // saying "all 241 exam-tested question(s) ... are on it already" of a 42-answer
+    // CSA paper would be untrue twice over — it is not 241 questions, and the ones
+    // it never saw are not on it. (241 for ap_csa and 83 for ap_precalc, measured
+    // against the shipped seed; 286 was the two-subject total three rounds ago and
+    // was never a figure either subject could print.)
     const eligible = { ...ctx, items: ctx.items.filter((it) => !closed.has(it.kind)) }
 
     // NOTHING has been asked, so nothing can have been "asked already": this bank
@@ -694,12 +707,13 @@ function sectionMinutes(section, e = {}) {
  * interval is forgiven outright, as the one break MOCK_TIME_SLACK is already
  * written to budget for, and the cap then falls on the longest interval that is
  * left. Half the section's entire budget on a second question, after a break has
- * already been allowed for, is not one interruption at any section shape (45
- * minutes of a 90-minute MCQ section, 45 of one Precalc FRQ set, 90 of a full
- * sitting) — it is an afternoon spent with the paper open. The total-time bar is
- * what still refuses a genuinely untimed sitting: a four-hour "90-minute
- * section" runs past its allowance whether the time went into one question or
- * forty-two.
+ * already been allowed for, is not one interruption at any section shape the two
+ * configs actually declare — the six caps are 45, 45 and 90 minutes on CSA (I, II,
+ * full) and 52.5, 35 and 87.5 on Precalculus, whose FRQ set gets 70 minutes rather
+ * than the 90 an earlier version of this comment assumed — it is an afternoon spent
+ * with the paper open. The total-time bar is what still refuses a genuinely untimed
+ * sitting: a four-hour "90-minute section" runs past its allowance whether the time
+ * went into one question or forty-two.
  *
  * WHAT THAT DELIBERATELY LETS THROUGH, at the size it actually is: the question
  * the forgiven break was spent on may have been looked up rather than thought
@@ -924,7 +938,7 @@ function describeParts(pairs) {
  * live defects, one root:
  *
  *   A `full` CSA paper is 42 multiple choice plus 4 free-response. /next drew
- *   from all 218 mcq items with no cap at all, so the paper could be answered 46
+ *   from all 221 mcq items with no cap at all, so the paper could be answered 46
  *   times — every answer multiple choice — and the basis then reported "Answered
  *   46 of the 46 questions a section full sitting is expected to contain": the
  *   free-response half claimed as sat, and never asked. That is the sec=II
@@ -1021,35 +1035,87 @@ function partObstacle([kind, count], supply) {
  *   perfect paper scored 91.3 with 4 "blanks" it was never offered — three of
  *   them put max_blanks (1) out of reach and made `ready` unreachable that way.
  *
- * The bank now holds the free-response half (20 items), so section II can be
- * ASKED; it still cannot be MARKED, because every rubric item is model-graded and
- * the grader is not calibrated. That keeps `scorable` at 0 for section II and at
- * mcq_count for a full sitting, by a different clause of partObstacle — supply is
- * no longer what is missing there, marking is.
+ * The bank now holds the free-response half (20 CSA items, 4 Precalc), so section
+ * II can be ASKED; it still cannot be MARKED, because every rubric item is
+ * model-graded and the grader is not calibrated. That keeps `scorable` at 0 for
+ * section II and at mcq_count for a full sitting, by a different clause of
+ * partObstacle — supply is no longer what is missing there, marking is.
+ *
+ * `askable` IS THE THIRD NUMBER, and its absence was a live parent-facing defect.
+ * partObstacle passes a half whose supply covers MIN_MOCK_COVERAGE of it — 38 of
+ * 42 clears ceil(42 x 0.9) = 38 — and `scorable` then claimed all 42, so the
+ * arithmetic below treated 4 questions the bank cannot ask as questions he failed
+ * to reach. Measured on the shipped Precalc bank: every one of the 38 multiple
+ * choice questions it can ask, answered correctly, came back composite 90.5 with
+ * FOUR BLANKS, four times over, and `At most 1 blank response across the window —
+ * 12 blanks` was printed as the one thing blocking a student who had answered
+ * everything he was ever offered. max_blanks (1) was unsatisfiable by
+ * construction, so `ready` could never be true, and the reason blamed him for it.
+ *
+ * So a half contributes to `scorable` what the EXAM has of it (which is what the
+ * coverage gate is rightly measured against — the gate does not move) and to
+ * `askable` only what the bank can put in front of him and mark. The gap between
+ * them is a fact about the BANK: it belongs in the disclosure, not in his blank
+ * count and not in his composite. Same principle partObstacle already applies to
+ * a whole half, applied inside one.
  *
  * A section with NOTHING scorable gets no composite at all: that is the same
  * mechanism a sitting below MIN_MOCK_COVERAGE or one run without a clock
  * already goes through — recorded, disclosed, unable to move readiness — and
  * the answers are still kept as practice.
  *
- * @returns {{expected: number|null, scorable: number|null, obstacles: string[]}}
- *          `scorable` is null exactly when `expected` is (the exam table
- *          declares no count for this section, so there is nothing to measure
- *          against), and 0 when the section cannot be scored at all.
+ * @returns {{expected: number|null, scorable: number|null, askable: number|null,
+ *          obstacles: string[], scorableKinds: Set<string>,
+ *          shortfalls: Array<{kind: string, count: number, have: number}>}}
+ *          `scorable` and `askable` are null exactly when `expected` is (the exam
+ *          table declares no count for this section, so there is nothing to
+ *          measure against), and 0 when the section cannot be scored at all.
+ *          `askable <= scorable` always; `shortfalls` names every half where it is
+ *          strictly less.
  */
 function sectionScoring({ section, exam = {}, supply = new Map() }) {
   const parts = sectionParts(section, exam).filter(([, n]) => n != null)
   const expected = expectedQuestions(section, exam)
-  if (!parts.length) return { expected, scorable: null, obstacles: [] }
+  if (!parts.length) {
+    return { expected, scorable: null, askable: null, obstacles: [], scorableKinds: new Set(), shortfalls: [] }
+  }
 
   let scorable = 0
+  let askable = 0
   const obstacles = []
+  const scorableKinds = new Set()
+  const shortfalls = []
   for (const part of parts) {
     const obstacle = partObstacle(part, supply)
-    if (obstacle) obstacles.push(obstacle)
-    else scorable += part[1]
+    if (obstacle) {
+      obstacles.push(obstacle)
+      continue
+    }
+    const [kind, count] = part
+    scorable += count
+    scorableKinds.add(kind)
+    const have = Math.min(count, supply.get(kind) ?? 0)
+    askable += have
+    if (have < count) shortfalls.push({ kind, count, have })
   }
-  return { expected, scorable, obstacles }
+  return { expected, scorable, askable, obstacles, scorableKinds, shortfalls }
+}
+
+/**
+ * The bank's own shortfall on a half it CAN be scored on, as a clause that reads
+ * in the middle of a sentence.
+ *
+ * Its own words, deliberately distinct from partObstacle's: a half the bank cannot
+ * supply AT ALL is not scorable and says so; a half it can only partly supply is
+ * scored over what it can ask. Both are facts about the bank, and neither is
+ * something the student did.
+ */
+function shortfallClause(shortfalls) {
+  return shortfalls
+    .map(({ kind, count, have }) =>
+      `this bank holds ${have} exam-tested ${PART_NAME[kind] ?? kind} question(s) of the ${count} that half has, so `
+      + `${count - have} of them cannot be asked at all`)
+    .join('; ')
 }
 
 /** GET /mock/submit — close the sitting and score it from its own attempts. */
@@ -1104,24 +1170,20 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // Composite counts only mechanically graded answers. Including model-graded or
   // unkeyed items would fold an ungraded zero into the score and understate it.
   const scored = attempts.filter((a) => a.graded_by === 'server')
-  // Two different things used to be told as one. `ungraded` is everything the
-  // composite cannot include, and the basis described the whole of it as needing
-  // "human or model grading" — including the responses grade.js could not read as
-  // one answer, which NO grader will ever look at: the serve is spent, the question
-  // is gone, and /log has already told him the opposite ("I could not read that as
-  // one answer ... send just the letter"). Two surfaces, the same two rows,
-  // contradictory statements. The total is unchanged, so the divisor below is too.
-  const unparsed = attempts.filter((a) => a.graded_by === 'unparsed').length
-  const awaitingGrader = attempts.length - scored.length - unparsed
-  const ungraded = awaitingGrader + unparsed
-
+  // Everything on the paper the composite cannot include, whatever kind of question
+  // it was an answer to. That is what the field means, and it is a true fact about
+  // the paper; which CLAUSE of the basis owns each of those rows is settled below,
+  // where the paper is partitioned, so no row is given two different reasons.
+  const ungraded = attempts.length - scored.length
 
   // What this section can actually be asked and marked from, read off the bank
   // rather than off the exam table alone. `expected` is what the real section
-  // contains and is what he is told; `scorable` is what the composite may be
-  // measured against. See sectionScoring for why they are not the same number.
+  // contains and is what he is told; `scorable` is what the coverage gate is
+  // measured against; `askable` is how many of those questions the bank can
+  // actually put in front of him and mark. See sectionScoring for why these are
+  // three different numbers.
   const [items, topics] = await Promise.all([db.items(m.subject), db.topics(m.subject)])
-  const { expected, scorable, obstacles } = sectionScoring({
+  const { expected, scorable, askable, obstacles, scorableKinds, shortfalls } = sectionScoring({
     section: m.section, exam: cfg.exam, supply: supplyOf({ items, topics }),
   })
   // A section with nothing scorable is not a paper this system can mark at all.
@@ -1155,16 +1217,63 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
     sectionParts(m.section, cfg.exam).filter(([, n]) => n != null).map(([kind]) => kind),
   )
   const onSection = sectionKinds.size ? attempts.filter((a) => sectionKinds.has(a.kind)) : attempts
-  const aside = attempts.length - onSection.length
-  const asideKinds = [...new Set(
-    attempts.filter((a) => !sectionKinds.has(a.kind)).map((a) => a.kind ?? 'unlabelled'),
-  )].sort()
-  const marked = onSection.filter((a) => a.graded_by === 'server')
+  // The answers that are questions of no half of this section at all. One list, so
+  // the count, the kinds named and the "how many of them nobody can mark" figure
+  // cannot describe three different sets.
+  const asideRows = sectionKinds.size ? attempts.filter((a) => !sectionKinds.has(a.kind)) : []
+  const aside = asideRows.length
+  const asideKinds = [...new Set(asideRows.map((a) => a.kind ?? 'unlabelled'))].sort()
+
+  // THE ANSWERS THE COMPOSITE IS ABOUT: the paper proper, narrowed again to the
+  // halves this sitting can be SCORED on.
+  //
+  // `onSection` is the right set for saying what he answered; it is the wrong set
+  // for every number the composite is built from, and the difference was worth 7
+  // points and four blanks. A Precalc `full` paper's free-response half is a half
+  // of the section — so it is in `onSection` — and it contributes NOTHING to
+  // `scorable`, because it cannot be marked. Measured on the shipped bank, one
+  // sitting, 38 multiple choice answers and 4 written free-response answers:
+  //
+  //   `unreached = scorable - onSection.length` counted the 4 rubric answers as
+  //   reaching 4 of the multiple choice half's questions, which erased 4 blanks;
+  //   and `denominator = scorable - unmarkable` then took the SAME 4 rows off a
+  //   divisor that never included them, shrinking it from 42 to 38. One row,
+  //   counted twice in the student's favour: composite 100 with 0 blanks, from the
+  //   same work that read 90.2 with 4 blanks when submitted four answers earlier.
+  //   `covered` had the same leak, so 34 multiple choice answers plus 4 rubric ones
+  //   cleared a gate that asks for 38 of the section's own questions.
+  //
+  // So the numerator, the divisor, the reach count and the coverage gate are all
+  // measured over ONE set: the answers to halves this paper can be scored on. The
+  // rubric half is disclosed by its obstacle and by the grading sentence, once.
+  const onScored = sectionKinds.size ? attempts.filter((a) => scorableKinds.has(a.kind)) : attempts
+  const marked = onScored.filter((a) => a.graded_by === 'server')
   const right = marked.filter((a) => a.correct).length
-  // The section's own answers that came back unmarkable, which is what comes off
-  // the divisor. Counted over the paper proper for the same reason `right` is: a
-  // drill nobody could mark is not one of the section's questions going unmarked.
-  const unmarkable = onSection.length - marked.length
+  // The scorable halves' own answers that came back unmarkable, which is what comes
+  // off the divisor. Counted over the same set as `right` for the same reason: an
+  // answer to a half that could never be marked is not one of the scorable half's
+  // questions going unmarked.
+  const unmarkable = onScored.length - marked.length
+
+  // Two clauses that used to be told as one, over a set that was too wide.
+  //
+  // `ungraded` is everything the composite cannot include, and the basis described
+  // the whole of it as needing "human or model grading" — including the responses
+  // grade.js could not read as one answer, which NO grader will ever look at: the
+  // serve is spent, the question is gone, and /log has already told him the opposite
+  // ("I could not read that as one answer ... send just the letter"). Two surfaces,
+  // the same two rows, contradictory statements.
+  //
+  // Counted over the paper PROPER, not over every answer filed under the sitting,
+  // so that each row is given exactly ONE reason. A model-graded short-answer drill
+  // sitting on a section I paper is both "a response that needs grading" and "an
+  // answer that fills no half of this section", and the basis stated both — the
+  // same row excluded twice, for two different reasons, which reads as two
+  // exclusions. The set-aside clause below owns those rows and now says how many of
+  // them carry no verdict, so `ungraded` is still reconstructible from the prose.
+  const unparsed = onSection.filter((a) => a.graded_by === 'unparsed').length
+  const awaitingGrader = onSection.length - onSection.filter((a) => a.graded_by === 'server').length - unparsed
+  const asideUngraded = asideRows.filter((a) => a.graded_by !== 'server').length
 
   // Blanks count what the answer sheet would show, which is the same rule the
   // composite applies below: a question left empty and a question never reached
@@ -1173,12 +1282,23 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // "0 blanks", so the max_blanks criterion was blind to exactly the four
   // questions the composite had just penalised — one fix, two stories.
   //
-  // Measured against `scorable`, never against `expected`: a question the bank
-  // cannot ask is not one he failed to reach. Counting the 4 free-response
-  // questions of a full sitting as blanks put max_blanks (1) permanently out of
-  // reach after three sittings, i.e. it made `ready` unreachable through sec=full.
-  const unreached = scorable == null ? 0 : Math.max(0, scorable - onSection.length)
-  const left = onSection.filter((a) => (a.response ?? '') === '').length
+  // Measured against `askable`, never against `expected` and never against
+  // `scorable`: A QUESTION THE BANK CANNOT ASK IS NOT ONE HE FAILED TO REACH. Two
+  // measured failures of that principle, in the same line:
+  //
+  //   Against `expected`, the 4 free-response questions of a full CSA sitting were
+  //   blanks he was never offered.
+  //
+  //   Against `scorable`, the 4 multiple choice questions the Precalc bank does not
+  //   hold were blanks on every one of four perfect sittings — 12 across the window
+  //   against max_blanks 1, printed to a parent as the one thing blocking him. The
+  //   bank shortfall is disclosed below as a fact about the bank, which is what it
+  //   is.
+  const unreached = askable == null ? 0 : Math.max(0, askable - onScored.length)
+  // The questions of the scorable halves that this bank cannot ask at all. Not
+  // blanks, not wrong, and not silent: they come off the divisor and are named.
+  const unaskable = askable == null ? 0 : scorable - askable
+  const left = onScored.filter((a) => (a.response ?? '') === '').length
   const blanks = left + unreached
 
   // Three guards against three different false claims:
@@ -1193,20 +1313,28 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   //      questions "a section II sitting is expected to contain" and scored them
   //      100 — the coverage gate cannot do its job on a count the bank has no
   //      questions behind.
-  const covered = scorable == null || onSection.length >= Math.ceil(scorable * MIN_MOCK_COVERAGE)
-  // The questions this sitting was actually scored against: the section's markable
-  // questions, less the answers that came back unmarkable — and never fewer than
-  // the answers that WERE marked, because a paper cannot be scored over fewer
-  // questions than it had marked on it. handleNext bounds a paper at its section,
-  // so the second term normally wins; the max is what keeps this honest when a
-  // lost /next race puts one answer more on the paper than the section holds.
+  //
+  // Guard 3 is measured over `onScored` against `scorable`: the bar is still 90% of
+  // what the EXAM's scorable halves hold — the gate does not move, and a bank that
+  // cannot supply 90% of a half fails partObstacle before reaching here — but the
+  // answers allowed to clear it are only the ones to those halves. Comparing an
+  // all-kinds count against an obstacle-filtered target was the leak: a rubric
+  // answer nobody can mark bought the coverage of a multiple choice question.
+  const covered = scorable == null || onScored.length >= Math.ceil(scorable * MIN_MOCK_COVERAGE)
+  // The questions this sitting was actually scored against: the questions of its
+  // scorable halves that this bank can ask, less the answers that came back
+  // unmarkable — and never fewer than the answers that WERE marked, because a paper
+  // cannot be scored over fewer questions than it had marked on it. handleNext
+  // bounds a paper at its section, so the second term normally wins; the max is what
+  // keeps this honest when a lost /next race puts one answer more on the paper than
+  // the section holds.
   //
   // Whatever it works out to, it is the ONLY divisor stated anywhere: the sentence
   // that explains the composite is derived from it below rather than from
   // `scorable`, which is how one string came to report a composite "measured over
   // the 42 question(s)" and then "Scored 40 right out of 43" — 95.2 and 93.0, two
   // divisors 2.2 points apart, about a number the student can check himself.
-  const denominator = Math.max(marked.length, (scorable ?? 0) - unmarkable)
+  const denominator = Math.max(marked.length, (askable ?? 0) - unmarkable)
 
   // The fourth guard: a sitting that was not run against a clock is not evidence
   // about how he performs under exam conditions, whatever it scores. See
@@ -1252,6 +1380,12 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   // the halves sentence above reading as a contradiction — 42 answered, 22 of the
   // 42 multiple choice questions filled, and nothing to account for the other 20.
   //
+  // These rows are this clause's ALONE. The grading sentences above are counted over
+  // the paper proper, so a model-graded drill is no longer excluded twice in one
+  // basis — once as "needs grading", once as "fills no half" — for two different
+  // reasons. How many of them carry no verdict is stated here instead, which is what
+  // keeps `ungraded` (a paper-wide count) reconstructible from the prose.
+  //
   // Deliberately NOT a fifth reason a sitting goes unscored: it is a fact about the
   // paper, true whether or not a composite came out, and the reason such a paper
   // gets no composite is the coverage shortfall that already exists and already has
@@ -1260,8 +1394,27 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   if (aside) {
     basis.push(
       `${aside} of those answer(s) — ${asideKinds.join('/')} items — fill no half of a section ${m.section} paper, so `
-      + `they count as ordinary practice and are left out of this sitting's coverage and its composite. Nothing he `
-      + `answered was thrown away.`,
+      + `they count as ordinary practice and are left out of this sitting's coverage and its composite`
+      + (asideUngraded
+        ? `; ${asideUngraded} of them carr${asideUngraded === 1 ? 'ies' : 'y'} no grader's verdict either, and the `
+          + `ungraded count includes ${asideUngraded === 1 ? 'it' : 'them'}`
+        : '')
+      + `. Nothing he answered was thrown away.`,
+    )
+  }
+
+  // The bank's own shortfall on a half this sitting CAN be scored on: stated
+  // wherever it is true, scored or not, because it is what makes `expected` and the
+  // divisor differ, and because it is the reason the paper stopped where it did (see
+  // handleNext's refusal, which names the same questions). Attributed to the BANK,
+  // which is whose gap it is: printed as blanks, it read as twelve unfilled bubbles
+  // across a window of four sittings in which the student answered every question he
+  // was ever offered, correctly.
+  if (unaskable) {
+    basis.push(
+      `${unaskable} of those ${expected} questions cannot be asked from this bank at all: ${shortfallClause(shortfalls)}. `
+      + `That is a gap in the question bank rather than a question he skipped, so it counts neither as a blank nor as a `
+      + `wrong answer — only more items of that kind can close it.`,
     )
   }
 
@@ -1305,22 +1458,27 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
       basis.push('Nothing in this sitting could be graded mechanically, so it has no composite and cannot count toward readiness.')
     }
   } else {
-    if (obstacles.length) {
-      // Stated over the divisor the composite was ACTUALLY taken over, never over
-      // `scorable`: the two differ whenever an answer came back unmarkable (42
-      // markable questions, 4 unmarkable answers, so 38), and printing `scorable`
-      // here put two divisors in one string. Both deductions are named, so the
-      // number can be reconstructed rather than merely believed.
-      const deducted = (scorable ?? denominator) - denominator
+    // Stated over the divisor the composite was ACTUALLY taken over, never over
+    // `scorable` and never over `askable`: they differ whenever an answer came back
+    // unmarkable (42 markable questions, 4 unmarkable answers, so 38), and printing
+    // either here put two divisors in one string. Every deduction is named — the
+    // halves that cannot be marked, the questions the bank cannot ask, the answers
+    // no grader could read — so the number can be reconstructed rather than merely
+    // believed.
+    const deducted = (askable ?? denominator) - denominator
+    const why = [
+      ...obstacles,
+      ...(unaskable ? [`${unaskable} of them are questions this bank cannot ask, named above`] : []),
+      ...(deducted > 0 ? [`${deducted} of its answers came back as work no grader can mark`] : []),
+      ...(deducted < 0
+        ? [`this sitting logged ${-deducted} markable answer(s) more than the section has questions, every one of which `
+           + `is in that divisor`]
+        : []),
+    ]
+    if (why.length) {
       basis.push(
         `This composite is measured over the ${denominator} question(s) of the ${expected} a section ${m.section} sitting `
-        + `contains that this paper could be scored on: ${obstacles.join('; ')}`
-        + (deducted > 0 ? `; and ${deducted} more of them came back as answers no grader can mark` : '')
-        + (deducted < 0
-          ? `; and this sitting logged ${-deducted} markable answer(s) more than the section has questions, every one `
-            + `of which is in that divisor`
-          : '')
-        + `.`,
+        + `contains that this paper could be scored on: ${why.join('; and ')}.`,
       )
     }
     basis.push(`Scored ${right} right out of ${denominator} — anything not answered counts as wrong, as on the exam.`)
@@ -1338,6 +1496,21 @@ export async function handleMockSubmit({ db, mockId, config, configs = null, now
   const ctx = await loadContext(db, m.subject, cfg)
   return {
     mock: Number(mockId),
+    // ROUNDED HALF UP, while readiness.js rounds the SAME stored value DOWN to the
+    // precision it prints (roundDown, deliberately, so no criterion can print a
+    // value that reads as clearing a bar it just failed). The two therefore disagree
+    // in the second decimal: a 38-of-42 sitting reads 90.5 here and 90.4% on the
+    // criterion, and the parent chip (dashboard.js, toFixed(0)) makes a third
+    // rendering. What is stored is the unrounded value, so no threshold moves; the
+    // disagreement is presentational and understates rather than overstates.
+    //
+    // NOT changed to roundDown here, and the reason is recorded so the next reader
+    // does not have to rediscover it: worker/tests/openapi.test.js pins this
+    // identity as `Number(((right / scored_out_of) * 100).toFixed(1)) ===
+    // composite_pct` over every section shape, so the rounding rule cannot be
+    // changed in this file alone. Fixing it means changing that identity to
+    // readiness.js's roundDown in the same commit, and dashboard.js's toFixed(0)
+    // with it.
     composite_pct: composite == null ? null : Number(composite.toFixed(1)),
     counted: composite != null,
     answered: attempts.length,
@@ -1378,25 +1551,41 @@ function unscoredSittings(ctx) {
   for (const m of ctx.mocks) {
     if (!m.proctored || !m.ended_at || m.composite_pct != null) continue
     const rows = ctx.attempts.filter((a) => a.mock_id === m.id)
-    const { expected, scorable, obstacles } = sectionScoring({
+    const { expected, scorable, askable, obstacles, scorableKinds } = sectionScoring({
       section: m.section, exam: ctx.config.exam, supply: ctx.supply,
     })
-    // Coverage is judged over the answers that ARE questions this section contains,
-    // exactly as handleMockSubmit judges it, and the count printed below is that
-    // same number. Judging on rows.length while the basis judged on the section's
-    // own answers would put this surface and the submit basis one call apart on the
-    // same sitting: "#7 reached 42 of 42" against "short of the 90%".
+    // Coverage is judged over the answers that ARE questions this section contains
+    // AND that this sitting could be scored on, exactly as handleMockSubmit judges
+    // it, and the count printed below is that same number. Judging on rows.length
+    // while the basis judged on the scorable halves' own answers would put this
+    // surface and the submit basis one call apart on the same sitting: "#7 reached 42
+    // of 42" against "short of the 90%". `sectionKinds` is still what decides whether
+    // an answer belongs to the section at all, because that is the distinction the
+    // "its other N answer(s)" clause reports.
     const sectionKinds = new Set(
       sectionParts(m.section, ctx.config.exam).filter(([, n]) => n != null).map(([kind]) => kind),
     )
-    const onSection = sectionKinds.size ? rows.filter((a) => sectionKinds.has(a.kind)) : rows
+    const onSection = sectionKinds.size ? rows.filter((a) => scorableKinds.has(a.kind)) : rows
+    // The two ways an answer can be on the paper and still fill none of what the
+    // coverage gate measures. They are different facts with different words, and
+    // reporting either as the other is a false statement about the same row: an
+    // answer to the section's own free-response half IS a question this section
+    // contains, and a short-answer drill is not.
+    const asideRows = sectionKinds.size ? rows.filter((a) => !sectionKinds.has(a.kind)) : []
+    const unscorableHalf = sectionKinds.size
+      ? rows.filter((a) => sectionKinds.has(a.kind) && !scorableKinds.has(a.kind))
+      : []
     const timing = sittingTiming({ section: m.section, exam: ctx.config.exam, attempts: rows })
     // Closed, and never scored at all: the scoring write died in the gap after the
     // close (see db.scoreMock, the only writer of `blanks`, so a NULL there means
     // it never ran). No verdict has been reached about this sitting yet, so every
     // OTHER reason would be an invention — a sitting with 42 mechanically graded
     // answers was disclosed as having "had nothing that could be graded
-    // mechanically", which is the reason a Precalc paper gets, not this one.
+    // mechanically", which is the reason a paper whose every answer came back
+    // unmarkable gets, not this one. (It is not "the reason a Precalc paper gets":
+    // a Precalc sitting lands in `unsupplied` or `short`, and the all-model-graded
+    // premise that made it Precalc's reason died when the packs gained keys — see
+    // handleNext's kind filter.)
     const unscored_write = m.blanks == null
     // A section the bank cannot supply was never scorable, whatever the clock or
     // the count says, so it is reported ahead of both.
@@ -1425,12 +1614,19 @@ function unscoredSittings(ctx) {
       answered: rows.length,
       // How much of the section itself it reached: `answered` counts every answer
       // filed under the sitting, and on a paper that also holds work of a kind this
-      // section does not contain those are two different numbers. The shortfall
-      // advisory quotes this one, because it is the one the gate was applied to.
+      // section does not contain — or work on a half of it nothing can mark — those
+      // are three different numbers. The shortfall advisory quotes this one, because
+      // it is the one the gate was applied to, and names the other two separately.
       on_section: onSection.length,
+      aside: asideRows.length,
+      unscorable_half: unscorableHalf.length,
       gradeable: rows.filter((a) => a.graded_by === 'server').length,
       expected,
       scorable,
+      // How many of the scorable halves' questions this bank can actually put on a
+      // paper. Less than `scorable` is a gap in the BANK, and the advisory says so
+      // rather than leaving "reached 30 of 42" to read as 12 he skipped.
+      askable,
       still_fails,
       // Five different reasons produce a null composite, and each has its own
       // thing to fix. `unscored_write` and `unsupplied` are reported ALONE and
@@ -1512,16 +1708,32 @@ function unscoredAdvisory(unscored) {
   }
   const short = unscored.filter((u) => u.short)
   if (short.length) {
+    // `on_section`, not `answered`: the gate was applied to the questions this
+    // section is made of AND can be marked on, so that is the number this sentence
+    // has to quote, and where they differ the difference is stated rather than left
+    // to look like a miscount. The two ways they differ are named separately,
+    // because they are different facts: an answer of a kind the section does not
+    // contain at all, and an answer to a half of it this bank cannot mark.
+    const gap = (u) => [
+      ...(u.aside
+        ? [`its other ${u.aside} answer(s) are of a kind a section ${u.section} paper does not contain, so they stand as `
+           + `practice and fill none of it`]
+        : []),
+      ...(u.unscorable_half
+        ? [`${u.unscorable_half} of its answer${u.unscorable_half === 1 ? ' is' : 's are'} on a half of section `
+           + `${u.section} this bank cannot mark, so ${u.unscorable_half === 1 ? 'it fills' : 'they fill'} none of what `
+           + `the composite is measured over`]
+        : []),
+      ...(u.askable != null && u.askable < u.scorable
+        ? [`and this bank can put only ${u.askable} of those ${u.scorable} on a paper at all, which is a gap in the `
+           + `question bank rather than questions he skipped`]
+        : []),
+    ]
     parts.push(
-      // `on_section`, not `answered`: the gate was applied to the questions this
-      // section is made of, so that is the number this sentence has to quote, and
-      // where the two differ the difference is stated rather than left to look like
-      // a miscount.
-      `${short.map((u) => `#${u.id} reached ${u.on_section} of ${u.scorable}` +
-        (u.answered > u.on_section
-          ? ` (its other ${u.answered - u.on_section} answer(s) are of a kind a section ${u.section} paper does not ` +
-            `contain, so they stand as practice and fill none of it)`
-          : '')).join(', ')} — under the ` +
+      `${short.map((u) => {
+        const clauses = gap(u)
+        return `#${u.id} reached ${u.on_section} of ${u.scorable}${clauses.length ? ` (${clauses.join('; ')})` : ''}`
+      }).join(', ')} — under the ` +
       `${Math.round(MIN_MOCK_COVERAGE * 100)}% of the section a scored sitting has to cover. Running out of time is ` +
       `exactly what a mock is for: treat that as a pace problem to work on, not as noise. Only a sitting that covers ` +
       `the section can produce a composite, so re-sit a full one to turn this into a score.`,
@@ -1542,12 +1754,16 @@ function unscoredAdvisory(unscored) {
  * reported rather than left to look like a slow week.
  *
  * WHY SEVEN DAYS. Every spaced-review interval but the last two (16 and 35 days)
- * is shorter than a week, so at seven days everything he has ever missed and not
- * re-confirmed is overdue by construction — the schedule itself says so. It is
- * also a sixth of readiness.freshness_days (42), the point at which his most
- * recent mock stops counting at all, so a week is the largest gap that cannot
- * start eroding the evidence trail. And it is the unit a parent checks: a day or
- * two is a weekend, a week is a change of behaviour.
+ * is a week or less — select.js's REVIEW_INTERVALS are [1, 3, 7, 16, 35] and the
+ * schedule fires at `elapsed >= interval`, so the 7-day one comes around ON day
+ * seven — and at seven days of silence those reviews have all fallen due. (This
+ * used to claim every one of them was "shorter than a week", which the 7 is not:
+ * the bar and the interval are the same number, and the reason a week works is that
+ * the comparison is inclusive.) It is also a sixth of readiness.freshness_days (42
+ * in both configs), the point at which his most recent mock stops counting at all,
+ * so a week is the largest gap that cannot start eroding the evidence trail. And it
+ * is the unit a parent checks: a day or two is a weekend, a week is a change of
+ * behaviour.
  *
  * The number below the threshold is still computed and still shown on the parent
  * page; what the threshold decides is when the student is TOLD.
@@ -1683,12 +1899,20 @@ function lastAnswerOf(attempts, now) {
   return { at: latest, days, on: String(latest).slice(0, 10), stale: days >= SILENCE_DAYS }
 }
 
-/** The silence sentence. Only raised past SILENCE_DAYS. */
+/**
+ * The silence sentence. Only raised past SILENCE_DAYS.
+ *
+ * "Longer than every spaced-review interval but the last two" was false the first
+ * time this string was ever shown: at seven days it is EQUAL to the third interval
+ * (REVIEW_INTERVALS = [1, 3, 7, 16, 35]), not longer than it. The claim is now the
+ * inclusive one the schedule actually makes, so it holds at 7 days and at 70.
+ */
 function silenceAdvisory(last) {
   return `Nothing has been recorded for ${last.days} days — the last answer was on ${last.on}. Every readiness number `
-    + `below is therefore a snapshot of ${last.on} rather than of today, and ${last.days} days is longer than every `
-    + `spaced-review interval but the last two, so everything previously missed is now overdue. Nothing here can tell `
-    + `a planned break apart from having stopped: one answer puts the measurement back in the present.`
+    + `below is therefore a snapshot of ${last.on} rather than of today, and ${last.days} days is at or past every `
+    + `spaced-review interval but the last two (16 and 35 days), so the reviews that were due have been stacking up. `
+    + `Nothing here can tell a planned break apart from having stopped: one answer puts the measurement back in the `
+    + `present.`
 }
 
 /** Every open gap with its age, so "a gap is open" can be told from "for two months". */
@@ -1778,6 +2002,37 @@ function unfinishedAdvisory(unfinished) {
 }
 
 /**
+ * Halves of this exam the bank CAN be scored on and cannot supply in full.
+ *
+ * Measured over the whole exam's halves, so it is a fact about the subject rather
+ * than about one sitting: every section that contains such a half is scored over
+ * less of it than the real exam has.
+ *
+ * This is the disclosure that has to exist somewhere, because the arithmetic in
+ * handleMockSubmit deliberately no longer charges the student for it. A half the
+ * bank cannot supply AT ALL is already loud (partObstacle refuses the section a
+ * composite and says so). A half it can ALMOST supply was silent: 38 of Precalc's
+ * 42 multiple choice questions cleared MIN_MOCK_COVERAGE, so sittings were scored
+ * and counted, and the only trace of the missing 4 was four blanks a parent read as
+ * his son's unfilled bubbles. Named here, on every surface, for what it is.
+ */
+function bankShortfall(ctx) {
+  return sectionScoring({ section: 'full', exam: ctx.config?.exam, supply: ctx.supply }).shortfalls
+}
+
+/** The sentence for a half this bank can only partly supply. */
+function bankShortfallAdvisory(shortfalls) {
+  const halves = shortfalls
+    .map(({ kind, count, have }) => `${have} of the ${count} ${PART_NAME[kind] ?? kind} question(s)`)
+    .join(', ')
+  return `This question bank cannot supply one half of the exam in full: ${shortfallClause(shortfalls)}. Every `
+    + `proctored sitting is therefore measured over the questions it CAN ask — ${halves} — so a composite of 100 on `
+    + `this section means every question the bank could put in front of him, not every question the real section has. `
+    + `The ones it cannot ask are missing content: they are not counted as blanks and not counted wrong, because he was `
+    + `never offered them. Only more items of that kind close the gap.`
+}
+
+/**
  * Everything the summary and the parent page both need computed off one context,
  * so the two surfaces cannot describe the same evidence differently.
  */
@@ -1788,6 +2043,7 @@ function signalsOf({ ctx, now }) {
     pace: paceOf({ attempts: ctx.attempts, exam: ctx.config?.exam }),
     last_answer: lastAnswerOf(ctx.attempts, now),
     open_gaps: openGapAges(ctx.gaps, now),
+    bank_shortfall: bankShortfall(ctx),
   }
 }
 
@@ -1798,6 +2054,10 @@ function signalAdvisories(signals) {
     ...(signals.unfinished.length ? [unfinishedAdvisory(signals.unfinished)] : []),
     ...(signals.last_answer && signals.last_answer.days >= SILENCE_DAYS ? [silenceAdvisory(signals.last_answer)] : []),
     ...(signals.pace?.over ? [paceAdvisory(signals.pace)] : []),
+    // Last because it is the one standing fact rather than something that changed,
+    // and it must not push the actionable advisories down the page. It is never
+    // dropped, though: it is what makes every composite on this subject readable.
+    ...(signals.bank_shortfall?.length ? [bankShortfallAdvisory(signals.bank_shortfall)] : []),
   ]
 }
 
@@ -1851,12 +2111,27 @@ export async function handleStatus({ db, subject, config, now }) {
   return {
     ...summarize({ ctx, now }),
     criteria: r.criteria.map((c) => ({ requirement: c.label, met: c.met, evidence: c.detail })),
+    // NAMES THE WHOLE BAR, including the two criteria that actually block today.
+    // This used to list six of the fourteen — the mocks, the span, the official
+    // sitting, the mean, the floor and the per-unit bar — and stop, and the two it
+    // left out were `blanks` and `frq`: precisely the pair a real record hits.
+    // Measured on the shipped Precalc bank, a student who had answered every
+    // question the system could ask him was at 93% with `frq` pending, and this
+    // sentence claimed to have told him what 100% requires while omitting it. The
+    // count is derived from the criteria list above rather than typed in, so the two
+    // cannot drift; `criteria` remains the itemised answer, and this is the summary
+    // that must not contradict it.
     what_100_means:
-      `100% is not "finished the material." It means every criterion above holds at the same time: ` +
-      `${config.readiness.consecutive_qualifying_mocks} proctored mocks spread over at least ` +
-      `${config.readiness.window_span_days_min} days, at least one from official College Board material, ` +
+      `100% is not "finished the material." It means all ${r.criteria.length} criteria above hold at the same time, ` +
+      `not most of them: every exam-tested topic attempted, then ` +
+      `${config.readiness.consecutive_qualifying_mocks} consecutive proctored mocks spread over at least ` +
+      `${config.readiness.window_span_days_min} days with at least one from official College Board material, ` +
       `a mean of ${config.readiness.composite_mean_min}%+ with no single sitting below ` +
-      `${config.readiness.composite_floor_min}%, and every unit above ${config.readiness.per_unit_min}%.`,
+      `${config.readiness.composite_floor_min}%, every unit above ${config.readiness.per_unit_min}%, ` +
+      `at most ${config.readiness.max_blanks} blank response across the whole window, and free response at ` +
+      `${config.readiness.frq_min_pct}%+ — which cannot be measured at all until the rubric grader has been ` +
+      `calibrated against an officially scored response, so that one is reported as pending rather than failed and ` +
+      `100% is currently out of reach for that reason. Read the criteria list above for where each one stands.`,
   }
 }
 
