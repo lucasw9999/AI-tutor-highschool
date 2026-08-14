@@ -77,17 +77,41 @@
  * silently unkeyed item, which is how a parser once found 22 of 48 problems and
  * reported success.
  *
- * ORDER INDEPENDENCE, AND THE DECISION BEHIND IT
- * ----------------------------------------------
+ * ORDER, AND THE DECISION BEHIND IT
+ * ---------------------------------
  * grade.js compares `normalizeShort(response)` against the key and each variant
  * as WHOLE STRINGS. It cannot be taught set semantics ("all these parts must
  * appear, in any order") — and it must not be, because the grader is deliberately
- * mechanical. So a compound answer is made order-independent HERE, at build
- * time: the author declares each part once, and the parser expands the
- * declaration into every ordering of the parts, every combination of the
- * phrasings declared for them, and every separator a student plausibly types
- * (", ", " and ", ", and ", "; ", " "). "x=2 (mult 2), x=-3 (mult 1)" typed in
- * the other order is therefore a variant the bank already holds, not a miss.
+ * mechanical. So a compound answer is expanded HERE, at build time: the author
+ * declares each part once, and the parser generates every combination of the
+ * phrasings declared for the parts, every way a student plausibly joins them,
+ * and — WHEN AND ONLY WHEN a reordering says the same thing — every ordering.
+ *
+ * ORDER IS NOT UNCONDITIONALLY FREE, and treating it as free credited wrong
+ * answers on three shipped items. "State amplitude, midline, and period ... IN
+ * THE ORDER amplitude, midline, period" keyed 4, -2, 2pi/3 also accepted
+ * "-2, 4, 2pi/3" — the amplitude/midline swap that is THE canonical error on
+ * 4sin(3x)-2 — because every permutation of the bare values was generated. A
+ * permutation is the same answer only when the parts identify THEMSELVES, or
+ * when they are a set in which position means nothing at all. So the parser asks
+ * two questions, in this order:
+ *
+ *   1. Are the parts SELF-LABELLING? "hole at x=3" cannot be read as the
+ *      horizontal asymptote and "overestimate" cannot be read as the rate, so
+ *      every ordering of them asserts exactly the same facts and every ordering
+ *      is generated — even where the stem states an order, because marking a
+ *      correct, unambiguous answer wrong is the one error this file exists to
+ *      prevent. partsAreSelfLabelling() decides this from the declared phrasings
+ *      alone: at most one part may accept a BARE value (that one is identified by
+ *      elimination), and no phrasing's words may be a subset of another part's.
+ *   2. Otherwise the parts are interchangeable in shape, so what a position means
+ *      can only come from the sentence the STUDENT was given. The required
+ *      `format:` sentence is read for it: "in that order" / "in the order
+ *      amplitude, midline, period" means position is part of the claim and NO
+ *      permutation is generated; "in any order" (or a list of all the solutions
+ *      to an equation) means the parts are a set and every ordering is. A
+ *      sentence that says neither is a BUILD ERROR — the parser will not guess
+ *      which of a right answer and the classic wrong one it is looking at.
  *
  * That expansion also absorbs an asymmetry in normalizeShort that would
  * otherwise be a trap: it strips a leading `x =` from the WHOLE response only,
@@ -382,6 +406,115 @@ const MAX_PARTS = 4
 const MAX_ALTS_PER_PART = 6
 /** Guards items.json and the D1 row against a combinatorial blow-up. */
 const MAX_ACCEPTED_FORMS = 1000
+
+/**
+ * Words that belong to a VALUE rather than labelling one. "2pi/3" and "-sqrt2/2"
+ * are bare values however many letters they contain, so their letters cannot be
+ * what tells one part from another. Over-inclusion here is the safe direction: a
+ * label mistaken for a value makes the parts look interchangeable, which costs a
+ * build error rather than a wrong answer credited.
+ */
+const MATH_WORDS = new Set([
+  'pi', 'sqrt', 'cbrt', 'abs', 'exp', 'log', 'ln', 'sin', 'cos', 'tan', 'sec', 'csc', 'cot',
+  'arcsin', 'arccos', 'arctan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh',
+  'inf', 'infinity', 'dne', 'nan', 'none', 'undefined',
+])
+
+/**
+ * The words by which a phrasing announces WHICH part it is. Single letters are
+ * never labels — 'x', 'y', 'a', 'b' are variables, i.e. part of the value — and
+ * neither is mathematical vocabulary. "hole at x=3" -> {hole, at}; "2pi/3" -> {}.
+ */
+const labelsOf = (phrasing) =>
+  new Set((String(phrasing).toLowerCase().match(/[a-z]{2,}/g) ?? []).filter((w) => !MATH_WORDS.has(w)))
+
+const isSubsetOf = (a, b) => [...a].every((w) => b.has(w))
+
+/**
+ * True when no phrasing of one part could be read as a phrasing of another — so
+ * every ordering of the parts asserts the same facts and a permutation is a
+ * right answer, not a swap.
+ *
+ * Two conditions, both of them about what a READER of the answer can tell:
+ *
+ *   * At most one part may accept a bare value. One unlabelled entry among
+ *     labelled ones is identified by elimination ("midline -2, 4" can only mean
+ *     amplitude 4); two of them cannot be told apart at all, which is exactly
+ *     the amplitude/midline case.
+ *   * No phrasing's words may be a subset of another part's phrasing's words
+ *     (equal sets included). "asymptote y=1" against "vertical asymptote x=-3"
+ *     is readable as the same label with more said, so the parts are not
+ *     self-labelling; "-2 mult 3 crosses" against "1 mult 2 bounces" is not.
+ */
+function partsAreSelfLabelling(parts) {
+  const labels = parts.map((alternatives) => alternatives.map(labelsOf))
+  if (labels.filter((alternatives) => alternatives.some((l) => l.size === 0)).length > 1) return false
+  for (const [i, mine] of labels.entries()) {
+    for (const [j, theirs] of labels.entries()) {
+      if (i >= j) continue
+      for (const a of mine) {
+        for (const b of theirs) {
+          if (a.size && b.size && (isSubsetOf(a, b) || isSubsetOf(b, a))) return false
+        }
+      }
+    }
+  }
+  return true
+}
+
+/**
+ * The `format:` sentence states an ORDER for the parts. Deliberately liberal:
+ * a match only ever SUPPRESSES permutations, which is the safe direction, and
+ * self-labelling parts are decided before this is consulted at all.
+ */
+const ORDER_DECLARED =
+  /\bin (?:that|this|the) (?:given |stated |same |following |exact )?(?:order|form)\b|\bin order\b|\bthen\b|\bfirst\b|\brespectively\b/i
+
+/**
+ * ...or states that the parts are a SET, where every ordering is the same
+ * answer: "in any order", or a list of all the solutions of an equation, which
+ * is a set by construction. Deliberately STRICT: a match here is what licenses
+ * crediting every permutation of values nothing else can tell apart.
+ */
+const SET_DECLARED = /\bany order\b|\blist of (?:all |the )*(?:exact )?solutions\b|\ball (?:the )?solutions\b/i
+
+const ORDER_ADVICE =
+  `Say "in that order" (or "in the order amplitude, midline, period") in the sentence when a part's POSITION is ` +
+  `what identifies it, or "in any order" when the parts are a set and any ordering is the same answer. Whichever ` +
+  `you write goes in the stem too, because the sentence is what the student is told`
+
+/**
+ * Whether the parts' ORDER is part of the answer, or an error saying why the
+ * question cannot be settled.
+ *
+ * @returns {{ordered: boolean}|{error: string}}
+ */
+function orderSemantics(parts, formatDecl) {
+  // The parts name themselves: a reordering says the same thing, whatever the
+  // sentence says about how to type it. Refusing it would mark a correct,
+  // unambiguous answer wrong.
+  if (partsAreSelfLabelling(parts)) return { ordered: false }
+  const sentence = String(formatDecl)
+  const order = ORDER_DECLARED.test(sentence)
+  const set = SET_DECLARED.test(sentence)
+  if (order && set) {
+    return {
+      error:
+        `the "format:" sentence states both a required order and that any order will do, and these parts have ` +
+        `nothing but position to tell them apart, so one of the two readings credits an answer the other calls ` +
+        `wrong. Say one thing: ${ORDER_ADVICE}`,
+    }
+  }
+  if (order) return { ordered: true }
+  if (set) return { ordered: false }
+  return {
+    error:
+      `these parts (${parts.map((p) => `"${p[0]}"`).join(', ')}) could be swapped without the answer looking any ` +
+      `different, and the "format:" sentence does not say whether their ORDER is part of the answer. Either every ` +
+      `ordering is credited or only the declared one is, and the parser will not guess which: a swap is the ` +
+      `commonest wrong answer there is. ${ORDER_ADVICE}`,
+  }
+}
 
 function readTagline(tagline) {
   const t = tagline.toLowerCase()
@@ -805,6 +938,11 @@ const looseText = (text) =>
     .replace(/\s+/g, ' ')
     .trim()
 
+/** The one diagnostic for a `format:` sentence the stem does not state. */
+const formatNotInStem = (formatDecl) =>
+  `the "format:" sentence does not appear in the stem, so nothing tells the student how to type the answer. ` +
+  `Add it to the stem verbatim: "${String(formatDecl).trim()}"`
+
 /**
  * Turn one problem's declarations into { answer, variants, topic }, or into
  * errors and NO key.
@@ -870,6 +1008,9 @@ function resolveKey({ decls, stem, unit }) {
   // --- assemble the accepted forms ---------------------------------------
   let answer
   let generated = []
+  // Whether a part's POSITION is part of the answer. Only a compound answer has
+  // an order to get wrong; orderSemantics() below decides it.
+  let ordered = false
   if (keyDecl != null) {
     answer = keyDecl.trim()
   } else {
@@ -919,8 +1060,26 @@ function resolveKey({ decls, stem, unit }) {
       )
       return { ...unkeyed, topic }
     }
+    // Checked HERE rather than with the other `format:` rules below, because the
+    // sentence is also what declares the parts' ORDER: a sentence the stem does
+    // not state is not a contract with the student, so it cannot be read for one.
+    if (!looseText(stem).includes(looseText(formatDecl))) {
+      errors.push(formatNotInStem(formatDecl))
+      return { ...unkeyed, topic }
+    }
 
-    const forms = permutations(indices).length * parts.reduce((n, p) => n * p.length, 1) * SEPARATORS.length
+    // Does a reordering of the parts say the same thing? See the module comment:
+    // self-labelling parts always do, interchangeable ones only when the sentence
+    // the student was given says so, and a sentence that says nothing is refused.
+    const semantics = orderSemantics(parts, formatDecl)
+    if (semantics.error) {
+      errors.push(semantics.error)
+      return { ...unkeyed, topic }
+    }
+    ordered = semantics.ordered
+
+    const orderings = ordered ? 1 : permutations(indices).length
+    const forms = orderings * parts.reduce((n, p) => n * p.length, 1) * SEPARATORS.length
     if (forms > MAX_ACCEPTED_FORMS) {
       errors.push(
         `these parts expand to ${forms} accepted forms, past the cap of ${MAX_ACCEPTED_FORMS} — too many phrasings ` +
@@ -944,7 +1103,7 @@ function resolveKey({ decls, stem, unit }) {
     const winners = new Set()
     const firstOf = new Map()
     for (const [chosen, picks] of combinations(parts)) {
-      for (const ordering of permutations(chosen)) {
+      for (const ordering of ordered ? [chosen] : permutations(chosen)) {
         for (const separator of SEPARATORS) {
           const form = ordering.join(separator)
           const norm = normalizeShort(form)
@@ -968,12 +1127,11 @@ function resolveKey({ decls, stem, unit }) {
     if (errors.length) return { ...unkeyed, topic }
   }
 
-  // The stem must actually say what it told the author it says.
+  // The stem must actually say what it told the author it says. (A compound
+  // answer has already been held to this, above, before its `format:` sentence
+  // was read for the parts' order.)
   if (formatDecl != null && !looseText(stem).includes(looseText(formatDecl))) {
-    errors.push(
-      `the "format:" sentence does not appear in the stem, so nothing tells the student how to type the answer. ` +
-        `Add it to the stem verbatim: "${formatDecl.trim()}"`,
-    )
+    errors.push(formatNotInStem(formatDecl))
     return { ...unkeyed, topic }
   }
 
